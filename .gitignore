@@ -1,0 +1,53 @@
+# Dependency directories
+/vendor
+/node_modules
+
+# Laravel specific
+/public/hot
+/public/storage
+/public/build
+
+/storage/*
+!/storage/app
+!/storage/app/public
+!/storage/framework
+!/storage/framework/cache
+!/storage/framework/sessions
+!/storage/framework/views
+!/storage/logs
+
+/bootstrap/cache/*.php
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# PHPUnit & test cache
+.phpunit.result.cache
+phpunit.xml.backup
+
+# Logs
+npm-debug.log
+yarn-error.log
+laravel.log
+
+# IDE/editor
+/.idea
+/.vscode
+/.fleet
+/.zed
+/.nova
+
+# Homestead
+Homestead.json
+Homestead.yaml
+
+# Composer authentication file
+/auth.json
+
+# phpactor (PHP language server)
+.phpactor.json
+
+# SQLite database
+/database/*.sqlite
