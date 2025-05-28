@@ -63,6 +63,8 @@ const navItems = [
     route: 'dashboard',
     icon: 'mdi-view-dashboard',
   },
+
+  
 ];
 </script>
 
@@ -137,6 +139,10 @@ const navItems = [
           <ApplicationMark class="mr-2" height="32" />
           {{ title }}
         </Link>
+
+
+
+        <!-- /admin/users -->
       </v-app-bar-title>
       
       <v-spacer></v-spacer>

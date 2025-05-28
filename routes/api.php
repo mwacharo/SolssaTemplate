@@ -16,6 +16,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::apiResource('roles', \App\Http\Controllers\Api\Admin\RoleController::class)->except('show');
         Route::apiResource('permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
+        Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
+
         
         Route::prefix('users/{user}')->name('users.')->group(function () {
             Route::post('assign-role', [UserRolePermissionController::class, 'assignRole'])->name('assignRole');
