@@ -3,6 +3,12 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
+
+
+
+// use Spatie\Permission\Models\Permission as SpatiePermission;
+use App\Models\Permission;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +31,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+        // 
+            // SpatiePermission::resolveRelationUsing('model', fn () => Permission::class);
+
+                Route::model('permission', Permission::class);
+
+
     }
 }
 

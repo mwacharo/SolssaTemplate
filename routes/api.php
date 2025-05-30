@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\Admin\UserRolePermissionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
+
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -15,7 +18,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::apiResource('roles', \App\Http\Controllers\Api\Admin\RoleController::class)->except('show');
-        Route::apiResource('permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
+        Route::apiResource('permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show']);
         Route::apiResource('users', \App\Http\Controllers\Api\Admin\UserController::class);
 
         

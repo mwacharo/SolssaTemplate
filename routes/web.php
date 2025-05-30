@@ -50,9 +50,9 @@ Route::middleware([
     })->name('dashboard');
     
     // Role management
-    Route::get('/roles', function () {
-        return Inertia::render('Admin/Roles/Index');
-    })->name('roles.index');
+    // Route::get('/roles', function () {
+    //     return Inertia::render('Admin/Roles/Index');
+    // })->name('roles.index');
     
     // Permission management
     Route::get('/permissions', function () {

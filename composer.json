@@ -10,8 +10,10 @@
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^11.31",
         "laravel/jetstream": "^5.3",
-        "laravel/sanctum": "^4.0",
+        "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.9",
+        "sentry/sentry-laravel": "^4.13",
+        "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.18",
         "tightenco/ziggy": "^2.0"
     },

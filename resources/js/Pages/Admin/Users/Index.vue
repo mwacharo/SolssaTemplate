@@ -522,14 +522,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed,onMounted } from 'vue'
+import { usePermissionsStore } from '@/stores/permissions'
+import { useRolesStore } from '@/stores/roles'
+import { useUsersStore } from '@/stores/users'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import RoleDialog from '@/Pages/RoleDialog.vue'
 import UserPermissionDialog from '@/Pages/UserPermissionDialog.vue'
 
-// Reactive data
+// Initialize Pinia stores
+const permissionsStore = usePermissionsStore()
+const rolesStore = useRolesStore()
+const usersStore = useUsersStore()
+
+// Reactive data for UI
 const activeTab = ref('roles')
 const roleSearch = ref('')
+const permissionSearch = ref('')
 const userSearch = ref('')
 const selectedRoleFilter = ref(null)
 const auditFilter = ref(null)
@@ -537,26 +546,10 @@ const dateMenu = ref(false)
 const dateRange = ref('')
 const selectedDates = ref([])
 const roleDialog = ref(false)
+const permissionDialog = ref(false)
 const userPermissionDialog = ref(false)
 const selectedRole = ref(null)
 const selectedUser = ref(null)
-
-
-// Add these to <script setup>:
-
-// Permissions Data
-const permissions = ref([
-  { id: 1, name: 'create', description: 'Create resources' },
-  { id: 2, name: 'read', description: 'Read resources' },
-  { id: 3, name: 'update', description: 'Update resources' },
-  { id: 4, name: 'delete', description: 'Delete resources' },
-  { id: 5, name: 'manage_users', description: 'Manage users' },
-  { id: 6, name: 'system_config', description: 'System configuration' },
-  // Add more as needed
-])
-
-const permissionSearch = ref('')
-const permissionDialog = ref(false)
 const editingPermission = ref(false)
 const permissionForm = ref({
   id: null,
@@ -564,139 +557,21 @@ const permissionForm = ref({
   description: ''
 })
 
-const permissionHeaders = ref([
-  { title: 'Name', key: 'name', sortable: true },
-  { title: 'Description', key: 'description', sortable: false },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end', width: '120px' }
+// Computed properties using store getters
+const stats = computed(() => [
+  { title: 'Total Roles', value: rolesStore.rolesCount, icon: 'mdi-account-group', color: 'primary' },
+  { title: 'Active Users', value: usersStore.activeUsersCount, icon: 'mdi-account-check', color: 'success' },
+  { title: 'Permissions', value: permissionsStore.permissionsCount, icon: 'mdi-key', color: 'warning' },
+  { title: 'Recent Changes', value: '8', icon: 'mdi-history', color: 'info' } // Audit logs not implemented in stores yet
 ])
 
-const filteredPermissions = computed(() => {
-  if (!permissionSearch.value) return permissions.value
-  return permissions.value.filter(p =>
-    p.name.toLowerCase().includes(permissionSearch.value.toLowerCase()) ||
-    (p.description && p.description.toLowerCase().includes(permissionSearch.value.toLowerCase()))
-  )
-})
+const filteredRoles = computed(() => rolesStore.searchRoles(roleSearch.value))
 
-// Permission CRUD Methods
-const createPermission = () => {
-  editingPermission.value = false
-  permissionForm.value = { id: null, name: '', description: '' }
-  permissionDialog.value = true
-}
+const filteredPermissions = computed(() => permissionsStore.searchPermissions(permissionSearch.value))
 
-const editPermission = (item) => {
-  editingPermission.value = true
-  permissionForm.value = { ...item }
-  permissionDialog.value = true
-}
+const filteredUsers = computed(() => usersStore.searchUsers(userSearch.value, selectedRoleFilter.value))
 
-const savePermission = () => {
-  if (!permissionForm.value.name) return
-  if (editingPermission.value) {
-    // Update existing
-    const idx = permissions.value.findIndex(p => p.id === permissionForm.value.id)
-    if (idx !== -1) {
-      permissions.value[idx] = { ...permissionForm.value }
-    }
-  } else {
-    // Create new
-    const newId = Math.max(0, ...permissions.value.map(p => p.id)) + 1
-    permissions.value.push({ ...permissionForm.value, id: newId })
-  }
-  permissionDialog.value = false
-}
-
-const deletePermission = (item) => {
-  // Simple confirmation, replace with dialog if needed
-  if (confirm(`Delete permission "${item.name}"?`)) {
-    permissions.value = permissions.value.filter(p => p.id !== item.id)
-  }
-}
-
-
-// Mock data - replace with actual API calls
-const stats = ref([
-  { title: 'Total Roles', value: '12', icon: 'mdi-account-group', color: 'primary' },
-  { title: 'Active Users', value: '248', icon: 'mdi-account-check', color: 'success' },
-  { title: 'Permissions', value: '45', icon: 'mdi-key', color: 'warning' },
-  { title: 'Recent Changes', value: '8', icon: 'mdi-history', color: 'info' }
-])
-
-const roles = ref([
-  {
-    id: 1,
-    name: 'Super Admin',
-    description: 'Full system access with all permissions',
-    permissions: ['create', 'read', 'update', 'delete', 'manage_users', 'system_config'],
-    users_count: 2,
-    active: true,
-    color: 'red',
-    icon: 'mdi-shield-crown'
-  },
-  {
-    id: 2,
-    name: 'Admin',
-    description: 'Administrative access with limited system config',
-    permissions: ['create', 'read', 'update', 'delete', 'manage_users'],
-    users_count: 8,
-    active: true,
-    color: 'orange',
-    icon: 'mdi-shield-account'
-  },
-  {
-    id: 3,
-    name: 'Manager',
-    description: 'Team management and reporting capabilities',
-    permissions: ['create', 'read', 'update', 'reports'],
-    users_count: 15,
-    active: true,
-    color: 'blue',
-    icon: 'mdi-account-tie'
-  },
-  {
-    id: 4,
-    name: 'Editor',
-    description: 'Content creation and editing permissions',
-    permissions: ['create', 'read', 'update'],
-    users_count: 32,
-    active: true,
-    color: 'green',
-    icon: 'mdi-pencil'
-  },
-  {
-    id: 5,
-    name: 'Viewer',
-    description: 'Read-only access to system resources',
-    permissions: ['read'],
-    users_count: 189,
-    active: true,
-    color: 'grey',
-    icon: 'mdi-eye'
-  }
-])
-
-const users = ref([
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-    role: 'Admin',
-    status: 'Active',
-    lastLogin: new Date('2024-01-15')
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-    role: 'Manager',
-    status: 'Active',
-    lastLogin: new Date('2024-01-14')
-  },
-  // Add more mock users...
-])
+const roleFilterOptions = computed(() => rolesStore.roleNames)
 
 const auditLogs = ref([
   {
@@ -712,55 +587,33 @@ const auditLogs = ref([
     description: 'Updated permissions for role "Editor"',
     user: { name: 'John Doe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
     timestamp: new Date('2024-01-15T09:15:00')
-  },
-  // Add more audit logs...
-])
-
-// Computed properties
-const filteredRoles = computed(() => {
-  if (!roleSearch.value) return roles.value
-  return roles.value.filter(role => 
-    role.name.toLowerCase().includes(roleSearch.value.toLowerCase()) ||
-    role.description.toLowerCase().includes(roleSearch.value.toLowerCase())
-  )
-})
-
-const filteredUsers = computed(() => {
-  let filtered = users.value
-  
-  if (selectedRoleFilter.value) {
-    filtered = filtered.filter(user => user.role === selectedRoleFilter.value)
   }
-  
-  if (userSearch.value) {
-    filtered = filtered.filter(user =>
-      user.name.toLowerCase().includes(userSearch.value.toLowerCase()) ||
-      user.email.toLowerCase().includes(userSearch.value.toLowerCase())
-    )
-  }
-  
-  return filtered
-})
-
-const filteredAuditLogs = computed(() => {
-  let filtered = auditLogs.value
-  
-  if (auditFilter.value) {
-    filtered = filtered.filter(log => log.action === auditFilter.value)
-  }
-  
-  // Add date filtering logic here if needed
-  
-  return filtered
-})
-
-const roleFilterOptions = computed(() => [
-  ...new Set(users.value.map(user => user.role))
 ])
 
 const auditFilterOptions = ref([
   'Role Created', 'Role Updated', 'Role Deleted',
   'Permission Updated', 'User Assigned', 'User Suspended'
+])
+
+const filteredAuditLogs = computed(() => {
+  let filtered = auditLogs.value
+  if (auditFilter.value) {
+    filtered = filtered.filter(log => log.action === auditFilter.value)
+  }
+  if (selectedDates.value.length === 2) {
+    const [start, end] = selectedDates.value
+    filtered = filtered.filter(log => {
+      const logDate = new Date(log.timestamp)
+      return logDate >= start && logDate <= end
+    })
+  }
+  return filtered
+})
+
+const permissionHeaders = ref([
+  { title: 'Name', key: 'name', sortable: true },
+  { title: 'Description', key: 'description', sortable: false },
+  { title: 'Actions', key: 'actions', sortable: false, align: 'end', width: '120px' }
 ])
 
 const userHeaders = ref([
@@ -771,7 +624,7 @@ const userHeaders = ref([
   { title: 'Actions', key: 'actions', sortable: false, width: '20%' }
 ])
 
-// Methods
+// Methods using store actions
 const createRole = () => {
   selectedRole.value = null
   roleDialog.value = true
@@ -782,36 +635,94 @@ const editRole = (role) => {
   roleDialog.value = true
 }
 
-const duplicateRole = (role) => {
-  selectedRole.value = { ...role, id: null, name: `${role.name} (Copy)` }
-  roleDialog.value = true
+const duplicateRole = async (role) => {
+  try {
+    await rolesStore.duplicateRole(role.id)
+  } catch (err) {
+    console.error('Failed to duplicate role:', err)
+  }
 }
 
-const deleteRole = (role) => {
-  // Implement delete confirmation and API call
-  console.log('Delete role:', role)
+const deleteRole = async (role) => {
+  if (confirm(`Delete role "${role.name}"?`)) {
+    try {
+      await rolesStore.deleteRole(role.id)
+    } catch (err) {
+      console.error('Failed to delete role:', err)
+    }
+  }
 }
 
-const toggleRoleStatus = (role) => {
-  // Implement API call to toggle role status
-  console.log('Toggle role status:', role)
+const toggleRoleStatus = async (role) => {
+  try {
+    await rolesStore.toggleRoleStatus(role.id)
+  } catch (err) {
+    console.error('Failed to toggle role status:', err)
+  }
 }
 
 const viewRoleDetails = (role) => {
-  // Navigate to detailed role view
   console.log('View role details:', role)
 }
 
-const saveRole = (roleData) => {
-  // Implement save role API call
-  console.log('Save role:', roleData)
-  roleDialog.value = false
+const saveRole = async (roleData) => {
+  try {
+    if (selectedRole.value && selectedRole.value.id) {
+      await rolesStore.updateRole(selectedRole.value.id, roleData)
+    } else {
+      await rolesStore.createRole(roleData)
+    }
+    roleDialog.value = false
+  } catch (err) {
+    console.error('Failed to save role:', err)
+  }
 }
 
-const updateUserRole = (user, newRole) => {
-  // Implement API call to update user role
-  user.role = newRole
-  console.log('Update user role:', user, newRole)
+const createPermission = () => {
+  editingPermission.value = false
+  permissionForm.value = { id: null, name: '', description: '' }
+  permissionDialog.value = true
+}
+
+const editPermission = (item) => {
+  editingPermission.value = true
+  permissionForm.value = { ...item }
+  permissionDialog.value = true
+}
+
+const savePermission = async () => {
+  if (!permissionForm.value.name) return
+  try {
+    if (editingPermission.value) {
+      await permissionsStore.updatePermission(permissionForm.value.id, permissionForm.value)
+    } else {
+      await permissionsStore.createPermission(permissionForm.value)
+    }
+    permissionDialog.value = false
+  } catch (err) {
+    console.error('Failed to save permission:', err)
+  }
+}
+
+const deletePermission = async (item) => {
+  if (confirm(`Delete permission "${item.name}"?`)) {
+    try {
+      await permissionsStore.deletePermission(item.id)
+    } catch (err) {
+      console.error('Failed to delete permission:', err)
+    }
+  }
+}
+
+const updateUserRole = async (user, newRole) => {
+  try {
+    const role = rolesStore.getRoleById(rolesStore.roles.find(r => r.name === newRole)?.id)
+    if (role) {
+      await usersStore.assignRoleToUser(user.id, role.id)
+    }
+  } catch (err) {
+    console.error('Failed to update user role:', err)
+  }
 }
 
 const viewUserPermissions = (user) => {
@@ -820,23 +731,22 @@ const viewUserPermissions = (user) => {
 }
 
 const editUserRoles = (user) => {
-  // Navigate to user role editing
   console.log('Edit user roles:', user)
 }
 
-const suspendUser = (user) => {
-  // Implement user suspension/activation
-  user.status = user.status === 'Active' ? 'Suspended' : 'Active'
-  console.log('Toggle user status:', user)
+const suspendUser = async (user) => {
+  try {
+    await usersStore.toggleUserStatus(user.id)
+  } catch (err) {
+    console.error('Failed to toggle user status:', err)
+  }
 }
 
 const exportPermissions = () => {
-  // Implement export functionality
   console.log('Export permissions')
 }
 
 const viewAuditDetails = (log) => {
-  // Show detailed audit information
   console.log('View audit details:', log)
 }
 
@@ -880,22 +790,16 @@ const getAuditIcon = (action) => {
   return iconMap[action] || 'mdi-information'
 }
 
-onMounted(() => {
-  // Initialize data or make API calls
+// Fetch initial data
+onMounted(async () => {
+  try {
+    await Promise.all([
+      permissionsStore.fetchPermissions(),
+      rolesStore.fetchRoles(),
+      usersStore.fetchUsers()
+    ])
+  } catch (err) {
+    console.error('Failed to fetch initial data:', err)
+  }
 })
 </script>
-
-<style scoped>
-.search-field :deep(.v-field__input) {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-.audit-timeline :deep(.v-timeline-item__body) {
-  padding-bottom: 0;
-}
-
-.border-primary {
-  border: 2px solid rgb(var(--v-theme-primary)) !important;
-}
-</style>

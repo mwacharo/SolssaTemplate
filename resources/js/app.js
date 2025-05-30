@@ -46,65 +46,36 @@ const vuetify = createVuetify({
   },
   theme: {
     defaultTheme: 'light',
+  
     themes: {
-      // light: {
-      //   dark: false,
-      //   colors: {
-      //     background: '#FFFFFF',
-      //     surface: '#FFFFFF',
-      //     primary: '#1976D2',
-      //     secondary: '#424242',
-      //     accent: '#82B1FF',
-      //     error: '#FF5252',
-      //     info: '#2196F3',
-      //     success: '#4CAF50',
-      //     warning: '#FB8C00',
-      //   },
-      // },
-      light: {
+    light: {
         dark: false,
         colors: {
-          background: '#F9FAFB',         // Soft off-white for less strain
-          surface: '#FFFFFF',            // Clean white for cards/surfaces
-          primary: '#2563EB',            // Strong blue for primary actions
-          secondary: '#64748B',          // Muted blue-gray for secondary elements
-          accent: '#3B82F6',             // Bright accent for highlights
-          error: '#EF4444',              // Clear red for errors
-          info: '#0EA5E9',               // Light blue for info
-          success: '#22C55E',            // Green for success
-          warning: '#F59E0B',            // Orange for warnings
+          background: '#F9FAFB',
+          surface: '#FFFFFF',
+          primary: '#2563EB',
+          secondary: '#64748B',
+          accent: '#3B82F6',
+          error: '#EF4444',
+          info: '#0EA5E9',
+          success: '#22C55E',
+          warning: '#F59E0B',
         }
-      }
-      ,
+      },
       dark: {
         dark: true,
         colors: {
-          background: '#0F172A',         // Deep slate (almost black)
-          surface: '#1E293B',            // Darker slate for card/surface contrast
-          primary: '#3B82F6',            // Vivid blue for action
-          secondary: '#94A3B8',          // Light slate for secondary elements
-          accent: '#60A5FA',             // Soft accent for highlights
-          error: '#F87171',              // Light red
-          info: '#38BDF8',               // Aqua blue for info
-          success: '#34D399',            // Light green for success
-          warning: '#FBBF24',            // Lighter yellow-orange
+          background: '#0F172A',
+          surface: '#1E293B',
+          primary: '#3B82F6',
+          secondary: '#94A3B8',
+          accent: '#60A5FA',
+          error: '#F87171',
+          info: '#38BDF8',
+          success: '#34D399',
+          warning: '#FBBF24',
         }
       }
-      // ,
-      //       dark: {
-      //         dark: true,
-      //         colors: {
-      //           background: '#121212',
-      //           surface: '#1E1E1E',
-      //           primary: '#BB86FC',
-      //           secondary: '#03DAC6',
-      //           accent: '#03DAC6',
-      //           error: '#CF6679',
-      //           info: '#2196F3',
-      //           success: '#4CAF50',
-      //           warning: '#FB8C00',
-      //         },
-      //       },
     },
   },
 });
