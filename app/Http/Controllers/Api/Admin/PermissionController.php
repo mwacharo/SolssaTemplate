@@ -37,35 +37,11 @@ class PermissionController extends Controller
 
         $permission = $this->permissions->create($request->only('name'));
 
-        activity()
-            ->causedBy($user)
-            ->performedOn($permission)
-            ->withProperties(['attributes' => $permission->toArray()])
-            ->log("Created permission: {$permission->name}");
+      
 
         return response()->json(['message' => 'Permission created.', 'permission' => $permission], 201);
     }
 
-
-
-
-    // public function destroy(Permission $permission)
-    // {
-    //     $user = auth()->user();
-
-    //     $permissionName = $permission->name;
-
-    //     $this->permissions->delete($permission);
-
-    //     Log::info('User deleted permission', ['user_id' => $user?->id, 'permission' => $permissionName]);
-
-    //     activity()
-    //         ->causedBy($user)
-    //         ->withProperties(['name' => $permissionName])
-    //         ->log("Deleted permission: {$permissionName}");
-
-    //     return response()->json(['message' => 'Permission deleted.']);
-    // }
 
     public function update(Request $request, Permission $permission)
     {
@@ -77,11 +53,6 @@ class PermissionController extends Controller
 
         $updatedPermission = $this->permissions->update($permission, $request->only('name'));
 
-        activity()
-            ->causedBy($user)
-            ->performedOn($updatedPermission)
-            ->withProperties(['attributes' => $updatedPermission->toArray()])
-            ->log("Updated permission: {$updatedPermission->name}");
 
         return response()->json(['message' => 'Permission updated.', 'permission' => $updatedPermission]);
     }

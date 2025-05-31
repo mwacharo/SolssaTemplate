@@ -11,21 +11,12 @@
           </p>
         </div>
         <div class="d-flex gap-2">
-          <v-btn
-            color="primary"
-            variant="outlined"
-            prepend-icon="mdi-download"
-            @click="exportPermissions"
-          >
+          <v-btn color="primary" variant="outlined" prepend-icon="mdi-download" @click="exportPermissions">
             Export
           </v-btn>
 
           <!-- add permissions button to open dialog to create permissions -->
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            @click="createRole"
-          >
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="createRole">
             Create Role
           </v-btn>
         </div>
@@ -89,27 +80,13 @@
                     Configure roles and their associated permissions
                   </p>
                 </div>
-                <v-text-field
-                  v-model="roleSearch"
-                  prepend-inner-icon="mdi-magnify"
-                  placeholder="Search roles..."
-                  variant="outlined"
-                  density="compact"
-                  single-line
-                  hide-details
-                  class="search-field"
-                  style="max-width: 300px;"
-                ></v-text-field>
+                <v-text-field v-model="roleSearch" prepend-inner-icon="mdi-magnify" placeholder="Search roles..."
+                  variant="outlined" density="compact" single-line hide-details class="search-field"
+                  style="max-width: 300px;"></v-text-field>
               </div>
 
               <v-row>
-                <v-col 
-                  cols="12" 
-                  md="6" 
-                  lg="4" 
-                  v-for="role in filteredRoles" 
-                  :key="role.id"
-                >
+                <v-col cols="12" md="6" lg="4" v-for="role in filteredRoles" :key="role.id">
                   <v-card elevation="1" :class="{ 'border-primary': role.active }" class="h-100">
                     <v-card-title class="d-flex align-center justify-space-between">
                       <div class="d-flex align-center">
@@ -159,39 +136,20 @@
                       <div class="mb-4">
                         <div class="text-subtitle-2 font-weight-medium mb-2">Permissions</div>
                         <v-chip-group>
-                          <v-chip 
-                            v-for="permission in role.permissions.slice(0, 3)" 
-                            :key="permission"
-                            size="small"
-                            color="primary"
-                            variant="tonal"
-                          >
+                          <v-chip v-for="permission in role.permissions.slice(0, 3)" :key="permission" size="small"
+                            color="primary" variant="tonal">
                             {{ permission }}
                           </v-chip>
-                          <v-chip 
-                            v-if="role.permissions.length > 3"
-                            size="small"
-                            variant="outlined"
-                          >
+                          <v-chip v-if="role.permissions.length > 3" size="small" variant="outlined">
                             +{{ role.permissions.length - 3 }} more
                           </v-chip>
                         </v-chip-group>
                       </div>
 
                       <div class="d-flex align-center justify-space-between">
-                        <v-switch
-                          v-model="role.active"
-                          :label="role.active ? 'Active' : 'Inactive'"
-                          color="success"
-                          density="compact"
-                          hide-details
-                          @change="toggleRoleStatus(role)"
-                        ></v-switch>
-                        <v-btn
-                          variant="outlined"
-                          size="small"
-                          @click="viewRoleDetails(role)"
-                        >
+                        <v-switch v-model="role.active" :label="role.active ? 'Active' : 'Inactive'" color="success"
+                          density="compact" hide-details @change="toggleRoleStatus(role)"></v-switch>
+                        <v-btn variant="outlined" size="small" @click="viewRoleDetails(role)">
                           View Details
                         </v-btn>
                       </div>
@@ -204,99 +162,74 @@
             <!-- permissions CRUD tab  -->
             <v-window-item value="permissions">
               <div class="d-flex align-center justify-space-between mb-6">
-              <div>
-                <h2 class="text-h5 font-weight-medium mb-1">Permissions Management</h2>
-                <p class="text-body-2 text-medium-emphasis mb-0">
-                Create, edit, and delete permissions for your organization
-                </p>
-              </div>
-              <v-text-field
-                v-model="permissionSearch"
-                prepend-inner-icon="mdi-magnify"
-                placeholder="Search permissions..."
-                variant="outlined"
-                density="compact"
-                single-line
-                hide-details
-                class="search-field"
-                style="max-width: 300px;"
-              ></v-text-field>
+                <div>
+                  <h2 class="text-h5 font-weight-medium mb-1">Permissions Management</h2>
+                  <p class="text-body-2 text-medium-emphasis mb-0">
+                    Create, edit, and delete permissions for your organization
+                  </p>
+                </div>
+                <v-text-field v-model="permissionSearch" prepend-inner-icon="mdi-magnify"
+                  placeholder="Search permissions..." variant="outlined" density="compact" single-line hide-details
+                  class="search-field" style="max-width: 300px;"></v-text-field>
               </div>
 
               <v-row>
-              <v-col cols="12">
+                <v-col cols="12">
 
-                  <v-btn
-                  color="primary"
-                  prepend-icon="mdi-plus"
-                  class="mb-4"
-                  @click="createPermission"
-                  >
-                  Create Permission
+                  <v-btn color="primary" prepend-icon="mdi-plus" class="mb-4" @click="createPermission">
+                    Create Permission
                   </v-btn>
-                <v-data-table
-                :headers="permissionHeaders"
-                :items="filteredPermissions"
-                :search="permissionSearch"
-                class="elevation-1"
-                :items-per-page="10"
-                >
-                <template v-slot:top>
-                
-                </template>
+                  <v-data-table :headers="permissionHeaders" :items="filteredPermissions" :search="permissionSearch"
+                    class="elevation-1" :items-per-page="10">
+                    <template v-slot:top>
 
-                <template v-slot:item.actions="{ item }">
-                  <v-menu>
-                  <template v-slot:activator="{ props }">
-                    <v-btn icon="mdi-dots-vertical" size="small" variant="text" v-bind="props"></v-btn>
-                  </template>
-                  <v-list>
-                    <v-list-item @click="editPermission(item)">
-                    <template v-slot:prepend>
-                      <v-icon>mdi-pencil</v-icon>
                     </template>
-                    <v-list-item-title>Edit</v-list-item-title>
-                    </v-list-item>
-                    <v-divider></v-divider>
-                    <v-list-item @click="deletePermission(item)" class="text-error">
-                    <template v-slot:prepend>
-                      <v-icon color="error">mdi-delete</v-icon>
+
+                    <template v-slot:item.actions="{ item }">
+                      <v-menu>
+                        <template v-slot:activator="{ props }">
+                          <v-btn icon="mdi-dots-vertical" size="small" variant="text" v-bind="props"></v-btn>
+                        </template>
+                        <v-list>
+                          <v-list-item @click="editPermission(item)">
+                            <template v-slot:prepend>
+                              <v-icon>mdi-pencil</v-icon>
+                            </template>
+                            <v-list-item-title>Edit</v-list-item-title>
+                          </v-list-item>
+                          <v-divider></v-divider>
+                          <v-list-item @click="deletePermission(item)" class="text-error">
+                            <template v-slot:prepend>
+                              <v-icon color="error">mdi-delete</v-icon>
+                            </template>
+                            <v-list-item-title>Delete</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
                     </template>
-                    <v-list-item-title>Delete</v-list-item-title>
-                    </v-list-item>
-                  </v-list>
-                  </v-menu>
-                </template>
-                </v-data-table>
-              </v-col>
+                  </v-data-table>
+                </v-col>
               </v-row>
 
               <!-- Permission Dialog -->
               <v-dialog v-model="permissionDialog" max-width="500">
-              <v-card>
-                <v-card-title>
-                <span class="text-h6">{{ editingPermission ? 'Edit Permission' : 'Create Permission' }}</span>
-                </v-card-title>
-                <v-card-text>
-                <v-text-field
-                  v-model="permissionForm.name"
-                  label="Permission Name"
-                  required
-                  autofocus
-                ></v-text-field>
-                <v-text-field
-                  v-model="permissionForm.description"
-                  label="Description"
-                ></v-text-field>
-                </v-card-text>
-                <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn text @click="permissionDialog = false">Cancel</v-btn>
-                <v-btn color="primary" @click="savePermission">
-                  {{ editingPermission ? 'Save' : 'Create' }}
-                </v-btn>
-                </v-card-actions>
-              </v-card>
+                <v-card>
+                  <v-card-title>
+                    <span class="text-h6">{{ editingPermission ? 'Edit Permission' : 'Create Permission' }}</span>
+                  </v-card-title>
+                  <v-card-text>
+                    <v-text-field v-model="permissionForm.name" label="Permission Name" required
+                      autofocus></v-text-field>
+                    <v-text-field v-model="permissionForm.description" label="Description"></v-text-field>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text @click="permissionDialog = false">Cancel</v-btn>
+                    <v-btn color="primary" @click="savePermission">
+                      {{ editingPermission ? 'Save' : 'Create' }}
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
               </v-dialog>
             </v-window-item>
 
@@ -305,40 +238,21 @@
               <div class="d-flex align-center justify-space-between mb-6">
                 <div>
                   <h2 class="text-h5 font-weight-medium mb-1">User Role Assignments</h2>
-                  <p class="text-body-2 text-medium-emphasis mb-0">
+                  <p class="text-booptdy-2 text-medium-emphasis mb-0">
                     Manage user role assignments and permissions
                   </p>
                 </div>
                 <div class="d-flex gap-2">
-                  <v-select
-                    v-model="selectedRoleFilter"
-                    :items="roleFilterOptions"
-                    placeholder="Filter by role"
-                    variant="outlined"
-                    density="compact"
-                    clearable
-                    style="min-width: 200px;"
-                  ></v-select>
-                  <v-text-field
-                    v-model="userSearch"
-                    prepend-inner-icon="mdi-magnify"
-                    placeholder="Search users..."
-                    variant="outlined"
-                    density="compact"
-                    single-line
-                    hide-details
-                    style="max-width: 300px;"
-                  ></v-text-field>
+                  <v-select v-model="selectedRoleFilter" :items="roleFilterOptions" placeholder="Filter by role"
+                    variant="outlined" density="compact" clearable style="min-width: 200px;"></v-select>
+                  <v-text-field v-model="userSearch" prepend-inner-icon="mdi-magnify" placeholder="Search users..."
+                    variant="outlined" density="compact" single-line hide-details
+                    style="max-width: 300px;"></v-text-field>
                 </div>
               </div>
 
-              <v-data-table
-                :headers="userHeaders"
-                :items="filteredUsers"
-                :search="userSearch"
-                class="elevation-1"
-                :items-per-page="10"
-              >
+              <v-data-table :headers="userHeaders" :items="filteredUsers" :search="userSearch" class="elevation-1"
+                :items-per-page="10">
                 <template v-slot:item.user="{ item }">
                   <div class="d-flex align-center py-2">
                     <v-avatar size="40" class="mr-3">
@@ -352,21 +266,12 @@
                 </template>
 
                 <template v-slot:item.role="{ item }">
-                  <v-select
-                    :model-value="item.role"
-                    :items="roles.map(r => ({ title: r.name, value: r.name }))"
-                    variant="outlined"
-                    density="compact"
-                    @update:model-value="updateUserRole(item, $event)"
-                  ></v-select>
+                  <v-select :model-value="item.role" :items="roles.map(r => ({ title: r.name, value: r.name }))"
+                    variant="outlined" density="compact" @update:model-value="updateUserRole(item, $event)"></v-select>
                 </template>
 
                 <template v-slot:item.status="{ item }">
-                  <v-chip
-                    :color="item.status === 'Active' ? 'success' : 'error'"
-                    size="small"
-                    variant="tonal"
-                  >
+                  <v-chip :color="item.status === 'Active' ? 'success' : 'error'" size="small" variant="tonal">
                     {{ item.status }}
                   </v-chip>
                 </template>
@@ -422,58 +327,52 @@
                   </p>
                 </div>
                 <div class="d-flex gap-2">
-                  <v-select
-                    v-model="auditFilter"
-                    :items="auditFilterOptions"
-                    placeholder="Filter by action"
-                    variant="outlined"
-                    density="compact"
-                    clearable
-                    style="min-width: 200px;"
-                  ></v-select>
+                  <v-select v-model="selectedAction" :items="auditFilterOptions" placeholder="Filter by action"
+                    variant="outlined" density="compact" clearable style="min-width: 200px;"
+                    @update:model-value="updateActionFilter"></v-select>
                   <v-menu v-model="dateMenu">
                     <template v-slot:activator="{ props }">
-                      <v-text-field
-                        v-model="dateRange"
-                        prepend-inner-icon="mdi-calendar"
-                        placeholder="Select date range"
-                        variant="outlined"
-                        density="compact"
-                        readonly
-                        v-bind="props"
-                        style="min-width: 200px;"
-                      ></v-text-field>
+                      <v-text-field v-model="dateRangeText" prepend-inner-icon="mdi-calendar"
+                        placeholder="Select date range" variant="outlined" density="compact" readonly v-bind="props"
+                        style="min-width: 200px;"></v-text-field>
                     </template>
-                    <v-date-picker
-                      v-model="selectedDates"
-                      range
-                      @update:model-value="updateDateRange"
-                    ></v-date-picker>
+                    <v-date-picker v-model="selectedDates" range @update:model-value="updateDateRange"></v-date-picker>
                   </v-menu>
                 </div>
               </div>
 
-              <v-timeline side="end" class="audit-timeline">
-                <v-timeline-item
-                  v-for="log in filteredAuditLogs"
-                  :key="log.id"
-                  :dot-color="getAuditColor(log.action)"
-                  size="small"
-                >
+              <!-- Loading State -->
+              <div v-if="auditStore.loading" class="text-center py-8">
+                <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                <p class="mt-4 text-body-2">Loading audit logs...</p>
+              </div>
+
+              <!-- Error State -->
+              <v-alert v-if="auditStore.error" type="error" class="mb-4" closable
+                @click:close="auditStore.error = null">
+                {{ auditStore.error }}
+              </v-alert>
+
+              <!-- Recent Changes Counter -->
+              <v-chip v-if="auditStore.recentChangesCount > 0" color="info" variant="tonal" class="mb-4">
+                {{ auditStore.recentChangesCount }} changes in the last 24 hours
+              </v-chip>
+
+              <!-- Audit Timeline -->
+              <v-timeline v-if="!auditStore.loading && auditStore.filteredAuditLogs.length > 0" side="end"
+                class="audit-timeline">
+                <v-timeline-item v-for="log in auditStore.filteredAuditLogs" :key="log.id"
+                  :dot-color="auditStore.getAuditColor(log.action)" size="small">
                   <template v-slot:icon>
-                    <v-icon size="16">{{ getAuditIcon(log.action) }}</v-icon>
+                    <v-icon size="16">{{ auditStore.getAuditIcon(log.action) }}</v-icon>
                   </template>
-                  
+
                   <v-card elevation="1" class="mb-4">
                     <v-card-text>
                       <div class="d-flex align-center justify-space-between mb-2">
                         <div class="d-flex align-center">
-                          <v-chip
-                            :color="getAuditColor(log.action)"
-                            size="small"
-                            variant="tonal"
-                            class="mr-2"
-                          >
+                          <v-chip :color="auditStore.getAuditColor(log.action)" size="small" variant="tonal"
+                            class="mr-2">
                             {{ log.action }}
                           </v-chip>
                           <span class="font-weight-medium">{{ log.description }}</span>
@@ -482,18 +381,14 @@
                           {{ formatDateTime(log.timestamp) }}
                         </div>
                       </div>
-                      
+
                       <div class="d-flex align-center">
                         <v-avatar size="24" class="mr-2">
                           <v-img :src="log.user.avatar" :alt="log.user.name"></v-img>
                         </v-avatar>
                         <span class="text-body-2">{{ log.user.name }}</span>
                         <v-spacer></v-spacer>
-                        <v-btn
-                          variant="text"
-                          size="small"
-                          @click="viewAuditDetails(log)"
-                        >
+                        <v-btn variant="text" size="small" @click="viewAuditDetails(log)">
                           View Details
                         </v-btn>
                       </div>
@@ -501,6 +396,87 @@
                   </v-card>
                 </v-timeline-item>
               </v-timeline>
+
+              <!-- Empty State -->
+              <div v-else-if="!auditStore.loading && auditStore.filteredAuditLogs.length === 0"
+                class="text-center py-8">
+                <v-icon size="64" color="grey-lighten-1">mdi-file-document-outline</v-icon>
+                <h3 class="text-h6 mt-4 mb-2">No audit logs found</h3>
+                <!-- <p class="text-body-2 text-medium-emphasis">
+                  {{ auditStore.auditLogs.length === 0 ? 'No audit activity recorded yet.' : 'Try adjusting your
+                  filters.'
+                  }}
+                </p> -->
+                <v-btn v-if="auditStore.filters.action || auditStore.filters.startDate || auditStore.filters.endDate"
+                  variant="outlined" @click="clearAllFilters" class="mt-4">
+                  Clear Filters
+                </v-btn>
+              </div>
+
+              <!-- Audit Details Dialog -->
+              <v-dialog v-model="detailsDialog" max-width="600">
+                <v-card v-if="selectedLog">
+                  <v-card-title class="d-flex align-center">
+                    <v-icon :color="auditStore.getAuditColor(selectedLog.action)" class="mr-2">
+                      {{ auditStore.getAuditIcon(selectedLog.action) }}
+                    </v-icon>
+                    Audit Log Details
+                  </v-card-title>
+
+                  <v-card-text>
+                    <v-row>
+                      <v-col cols="12" sm="6">
+                        <div class="text-caption text-medium-emphasis">Action</div>
+                        <v-chip :color="auditStore.getAuditColor(selectedLog.action)" size="small" variant="tonal">
+                          {{ selectedLog.action }}
+                        </v-chip>
+                      </v-col>
+                      <v-col cols="12" sm="6">
+                        <div class="text-caption text-medium-emphasis">Timestamp</div>
+                        <div class="text-body-2">{{ formatDateTime(selectedLog.timestamp) }}</div>
+                      </v-col>
+                      <v-col cols="12">
+                        <div class="text-caption text-medium-emphasis">Description</div>
+                        <div class="text-body-2">{{ selectedLog.description }}</div>
+                      </v-col>
+                      <v-col cols="12">
+                        <div class="text-caption text-medium-emphasis">User</div>
+                        <div class="d-flex align-center">
+                          <v-avatar size="32" class="mr-2">
+                            <v-img :src="selectedLog.user.avatar" :alt="selectedLog.user.name"></v-img>
+                          </v-avatar>
+                          <div>{{ selectedLog.user.name }}</div>
+                        </div>
+                      </v-col>
+                    </v-row>
+
+                    <!-- Details Section -->
+                    <v-divider class="my-4"></v-divider>
+                    <div class="text-caption text-medium-emphasis mb-2">Change Details</div>
+
+                    <div v-if="selectedLog.details?.attributes">
+                      <div class="text-body-2 font-weight-medium mb-2">New Values:</div>
+                      <v-chip v-for="(value, key) in selectedLog.details.attributes" :key="key" size="small"
+                        variant="outlined" class="mr-1 mb-1">
+                        {{ key }}: {{ value }}
+                      </v-chip>
+                    </div>
+
+                    <div v-if="selectedLog.details?.old" class="mt-3">
+                      <div class="text-body-2 font-weight-medium mb-2">Previous Values:</div>
+                      <v-chip v-for="(value, key) in selectedLog.details.old" :key="key" size="small" variant="outlined"
+                        color="orange" class="mr-1 mb-1">
+                        {{ key }}: {{ value }}
+                      </v-chip>
+                    </div>
+                  </v-card-text>
+
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text @click="detailsDialog = false">Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
             </v-window-item>
           </v-window>
         </v-card-text>
@@ -508,32 +484,32 @@
     </v-container>
 
     <!-- Dialogs -->
-    <RoleDialog
-      v-model="roleDialog"
-      :role="selectedRole"
-      @save="saveRole"
-    />
+    <RoleDialog v-model="roleDialog" :role="selectedRole" @save="saveRole" />
 
-    <UserPermissionDialog
-      v-model="userPermissionDialog"
-      :user="selectedUser"
-    />
+    <UserPermissionDialog v-model="userPermissionDialog" :user="selectedUser" />
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed,onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { usePermissionsStore } from '@/stores/permissions'
 import { useRolesStore } from '@/stores/roles'
 import { useUsersStore } from '@/stores/users'
+import { useAuditStore } from '@/stores/audit'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import RoleDialog from '@/Pages/RoleDialog.vue'
 import UserPermissionDialog from '@/Pages/UserPermissionDialog.vue'
+
+// import { toast } from 'vue3-toastify'
+
+import { notify } from '@/utils/toast'
+
 
 // Initialize Pinia stores
 const permissionsStore = usePermissionsStore()
 const rolesStore = useRolesStore()
 const usersStore = useUsersStore()
+const auditStore = useAuditStore()
 
 // Reactive data for UI
 const activeTab = ref('roles')
@@ -556,6 +532,9 @@ const permissionForm = ref({
   name: '',
   description: ''
 })
+// const roles 
+
+const roles = computed(() => rolesStore.roles)
 
 // Computed properties using store getters
 const stats = computed(() => [
@@ -573,42 +552,20 @@ const filteredUsers = computed(() => usersStore.searchUsers(userSearch.value, se
 
 const roleFilterOptions = computed(() => rolesStore.roleNames)
 
-const auditLogs = ref([
-  {
-    id: 1,
-    action: 'Role Created',
-    description: 'Created new role "Content Moderator"',
-    user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
-    timestamp: new Date('2024-01-15T10:30:00')
-  },
-  {
-    id: 2,
-    action: 'Permission Updated',
-    description: 'Updated permissions for role "Editor"',
-    user: { name: 'John Doe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
-    timestamp: new Date('2024-01-15T09:15:00')
-  }
-])
 
-const auditFilterOptions = ref([
-  'Role Created', 'Role Updated', 'Role Deleted',
-  'Permission Updated', 'User Assigned', 'User Suspended'
-])
-
-const filteredAuditLogs = computed(() => {
-  let filtered = auditLogs.value
-  if (auditFilter.value) {
-    filtered = filtered.filter(log => log.action === auditFilter.value)
-  }
-  if (selectedDates.value.length === 2) {
-    const [start, end] = selectedDates.value
-    filtered = filtered.filter(log => {
-      const logDate = new Date(log.timestamp)
-      return logDate >= start && logDate <= end
-    })
-  }
-  return filtered
+// Computed properties
+const auditFilterOptions = computed(() => {
+  return auditStore.uniqueActions.map(action => ({
+    title: action,
+    value: action
+  }))
 })
+
+
+const updateActionFilter = (action) => {
+  auditStore.setFilters({ action })
+}
+
 
 const permissionHeaders = ref([
   { title: 'Name', key: 'name', sortable: true },
@@ -695,12 +652,20 @@ const savePermission = async () => {
   try {
     if (editingPermission.value) {
       await permissionsStore.updatePermission(permissionForm.value.id, permissionForm.value)
+            notify.updated('Permission')
+
     } else {
       await permissionsStore.createPermission(permissionForm.value)
+            notify.created('Permission')
+
+
     }
     permissionDialog.value = false
   } catch (err) {
+        notify.failed('save permission')
+
     console.error('Failed to save permission:', err)
+
   }
 }
 
@@ -746,13 +711,17 @@ const exportPermissions = () => {
   console.log('Export permissions')
 }
 
-const viewAuditDetails = (log) => {
-  console.log('View audit details:', log)
-}
-
 const updateDateRange = (dates) => {
   if (dates && dates.length === 2) {
-    dateRange.value = `${formatDate(dates[0])} - ${formatDate(dates[1])}`
+    auditStore.setFilters({
+      startDate: dates[0],
+      endDate: dates[1]
+    })
+  } else {
+    auditStore.setFilters({
+      startDate: null,
+      endDate: null
+    })
   }
   dateMenu.value = false
 }
@@ -762,9 +731,29 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString()
 }
 
-const formatDateTime = (date) => {
-  return new Date(date).toLocaleString()
+const formatDateTime = (timestamp) => {
+  return new Date(timestamp).toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  })
 }
+
+
+const clearAllFilters = () => {
+  selectedAction.value = null
+  selectedDates.value = []
+  auditStore.clearFilters()
+}
+
+const viewAuditDetails = (log) => {
+  selectedLog.value = log
+  detailsDialog.value = true
+}
+
 
 const getAuditColor = (action) => {
   const colorMap = {
@@ -796,10 +785,24 @@ onMounted(async () => {
     await Promise.all([
       permissionsStore.fetchPermissions(),
       rolesStore.fetchRoles(),
-      usersStore.fetchUsers()
+      usersStore.fetchUsers(),
+      auditStore.fetchAuditLogs(),
     ])
   } catch (err) {
     console.error('Failed to fetch initial data:', err)
   }
 })
+
+// Watch for filter changes to refetch data
+watch(
+  () => auditStore.filters,
+  async () => {
+    try {
+      await auditStore.fetchAuditLogs()
+    } catch (error) {
+      console.error('Failed to refetch audit logs:', error)
+    }
+  },
+  { deep: true }
+)
 </script>

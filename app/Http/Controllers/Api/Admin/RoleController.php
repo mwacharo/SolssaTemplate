@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Repositories\RoleRepository;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+// use Spatie\Permission\Models\Role;
+use App\Models\Role;
 
 class RoleController extends Controller
 {
@@ -18,8 +19,18 @@ class RoleController extends Controller
 
     public function index()
     {
-        return response()->json($this->roles->all());
+        $roles = Role::with('permissions')->get()->map(function ($role) {
+            return [
+                'id' => $role->id,
+                'name' => $role->name,
+                'permissions' => $role->permissions->pluck('name'),
+            ];
+        });
+
+        return response()->json($roles);
     }
+
+
 
     public function store(Request $request)
     {

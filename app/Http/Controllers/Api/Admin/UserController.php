@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\UserService;
 
 class UserController extends Controller
@@ -19,12 +20,20 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = $this->userService->all();
+        // $users = $this->userService->all();
 
         // Eager load roles and permissions for each user
-        $users->load(['roles', 'permissions']);
+        // $users->load(['roles', 'permissions']);
 
-        return UserResource::collection($users);
+
+            $users=User::with(['roles', 'permissions'])->get();
+
+            return response()->json([
+                'data' => UserResource::collection($users),
+                'message' => 'Users retrieved successfully'
+            ]);
+
+
     }
 
     public function store(UserStoreRequest $request)

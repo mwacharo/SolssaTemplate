@@ -2,10 +2,26 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Models\Role as SpatieRole;
+use Spatie\Permission\Contracts\Role as RoleContract;
+use Spatie\Activitylog\LogOptions;
 
-class Role extends SpatieRole
+
+class Role extends SpatieRole implements RoleContract
 {
+
+
+
+     use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('role')
+            ->logOnly(['name'])
+            ->logOnlyDirty();
+    }
     /**
      * The attributes that are mass assignable.
      *
@@ -27,6 +43,8 @@ class Role extends SpatieRole
      */
     protected $casts = [
         'active' => 'boolean',
+          'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**

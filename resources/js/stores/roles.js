@@ -2,64 +2,16 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { usePermissionsStore } from './permissions'
+import axios from 'axios'
 
 export const useRolesStore = defineStore('roles', () => {
   // State
-  const roles = ref([
-    {
-      id: 1,
-      name: 'Super Admin',
-      description: 'Full system access with all permissions',
-      permissions: ['create', 'read', 'update', 'delete', 'manage_users', 'system_config'],
-      users_count: 2,
-      active: true,
-      color: 'red',
-      icon: 'mdi-shield-crown'
-    },
-    {
-      id: 2,
-      name: 'Admin',
-      description: 'Administrative access with limited system config',
-      permissions: ['create', 'read', 'update', 'delete', 'manage_users'],
-      users_count: 8,
-      active: true,
-      color: 'orange',
-      icon: 'mdi-shield-account'
-    },
-    {
-      id: 3,
-      name: 'Manager',
-      description: 'Team management and reporting capabilities',
-      permissions: ['create', 'read', 'update', 'reports'],
-      users_count: 15,
-      active: true,
-      color: 'blue',
-      icon: 'mdi-account-tie'
-    },
-    {
-      id: 4,
-      name: 'Editor',
-      description: 'Content creation and editing permissions',
-      permissions: ['create', 'read', 'update'],
-      users_count: 32,
-      active: true,
-      color: 'green',
-      icon: 'mdi-pencil'
-    },
-    {
-      id: 5,
-      name: 'Viewer',
-      description: 'Read-only access to system resources',
-      permissions: ['read'],
-      users_count: 189,
-      active: true,
-      color: 'grey',
-      icon: 'mdi-eye'
-    }
-  ])
-
+  const roles = ref([])
   const loading = ref(false)
   const error = ref(null)
+
+  // API base URL - adjust this to match your Laravel API
+  const API_BASE_URL = '/api/v1/admin'
 
   // Getters
   const activeRoles = computed(() => roles.value.filter(role => role.active))
@@ -67,7 +19,7 @@ export const useRolesStore = defineStore('roles', () => {
   const rolesCount = computed(() => roles.value.length)
   
   const totalUsers = computed(() => 
-    roles.value.reduce((sum, role) => sum + role.users_count, 0)
+    roles.value.reduce((sum, role) => sum + (role.users_count || 0), 0)
   )
 
   const getRoleById = computed(() => (id) => 
@@ -84,14 +36,26 @@ export const useRolesStore = defineStore('roles', () => {
 
   const roleNames = computed(() => roles.value.map(role => role.name))
 
+  // Helper function to handle API errors
+  const handleApiError = (err) => {
+    const message = err.response?.data?.message || err.message || 'An error occurred'
+    error.value = message
+    console.error('API Error:', err)
+    return message
+  }
+
   // Actions
   const fetchRoles = async () => {
     try {
       loading.value = true
       error.value = null
-      // API call would go here
+      
+      const response = await axios.get(`${API_BASE_URL}/roles`)
+      roles.value = response.data.data || response.data
+      
+      return roles.value
     } catch (err) {
-      error.value = err.message
+      handleApiError(err)
       throw err
     } finally {
       loading.value = false
@@ -103,18 +67,14 @@ export const useRolesStore = defineStore('roles', () => {
       loading.value = true
       error.value = null
       
-      const newId = Math.max(0, ...roles.value.map(r => r.id)) + 1
-      const newRole = { 
-        ...roleData, 
-        id: newId, 
-        users_count: 0,
-        active: true 
-      }
+      const response = await axios.post(`${API_BASE_URL}/roles`, roleData)
+      const newRole = response.data.data || response.data
+      
       roles.value.push(newRole)
       
       return newRole
     } catch (err) {
-      error.value = err.message
+      handleApiError(err)
       throw err
     } finally {
       loading.value = false
@@ -126,12 +86,17 @@ export const useRolesStore = defineStore('roles', () => {
       loading.value = true
       error.value = null
       
+      const response = await axios.put(`${API_BASE_URL}/roles/${id}`, roleData)
+      const updatedRole = response.data.data || response.data
+      
       const index = roles.value.findIndex(r => r.id === id)
       if (index !== -1) {
-        roles.value[index] = { ...roles.value[index], ...roleData }
+        roles.value[index] = updatedRole
       }
+      
+      return updatedRole
     } catch (err) {
-      error.value = err.message
+      handleApiError(err)
       throw err
     } finally {
       loading.value = false
@@ -143,15 +108,17 @@ export const useRolesStore = defineStore('roles', () => {
       loading.value = true
       error.value = null
       
-      // Check if role has users assigned
-      const role = getRoleById.value(id)
-      if (role && role.users_count > 0) {
-        throw new Error('Cannot delete role with assigned users')
-      }
+      await axios.delete(`${API_BASE_URL}/roles/${id}`)
       
       roles.value = roles.value.filter(r => r.id !== id)
+      
+      return true
     } catch (err) {
-      error.value = err.message
+      const message = handleApiError(err)
+      // Check if error is about users assigned to role
+      if (err.response?.status === 422 || message.includes('users')) {
+        throw new Error('Cannot delete role with assigned users')
+      }
       throw err
     } finally {
       loading.value = false
@@ -165,7 +132,7 @@ export const useRolesStore = defineStore('roles', () => {
         await updateRole(id, { active: !role.active })
       }
     } catch (err) {
-      error.value = err.message
+      handleApiError(err)
       throw err
     }
   }
@@ -175,17 +142,131 @@ export const useRolesStore = defineStore('roles', () => {
       const role = getRoleById.value(id)
       if (role) {
         const duplicatedRole = {
-          ...role,
           name: `${role.name} (Copy)`,
-          users_count: 0
+          description: role.description,
+          permissions: [...(role.permissions || [])],
+          color: role.color,
+          icon: role.icon,
+          active: true
         }
-        delete duplicatedRole.id
         return await createRole(duplicatedRole)
       }
     } catch (err) {
-      error.value = err.message
+      handleApiError(err)
       throw err
     }
+  }
+
+  // Additional role-related API calls
+  const assignRoleToUser = async (userId, roleId) => {
+    try {
+      loading.value = true
+      error.value = null
+      
+      const response = await axios.post(`${API_BASE_URL}/users/${userId}/assign-role`, {
+        role_id: roleId
+      })
+      
+      // Update local user count if role exists
+      const role = getRoleById.value(roleId)
+      if (role) {
+        role.users_count = (role.users_count || 0) + 1
+      }
+      
+      return response.data
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const removeRoleFromUser = async (userId, roleId) => {
+    try {
+      loading.value = true
+      error.value = null
+      
+      const response = await axios.post(`${API_BASE_URL}/users/${userId}/remove-role`, {
+        role_id: roleId
+      })
+      
+      // Update local user count if role exists
+      const role = getRoleById.value(roleId)
+      if (role && role.users_count > 0) {
+        role.users_count = role.users_count - 1
+      }
+      
+      return response.data
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Batch operations
+  const fetchRolesWithUsers = async () => {
+    try {
+      loading.value = true
+      error.value = null
+      
+      const response = await axios.get(`${API_BASE_URL}/roles?with_users=true`)
+      roles.value = response.data.data || response.data
+      
+      return roles.value
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const bulkUpdateRoles = async (updates) => {
+    try {
+      loading.value = true
+      error.value = null
+      
+      const promises = updates.map(({ id, data }) => 
+        axios.put(`${API_BASE_URL}/roles/${id}`, data)
+      )
+      
+      const responses = await Promise.all(promises)
+      
+      // Update local state
+      responses.forEach((response, index) => {
+        const updatedRole = response.data.data || response.data
+        const roleIndex = roles.value.findIndex(r => r.id === updates[index].id)
+        if (roleIndex !== -1) {
+          roles.value[roleIndex] = updatedRole
+        }
+      })
+      
+      return responses.map(r => r.data)
+    } catch (err) {
+      handleApiError(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Initialize store
+  const init = async () => {
+    try {
+      await fetchRoles()
+    } catch (err) {
+      console.warn('Failed to initialize roles store:', err)
+    }
+  }
+
+  // Clear store
+  const clearStore = () => {
+    roles.value = []
+    error.value = null
+    loading.value = false
   }
 
   return {
@@ -193,6 +274,7 @@ export const useRolesStore = defineStore('roles', () => {
     roles,
     loading,
     error,
+    
     // Getters
     activeRoles,
     rolesCount,
@@ -200,13 +282,19 @@ export const useRolesStore = defineStore('roles', () => {
     getRoleById,
     searchRoles,
     roleNames,
+    
     // Actions
     fetchRoles,
     createRole,
     updateRole,
     deleteRole,
     toggleRoleStatus,
-    duplicateRole
+    duplicateRole,
+    assignRoleToUser,
+    removeRoleFromUser,
+    fetchRolesWithUsers,
+    bulkUpdateRoles,
+    init,
+    clearStore
   }
 })
-

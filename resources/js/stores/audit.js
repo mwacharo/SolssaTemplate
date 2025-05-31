@@ -4,44 +4,32 @@ import { ref, computed } from 'vue'
 
 export const useAuditStore = defineStore('audit', () => {
   // State
-  const auditLogs = ref([
-    {
-      id: 1,
-      action: 'Role Created',
-      description: 'Created new role "Content Moderator"',
-      user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
-      timestamp: new Date('2024-01-15T10:30:00'),
-      details: { roleId: 6, roleName: 'Content Moderator' }
-    },
-    {
-      id: 2,
-      action: 'Permission Updated',
-      description: 'Updated permissions for role "Editor"',
-      user: { name: 'John Doe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
-      timestamp: new Date('2024-01-15T09:15:00'),
-      details: { roleId: 4, addedPermissions: ['manage_content'] }
-    },
-    {
-      id: 3,
-      action: 'User Suspended',
-      description: 'Suspended user "Bob Wilson"',
-      user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
-      timestamp: new Date('2024-01-14T15:45:00'),
-      details: { userId: 3, reason: 'Policy violation' }
-    }
-  ])
-
+  const auditLogs = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const filters = ref({
+    action: null,
+    startDate: null,
+    endDate: null
+  })
 
   // Getters
   const recentChangesCount = computed(() => {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    return auditLogs.value.filter(log => log.timestamp > oneDayAgo).length
+    return auditLogs.value.filter(log => new Date(log.timestamp) > oneDayAgo).length
   })
 
   const getAuditColor = computed(() => (action) => {
     const colorMap = {
+      'Created Role': 'success',
+      'Updated Role': 'info',
+      'Deleted Role': 'error',
+      'Created User': 'success',
+      'Updated User': 'info',
+      'Deleted User': 'error',
+      'Created Permission': 'success',
+      'Updated Permission': 'warning',
+      'Deleted Permission': 'error',
       'Role Created': 'success',
       'Role Updated': 'info',
       'Role Deleted': 'error',
@@ -54,6 +42,15 @@ export const useAuditStore = defineStore('audit', () => {
 
   const getAuditIcon = computed(() => (action) => {
     const iconMap = {
+      'Created Role': 'mdi-plus-circle',
+      'Updated Role': 'mdi-pencil-circle',
+      'Deleted Role': 'mdi-delete-circle',
+      'Created User': 'mdi-account-plus',
+      'Updated User': 'mdi-account-edit',
+      'Deleted User': 'mdi-account-remove',
+      'Created Permission': 'mdi-key-plus',
+      'Updated Permission': 'mdi-key-change',
+      'Deleted Permission': 'mdi-key-remove',
       'Role Created': 'mdi-plus-circle',
       'Role Updated': 'mdi-pencil-circle',
       'Role Deleted': 'mdi-delete-circle',
@@ -64,59 +61,125 @@ export const useAuditStore = defineStore('audit', () => {
     return iconMap[action] || 'mdi-information'
   })
 
-  const filterAuditLogs = computed(() => (actionFilter = null, dateRange = null) => {
-    let filtered = auditLogs.value
+  const filteredAuditLogs = computed(() => {
+    let filtered = [...auditLogs.value]
 
-    if (actionFilter) {
-      filtered = filtered.filter(log => log.action === actionFilter)
+    if (filters.value.action) {
+      filtered = filtered.filter(log => log.action === filters.value.action)
     }
 
-    if (dateRange && dateRange.length === 2) {
-      const [startDate, endDate] = dateRange
-      filtered = filtered.filter(log => 
-        log.timestamp >= startDate && log.timestamp <= endDate
-      )
+    if (filters.value.startDate && filters.value.endDate) {
+      const startDate = new Date(filters.value.startDate)
+      const endDate = new Date(filters.value.endDate)
+      filtered = filtered.filter(log => {
+        const logDate = new Date(log.timestamp)
+        return logDate >= startDate && logDate <= endDate
+      })
     }
 
-    return filtered.sort((a, b) => b.timestamp - a.timestamp)
+    return filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  })
+
+  const uniqueActions = computed(() => {
+    const actions = [...new Set(auditLogs.value.map(log => log.action))]
+    return actions.sort()
   })
 
   // Actions
-  const logAction = async (action, description, details = {}) => {
+  const fetchAuditLogs = async (customFilters = {}) => {
     try {
-      const newLog = {
-        id: Math.max(0, ...auditLogs.value.map(l => l.id)) + 1,
-        action,
-        description,
-        user: { 
-          name: 'Current User', // Replace with actual current user
-          avatar: 'https://randomuser.me/api/portraits/men/1.jpg' 
-        },
-        timestamp: new Date(),
-        details
+      loading.value = true
+      error.value = null
+
+      const params = new URLSearchParams()
+      
+      // Apply filters
+      const appliedFilters = { ...filters.value, ...customFilters }
+      
+      if (appliedFilters.action) {
+        params.append('action', appliedFilters.action)
       }
       
-      auditLogs.value.unshift(newLog)
+      if (appliedFilters.startDate) {
+        params.append('start_date', appliedFilters.startDate)
+      }
       
-      // Optional: Send to API
-      // await api.post('/audit-logs', newLog)
+      if (appliedFilters.endDate) {
+        params.append('end_date', appliedFilters.endDate)
+      }
+
+      const queryString = params.toString()
+      const url = `/api/v1/admin/audit-logs${queryString ? `?${queryString}` : ''}`
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          // Add authorization header if needed
+          // 'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audit logs: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      auditLogs.value = data
+
+    } catch (err) {
+      error.value = err.message
+      console.error('Error fetching audit logs:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const setFilters = (newFilters) => {
+    filters.value = { ...filters.value, ...newFilters }
+  }
+
+  const clearFilters = () => {
+    filters.value = {
+      action: null,
+      startDate: null,
+      endDate: null
+    }
+  }
+
+  const refreshLogs = async () => {
+    await fetchAuditLogs()
+  }
+
+  // Legacy method for backwards compatibility
+  const logAction = async (action, description, details = {}) => {
+    try {
+      // This would typically trigger a backend action that gets logged automatically
+      // For now, we'll just refresh the logs to get the latest data
+      console.warn('logAction is deprecated. Backend actions should be logged automatically via Spatie Activity Log')
+      await refreshLogs()
     } catch (err) {
       error.value = err.message
       throw err
     }
   }
 
-  const fetchAuditLogs = async (filters = {}) => {
-    try {
-      loading.value = true
-      error.value = null
-      // API call would go here
-    } catch (err) {
-      error.value = err.message
-      throw err
-    } finally {
-      loading.value = false
-    }
+  // Utility methods
+  const getLogsByDateRange = (startDate, endDate) => {
+    return auditLogs.value.filter(log => {
+      const logDate = new Date(log.timestamp)
+      return logDate >= new Date(startDate) && logDate <= new Date(endDate)
+    })
+  }
+
+  const getLogsByAction = (action) => {
+    return auditLogs.value.filter(log => log.action === action)
+  }
+
+  const getLogsByUser = (userName) => {
+    return auditLogs.value.filter(log => log.user.name === userName)
   }
 
   return {
@@ -124,13 +187,25 @@ export const useAuditStore = defineStore('audit', () => {
     auditLogs,
     loading,
     error,
+    filters,
+    
     // Getters
     recentChangesCount,
     getAuditColor,
     getAuditIcon,
-    filterAuditLogs,
+    filteredAuditLogs,
+    uniqueActions,
+    
     // Actions
-    logAction,
-    fetchAuditLogs
+    fetchAuditLogs,
+    setFilters,
+    clearFilters,
+    refreshLogs,
+    logAction, // Deprecated but kept for backwards compatibility
+    
+    // Utility methods
+    getLogsByDateRange,
+    getLogsByAction,
+    getLogsByUser
   }
 })

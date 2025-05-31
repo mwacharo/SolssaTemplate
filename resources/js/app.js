@@ -6,6 +6,9 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { createPinia } from 'pinia'; // ✅ Import Pinia
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+// toast
+import Vue3Toastify from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css';
 
 // Import Vuetify (not the Vite plugin)
 import 'vuetify/styles';
@@ -95,6 +98,15 @@ createInertiaApp({
       .use(ZiggyVue)
       .use(vuetify) // Now using the properly created Vuetify instance
       .use(pinia) // ✅ Use Pinia
+      .use(Vue3Toastify, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      })
       .mount(el);
   },
   progress: {
