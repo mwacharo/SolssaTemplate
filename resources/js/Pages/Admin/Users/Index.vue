@@ -242,13 +242,29 @@
                     Manage user role assignments and permissions
                   </p>
                 </div>
-                <div class="d-flex gap-2">
-                  <v-select v-model="selectedRoleFilter" :items="roleFilterOptions" placeholder="Filter by role"
-                    variant="outlined" density="compact" clearable style="min-width: 200px;"></v-select>
-                  <v-text-field v-model="userSearch" prepend-inner-icon="mdi-magnify" placeholder="Search users..."
-                    variant="outlined" density="compact" single-line hide-details
-                    style="max-width: 300px;"></v-text-field>
-                </div>
+                <v-container fluid>
+                  <v-row justify="center" class="mb-2">
+                    <v-col cols="12" md="4">
+                      <v-select v-model="selectedRoleFilter" :items="roleFilterOptions" placeholder="Filter by role"
+                        variant="outlined" density="compact" clearable></v-select>
+                    </v-col>
+
+                    <v-col cols="12" md="4">
+                      <v-text-field v-model="userSearch" prepend-inner-icon="mdi-magnify" placeholder="Search users..."
+                        variant="outlined" density="compact" single-line hide-details></v-text-field>
+                    </v-col>
+
+                    <v-col cols="12" md="4">
+                      <v-btn color="primary" prepend-icon="mdi-account-plus" @click="createUser">
+                        Add User
+                      </v-btn>
+                    </v-col>
+
+                 
+
+                  </v-row>
+                </v-container>
+
               </div>
 
               <v-data-table :headers="userHeaders" :items="filteredUsers" :search="userSearch" class="elevation-1"
@@ -294,11 +310,11 @@
                         </template>
                         <v-list-item-title>View Permissions</v-list-item-title>
                       </v-list-item>
-                      <v-list-item @click="editUserRoles(item)">
+                      <v-list-item @click="editUser(item)">
                         <template v-slot:prepend>
                           <v-icon>mdi-pencil</v-icon>
                         </template>
-                        <v-list-item-title>Edit Roles</v-list-item-title>
+                        <v-list-item-title>Edit User</v-list-item-title>
                       </v-list-item>
                       <v-divider></v-divider>
                       <v-list-item @click="suspendUser(item)" :class="{ 'text-error': item.status === 'Active' }">
@@ -311,7 +327,24 @@
                           {{ item.status === 'Active' ? 'Suspend User' : 'Activate User' }}
                         </v-list-item-title>
                       </v-list-item>
+
+                      <v-list-item @click="forceChangePassword(item)">
+                        <template v-slot:prepend>
+                          <v-icon>mdi-lock-reset</v-icon>
+                        </template>
+                        <v-list-item-title>Force Password Change</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item @click="sendResetLink(item)">
+                        <template v-slot:prepend>
+                          <v-icon>mdi-email-send</v-icon>
+                        </template>
+                        <v-list-item-title>Send Reset Link</v-list-item-title>
+                      </v-list-item>
                     </v-list>
+
+
+
+
                   </v-menu>
                 </template>
               </v-data-table>
@@ -487,6 +520,8 @@
     <RoleDialog v-model="roleDialog" :role="selectedRole" @save="saveRole" />
 
     <UserPermissionDialog v-model="userPermissionDialog" :user="selectedUser" />
+
+    <ManageUserDialog v-model="manageUserDialog" :user="selectedUser" @update="updateUserRole" />
   </AppLayout>
 </template>
 
@@ -499,7 +534,7 @@ import { useAuditStore } from '@/stores/audit'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import RoleDialog from '@/Pages/RoleDialog.vue'
 import UserPermissionDialog from '@/Pages/UserPermissionDialog.vue'
-
+import ManageUserDialog from '@/Pages/ManageUserDialog.vue'
 // import { toast } from 'vue3-toastify'
 
 import { notify } from '@/utils/toast'
@@ -524,6 +559,7 @@ const selectedDates = ref([])
 const roleDialog = ref(false)
 const permissionDialog = ref(false)
 const userPermissionDialog = ref(false)
+const manageUserDialog = ref(false)
 const selectedRole = ref(null)
 const selectedUser = ref(null)
 const editingPermission = ref(false)
@@ -652,17 +688,16 @@ const savePermission = async () => {
   try {
     if (editingPermission.value) {
       await permissionsStore.updatePermission(permissionForm.value.id, permissionForm.value)
-            notify.updated('Permission')
+      notify.updated('Permission')
 
     } else {
       await permissionsStore.createPermission(permissionForm.value)
-            notify.created('Permission')
-
+      notify.created('Permission')
 
     }
     permissionDialog.value = false
   } catch (err) {
-        notify.failed('save permission')
+    notify.failed('save permission')
 
     console.error('Failed to save permission:', err)
 
@@ -681,12 +716,13 @@ const deletePermission = async (item) => {
 
 const updateUserRole = async (user, newRole) => {
   try {
-    const role = rolesStore.getRoleById(rolesStore.roles.find(r => r.name === newRole)?.id)
+    const role = rolesStore.roles.find(r => r.name === newRole);
     if (role) {
-      await usersStore.assignRoleToUser(user.id, role.id)
+      // Send the role name
+      await usersStore.assignRoleToUser(user.id, role.name);
     }
   } catch (err) {
-    console.error('Failed to update user role:', err)
+    console.error('Failed to update user role:', err);
   }
 }
 
@@ -695,6 +731,15 @@ const viewUserPermissions = (user) => {
   userPermissionDialog.value = true
 }
 
+
+const createUser = () => {
+  selectedUser.value = null
+  manageUserDialog.value = true
+}
+const editUser = (user) => {
+  selectedUser.value = user
+  manageUserDialog.value = true
+}
 const editUserRoles = (user) => {
   console.log('Edit user roles:', user)
 }
@@ -704,6 +749,25 @@ const suspendUser = async (user) => {
     await usersStore.toggleUserStatus(user.id)
   } catch (err) {
     console.error('Failed to toggle user status:', err)
+  }
+}
+
+const forceChangePassword = async (user) => {
+  try {
+    await usersStore.forcePasswordChange(user.id)
+    notify.success('Password change forced for user')
+  } catch (err) {
+    console.error('Failed to force password change:', err)
+    notify.failed('Failed to force password change')
+  }
+}
+const sendResetLink = async (user) => {
+  try {
+    await usersStore.sendPasswordResetLink(user.email)
+    notify.success('Password reset link sent to user')
+  } catch (err) {
+    console.error('Failed to send password reset link:', err)
+    notify.failed('Failed to send password reset link')
   }
 }
 

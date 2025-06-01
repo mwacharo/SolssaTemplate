@@ -30,7 +30,7 @@ export const useUsersStore = defineStore('users', () => {
   )
 
   const getUsersByRole = computed(() => (roleName) =>
-    users.value.filter(user => 
+    users.value.filter(user =>
       user.roles?.some(role => role.name === roleName) || user.role === roleName
     )
   )
@@ -39,7 +39,7 @@ export const useUsersStore = defineStore('users', () => {
     let filtered = users.value
 
     if (roleFilter) {
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.roles?.some(role => role.name === roleFilter) || user.role === roleFilter
       )
     }
@@ -59,15 +59,15 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const queryParams = {
         page,
         ...params
       }
-      
+
       const response = await axios.get(`${API_BASE_URL}/users`, { params: queryParams })
       const responseData = response.data
-      
+
       // Handle Laravel pagination structure
       if (responseData.data) {
         users.value = responseData.data
@@ -80,7 +80,7 @@ export const useUsersStore = defineStore('users', () => {
       } else {
         users.value = responseData
       }
-      
+
       return responseData
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -94,13 +94,13 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users`, userData)
       const newUser = response.data.data || response.data
-      
+
       // Add to local state
       users.value.push(newUser)
-      
+
       return newUser
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -114,16 +114,16 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.put(`${API_BASE_URL}/users/${userId}`, userData)
       const updatedUser = response.data.data || response.data
-      
+
       // Update local state
       const index = users.value.findIndex(user => user.id == userId)
       if (index !== -1) {
         users.value[index] = updatedUser
       }
-      
+
       return updatedUser
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -137,12 +137,12 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       await axios.delete(`${API_BASE_URL}/users/${userId}`)
-      
+
       // Remove from local state
       users.value = users.value.filter(user => user.id != userId)
-      
+
       return true
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -156,10 +156,10 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.get(`${API_BASE_URL}/users/${userId}`)
       const userData = response.data.data || response.data
-      
+
       return userData
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -170,21 +170,21 @@ export const useUsersStore = defineStore('users', () => {
   }
 
   // Role management methods
-  const assignRoleToUser = async (userId, roleId) => {
+  const assignRoleToUser = async (userId, roleName) => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/assign-role`, {
-        role_id: roleId
+        role: roleName
       })
-      
+
       // Update local user data
       const user = getUserById.value(userId)
       if (user && response.data.data) {
         Object.assign(user, response.data.data)
       }
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -198,17 +198,17 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/remove-role`, {
         role_id: roleId
       })
-      
+
       // Update local user data
       const user = getUserById.value(userId)
       if (user && response.data.data) {
         Object.assign(user, response.data.data)
       }
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -223,17 +223,17 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/assign-permission`, {
         permission_id: permissionId
       })
-      
+
       // Update local user data
       const user = getUserById.value(userId)
       if (user && response.data.data) {
         Object.assign(user, response.data.data)
       }
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -247,17 +247,17 @@ export const useUsersStore = defineStore('users', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/remove-permission`, {
         permission_id: permissionId
       })
-      
+
       // Update local user data
       const user = getUserById.value(userId)
       if (user && response.data.data) {
         Object.assign(user, response.data.data)
       }
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -268,31 +268,29 @@ export const useUsersStore = defineStore('users', () => {
   }
 
   // Legacy method for backward compatibility
-  const updateUserRole = async (userId, roleId) => {
-    return await assignRoleToUser(userId, roleId)
+  const updateUserRole = async (userId, role) => {
+    return await assignRoleToUser(userId, role)
   }
 
   const toggleUserStatus = async (userId) => {
     try {
       loading.value = true
       error.value = null
-      
+
       const user = getUserById.value(userId)
       if (!user) throw new Error('User not found')
-      
+
       const newStatus = user.status === 'active' ? 'inactive' : 'active'
-      
-      const response = await axios.put(`${API_BASE_URL}/users/${userId}`, {
-        status: newStatus
-      })
-      
+
+      const response = await axios.post(`${API_BASE_URL}/${userId}/toggle-status`)
+
       // Update local state
       const updatedUser = response.data.data || response.data
       const index = users.value.findIndex(u => u.id == userId)
       if (index !== -1) {
         users.value[index] = updatedUser
       }
-      
+
       return updatedUser
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -301,6 +299,45 @@ export const useUsersStore = defineStore('users', () => {
       loading.value = false
     }
   }
+  const forcePasswordChange = async (userId) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.post(`${API_BASE_URL}/${userId}/force-password`)
+
+      // Update local user data
+      const user = getUserById.value(userId)
+      if (user && response.data.data) {
+        Object.assign(user, response.data.data)
+      }
+
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+ const sendPasswordResetLink = async (email) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const response = await axios.post(`${API_BASE_URL}/reset-link`, { email })
+
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+  
+
 
   // Reset state
   const resetState = () => {
@@ -339,6 +376,9 @@ export const useUsersStore = defineStore('users', () => {
     removePermissionFromUser,
     updateUserRole, // Legacy method
     toggleUserStatus,
-    resetState
+    resetState,
+    forcePasswordChange,
+    sendPasswordResetLink
+    
   }
 })

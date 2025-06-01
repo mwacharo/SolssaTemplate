@@ -1,12 +1,30 @@
 <script setup>
 import { ref } from 'vue';
+import { computed } from 'vue'
+
+
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
+import { useNavStore } from '@/stores/nav' 
+
+
 
 defineProps({
     title: String,
 });
+
+const navStore = useNavStore()
+
+
+// Assume userRole, userPlan, and enabledFeatures come from auth store or props
+const userRole = 'admin' // e.g., from authStore.user.role
+const userPlan = 'Pro'
+const enabledFeatures = ['reports', 'billing', 'notifications','team-management','integrations',''] // e.g., from authStore.user.features
+
+const navItems = computed(() =>
+  navStore.filteredNavItems(userRole, userPlan, enabledFeatures)
+)
 
 // Navigation drawer control
 const drawer = ref(true);
@@ -57,15 +75,15 @@ const logout = () => {
 };
 
 // Items for navigation menu
-const navItems = [
-  {
-    title: 'Dashboard',
-    route: 'dashboard',
-    icon: 'mdi-view-dashboard',
-  },
+// const navItems = [
+//   {
+//     title: 'Dashboard',
+//     route: 'dashboard',
+//     icon: 'mdi-view-dashboard',
+//   },
 
   
-];
+// ];
 </script>
 
 <template>
@@ -187,7 +205,7 @@ const navItems = [
       </v-menu>
       
       <!-- Teams Dropdown -->
-      <v-menu v-if="$page.props.jetstream.hasTeamFeatures" offset-y>
+      <!-- <v-menu v-if="$page.props.jetstream.hasTeamFeatures" offset-y>
         <template v-slot:activator="{ props }">
           <v-btn variant="text" v-bind="props">
             {{ $page.props.auth.user.current_team.name }}
@@ -225,7 +243,7 @@ const navItems = [
             <v-list-item-title>{{ team.name }}</v-list-item-title>
           </v-list-item>
         </v-list>
-      </v-menu>
+      </v-menu> -->
       
       <!-- User Menu -->
       <v-menu offset-y>

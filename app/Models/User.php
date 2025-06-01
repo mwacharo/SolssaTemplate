@@ -11,11 +11,15 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Spatie\Activitylog\Traits\LogsActivity;
+
+use Spatie\Activitylog\LogOptions;
 
 class User extends Authenticatable
 {
     use HasApiTokens;
     use HasRoles;
+    use LogsActivity;
 
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -24,6 +28,11 @@ class User extends Authenticatable
     use HasTeams;
     use Notifiable;
     use TwoFactorAuthenticatable;
+
+
+
+        protected $guard_name = 'sanctum'; // Important for Spatie permissions
+
 
     /**
      * The attributes that are mass assignable.
@@ -34,6 +43,22 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'client_name',
+        'address',
+        'city',
+        'state',
+        'token',
+        'username',
+        'phone_number',
+        'alt_number',
+        'country_code',
+        'time_zone',
+        'language',
+        'is_active',
+        'last_login_at',
+        'last_login_ip',
+        'two_factor_enabled',
+        'timezone',
     ];
 
     /**
@@ -46,6 +71,7 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
+        'token',
     ];
 
     /**
@@ -68,5 +94,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('user')
+            ->logOnly(['name', 'email', 'is_active']) // add the fields you care about
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) => "User was {$eventName}");
     }
 }

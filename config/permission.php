@@ -2,6 +2,11 @@
 
 return [
 
+    'defaults' => [
+    'guard' => 'sanctum',
+    'cache_key' => 'spatie.permission.cache',
+],
+
     'models' => [
 
         /*

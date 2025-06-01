@@ -11,7 +11,11 @@ class UserUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        // return false;
+            return auth()->check(); // Only allow authenticated users
+
+            // return auth()->user()?->hasRole('admin'); // Only allow admins
+
     }
 
     /**

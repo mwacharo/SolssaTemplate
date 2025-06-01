@@ -8,9 +8,17 @@ use App\Http\Requests\UserUpdateRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\UserService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
+use Stevebauman\Location\Facades\Location;
 
 class UserController extends Controller
 {
+
+
     protected $userService;
 
     public function __construct(UserService $userService)
@@ -57,5 +65,65 @@ class UserController extends Controller
     {
         $this->userService->delete($id);
         return response()->json(['message' => 'User deleted successfully']);
+    }
+
+
+
+     // ✅ Suspend or Reactivate User
+    public function toggleStatus($id)
+    {
+        $user = User::findOrFail($id);
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $status = $user->is_active ? 'Reactivated' : 'Suspended';
+        $this->logActivity("$status user account", $user);
+
+        return response()->json(['message' => "User account {$status}"]);
+    }
+
+    // ✅ Send Password Reset Link
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        $status = Password::sendResetLink(['email' => $request->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => 'Reset link sent.']);
+        }
+
+        return response()->json(['message' => 'Unable to send reset link.'], 400);
+    }
+
+    // ✅ Change Password on Behalf of User
+    public function forceChangePassword(Request $request, $id)
+    {
+        $request->validate(['password' => 'required|min:8|confirmed']);
+        $user = User::findOrFail($id);
+        $user->password = Hash::make($request->password);
+        $user->remember_token = Str::random(60);
+        $user->save();
+
+        $this->logActivity('Password changed by admin', $user);
+        return response()->json(['message' => 'Password updated successfully']);
+    }
+
+    // ✅ Log with Device, IP, Location
+    protected function logActivity($action, $user)
+    {
+        // $location = Location::get(request()->ip());
+
+        activity('user-management')
+            ->causedBy(auth()->user())
+            ->performedOn($user)
+            ->withProperties([
+                'ip' => request()->ip(),
+                'agent' => request()->userAgent(),
+                'location' => [
+                    // 'city' => $location?->cityName,
+                    // 'country' => $location?->countryName,
+                ]
+            ])
+            ->log($action);
     }
 }
