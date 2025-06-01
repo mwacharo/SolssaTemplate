@@ -13,7 +13,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
 
   // Getters
   const permissionsCount = computed(() => permissions.value.length)
-     
+
   const getPermissionById = computed(() => (id) =>
     permissions.value.find(p => p.id === id)
   )
@@ -31,10 +31,10 @@ export const usePermissionsStore = defineStore('permissions', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.get(`${API_BASE_URL}/permissions`)
       permissions.value = response.data.data || response.data
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -48,13 +48,13 @@ export const usePermissionsStore = defineStore('permissions', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/permissions`, permissionData)
       const newPermission = response.data.data || response.data
-      
+
       // Add to local state
       permissions.value.push(newPermission)
-      
+
       return newPermission
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -69,18 +69,18 @@ export const usePermissionsStore = defineStore('permissions', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       // Since update is excluded in your routes, this would need a custom route
       // or you might want to remove this method entirely
       const response = await axios.put(`${API_BASE_URL}/permissions/${id}`, permissionData)
       const updatedPermission = response.data.data || response.data
-      
+
       // Update local state
       const index = permissions.value.findIndex(p => p.id === id)
       if (index !== -1) {
         permissions.value[index] = updatedPermission
       }
-      
+
       return updatedPermission
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -94,12 +94,12 @@ export const usePermissionsStore = defineStore('permissions', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       await axios.delete(`${API_BASE_URL}/permissions/${id}`)
-      
+
       // Remove from local state
       permissions.value = permissions.value.filter(p => p.id !== id)
-      
+
       return true
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -114,11 +114,11 @@ export const usePermissionsStore = defineStore('permissions', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/assign-permission`, {
         permission_id: permissionId
       })
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -132,11 +132,11 @@ export const usePermissionsStore = defineStore('permissions', () => {
     try {
       loading.value = true
       error.value = null
-      
+
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/remove-permission`, {
         permission_id: permissionId
       })
-      
+
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
@@ -152,12 +152,17 @@ export const usePermissionsStore = defineStore('permissions', () => {
     loading.value = false
     error.value = null
   }
+  const clearError = () => {
+    error.value = null
+  }
 
   return {
     // State
     permissions,
     loading,
     error,
+    clearError,
+
     // Getters
     permissionsCount,
     getPermissionById,

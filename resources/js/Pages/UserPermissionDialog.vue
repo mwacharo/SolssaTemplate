@@ -1,10 +1,6 @@
 <template>
-  <v-dialog 
-    :model-value="modelValue" 
-    @update:model-value="$emit('update:modelValue', $event)"
-    max-width="800px"
-    persistent
-  >
+  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="800px"
+    persistent>
     <v-card>
       <v-card-title class="d-flex align-center justify-space-between bg-primary text-white pa-4">
         <div class="d-flex align-center">
@@ -16,12 +12,7 @@
             <div class="text-body-2 opacity-80">{{ user?.email }}</div>
           </div>
         </div>
-        <v-btn 
-          icon="mdi-close" 
-          variant="text" 
-          color="white"
-          @click="closeDialog"
-        ></v-btn>
+        <v-btn icon="mdi-close" variant="text" color="white" @click="closeDialog"></v-btn>
       </v-card-title>
 
       <v-card-text class="pa-0">
@@ -42,6 +33,17 @@
 
         <v-divider></v-divider>
 
+        <!-- Loading Overlay -->
+        <v-overlay :model-value="permissionsStore.loading" contained class="d-flex align-center justify-center">
+          <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
+        </v-overlay>
+
+        <!-- Error Alert -->
+        <v-alert v-if="permissionsStore.error" type="error" variant="tonal" closable class="ma-4"
+          @click:close="permissionsStore.clearError">
+          {{ permissionsStore.error }}
+        </v-alert>
+
         <div class="pa-6">
           <v-window v-model="activeTab">
             <!-- Current Roles Tab -->
@@ -60,16 +62,9 @@
                       Current Role Assignment
                     </v-card-title>
                     <v-card-text>
-                      <v-select
-                        v-model="selectedRole"
-                        :items="availableRoles"
-                        item-title="name"
-                        item-value="name"
-                        label="Primary Role"
-                        variant="outlined"
-                        :prepend-icon="getCurrentRoleIcon()"
-                        @update:model-value="onRoleChange"
-                      >
+                      <v-select v-model="selectedRole" :items="permissionsStore.availableRoles" item-title="name"
+                        item-value="name" label="Primary Role" variant="outlined" :prepend-icon="getCurrentRoleIcon()"
+                        @update:model-value="onRoleChange" :loading="permissionsStore.loading">
                         <template v-slot:item="{ props, item }">
                           <v-list-item v-bind="props">
                             <template v-slot:prepend>
@@ -83,12 +78,7 @@
                         </template>
                       </v-select>
 
-                      <v-alert
-                        v-if="roleChangeWarning"
-                        type="warning"
-                        variant="tonal"
-                        class="mt-3"
-                      >
+                      <v-alert v-if="roleChangeWarning" type="warning" variant="tonal" class="mt-3">
                         <v-alert-title>Role Change Warning</v-alert-title>
                         {{ roleChangeWarning }}
                       </v-alert>
@@ -113,22 +103,17 @@
                           </div>
                         </div>
                       </div>
-                      
+
                       <p class="text-body-2 mb-3">{{ currentRoleDetails.description }}</p>
-                      
+
                       <div>
                         <div class="text-subtitle-2 font-weight-medium mb-2">
-                          Included Permissions ({{ currentRoleDetails.permissions.length }})
+                          Included Permissions ({{ currentRoleDetails.permissions?.length || 0 }})
                         </div>
                         <v-chip-group>
-                          <v-chip
-                            v-for="permission in currentRoleDetails.permissions"
-                            :key="permission"
-                            size="small"
-                            color="primary"
-                            variant="tonal"
-                          >
-                            {{ formatPermission(permission) }}
+                          <v-chip v-for="permission in currentRoleDetails.permissions" :key="permission" size="small"
+                            color="primary" variant="tonal">
+                            {{ permissionsStore.formatPermission(permission) }}
                           </v-chip>
                         </v-chip-group>
                       </div>
@@ -148,13 +133,8 @@
               </div>
 
               <v-row>
-                <v-col 
-                  cols="12" 
-                  sm="6" 
-                  md="4" 
-                  v-for="category in permissionCategories" 
-                  :key="category.name"
-                >
+                <v-col cols="12" sm="6" md="4" v-for="category in permissionsStore.permissionCategories"
+                  :key="category.name">
                   <v-card elevation="1" class="h-100">
                     <v-card-title class="d-flex align-center">
                       <v-icon :color="category.color" class="mr-2">{{ category.icon }}</v-icon>
@@ -162,22 +142,13 @@
                     </v-card-title>
                     <v-card-text>
                       <v-list density="compact">
-                        <v-list-item
-                          v-for="permission in category.permissions"
-                          :key="permission.key"
-                          class="px-0"
-                        >
+                        <v-list-item v-for="permission in category.permissions" :key="permission.key" class="px-0">
                           <template v-slot:prepend>
-                            <v-icon 
-                              :color="hasPermission(permission.key) ? 'success' : 'error'"
-                              size="16"
-                            >
-                              {{ hasPermission(permission.key) ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                            <v-icon :color="hasUserPermission(permission.key) ? 'success' : 'error'" size="16">
+                              {{ hasUserPermission(permission.key) ? 'mdi-check-circle' : 'mdi-close-circle' }}
                             </v-icon>
                           </template>
-                          <v-list-item-title 
-                            :class="{ 'text-medium-emphasis': !hasPermission(permission.key) }"
-                          >
+                          <v-list-item-title :class="{ 'text-medium-emphasis': !hasUserPermission(permission.key) }">
                             {{ permission.name }}
                           </v-list-item-title>
                         </v-list-item>
@@ -192,12 +163,8 @@
                 <v-card-text>
                   <div class="d-flex align-center justify-space-between">
                     <div class="d-flex align-center">
-                      <v-progress-circular
-                        :model-value="permissionCoverage"
-                        :color="getPermissionCoverageColor()"
-                        size="60"
-                        width="6"
-                      >
+                      <v-progress-circular :model-value="permissionCoverage" :color="getPermissionCoverageColor()"
+                        size="60" width="6">
                         <span class="text-caption font-weight-bold">
                           {{ Math.round(permissionCoverage) }}%
                         </span>
@@ -211,11 +178,8 @@
                         </div>
                       </div>
                     </div>
-                    <v-btn
-                      variant="outlined"
-                      prepend-icon="mdi-download"
-                      @click="exportUserPermissions"
-                    >
+                    <v-btn variant="outlined" prepend-icon="mdi-download" @click="exportUserPermissions"
+                      :loading="permissionsStore.loading">
                       Export Report
                     </v-btn>
                   </div>
@@ -233,26 +197,17 @@
               </div>
 
               <v-timeline side="end" density="compact">
-                <v-timeline-item
-                  v-for="change in userHistory"
-                  :key="change.id"
-                  :dot-color="getHistoryColor(change.type)"
-                  size="small"
-                >
+                <v-timeline-item v-for="change in permissionsStore.userHistory" :key="change.id"
+                  :dot-color="getHistoryColor(change.type)" size="small">
                   <template v-slot:icon>
                     <v-icon size="12">{{ getHistoryIcon(change.type) }}</v-icon>
                   </template>
-                  
+
                   <v-card elevation="1" class="mb-3">
                     <v-card-text class="py-3">
                       <div class="d-flex align-center justify-space-between mb-2">
                         <div class="d-flex align-center">
-                          <v-chip
-                            :color="getHistoryColor(change.type)"
-                            size="x-small"
-                            variant="tonal"
-                            class="mr-2"
-                          >
+                          <v-chip :color="getHistoryColor(change.type)" size="x-small" variant="tonal" class="mr-2">
                             {{ change.type }}
                           </v-chip>
                           <span class="text-body-2 font-weight-medium">{{ change.description }}</span>
@@ -261,7 +216,7 @@
                           {{ formatDateTime(change.timestamp) }}
                         </span>
                       </div>
-                      
+
                       <div class="d-flex align-center justify-space-between">
                         <div class="d-flex align-center">
                           <span class="text-caption text-medium-emphasis">Changed by:</span>
@@ -270,11 +225,7 @@
                           </v-avatar>
                           <span class="text-caption">{{ change.changedBy.name }}</span>
                         </div>
-                        <v-btn
-                          variant="text"
-                          size="x-small"
-                          @click="viewChangeDetails(change)"
-                        >
+                        <v-btn variant="text" size="x-small" @click="viewChangeDetails(change)">
                           Details
                         </v-btn>
                       </div>
@@ -283,7 +234,7 @@
                 </v-timeline-item>
               </v-timeline>
 
-              <div v-if="userHistory.length === 0" class="text-center py-8">
+              <div v-if="permissionsStore.userHistory.length === 0" class="text-center py-8">
                 <v-icon size="48" color="medium-emphasis">mdi-history</v-icon>
                 <div class="text-body-1 text-medium-emphasis mt-2">
                   No permission changes recorded for this user
@@ -298,18 +249,10 @@
 
       <v-card-actions class="pa-4">
         <v-spacer></v-spacer>
-        <v-btn
-          variant="outlined"
-          @click="closeDialog"
-        >
+        <v-btn variant="outlined" @click="closeDialog">
           Cancel
         </v-btn>
-        <v-btn
-          color="primary"
-          @click="saveChanges"
-          :loading="saving"
-          :disabled="!hasChanges"
-        >
+        <v-btn color="primary" @click="saveChanges" :loading="permissionsStore.saving" :disabled="!hasChanges">
           Save Changes
         </v-btn>
       </v-card-actions>
@@ -318,7 +261,11 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { usePermissionsStore } from '@/stores/permissions'
+import { useRolesStore } from '@/stores/roles'
+import { useUsersStore } from '@/stores/users'
+import { useAuditStore } from '@/stores'
 
 // Props and emits
 const props = defineProps({
@@ -328,150 +275,24 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
+// Store
+const permissionsStore = usePermissionsStore()
+const rolesStore = useRolesStore()
+const usersStore = useUsersStore() 
+const auditsStore = useAuditStore()
+
 // Reactive data
 const activeTab = ref('roles')
 const selectedRole = ref('')
-const saving = ref(false)
 const roleChangeWarning = ref('')
-
-// Mock data - replace with actual API calls
-const availableRoles = ref([
-  {
-    id: 1,
-    name: 'Super Admin',
-    description: 'Full system access with all permissions',
-    permissions: ['create', 'read', 'update', 'delete', 'manage_users', 'system_config'],
-    users_count: 2,
-    active: true,
-    color: 'red',
-    icon: 'mdi-shield-crown'
-  },
-  {
-    id: 2,
-    name: 'Admin',
-    description: 'Administrative access with limited system config',
-    permissions: ['create', 'read', 'update', 'delete', 'manage_users'],
-    users_count: 8,
-    active: true,
-    color: 'orange',
-    icon: 'mdi-shield-account'
-  },
-  {
-    id: 3,
-    name: 'Manager',
-    description: 'Team management and reporting capabilities',
-    permissions: ['create', 'read', 'update', 'reports'],
-    users_count: 15,
-    active: true,
-    color: 'blue',
-    icon: 'mdi-account-tie'
-  },
-  {
-    id: 4,
-    name: 'Editor',
-    description: 'Content creation and editing permissions',
-    permissions: ['create', 'read', 'update'],
-    users_count: 32,
-    active: true,
-    color: 'green',
-    icon: 'mdi-pencil'
-  },
-  {
-    id: 5,
-    name: 'Viewer',
-    description: 'Read-only access to system resources',
-    permissions: ['read'],
-    users_count: 189,
-    active: true,
-    color: 'grey',
-    icon: 'mdi-eye'
-  }
-])
-
-const permissionCategories = ref([
-  {
-    name: 'Content Management',
-    icon: 'mdi-file-document',
-    color: 'blue',
-    permissions: [
-      { key: 'create', name: 'Create Content' },
-      { key: 'read', name: 'View Content' },
-      { key: 'update', name: 'Edit Content' },
-      { key: 'delete', name: 'Delete Content' }
-    ]
-  },
-  {
-    name: 'User Management',
-    icon: 'mdi-account-group',
-    color: 'green',
-    permissions: [
-      { key: 'manage_users', name: 'Manage Users' },
-      { key: 'assign_roles', name: 'Assign Roles' },
-      { key: 'view_profiles', name: 'View User Profiles' }
-    ]
-  },
-  {
-    name: 'System Administration',
-    icon: 'mdi-cog',
-    color: 'orange',
-    permissions: [
-      { key: 'system_config', name: 'System Configuration' },
-      { key: 'backup_restore', name: 'Backup & Restore' },
-      { key: 'audit_logs', name: 'View Audit Logs' }
-    ]
-  },
-  {
-    name: 'Reports & Analytics',
-    icon: 'mdi-chart-line',
-    color: 'purple',
-    permissions: [
-      { key: 'reports', name: 'Generate Reports' },
-      { key: 'analytics', name: 'View Analytics' },
-      { key: 'export_data', name: 'Export Data' }
-    ]
-  }
-])
-
-const userHistory = ref([
-  {
-    id: 1,
-    type: 'Role Changed',
-    description: 'Role changed from Editor to Manager',
-    timestamp: new Date('2024-01-15T10:30:00'),
-    changedBy: {
-      name: 'Admin User',
-      avatar: 'https://randomuser.me/api/portraits/men/5.jpg'
-    }
-  },
-  {
-    id: 2,
-    type: 'Permission Granted',
-    description: 'Granted additional reporting permissions',
-    timestamp: new Date('2024-01-10T14:20:00'),
-    changedBy: {
-      name: 'John Doe',
-      avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
-    }
-  },
-  {
-    id: 3,
-    type: 'User Created',
-    description: 'User account created with Editor role',
-    timestamp: new Date('2024-01-01T09:00:00'),
-    changedBy: {
-      name: 'System',
-      avatar: 'https://randomuser.me/api/portraits/men/0.jpg'
-    }
-  }
-])
 
 // Computed properties
 const currentRoleDetails = computed(() => {
-  return availableRoles.value.find(role => role.name === selectedRole.value)
+  return rolesStore.getRoleName(selectedRole.value)
 })
 
 const userPermissions = computed(() => {
-  return currentRoleDetails.value?.permissions || []
+  return permissionsStore.getUserPermissions(props.user)
 })
 
 const hasChanges = computed(() => {
@@ -483,14 +304,13 @@ const grantedPermissionsCount = computed(() => {
 })
 
 const totalPermissionsCount = computed(() => {
-  return permissionCategories.value.reduce((total, category) => 
+  return permissionsStore.permissionCategories.reduce((total, category) =>
     total + category.permissions.length, 0
   )
 })
 
 const permissionCoverage = computed(() => {
-  if (totalPermissionsCount.value === 0) return 0
-  return (grantedPermissionsCount.value / totalPermissionsCount.value) * 100
+  return permissionsStore.getPermissionCoverage(props.user)
 })
 
 // Methods
@@ -503,38 +323,42 @@ const resetForm = () => {
   activeTab.value = 'roles'
   selectedRole.value = props.user?.role || ''
   roleChangeWarning.value = ''
+  permissionsStore.clearError()
 }
 
 const saveChanges = async () => {
-  saving.value = true
   try {
-    // Implement save logic here
-    const userData = {
-      ...props.user,
-      role: selectedRole.value
+    if (!props.user?.id) {
+      throw new Error('User ID is required')
     }
-    
-    emit('save', userData)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
+    // Find the role object by name to get the ID
+    const targetRole = rolesStore.RoleNames(selectedRole.value)
+    if (!targetRole) {
+      throw new Error('Selected role not found')
+    }
+
+    // Update user role via store
+    const updatedUser = await permissionsStore.updateUserRole(props.user.id, targetRole.id)
+
+    // Emit save event with updated user data
+    emit('save', updatedUser)
+
     closeDialog()
   } catch (error) {
     console.error('Error saving user permissions:', error)
-  } finally {
-    saving.value = false
+    // Error is already handled by the store and displayed in the UI
   }
 }
 
 const onRoleChange = (newRole) => {
-  const currentRole = availableRoles.value.find(r => r.name === props.user?.role)
-  const targetRole = availableRoles.value.find(r => r.name === newRole)
-  
+  const currentRole = rolesStore.roleNames(props.user?.role)
+  const targetRole = rolesStore.roleNames(newRole)
+
   if (currentRole && targetRole) {
-    const currentPermCount = currentRole.permissions.length
-    const targetPermCount = targetRole.permissions.length
-    
+    const currentPermCount = currentRole.permissions?.length || 0
+    const targetPermCount = targetRole.permissions?.length || 0
+
     if (targetPermCount < currentPermCount) {
       roleChangeWarning.value = `This role change will reduce permissions from ${currentPermCount} to ${targetPermCount}. Some access may be revoked.`
     } else if (targetPermCount > currentPermCount) {
@@ -545,16 +369,12 @@ const onRoleChange = (newRole) => {
   }
 }
 
-const hasPermission = (permissionKey) => {
-  return userPermissions.value.includes(permissionKey)
+const hasUserPermission = (permissionKey) => {
+  return permissionsStore.hasPermission(props.user, permissionKey)
 }
 
 const getCurrentRoleIcon = () => {
   return currentRoleDetails.value?.icon || 'mdi-account'
-}
-
-const formatPermission = (permission) => {
-  return permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }
 
 const getPermissionCoverageColor = () => {
@@ -590,15 +410,34 @@ const formatDateTime = (date) => {
   return new Date(date).toLocaleString()
 }
 
-const exportUserPermissions = () => {
-  // Implement export functionality
-  console.log('Export user permissions for:', props.user?.name)
+const exportUserPermissions = async () => {
+  if (props.user?.id) {
+    try {
+      await permissionsStore.exportUserPermissions(props.user.id)
+    } catch (error) {
+      console.error('Error exporting user permissions:', error)
+    }
+  }
 }
 
 const viewChangeDetails = (change) => {
-  // Show detailed change information
+  // You can implement a detailed view modal here
   console.log('View change details:', change)
 }
+
+// Lifecycle and watchers
+onMounted(async () => {
+  try {
+    // Load initial data when component mounts
+    await Promise.all([
+      usersStore.fetchUsers(props.user?.id),
+      rolesStore.fetchRoles(),
+      permissionsStore.fetchPermissions()
+    ])
+  } catch (error) {
+    console.error('Error loading initial data:', error)
+  }
+})
 
 // Watch for user changes
 watch(() => props.user, (newUser) => {
@@ -607,13 +446,41 @@ watch(() => props.user, (newUser) => {
   }
 }, { immediate: true })
 
-watch(() => props.modelValue, (newValue) => {
+watch(() => props.modelValue, async (newValue) => {
   if (newValue) {
     resetForm()
+
+    // Load user-specific data when dialog opens
+    if (props.user?.id) {
+      try {
+        await Promise.all([
+          usersStore.showUser(props.user.id),
+          auditsStore.fetchAuditLogs(props.user.id)
+        ])
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      }
+    }
   }
 })
 </script>
 
 <style scoped>
 /* Add any custom styles here */
+.v-overlay {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.v-progress-circular {
+  font-size: 12px;
+}
+
+.v-timeline-item {
+  padding-bottom: 16px;
+}
+
+.v-chip-group {
+  max-height: 120px;
+  overflow-y: auto;
+}
 </style>

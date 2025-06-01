@@ -205,7 +205,7 @@ const logout = () => {
       </v-menu>
       
       <!-- Teams Dropdown -->
-      <!-- <v-menu v-if="$page.props.jetstream.hasTeamFeatures" offset-y>
+      <v-menu v-if="$page.props.jetstream.hasTeamFeatures" offset-y>
         <template v-slot:activator="{ props }">
           <v-btn variant="text" v-bind="props">
             {{ $page.props.auth.user.current_team.name }}
@@ -243,7 +243,7 @@ const logout = () => {
             <v-list-item-title>{{ team.name }}</v-list-item-title>
           </v-list-item>
         </v-list>
-      </v-menu> -->
+      </v-menu>
       
       <!-- User Menu -->
       <v-menu offset-y>

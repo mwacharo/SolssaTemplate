@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Team;
+
 
 
 use Spatie\Permission\PermissionRegistrar;
@@ -35,34 +38,31 @@ class UserRolePermissionController extends Controller
     // }
 
 
-    public function assignRole(Request $request, User $user)
-    {
-        $validated = $request->validate([
-            'role' => 'required|string|exists:roles,name',
-        ]);
+  public function assignRole(Request $request, User $user)
+{
+    $validated = $request->validate([
+        'role' => 'required|string|exists:roles,name',
+    ]);
 
-        $role = $validated['role'];
+    $roleName = $validated['role'];
 
-        if ($role === 'Super Admin') {
-            // ✅ Assign globally (no team_id)
-            app(PermissionRegistrar::class)->setPermissionsTeamId(null);
-        } else {
-            // ✅ Assign under current team
-            $teamId = auth()->user()?->current_team_id;
+    // Get current team or fallback to default team_id = 1
+    $team = auth()->user()?->currentTeam ?? Team::find(1);
 
-            if (!$teamId) {
-                return response()->json(['error' => 'No team context found for current user.'], 422);
-            }
-
-            app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
-        }
-
-        $user->assignRole($role);
-
-        return response()->json(['message' => 'Role assigned successfully.']);
+    if (!$team) {
+        return response()->json(['error' => 'No team context found and default team does not exist.'], 422);
     }
 
+    app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
 
+    $user->assignRole($roleName);
+
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    return response()->json([
+        'message' => "Role '{$roleName}' assigned successfully under Team ID {$team->id}."
+    ]);
+}
 
     public function removeRole(Request $request, User $user)
     {

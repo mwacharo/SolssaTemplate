@@ -282,7 +282,9 @@
                 </template>
 
                 <template v-slot:item.role="{ item }">
-                  <v-select :model-value="item.role" :items="roles.map(r => ({ title: r.name, value: r.name }))"
+                  <v-select 
+                :model-value="item.roles[0]"  
+                  :items="roles.map(r => ({ title: r.name, value: r.name }))"
                     variant="outlined" density="compact" @update:model-value="updateUserRole(item, $event)"></v-select>
                 </template>
 

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('city')->nullable()->after('address');
             $table->string('state')->nullable()->after('city');
             $table->string('token')->nullable()->after('state');
-            $table->string('username')->unique()->after('token');
+            $table->string('username')->nullable()->after('token');
             $table->string('phone_number')->nullable()->after('username');
             $table->string('alt_number')->nullable()->after('phone_number');
             $table->string('country_code', 5)->nullable()->after('alt_number');

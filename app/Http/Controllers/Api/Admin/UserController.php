@@ -15,6 +15,9 @@ use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use Stevebauman\Location\Facades\Location;
 
+use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Facades\Auth;
+
 class UserController extends Controller
 {
 
@@ -26,27 +29,52 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
+    // public function index()
+    // {
+    //     // $users = $this->userService->all();
+
+    //     // Eager load roles and permissions for each user
+    //     // $users->load(['roles', 'permissions']);
+
+
+    //         $users=User::with(['roles', 'permissions'])->get();
+
+    //         return response()->json([
+    //             'data' => UserResource::collection($users),
+    //             'message' => 'Users retrieved successfully'
+    //         ]);
+
+
+    // }
+
+
+
     public function index()
-    {
-        // $users = $this->userService->all();
+{
+    // Dynamically get the authenticated user's current team ID or fallback to default (e.g., 1)
+    $teamId = Auth::user()?->currentTeam->id ?? 1;
 
-        // Eager load roles and permissions for each user
-        // $users->load(['roles', 'permissions']);
+    // Set team context for Spatie roles/permissions
+    app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
 
+    // Load users with their roles and permissions under the correct team context
+    $users = User::with(['roles', 'permissions'])->get();
 
-            $users=User::with(['roles', 'permissions'])->get();
-
-            return response()->json([
-                'data' => UserResource::collection($users),
-                'message' => 'Users retrieved successfully'
-            ]);
-
-
-    }
+    return response()->json([
+        'data' => UserResource::collection($users),
+        'message' => 'Users retrieved successfully'
+    ]);
+}
 
     public function store(UserStoreRequest $request)
     {
         $user = $this->userService->create($request->validated());
+
+          $user->ownedTeams()->create([
+        'name' => $user->name . "'s Team",
+        'user_id' => $user->id,
+        'personal_team' => true,
+    ]);
         return new UserResource($user);
     }
 

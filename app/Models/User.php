@@ -31,7 +31,7 @@ class User extends Authenticatable
 
 
 
-        protected $guard_name = 'sanctum'; // Important for Spatie permissions
+    protected $guard_name = 'sanctum'; // Important for Spatie permissions
 
 
     /**

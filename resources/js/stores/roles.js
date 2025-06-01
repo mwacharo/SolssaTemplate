@@ -36,6 +36,10 @@ export const useRolesStore = defineStore('roles', () => {
 
   const roleNames = computed(() => roles.value.map(role => role.name))
 
+  const getRoleName = (roleId) => {
+  return roles.value.find(role => role.id === roleId)?.name
+}
+
   // Helper function to handle API errors
   const handleApiError = (err) => {
     const message = err.response?.data?.message || err.message || 'An error occurred'
@@ -282,6 +286,7 @@ export const useRolesStore = defineStore('roles', () => {
     getRoleById,
     searchRoles,
     roleNames,
+    getRoleName,
     
     // Actions
     fetchRoles,
