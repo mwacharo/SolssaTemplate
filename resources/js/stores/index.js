@@ -5,30 +5,30 @@ import { ref, computed } from 'vue'
 export const useAuditStore = defineStore('audit', () => {
   // State
   const auditLogs = ref([
-    {
-      id: 1,
-      action: 'Role Created',
-      description: 'Created new role "Content Moderator"',
-      user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
-      timestamp: new Date('2024-01-15T10:30:00'),
-      details: { roleId: 6, roleName: 'Content Moderator' }
-    },
-    {
-      id: 2,
-      action: 'Permission Updated',
-      description: 'Updated permissions for role "Editor"',
-      user: { name: 'John Doe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
-      timestamp: new Date('2024-01-15T09:15:00'),
-      details: { roleId: 4, addedPermissions: ['manage_content'] }
-    },
-    {
-      id: 3,
-      action: 'User Suspended',
-      description: 'Suspended user "Bob Wilson"',
-      user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
-      timestamp: new Date('2024-01-14T15:45:00'),
-      details: { userId: 3, reason: 'Policy violation' }
-    }
+    // {
+    //   id: 1,
+    //   action: 'Role Created',
+    //   description: 'Created new role "Content Moderator"',
+    //   user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
+    //   timestamp: new Date('2024-01-15T10:30:00'),
+    //   details: { roleId: 6, roleName: 'Content Moderator' }
+    // },
+    // {
+    //   id: 2,
+    //   action: 'Permission Updated',
+    //   description: 'Updated permissions for role "Editor"',
+    //   user: { name: 'John Doe', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
+    //   timestamp: new Date('2024-01-15T09:15:00'),
+    //   details: { roleId: 4, addedPermissions: ['manage_content'] }
+    // },
+    // {
+    //   id: 3,
+    //   action: 'User Suspended',
+    //   description: 'Suspended user "Bob Wilson"',
+    //   user: { name: 'Admin User', avatar: 'https://randomuser.me/api/portraits/men/5.jpg' },
+    //   timestamp: new Date('2024-01-14T15:45:00'),
+    //   details: { userId: 3, reason: 'Policy violation' }
+    // }
   ])
 
   const loading = ref(false)

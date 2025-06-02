@@ -7,6 +7,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
   const permissions = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const userDirectPermissions = ref([]) // For storing user's direct permissions
 
   // API base URL - adjust according to your setup
   const API_BASE_URL = '/api/v1/admin'
@@ -145,6 +146,23 @@ export const usePermissionsStore = defineStore('permissions', () => {
       loading.value = false
     }
   }
+
+
+
+  // Fetch user's direct permissions (separate from role permissions)
+const fetchUserDirectPermissions = async (userId) => {
+  try {
+    loading.value = true
+    const response = await axios.get(`${API_BASE_URL}/users/${userId}/permissions`)
+    userDirectPermissions.value = response.data.data || response.data
+    return userDirectPermissions.value
+  } catch (err) {
+    error.value = err.response?.data?.message || err.message
+    throw err
+  } finally {
+    loading.value = false
+  }
+}
 
   // Reset state
   const resetState = () => {
