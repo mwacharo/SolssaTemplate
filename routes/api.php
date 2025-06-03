@@ -34,6 +34,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
             Route::post('remove-role', [UserRolePermissionController::class, 'removeRole'])->name('removeRole');
             Route::post('assign-permission', [UserRolePermissionController::class, 'assignPermission'])->name('assignPermission');
             Route::post('remove-permission', [UserRolePermissionController::class, 'removePermission'])->name('removePermission');
+            Route::get('permissions', [UserRolePermissionController::class, 'getUserPermissions'])->name('permissions');
         });
     });
 });

@@ -108,4 +108,15 @@ class UserRolePermissionController extends Controller
 
         return response()->json(['message' => 'Permission removed successfully.']);
     }
+
+
+    // fetch permissions of a user with spatie 
+
+    public function getUserPermissions(User $user)
+    {
+        $permissions = $user->getAllPermissions()->pluck('name');
+
+        return response()->json(['permissions' => $permissions]);
+    }
+
 }

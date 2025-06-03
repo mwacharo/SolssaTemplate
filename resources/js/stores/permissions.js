@@ -16,14 +16,14 @@ export const usePermissionsStore = defineStore('permissions', () => {
   const permissionsCount = computed(() => permissions.value.length)
 
   const getPermissionById = computed(() => (id) =>
-    permissions.value.find(p => p.id === id)
+    permissions.value.find(p => p && p.id === id)
   )
 
   const searchPermissions = computed(() => (searchTerm) => {
     if (!searchTerm) return permissions.value
     return permissions.value.filter(p =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      p && p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p && p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
     )
   })
 
@@ -34,11 +34,12 @@ export const usePermissionsStore = defineStore('permissions', () => {
       error.value = null
 
       const response = await axios.get(`${API_BASE_URL}/permissions`)
-      permissions.value = response.data.data || response.data
+      permissions.value = response.data.data || response.data || []
 
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
+      console.error('Error fetching permissions:', err)
       throw err
     } finally {
       loading.value = false
@@ -53,38 +54,41 @@ export const usePermissionsStore = defineStore('permissions', () => {
       const response = await axios.post(`${API_BASE_URL}/permissions`, permissionData)
       const newPermission = response.data.data || response.data
 
-      // Add to local state
-      permissions.value.push(newPermission)
+      // Add to local state only if we have valid data
+      if (newPermission && newPermission.id) {
+        permissions.value.push(newPermission)
+      }
 
       return newPermission
     } catch (err) {
       error.value = err.response?.data?.message || err.message
+      console.error('Error creating permission:', err)
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  // Note: Update is excluded in your routes, but including for completeness
   const updatePermission = async (id, permissionData) => {
     try {
       loading.value = true
       error.value = null
 
-      // Since update is excluded in your routes, this would need a custom route
-      // or you might want to remove this method entirely
       const response = await axios.put(`${API_BASE_URL}/permissions/${id}`, permissionData)
       const updatedPermission = response.data.data || response.data
 
-      // Update local state
-      const index = permissions.value.findIndex(p => p.id === id)
-      if (index !== -1) {
-        permissions.value[index] = updatedPermission
+      // Update local state only if we have valid data
+      if (updatedPermission && updatedPermission.id) {
+        const index = permissions.value.findIndex(p => p && p.id === id)
+        if (index !== -1) {
+          permissions.value[index] = updatedPermission
+        }
       }
 
       return updatedPermission
     } catch (err) {
       error.value = err.response?.data?.message || err.message
+      console.error('Error updating permission:', err)
       throw err
     } finally {
       loading.value = false
@@ -99,30 +103,55 @@ export const usePermissionsStore = defineStore('permissions', () => {
       await axios.delete(`${API_BASE_URL}/permissions/${id}`)
 
       // Remove from local state
-      permissions.value = permissions.value.filter(p => p.id !== id)
+      permissions.value = permissions.value.filter(p => p && p.id !== id)
 
       return true
     } catch (err) {
       error.value = err.response?.data?.message || err.message
+      console.error('Error deleting permission:', err)
       throw err
     } finally {
       loading.value = false
     }
   }
 
-  // Additional methods for user-permission management
-  const assignPermissionToUser = async (userId, permissionId) => {
+  // Fixed assignPermissionToUser method with proper grant/revoke logic
+  const assignPermissionToUser = async (userId, permissionId, shouldGrant = true) => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await axios.post(`${API_BASE_URL}/users/${userId}/assign-permission`, {
+      const endpoint = shouldGrant ? 'assign-permission' : 'remove-permission'
+      const response = await axios.post(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
         permission_id: permissionId
       })
+
+      // Update local userDirectPermissions state
+      if (shouldGrant) {
+        // Add permission if not already present
+        const existingPermission = userDirectPermissions.value.find(p => 
+          (p && p.id === permissionId) || (p && p.name === permissionId)
+        )
+        if (!existingPermission) {
+          // Find the permission details from the main permissions list
+          const permissionDetail = permissions.value.find(p => 
+            (p && p.id === permissionId) || (p && p.name === permissionId)
+          )
+          if (permissionDetail) {
+            userDirectPermissions.value.push(permissionDetail)
+          }
+        }
+      } else {
+        // Remove permission
+        userDirectPermissions.value = userDirectPermissions.value.filter(p => 
+          p && (p.id !== permissionId && p.name !== permissionId)
+        )
+      }
 
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message
+      console.error(`Error ${shouldGrant ? 'assigning' : 'removing'} permission:`, err)
       throw err
     } finally {
       loading.value = false
@@ -130,68 +159,60 @@ export const usePermissionsStore = defineStore('permissions', () => {
   }
 
   const removePermissionFromUser = async (userId, permissionId) => {
+    return assignPermissionToUser(userId, permissionId, false)
+  }
+
+  // Fetch user's direct permissions (separate from role permissions)
+  const fetchUserDirectPermissions = async (userId) => {
     try {
       loading.value = true
       error.value = null
 
-      const response = await axios.post(`${API_BASE_URL}/users/${userId}/remove-permission`, {
-        permission_id: permissionId
-      })
-
-      return response.data
+      const response = await axios.get(`${API_BASE_URL}/users/${userId}/permissions`)
+      userDirectPermissions.value = response.data.data || response.data || []
+      return userDirectPermissions.value
     } catch (err) {
       error.value = err.response?.data?.message || err.message
+      console.error('Error fetching user direct permissions:', err)
       throw err
     } finally {
       loading.value = false
     }
   }
 
-
-
-  // Fetch user's direct permissions (separate from role permissions)
-const fetchUserDirectPermissions = async (userId) => {
-  try {
-    loading.value = true
-    const response = await axios.get(`${API_BASE_URL}/users/${userId}/permissions`)
-    userDirectPermissions.value = response.data.data || response.data
-    return userDirectPermissions.value
-  } catch (err) {
-    error.value = err.response?.data?.message || err.message
-    throw err
-  } finally {
-    loading.value = false
-  }
-}
-
   // Reset state
   const resetState = () => {
     permissions.value = []
+    userDirectPermissions.value = []
     loading.value = false
     error.value = null
   }
+
   const clearError = () => {
     error.value = null
   }
 
   return {
     // State
+    userDirectPermissions,
     permissions,
     loading,
     error,
-    clearError,
 
     // Getters
     permissionsCount,
     getPermissionById,
     searchPermissions,
+
     // Actions
+    fetchUserDirectPermissions,
     fetchPermissions,
     createPermission,
     updatePermission,
     deletePermission,
     assignPermissionToUser,
     removePermissionFromUser,
-    resetState
+    resetState,
+    clearError
   }
 })
