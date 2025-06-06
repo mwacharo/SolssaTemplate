@@ -38,13 +38,83 @@ class UserRolePermissionController extends Controller
     // }
 
 
-  public function assignRole(Request $request, User $user)
+//   public function assignRole(Request $request, User $user)
+// {
+//     $validated = $request->validate([
+//         'role' => 'required|string|exists:roles,name',
+//     ]);
+
+//     $roleName = $validated['role'];
+
+//     // Get current team or fallback to default team_id = 1
+//     $team = auth()->user()?->currentTeam ?? Team::find(1);
+
+//     if (!$team) {
+//         return response()->json(['error' => 'No team context found and default team does not exist.'], 422);
+//     }
+
+//     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
+
+//     $user->assignRole($roleName);
+
+//     app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+//     return response()->json([
+//         'message' => "Role '{$roleName}' assigned successfully under Team ID {$team->id}."
+//     ]);
+// }
+
+
+
+// public function assignRole(Request $request, User $user)
+// {
+//     $validated = $request->validate([
+//         'role' => 'required|string|exists:roles,name',
+//     ]);
+
+//     $roleName = $validated['role'];
+
+//     // Get current team or fallback to default team_id = 1
+//     $team = auth()->user()?->currentTeam ?? Team::find(1);
+
+//     if (!$team) {
+//         return response()->json(['error' => 'No team context found and default team does not exist.'], 422);
+//     }
+
+//     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
+
+//     // Revoke existing roles and assign the new one
+//     $user->syncRoles($roleName);
+
+//     app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+//     return response()->json([
+//         'message' => "Role '{$roleName}' assigned successfully under Team ID {$team->id}."
+//     ]);
+// }
+
+
+
+public function assignRole(Request $request, User $user)
 {
     $validated = $request->validate([
-        'role' => 'required|string|exists:roles,name',
+        'role' => 'nullable|string|exists:roles,name',
+        'role_id' => 'nullable|integer|exists:roles,id',
     ]);
 
-    $roleName = $validated['role'];
+    if (empty($validated['role']) && empty($validated['role_id'])) {
+        return response()->json([
+            'error' => 'Either role name or role ID must be provided.'
+        ], 422);
+    }
+
+    // Resolve role name
+    if (!empty($validated['role'])) {
+        $roleName = $validated['role'];
+    } else {
+        $role = \Spatie\Permission\Models\Role::find($validated['role_id']);
+        $roleName = $role->name;
+    }
 
     // Get current team or fallback to default team_id = 1
     $team = auth()->user()?->currentTeam ?? Team::find(1);
@@ -55,7 +125,8 @@ class UserRolePermissionController extends Controller
 
     app(PermissionRegistrar::class)->setPermissionsTeamId($team->id);
 
-    $user->assignRole($roleName);
+    // Revoke existing roles and assign the new one
+    $user->syncRoles($roleName);
 
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
@@ -63,6 +134,8 @@ class UserRolePermissionController extends Controller
         'message' => "Role '{$roleName}' assigned successfully under Team ID {$team->id}."
     ]);
 }
+
+
 
     public function removeRole(Request $request, User $user)
     {
@@ -80,20 +153,51 @@ class UserRolePermissionController extends Controller
     }
 
     public function assignPermission(Request $request, User $user)
-    {
-        $validator = Validator::make($request->all(), [
-            'permission' => 'required|string|exists:permissions,name',
-        ]);
+{
+    Log::info('Assigning permission', [
+        'user_id' => $user->id,
+        'request_data' => $request->all(),
+        'performed_by' => auth()->id(),
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    $validator = Validator::make($request->all(), [
+        'permission' => 'sometimes|string|exists:permissions,name',
+        'permission_id' => 'sometimes|integer|exists:permissions,id',
+        'team_id' => 'nullable|integer|exists:teams,id',
+    ]);
 
-        $user->givePermissionTo($request->input('permission'));
-
-        return response()->json(['message' => 'Permission assigned successfully.']);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
 
+    $permissionName = $request->input('permission');
+    if (!$permissionName && $request->filled('permission_id')) {
+        $permission = \Spatie\Permission\Models\Permission::find($request->input('permission_id'));
+        if (!$permission) {
+            return response()->json(['error' => 'Permission not found.'], 404);
+        }
+        $permissionName = $permission->name;
+    }
+
+    if (!$permissionName) {
+        return response()->json(['error' => 'Permission name or id must be provided.'], 422);
+    }
+
+    // ✅ Handle team context dynamically if teams are enabled
+    if (config('permission.teams')) {
+        if ($request->filled('team_id')) {
+            app(PermissionRegistrar::class)->setPermissionsTeamId($request->input('team_id'));
+        } else {
+            // Fallback global team (0 or your default value)
+            $defaultTeamId = config('permission.default_team_id', 0);
+            app(PermissionRegistrar::class)->setPermissionsTeamId($defaultTeamId);
+        }
+    }
+
+    $user->givePermissionTo($permissionName);
+
+    return response()->json(['message' => 'Permission assigned successfully.']);
+}
     public function removePermission(Request $request, User $user)
     {
         $validator = Validator::make($request->all(), [

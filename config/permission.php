@@ -3,9 +3,9 @@
 return [
 
     'defaults' => [
-    'guard' => 'sanctum',
-    'cache_key' => 'spatie.permission.cache',
-],
+        'guard' => 'sanctum',
+        'cache_key' => 'spatie.permission.cache',
+    ],
 
     'models' => [
 
@@ -141,6 +141,10 @@ return [
      */
 
     'teams' => true,
+
+
+    // Optional fallback to avoid NULL insert errors
+    'default_team_id' => 0,
 
     /*
      * The class to use to resolve the permissions team id

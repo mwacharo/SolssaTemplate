@@ -125,9 +125,19 @@ export const usePermissionsStore = defineStore('permissions', () => {
       const response = await axios.post(`${API_BASE_URL}/users/${userId}/${endpoint}`, {
         permission_id: permissionId
       })
+      // console.log('User permissions API response:', response.data)
+
+      console.log('[DEBUG] User Permissions API Response:', JSON.stringify(response.data, null, 2));
+
 
       // Update local userDirectPermissions state
       if (shouldGrant) {
+
+
+        if (!Array.isArray(userDirectPermissions.value)) {
+  userDirectPermissions.value = []
+}
+
         // Add permission if not already present
         const existingPermission = userDirectPermissions.value.find(p => 
           (p && p.id === permissionId) || (p && p.name === permissionId)
@@ -170,6 +180,7 @@ export const usePermissionsStore = defineStore('permissions', () => {
 
       const response = await axios.get(`${API_BASE_URL}/users/${userId}/permissions`)
       userDirectPermissions.value = response.data.data || response.data || []
+      console.log('[DEBUG] userDirectPermissions:', JSON.stringify(userDirectPermissions.value, null, 2))
       return userDirectPermissions.value
     } catch (err) {
       error.value = err.response?.data?.message || err.message

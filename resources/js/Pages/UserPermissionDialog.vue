@@ -498,21 +498,15 @@ const saveChanges = async () => {
     emit('error', 'User ID and role selection are required')
     return
   }
-  
+
   try {
     isSaving.value = true
-    const response = await fetch(`/api/users/${props.user.id}/assign-role`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ role_id: selectedRoleId.value })
+
+    const response = await axios.post(`/api/v1/admin/users/${props.user.id}/assign-role`, {
+      role_id: selectedRoleId.value
     })
-    
-    if (!response.ok) {
-      throw new Error(`Failed to update user role: ${response.statusText}`)
-    }
-    
-    const updatedUser = await response.json()
-    emit('save', updatedUser)
+
+    emit('save', response.data)
     closeDialog()
   } catch (error) {
     handleError(error, 'Error saving user permissions')
