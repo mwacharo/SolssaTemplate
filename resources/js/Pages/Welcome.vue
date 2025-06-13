@@ -50,7 +50,7 @@ const togglePasswordVisibility = () => {
               <v-row justify="center" align="center" class="h-100">
                 <v-col cols="12" sm="8" md="10">
                   <div class="pa-4 pa-md-8 text-center text-md-left">
-                    <h1 class="text-h2 font-weight-bold text-white mb-4">Solssa</h1>
+                    <!-- <h1 class="text-h2 font-weight-bold text-white mb-4">Solssa</h1> -->
                     <h2 class="text-h4 text-white mb-8">Customer Support</h2>
                     <v-btn
                       variant="outlined"

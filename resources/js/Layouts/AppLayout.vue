@@ -1,14 +1,10 @@
 <script setup>
 import { ref } from 'vue';
 import { computed } from 'vue'
-
-
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
 import { useNavStore } from '@/stores/nav' 
-
-
 
 defineProps({
     title: String,
@@ -16,14 +12,34 @@ defineProps({
 
 const navStore = useNavStore()
 
+// For development - enable all features and permissions
+const userRole = 'admin'
+const userPlan = 'Enterprise' // Use Enterprise to see all plan-restricted features
+const enabledFeatures = [
+  'call-center',
+  'team-management', 
+  'reports',
+  'branch-management',
+  'integrations',
+  'billing',
+  'notifications',
+  'audit-trail',
+  'developer-tools',
+  'vendor-management'
+] // All features enabled for development
 
-// Assume userRole, userPlan, and enabledFeatures come from auth store or props
-const userRole = 'admin' // e.g., from authStore.user.role
-const userPlan = 'Pro'
-const enabledFeatures = ['reports', 'billing', 'notifications','team-management','integrations',''] // e.g., from authStore.user.features
+// Mock permissions - include all possible permissions for development
+const userPermissions = [
+  'view branches',
+  'create branches',
+  'manage users',
+  'view reports',
+  'manage settings',
+  'view audit logs'
+] // All permissions for development
 
 const navItems = computed(() =>
-  navStore.filteredNavItems(userRole, userPlan, enabledFeatures)
+  navStore.filteredNavItems(userRole, userPlan, enabledFeatures, userPermissions)
 )
 
 // Navigation drawer control
@@ -74,29 +90,29 @@ const logout = () => {
     router.post(route('logout'));
 };
 
-// Items for navigation menu
-// const navItems = [
-//   {
-//     title: 'Dashboard',
-//     route: 'dashboard',
-//     icon: 'mdi-view-dashboard',
-//   },
+// Expanded groups for navigation
+const expandedGroups = ref([]);
 
-  
-// ];
+const toggleGroup = (groupName) => {
+  const index = expandedGroups.value.indexOf(groupName);
+  if (index === -1) {
+    expandedGroups.value.push(groupName);
+  } else {
+    expandedGroups.value.splice(index, 1);
+  }
+};
+
+const isGroupExpanded = (groupName) => {
+  return expandedGroups.value.includes(groupName);
+};
 </script>
 
 <template>
   <v-app :theme="darkMode ? 'dark' : 'light'">
-
-
-
-
-
     <!-- Navigation Drawer -->
-    <v-navigation-drawer v-model="drawer" app permanent :rail="!drawer" color="primary" :dark="true">
+    <v-navigation-drawer v-model="drawer" app permanent :rail="!drawer" width="280">
       <v-list>
-        <v-list-item class="px-2">
+        <v-list-item class="px-2 py-4">
           <template v-slot:prepend>
             <ApplicationMark height="32" />
           </template>
@@ -110,20 +126,53 @@ const logout = () => {
 
         <v-divider class="my-2"></v-divider>
         
-        <!-- Main Navigation -->
-        <v-list-item 
-          v-for="item in navItems"
-          :key="item.title"
-          :href="route(item.route)"
-          :active="route().current(item.route)"
-          link
-          class="mb-2"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ item.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ item.title }}</v-list-item-title>
-        </v-list-item>
+        <!-- Main Navigation with Expandable Groups -->
+        <template v-for="item in navItems" :key="item.title">
+          <!-- Parent Item -->
+          <v-list-group v-if="item.children && item.children.length > 0">
+            <template v-slot:activator="{ props }">
+              <v-list-item 
+                v-bind="props"
+                :active="route().current(item.route + '*')"
+                class="mb-1"
+              >
+                <template v-slot:prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              </v-list-item>
+            </template>
+            
+            <!-- Child Items -->
+            <v-list-item 
+              v-for="child in item.children"
+              :key="child.title"
+              :href="route(child.route)"
+              :active="route().current(child.route)"
+              link
+              class="ml-4"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">{{ child.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ child.title }}</v-list-item-title>
+            </v-list-item>
+          </v-list-group>
+          
+          <!-- Single Item (no children) -->
+          <v-list-item 
+            v-else
+            :href="route(item.route)"
+            :active="route().current(item.route)"
+            link
+            class="mb-1"
+          >
+            <template v-slot:prepend>
+              <v-icon>{{ item.icon }}</v-icon>
+            </template>
+            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          </v-list-item>
+        </template>
       </v-list>
       
       <template v-slot:append>
@@ -144,26 +193,28 @@ const logout = () => {
         </div>
       </template>
     </v-navigation-drawer>
+    
     <Head :title="title" />
     
     <Banner />
     
     <!-- App Bar -->
-    <v-app-bar color="primary" :dark="darkMode" app flat>
+    <v-app-bar app flat>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       
       <v-app-bar-title>
-        <Link :href="route('dashboard')" class="text-decoration-none" :class="darkMode ? 'text-white' : 'text-primary'">
+        <Link :href="route('dashboard')" class="text-decoration-none text-primary">
           <ApplicationMark class="mr-2" height="32" />
           {{ title }}
         </Link>
-
-
-
-        <!-- /admin/users -->
       </v-app-bar-title>
       
       <v-spacer></v-spacer>
+      
+      <!-- Development Mode Indicator -->
+      <v-chip color="warning" variant="outlined" size="small" class="mr-2">
+        DEV MODE
+      </v-chip>
       
       <!-- Dark Mode Toggle -->
       <v-btn icon @click="toggleDarkMode">
@@ -276,7 +327,6 @@ const logout = () => {
       </v-menu>
     </v-app-bar>
     
-    
     <!-- Page Content -->
     <v-main>
       <!-- Page Heading -->
@@ -293,7 +343,8 @@ const logout = () => {
     <!-- Footer -->
     <v-footer app>
       <div class="text-center w-100">
-        © {{ new Date().getFullYear() }} - Solssa     </div>
+        © {{ new Date().getFullYear() }} - Solssa
+      </div>
     </v-footer>
   </v-app>
 </template>

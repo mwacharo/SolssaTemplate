@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Contact;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,9 +18,17 @@ class DatabaseSeeder extends Seeder
 
 
 
-         // Call the roles and permissions seeder
+        // Call the roles and permissions seeder
         $this->call([
-            RolesAndPermissionsSeeder::class,
+            // RolesAndPermissionsSeeder::class,
+
+            // CountrySeeder::class,
+            // VendorSeeder::class
+            //  GoogleSheetSeeder::class,
+            // TemplateSeeder::class,
+               ContactSeeder::class,
+
+
         ]);
 
         // User::factory(10)->withPersonalTeam()->create();
