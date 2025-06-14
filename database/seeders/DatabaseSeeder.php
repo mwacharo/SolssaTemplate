@@ -26,16 +26,17 @@ class DatabaseSeeder extends Seeder
             // VendorSeeder::class
             //  GoogleSheetSeeder::class,
             // TemplateSeeder::class,
-               ContactSeeder::class,
+            //    ContactSeeder::class,
+            MessageSeeder::class,
 
 
         ]);
 
         // User::factory(10)->withPersonalTeam()->create();
 
-        User::factory()->withPersonalTeam()->create([
-            'name' => 'Mwacharo',
-            'email' => '12345678',
-        ]);
+        // User::factory()->withPersonalTeam()->create([
+        //     'name' => 'Mwacharo',
+        //     'email' => '12345678',
+        // ]);
     }
 }

@@ -227,8 +227,6 @@ import PeakHoursChart from "@/Components/Charts/PeakHoursChart.vue";
 import { usePage } from '@inertiajs/vue3';
 
 
-
-
 const userId = computed(() => usePage().props.user?.id);
 
 onMounted(() => {
