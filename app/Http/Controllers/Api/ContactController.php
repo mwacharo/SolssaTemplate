@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 
 class ContactController extends Controller
@@ -12,7 +13,12 @@ class ContactController extends Controller
      */
     public function index()
     {
-        //
+        $contacts = Contact::latest()->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $contacts,
+        ]);
     }
 
     /**

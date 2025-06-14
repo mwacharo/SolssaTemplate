@@ -1,81 +1,16 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { ref, onMounted, computed, toRefs, watch } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from "@/Layouts/AppLayout.vue";
+import { useWhatsAppStore } from '@/stores/whatsappStore'
 
-// Core state
+// Initialize the store
+const store = useWhatsAppStore()
+
+// Local UI state (not managed by store)
 const selectedPhone = ref(null);
 const dialog = ref(false);
 const conversation = ref([]);
-const search = ref('');
-const messages = ref([]);
-const contacts = ref([]);
-const orders = ref([]);
-const selectedContacts = ref([]);
-const selectedOrders = ref([]);
-const messageText = ref('');
-const templates = ref([]);
-const currentPage = ref(1);
-const perPage = ref(20);
-const totalMessages = ref(0);
-const totalOrders = ref(0);
-
-// UI state
-const showImportDialog = ref(false);
-const showNewMessageDialog = ref(false);
-const showTemplateDialog = ref(false);
-const showOrderImportDialog = ref(false);
-const showOrderMessageDialog = ref(false);
-const showBulkOrderDialog = ref(false);
-const activeTab = ref('messages');
-
-// Loading states
-const loading = ref({
-  messages: false,
-  contacts: false,
-  orders: false,
-  templates: false,
-  sending: false,
-  importing: false,
-  savingTemplate: false,
-  deletingTemplate: false,
-  uploadingOrders: false
-});
-
-// Message states
-const errorMessage = ref('');
-const successMessage = ref('');
-const csvFile = ref(null);
-const orderFile = ref(null);
-
-// Template management
-const newTemplate = ref({
-  name: '',
-  content: '',
-  channel: 'WhatsApp',
-  module: 'Message'
-});
-const selectedTemplate = ref(null);
-const isCreatingTemplate = ref(false);
-
-// Connection status
-const whatsappStatus = ref('Connected');
-const stats = ref({
-  sent: 0,
-  delivered: 0,
-  read: 0,
-  failed: 0,
-  pending: 0,
-  totalOrders: 0,
-  pendingOrders: 0,
-  deliveredOrders: 0
-});
-
-// Filter states
-const filterType = ref('all');
-const filterStatus = ref('all');
-const orderFilterStatus = ref('all');
-const itemsPerPage = ref(10);
 
 // Get user ID
 const userId = computed(() => usePage().props.value.user?.id);
@@ -106,554 +41,137 @@ const orderStatusOptions = [
   { title: 'Cancelled', value: 'cancelled' }
 ];
 
-// Predefined order message templates
-const orderTemplates = [
-  {
-    name: 'Order Confirmation',
-    content: 'Hi {{customer_name}}, your order #{{order_number}} for {{product_name}} worth ${{price}} has been confirmed. We will notify you once shipped. Thank you for choosing our courier service!'
-  },
-  {
-    name: 'Shipping Notification',
-    content: 'Hello {{customer_name}}, great news! Your order #{{order_number}} is now shipped and on its way to you. Track your package with tracking ID: {{tracking_id}}'
-  },
-  {
-    name: 'Delivery Confirmation',
-    content: 'Hi {{customer_name}}, your order #{{order_number}} has been successfully delivered. Thank you for your business! Please rate our service.'
-  },
-  {
-    name: 'Payment Reminder',
-    content: 'Dear {{customer_name}}, this is a reminder that payment for order #{{order_number}} worth ${{price}} is still pending. Please complete payment to avoid delays.'
-  }
-];
-
-// Computed properties
-const filteredContacts = computed(() => {
-  if (!Array.isArray(contacts.value)) return [];
-
-  let filtered = [...contacts.value];
-
-  if (filterType.value !== 'all') {
-    filtered = filtered.filter(contact => contact.type === filterType.value);
-  }
-
-  if (filterStatus.value !== 'all') {
-    filtered = filtered.filter(contact => contact.status === filterStatus.value);
-  }
-
-  return filtered;
-});
-
-const filteredOrders = computed(() => {
-  if (!Array.isArray(orders.value)) return [];
-
-  let filtered = [...orders.value];
-
-  if (orderFilterStatus.value !== 'all') {
-    filtered = filtered.filter(order => order.status === orderFilterStatus.value);
-  }
-
-  return filtered;
-});
-
-const filteredMessages = computed(() => {
-  if (!search.value || !Array.isArray(messages.value)) return messages.value;
-
-  const searchTerm = search.value.toLowerCase();
-  return messages.value.filter(message =>
-    (message.content?.toLowerCase().includes(searchTerm)) ||
-    (message.status?.toLowerCase().includes(searchTerm)) ||
-    (message.recipient_name?.toLowerCase().includes(searchTerm)) ||
-    (message.recipient_phone?.toLowerCase().includes(searchTerm)) ||
-    (message.order_number?.toLowerCase().includes(searchTerm))
-  );
-});
-
-const validWhatsappContacts = computed(() => {
-  if (!Array.isArray(contacts.value)) return [];
-  return contacts.value.filter(contact => contact.whatsapp || contact.alt_phone || contact.phone);
-});
-
-const totalPages = computed(() => Math.ceil(totalMessages.value / perPage.value));
-const totalOrderPages = computed(() => Math.ceil(totalOrders.value / perPage.value));
-
-// Utility functions
-const formatPhoneNumber = (phone) => {
-  if (!phone) return 'Unknown';
-  return phone.replace(/@c\.us$/, '');
-};
-
-const showError = (message) => {
-  errorMessage.value = message;
-  setTimeout(() => {
-    errorMessage.value = '';
-  }, 5000);
-};
-
-const showSuccess = (message) => {
-  successMessage.value = message;
-  setTimeout(() => {
-    successMessage.value = '';
-  }, 5000);
-};
-
-// API functions
-const loadMessages = async (page = 1) => {
-  try {
-    loading.value.messages = true;
-    currentPage.value = page;
-
-    const response = await axios.get(`/api/v1/whatsapp-messages`, {
-      params: {
-        page: page,
-        per_page: perPage.value
-      }
-    });
-
-    if (Array.isArray(response.data.data)) {
-      messages.value = response.data.data;
-      totalMessages.value = response.data.meta?.total || messages.value.length;
-      calculateStats();
-    } else {
-      console.error('Unexpected API response format:', response.data);
-      if (!Array.isArray(messages.value)) {
-        messages.value = [];
-      }
-      showError('Invalid data format received from server');
-    }
-  } catch (error) {
-    console.error('Error loading messages:', error);
-    showError(`Failed to load messages: ${error.response?.data?.message || error.message}`);
-    if (!Array.isArray(messages.value)) {
-      messages.value = [];
-    }
-  } finally {
-    loading.value.messages = false;
-  }
-};
-
-const loadContacts = async () => {
-  try {
-    loading.value.contacts = true;
-    const response = await axios.get('/api/v1/contacts');
-
-    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-      contacts.value = response.data.data.data;
-      console.log('Contacts loaded:', contacts.value.length);
-    } else {
-      console.error('Unexpected API response format:', response.data);
-      if (!Array.isArray(contacts.value) || contacts.value.length === 0) {
-        contacts.value = [];
-      }
-      showError('Invalid contact data format received from server');
-    }
-  } catch (error) {
-    console.error('Error loading contacts:', error);
-    showError(`Failed to load contacts: ${error.response?.data?.message || error.message}`);
-    if (!Array.isArray(contacts.value) || contacts.value.length === 0) {
-      contacts.value = [];
-    }
-  } finally {
-    loading.value.contacts = false;
-  }
-};
-
-const loadOrders = async (page = 1) => {
-  try {
-    loading.value.orders = true;
-    const response = await axios.get('/api/v1/orders', {
-      params: {
-        page: page,
-        per_page: perPage.value
-      }
-    });
-
-    if (Array.isArray(response.data.data)) {
-      orders.value = response.data.data;
-      totalOrders.value = response.data.meta?.total || orders.value.length;
-      calculateOrderStats();
-    } else {
-      console.error('Unexpected API response format:', response.data);
-      if (!Array.isArray(orders.value)) {
-        orders.value = [];
-      }
-      showError('Invalid order data format received from server');
-    }
-  } catch (error) {
-    console.error('Error loading orders:', error);
-    showError(`Failed to load orders: ${error.response?.data?.message || error.message}`);
-    if (!Array.isArray(orders.value)) {
-      orders.value = [];
-    }
-  } finally {
-    loading.value.orders = false;
-  }
-};
-
-const loadTemplates = async () => {
-  try {
-    loading.value.templates = true;
-    const response = await axios.get('/api/v1/templates');
-
-    if (response.data?.data && Array.isArray(response.data.data)) {
-      templates.value = [...response.data.data, ...orderTemplates];
-      console.log('Templates loaded:', templates.value.length);
-    } else {
-      console.error('Unexpected API response format:', response.data);
-      templates.value = [...orderTemplates];
-      showError('Failed to load custom templates, using default order templates');
-    }
-  } catch (error) {
-    console.error('Error loading templates:', error);
-    templates.value = [...orderTemplates];
-    showError('Failed to load custom templates, using default order templates');
-  } finally {
-    loading.value.templates = false;
-  }
-};
-
-// Statistics calculation
-const calculateStats = () => {
-  if (!Array.isArray(messages.value)) {
-    console.error('messages.value is not an array:', messages.value);
-    return;
-  }
-
-  try {
-    const statuses = messages.value.reduce((acc, message) => {
-      const status = (message && message.status && typeof message.status === 'string')
-        ? message.status.toLowerCase()
-        : 'unknown';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {});
-
-    stats.value = {
-      ...stats.value,
-      sent: statuses.sent || 0,
-      delivered: statuses.delivered || 0,
-      read: statuses.read || 0,
-      failed: statuses.failed || 0,
-      pending: statuses.pending || 0
-    };
-  } catch (error) {
-    console.error('Error calculating message stats:', error);
-  }
-};
-
-const calculateOrderStats = () => {
-  if (!Array.isArray(orders.value)) return;
-
-  try {
-    const orderStats = orders.value.reduce((acc, order) => {
-      const status = order.status?.toLowerCase() || 'unknown';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {});
-
-    stats.value = {
-      ...stats.value,
-      totalOrders: orders.value.length,
-      pendingOrders: orderStats.pending || 0,
-      deliveredOrders: orderStats.delivered || 0
-    };
-  } catch (error) {
-    console.error('Error calculating order stats:', error);
-  }
-};
-
-// Template handling
-const onTemplateSelect = (templateId) => {
-  if (!templateId) return;
-
-  const template = templates.value.find(t => t.id === templateId || t.name === templateId);
-  if (template) {
-    messageText.value = template.content;
-    selectedTemplate.value = template;
-  }
-};
-
-// Message sending
-const sendMessage = async () => {
-  if (!messageText.value.trim()) {
-    return showError('Please enter a message');
-  }
-
-  if (!Array.isArray(selectedContacts.value) || selectedContacts.value.length === 0) {
-    return showError('Please select at least one recipient');
-  }
-
-  try {
-    loading.value.sending = true;
-
-    const response = await axios.post('/api/v1/whatsapp-send', {
-      user_id: userId.value,
-      contacts: selectedContacts.value.map(c => ({
-        id: c.id,
-        name: c.name,
-        chatId: c.whatsapp || c.alt_phone || c.phone,
-      })),
-      message: messageText.value,
-      template_id: selectedTemplate.value?.id || null,
-    });
-
-    const now = new Date();
-
-    if (!Array.isArray(messages.value)) {
-      messages.value = [];
-    }
-
-    messages.value.unshift({
-      id: response.data?.id || Date.now(),
-      content: messageText.value,
-      recipients: selectedContacts.value.length,
-      status: 'sent',
-      message_status: 'sent',
-      sent_at: now.toISOString().split('T')[0],
-      created_at: now.toISOString(),
-      recipient_name: selectedContacts.value.map(c => c.name).join(', '),
-      recipient_phone: selectedContacts.value.map(c => c.whatsapp || c.alt_phone || c.phone).join(', '),
-      results: response.data?.results || []
-    });
-
-    stats.value.sent += selectedContacts.value.length;
-    showSuccess(`Message successfully sent to ${selectedContacts.value.length} recipients`);
-
-    messageText.value = '';
-    selectedContacts.value = [];
-    selectedTemplate.value = null;
-    showNewMessageDialog.value = false;
-
-    setTimeout(() => {
-      loadMessages(1);
-    }, 1000);
-
-  } catch (error) {
-    console.error('Error sending message:', error);
-    showError(`Failed to send message: ${error.response?.data?.message || error.message}`);
-  } finally {
-    loading.value.sending = false;
-  }
-};
-
-// Order messaging
-const sendOrderMessage = async () => {
-  if (!messageText.value.trim()) {
-    return showError('Please enter a message');
-  }
-
-  if (!Array.isArray(selectedOrders.value) || selectedOrders.value.length === 0) {
-    return showError('Please select at least one order');
-  }
-
-  try {
-    loading.value.sending = true;
-
-    const response = await axios.post('/api/v1/whatsapp-send-orders', {
-      user_id: userId.value,
-      orders: selectedOrders.value.map(order => ({
-        id: order.id,
-        order_number: order.order_number,
-        customer_name: order.customer_name,
-        customer_phone: order.customer_phone,
-        product_name: order.product_name,
-        price: order.price,
-        tracking_id: order.tracking_id
-      })),
-      message: messageText.value,
-      template_id: selectedTemplate.value?.id || null,
-    });
-
-    showSuccess(`Order messages sent to ${selectedOrders.value.length} customers`);
-
-    messageText.value = '';
-    selectedOrders.value = [];
-    selectedTemplate.value = null;
-    showOrderMessageDialog.value = false;
-
-    setTimeout(() => {
-      loadMessages(1);
-      loadOrders(1);
-    }, 1000);
-
-  } catch (error) {
-    console.error('Error sending order messages:', error);
-    showError(`Failed to send order messages: ${error.response?.data?.message || error.message}`);
-  } finally {
-    loading.value.sending = false;
-  }
-};
-
-// File import functions
-const importContacts = async () => {
-  if (!csvFile.value) {
-    return showError('Please select a CSV file to import');
-  }
-
-  try {
-    loading.value.importing = true;
-
-    const formData = new FormData();
-    formData.append('file', csvFile.value);
-    formData.append('user_id', userId.value);
-
-    const response = await axios.post('/api/v1/contacts/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-
-    if (response.data && response.data.success) {
-      showSuccess(`Successfully imported ${response.data.imported || 'multiple'} contacts`);
-      await loadContacts();
-      showImportDialog.value = false;
-      csvFile.value = null;
-    } else {
-      showError(response.data?.message || 'Import failed');
-    }
-  } catch (error) {
-    console.error('Error importing contacts:', error);
-    showError(`Failed to import contacts: ${error.response?.data?.message || error.message}`);
-  } finally {
-    loading.value.importing = false;
-  }
-};
-
-const importOrders = async () => {
-  if (!orderFile.value) {
-    return showError('Please select an Excel or CSV file to import');
-  }
-
-  try {
-    loading.value.uploadingOrders = true;
-
-    const formData = new FormData();
-    formData.append('file', orderFile.value);
-    formData.append('user_id', userId.value);
-
-    const response = await axios.post('/api/v1/orders/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-
-    if (response.data && response.data.success) {
-      showSuccess(`Successfully imported ${response.data.imported || 'multiple'} orders`);
-      await loadOrders();
-      showOrderImportDialog.value = false;
-      orderFile.value = null;
-    } else {
-      showError(response.data?.message || 'Order import failed');
-    }
-  } catch (error) {
-    console.error('Error importing orders:', error);
-    showError(`Failed to import orders: ${error.response?.data?.message || error.message}`);
-  } finally {
-    loading.value.uploadingOrders = false;
-  }
-};
-
-// Dialog functions
-const openNewMessageDialog = async () => {
-  errorMessage.value = '';
-  messageText.value = '';
-  selectedContacts.value = [];
-  selectedTemplate.value = null;
-
-  if ((!Array.isArray(contacts.value) || contacts.value.length === 0) && !loading.value.contacts) {
-    await loadContacts();
-  }
-
-  if ((!Array.isArray(templates.value) || templates.value.length === 0) && !loading.value.templates) {
-    await loadTemplates();
-  }
-
-  showNewMessageDialog.value = true;
-};
-
-const openOrderMessageDialog = async () => {
-  errorMessage.value = '';
-  messageText.value = '';
-  selectedOrders.value = [];
-  selectedTemplate.value = null;
-
-  if ((!Array.isArray(orders.value) || orders.value.length === 0) && !loading.value.orders) {
-    await loadOrders();
-  }
-
-  if ((!Array.isArray(templates.value) || templates.value.length === 0) && !loading.value.templates) {
-    await loadTemplates();
-  }
-
-  showOrderMessageDialog.value = true;
-};
-
+// Computed properties from store
+const {
+  // Data
+  messages,
+  contacts,
+  orders,
+  templates,
+  selectedContacts,
+  selectedOrders,
+  selectedTemplate,
+  messageText,
+
+  // Pagination
+  currentPage,
+  perPage,
+  totalMessages,
+  totalOrders,
+
+  // Loading states
+  loading,
+
+  // UI states
+  showImportDialog,
+  showNewMessageDialog,
+  showTemplateDialog,
+  showOrderImportDialog,
+  showOrderMessageDialog,
+  activeTab,
+
+  // Filters
+  search,
+  filterType,
+  filterStatus,
+  orderFilters,
+
+  // Messages
+  errorMessage,
+  successMessage,
+
+  // Statistics
+  stats,
+  whatsappStatus,
+
+  // File uploads
+  csvFile,
+  orderFile
+} = toRefs(store)
+
+// Computed properties from store getters
+const filteredContacts = computed(() => store.filteredContacts)
+const filteredOrders = computed(() => store.filteredOrders)
+const filteredMessages = computed(() => store.filteredMessages)
+const validWhatsappContacts = computed(() => store.validWhatsappContacts)
+const totalPages = computed(() => store.totalPages)
+const totalOrderPages = computed(() => store.totalOrderPages)
+const allTemplates = computed(() => store.allTemplates)
+
+// Store action methods
+const showError = (message) => store.showError(message)
+const showSuccess = (message) => store.showSuccess(message)
+const formatPhoneNumber = (phone) => store.formatPhoneNumber(phone)
+const loadMessages = (page = 1) => store.loadMessages(page)
+const loadContacts = () => store.loadContacts()
+const loadOrders = (page = 1) => store.loadOrders(page)
+const loadTemplates = () => store.loadTemplates()
+const calculateStats = () => store.calculateStats()
+const calculateOrderStats = () => store.calculateOrderStats()
+const onTemplateSelect = (templateId) => store.onTemplateSelect(templateId)
+const resetFilters = () => store.resetFilters()
+const sendMessage = () => store.sendMessage(userId.value)
+const sendOrderMessage = () => store.sendOrderMessage(userId.value)
+const importContacts = () => store.importContacts(userId.value)
+const importOrders = () => store.importOrders(userId.value)
+const openNewMessageDialog = () => store.openNewMessageDialog()
+const openOrderMessageDialog = () => store.openOrderMessageDialog()
+const deleteMessage = (messageId) => store.deleteMessage(messageId)
+
+// Local methods (not in store)
+
+const getTotalQuantity = (items) => {
+  return items.reduce((total, item) => total + (item.quantity || 0), 0)
+}
+const formatDate = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 const openSendMessage = (isBulk = false, contact = null) => {
-  errorMessage.value = '';
-  messageText.value = '';
+  store.errorMessage = ''
+  store.messageText = ''
 
   if (isBulk) {
-    selectedContacts.value = selectedContacts.value;
+    store.selectedContacts = store.selectedContacts
   } else if (contact) {
-    selectedContacts.value = [contact];
+    store.selectedContacts = [contact]
   } else {
-    selectedContacts.value = [];
+    store.selectedContacts = []
   }
 
-  if ((!Array.isArray(templates.value) || templates.value.length === 0) && !loading.value.templates) {
-    loadTemplates();
+  if ((!Array.isArray(store.templates) || store.templates.length === 0) && !store.loading.templates) {
+    store.loadTemplates()
   }
 
-  showNewMessageDialog.value = true;
-};
+  store.showNewMessageDialog = true
+}
 
 const viewMessageDetails = (message) => {
-  selectedPhone.value = message.recipient_phone;
-  dialog.value = true;
-  loading.value = true;
+  selectedPhone.value = message.recipient_phone
+  dialog.value = true
+  loading.value.messages = true
 
   axios.get(`/api/v1/messages/chat/${message.recipient_phone}`)
     .then((response) => {
-      conversation.value = response.data;
-      loading.value = false;
+      conversation.value = response.data
+      loading.value.messages = false
     })
     .catch((error) => {
-      console.error("Error loading chat:", error);
-      loading.value = false;
-    });
-};
-
-const deleteMessage = async (messageId) => {
-  if (!messageId) {
-    return showError('Invalid message ID');
-  }
-
-  if (confirm('Are you sure you want to delete this message?')) {
-    try {
-      await axios.delete(`/api/v1/whatsapp-messages/${messageId}`);
-
-      if (Array.isArray(messages.value)) {
-        messages.value = messages.value.filter(msg => msg.id !== messageId);
-        calculateStats();
-      }
-
-      showSuccess('Message deleted successfully');
-    } catch (error) {
-      console.error('Error deleting message:', error);
-      showError(`Failed to delete message: ${error.response?.data?.message || error.message}`);
-    }
-  }
-};
-
-const resetFilters = () => {
-  search.value = '';
-  filterType.value = 'all';
-  filterStatus.value = 'all';
-  orderFilterStatus.value = 'all';
-};
+      console.error("Error loading chat:", error)
+      loading.value.messages = false
+    })
+}
 
 const hasWhatsAppNumber = (contact) => {
-  return Boolean(contact.whatsapp || contact.alt_phone || contact.phone);
-};
+  return Boolean(contact.whatsapp || contact.alt_phone || contact.phone)
+}
 
 const viewContact = (contact) => {
   alert(`Contact: ${contact.name}
@@ -661,30 +179,22 @@ Phone: ${contact.phone || 'N/A'}
 WhatsApp: ${contact.whatsapp || 'N/A'}
 Type: ${contact.type || 'N/A'}
 Company: ${contact.company_name || 'N/A'}
-Country: ${contact.country_name || 'N/A'}`);
-};
+Country: ${contact.country_name || 'N/A'}`)
+}
 
 // Watch for search changes
-watch(search, (newValue) => {
+watch(() => store.search, (newValue) => {
   if (newValue === '') {
-    loadMessages(currentPage.value);
+    store.loadMessages(store.currentPage)
   }
-});
+})
 
 // Component mount
-onMounted(() => {
-  messages.value = [];
-  contacts.value = [];
-  orders.value = [];
-  templates.value = [];
-
-  loadMessages(1);
-  loadContacts();
-  loadOrders(1);
-  loadTemplates();
-});
+onMounted(async () => {
+  // Initialize the store which will load all data
+  await store.initialize()
+})
 </script>
-
 <template>
   <AppLayout>
 
@@ -813,202 +323,327 @@ onMounted(() => {
               </v-tab>
             </v-tabs>
 
-            <!-- Messages Tab -->
-            <v-tab-item value="messages">
-              <v-card-title class="d-flex flex-wrap justify-space-between align-center">
-                <div class="text-h6">Recent Messages</div>
-                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search messages" single-line
-                  hide-details density="compact" class="max-w-xs mt-2 mt-sm-0"></v-text-field>
-              </v-card-title>
+            <v-window v-model="activeTab">
+              <!-- Messages Tab -->
+              <v-window-item value="messages">
+                <v-card-title class="d-flex flex-wrap justify-space-between align-center">
+                  <div class="text-h6">Recent Messages</div>
+                  <v-text-field v-model="search" append-icon="mdi-magnify" label="Search messages" single-line
+                    hide-details density="compact" class="max-w-xs mt-2 mt-sm-0"></v-text-field>
+                </v-card-title>
 
-              <v-card-text>
-                <v-progress-linear v-if="loading.messages" indeterminate color="primary"></v-progress-linear>
+                <v-card-text>
+                  <v-progress-linear v-if="loading.messages" indeterminate color="primary"></v-progress-linear>
 
-                <div v-else-if="!Array.isArray(filteredMessages) || filteredMessages.length === 0"
-                  class="text-center pa-4">
-                  <v-icon size="large" color="grey">mdi-message-text-outline</v-icon>
-                  <p class="text-body-1 mt-2">No messages found. Try sending one!</p>
-                </div>
+                  <div v-else-if="!Array.isArray(filteredMessages) || filteredMessages.length === 0"
+                    class="text-center pa-4">
+                    <v-icon size="large" color="grey">mdi-message-text-outline</v-icon>
+                    <p class="text-body-1 mt-2">No messages found. Try sending one!</p>
+                  </div>
 
-                <v-table v-else>
-                  <thead>
-                    <tr>
-                      <th class="text-left">Content</th>
-                      <th class="text-left">Recipient</th>
-                      <th class="text-left">Order #</th>
-                      <th class="text-left">Status</th>
-                      <th class="text-left">Date</th>
-                      <th class="text-center">Actions</th>
-                    </tr>
+                  <v-table v-else>
+                    <thead>
+                      <tr>
+                        <th class="text-left">Content</th>
+                        <th class="text-left">Recipient</th>
+                        <th class="text-left">Order #</th>
+                        <th class="text-left">Status</th>
+                        <th class="text-left">Date</th>
+                        <th class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="message in filteredMessages" :key="message.id">
+                        <td>
+                          <span>{{ message.content }}</span>
+                        </td>
+                        <td>
+                          <div>{{ message.recipient_name || 'N/A' }}</div>
+                          <div class="text-caption text-grey">
+                            {{ formatPhoneNumber(message.recipient_phone) }}
+                          </div>
+                        </td>
+                        <td>
+                          {{ message.order_number || '-' }}
+                        </td>
+                        <td>
+                          <v-chip :color="{
+                            sent: 'primary',
+                            delivered: 'success',
+                            read: 'info',
+                            failed: 'error',
+                            pending: 'warning'
+                          }[message.status?.toLowerCase()] || 'grey'" small>
+                            {{ message.status || 'Unknown' }}
+                          </v-chip>
+                        </td>
+                        <td>
+                          {{ message.sent_at || message.created_at?.split('T')[0] || '-' }}
+                        </td>
+                        <td class="text-center">
+                          <v-btn icon size="small" @click="viewMessageDetails(message)">
+                            <v-icon>mdi-eye</v-icon>
+                          </v-btn>
+                          <v-btn icon size="small" color="error" @click="deleteMessage(message.id)">
+                            <v-icon>mdi-delete</v-icon>
+                          </v-btn>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </v-table>
 
-                  </thead>
-                  <tbody>
-                    <tr v-for="message in filteredMessages" :key="message.id">
-                      <td>
-                        <span>{{ message.content }}</span>
-                      </td>
-                      <td>
-                        <div>{{ message.recipient_name || 'N/A' }}</div>
-                        <div class="text-caption text-grey">
-                          {{ formatPhoneNumber(message.recipient_phone) }}
-                        </div>
-                      </td>
-                      <td>
-                        {{ message.order_number || '-' }}
-                      </td>
-                      <td>
-                        <v-chip :color="{
-                          sent: 'primary',
-                          delivered: 'success',
-                          read: 'info',
-                          failed: 'error',
-                          pending: 'warning'
-                        }[message.status?.toLowerCase()] || 'grey'" small>
-                          {{ message.status || 'Unknown' }}
-                        </v-chip>
-                      </td>
-                      <td>
-                        {{ message.sent_at || message.created_at?.split('T')[0] || '-' }}
-                      </td>
-                      <td class="text-center">
-                        <v-btn icon size="small" @click="viewMessageDetails(message)">
-                          <v-icon>mdi-eye</v-icon>
+                  <!-- Pagination -->
+                  <div class="d-flex justify-end mt-4">
+                    <v-pagination v-model="currentPage" :length="totalPages" @input="loadMessages"></v-pagination>
+                  </div>
+                </v-card-text>
+              </v-window-item>
+
+              <!-- Orders Tab -->
+              <v-window-item value="orders">
+                <v-card-title class="d-flex flex-wrap justify-space-between align-center">
+                  <div class="text-h6">Orders</div>
+                  <div class="d-flex align-center gap-2">
+                    <v-select v-model="orderFilterStatus" :items="orderStatusOptions" item-title="title"
+                      item-value="value" label="Filter by Status" hide-details density="compact"
+                      class="max-w-xs"></v-select>
+                    <v-btn icon @click="loadOrders" :loading="loading.orders">
+                      <v-icon>mdi-refresh</v-icon>
+                    </v-btn>
+                  </div>
+                </v-card-title>
+
+
+
+
+                <!-- Bulk Actions Bar -->
+                <v-card-text v-if="selectedOrders.length > 0" class="py-2">
+                  <v-alert type="info" variant="tonal" class="mb-0">
+                    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                      <div class="d-flex align-center gap-2">
+                        <v-icon>mdi-checkbox-marked</v-icon>
+                        <span>{{ selectedOrders.length }} order(s) selected</span>
+                        <v-btn variant="text" size="small" @click="clearSelection">
+                          Clear Selection
                         </v-btn>
-                        <v-btn icon size="small" color="error" @click="deleteMessage(message.id)">
-                          <v-icon>mdi-delete</v-icon>
-                        </v-btn>
-                      </td>
-                    </tr>
-                  </tbody>
-                </v-table>
+                      </div>
 
-                <!-- Pagination -->
-                <div class="d-flex justify-end mt-4">
-                  <v-pagination v-model="currentPage" :length="totalPages" @input="loadMessages"></v-pagination>
-                </div>
-              </v-card-text>
-            </v-tab-item>
-
-            <!-- Orders Tab -->
-            <v-tab-item value="orders">
-              <v-card-title class="d-flex flex-wrap justify-space-between align-center">
-                <div class="text-h6">Orders</div>
-                <v-select v-model="orderFilterStatus" :items="orderStatusOptions" item-title="title" item-value="value"
-                  label="Filter by Status" hide-details density="compact" class="max-w-xs mt-2 mt-sm-0"></v-select>
-              </v-card-title>
-              <v-card-text>
-                <v-progress-linear v-if="loading.orders" indeterminate color="primary"></v-progress-linear>
-                <div v-else-if="!Array.isArray(filteredOrders) || filteredOrders.length === 0" class="text-center pa-4">
-                  <v-icon size="large" color="grey">mdi-package-variant</v-icon>
-                  <p class="text-body-1 mt-2">No orders found.</p>
-                </div>
-                <v-table v-else>
-                  <thead>
-                    <tr>
-                      <th>Order #</th>
-                      <th>Customer</th>
-                      <th>Status</th>
-                      <th>Product</th>
-                      <th>Price</th>
-                      <th>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="order in filteredOrders" :key="order.id">
-                      <td>{{ order.order_number }}</td>
-                      <td>
-                        <div>{{ order.customer_name }}</div>
-                        <div class="text-caption text-grey">
-                          {{ formatPhoneNumber(order.customer_phone) }}
-                        </div>
-                      </td>
-                      <td>
-                        <v-chip :color="{
-                          pending: 'warning',
-                          processing: 'primary',
-                          shipped: 'info',
-                          delivered: 'success',
-                          cancelled: 'error'
-                        }[order.status?.toLowerCase()] || 'grey'" small>
-                          {{ order.status || 'Unknown' }}
-                        </v-chip>
-                      </td>
-                      <td>{{ order.product_name }}</td>
-                      <td>${{ order.price }}</td>
-                      <td>{{ order.created_at?.split('T')[0] || '-' }}</td>
-                    </tr>
-                  </tbody>
-                </v-table>
-                <div class="d-flex justify-end mt-4">
-                  <v-pagination v-model="currentPage" :length="totalOrderPages" @input="loadOrders"></v-pagination>
-                </div>
-              </v-card-text>
-            </v-tab-item>
-
-            <!-- Contacts Tab -->
-            <v-tab-item value="contacts">
-              <v-card-title class="d-flex flex-wrap justify-space-between align-center">
-                <div class="text-h6">Contacts</div>
-                <div class="d-flex">
-                  <v-select v-model="filterType" :items="contactTypes" item-title="title" item-value="value"
-                    label="Type" hide-details density="compact" class="mr-2"></v-select>
-                  <v-select v-model="filterStatus" :items="statusOptions" item-title="title" item-value="value"
-                    label="Status" hide-details density="compact"></v-select>
-                  <v-btn icon class="ml-2" @click="resetFilters">
-                    <v-icon>mdi-filter-remove</v-icon>
-                  </v-btn>
-                </div>
-              </v-card-title>
-              <v-card-text>
-                <v-progress-linear v-if="loading.contacts" indeterminate color="primary"></v-progress-linear>
-                <div v-else-if="!Array.isArray(filteredContacts) || filteredContacts.length === 0"
-                  class="text-center pa-4">
-                  <v-icon size="large" color="grey">mdi-account-multiple</v-icon>
-                  <p class="text-body-1 mt-2">No contacts found.</p>
-                </div>
-                <v-table v-else>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Phone</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Company</th>
-                      <th>Country</th>
-                      <th class="text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="contact in filteredContacts" :key="contact.id">
-                      <td>{{ contact.name }}</td>
-                      <td>
-                        <div>{{ formatPhoneNumber(contact.phone) }}</div>
-                        <div v-if="contact.whatsapp" class="text-caption text-success">
-                          WhatsApp: {{ formatPhoneNumber(contact.whatsapp) }}
-                        </div>
-                      </td>
-                      <td>{{ contact.type || '-' }}</td>
-                      <td>
-                        <v-chip :color="contact.status === 1 ? 'success' : 'grey'" small>
-                          {{ contact.status === 1 ? 'Active' : 'Inactive' }}
-                        </v-chip>
-                      </td>
-                      <td>{{ contact.company_name || '-' }}</td>
-                      <td>{{ contact.country_name || '-' }}</td>
-                      <td class="text-center">
-                        <v-btn icon size="small" @click="viewContact(contact)">
-                          <v-icon>mdi-eye</v-icon>
+                      <div class="d-flex align-center gap-2 flex-wrap">
+                        <!-- Bulk Delete -->
+                        <v-btn color="error" variant="outlined" size="small" @click="showBulkDeleteDialog = true"
+                          :loading="loading.bulkActions">
+                          <v-icon start>mdi-delete</v-icon>
+                          Delete Selected
                         </v-btn>
-                        <v-btn icon size="small" color="primary" :disabled="!hasWhatsAppNumber(contact)"
-                          @click="openSendMessage(false, contact)">
-                          <v-icon>mdi-whatsapp</v-icon>
+
+                        <!-- Bulk Assign Rider -->
+                        <v-btn color="primary" variant="outlined" size="small" @click="showAssignRiderDialog = true"
+                          :loading="loading.bulkActions">
+                          <v-icon start>mdi-motorbike</v-icon>
+                          Assign Rider
                         </v-btn>
-                      </td>
-                    </tr>
-                  </tbody>
-                </v-table>
-              </v-card-text>
-            </v-tab-item>
+
+                        <!-- Bulk Send Messages -->
+                        <v-btn color="success" variant="outlined" size="small" @click="showBulkMessageDialog = true"
+                          :loading="loading.bulkActions">
+                          <v-icon start>mdi-whatsapp</v-icon>
+                          Send Messages
+                        </v-btn>
+
+                        <!-- Bulk Status Update -->
+                        <v-btn color="warning" variant="outlined" size="small" @click="showBulkStatusDialog = true"
+                          :loading="loading.bulkActions">
+                          <v-icon start>mdi-update</v-icon>
+                          Update Status
+                        </v-btn>
+                      </div>
+                    </div>
+                  </v-alert>
+                </v-card-text>
+
+                <v-card-text>
+                  <v-progress-linear v-if="loading.orders" indeterminate color="primary"></v-progress-linear>
+
+                  <div v-else-if="!Array.isArray(filteredOrders) || filteredOrders.length === 0"
+                    class="text-center pa-4">
+                    <v-icon size="large" color="grey">mdi-package-variant</v-icon>
+                    <p class="text-body-1 mt-2">No orders found.</p>
+                  </div>
+
+                  <v-table v-else>
+                    <thead>
+                      <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Vendor</th>
+                        <th>Status</th>
+                        <th>Delivery Status</th>
+                        <th>Items</th>
+                        <th>Total Price</th>
+                        <th>Date Created</th>
+                        <th class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="order in filteredOrders" :key="order.id">
+                        <td>
+                          <strong>{{ order.order_no }}</strong>
+                          <div v-if="order.reference" class="text-caption text-grey">
+                            Ref: {{ order.reference }}
+                          </div>
+                        </td>
+                        <td>
+                          <div>{{ order.client?.name || 'N/A' }}</div>
+                          <div class="text-caption text-grey">
+                            {{ formatPhoneNumber(order.client?.phone_number) }}
+                          </div>
+                          <div v-if="order.client?.city" class="text-caption text-grey">
+                            {{ order.client.city }}
+                          </div>
+                        </td>
+                        <td>
+                          <div>{{ order.vendor?.name || 'N/A' }}</div>
+                          <div v-if="order.vendor?.company_name" class="text-caption text-grey">
+                            {{ order.vendor.company_name }}
+                          </div>
+                        </td>
+                        <td>
+                          <v-chip :color="{
+                            active: 'success',
+                            inactive: 'grey',
+                            pending: 'warning',
+                            processing: 'primary',
+                            cancelled: 'error'
+                          }[order.status?.toLowerCase()] || 'grey'" small>
+                            {{ order.status || 'Unknown' }}
+                          </v-chip>
+                        </td>
+                        <td>
+                          <v-chip :color="{
+                            'inprogress': 'warning',
+                            'delivered': 'success',
+                            'cancelled': 'error',
+                            'pending': 'primary',
+                            'shipped': 'info'
+                          }[order.delivery_status?.toLowerCase()] || 'grey'" small>
+                            {{ order.delivery_status || 'Unknown' }}
+                          </v-chip>
+                        </td>
+                        <td>
+                          <div v-if="order.order_items && order.order_items.length">
+                            {{ order.order_items.length }} item(s)
+                            <div class="text-caption text-grey">
+                              Qty: {{ getTotalQuantity(order.order_items) }}
+                            </div>
+                          </div>
+                          <div v-else class="text-grey">No items</div>
+                        </td>
+                        <td>
+                          <div v-if="order.total_price">
+                            ${{ parseFloat(order.total_price).toFixed(2) }}
+                          </div>
+                          <div v-else-if="order.invoice_value && order.invoice_value !== '0.00'">
+                            ${{ parseFloat(order.invoice_value).toFixed(2) }}
+                          </div>
+                          <div v-else class="text-grey">$0.00</div>
+                          <div v-if="order.shipping_charges && order.shipping_charges !== '0.00'"
+                            class="text-caption text-grey">
+                            Shipping: ${{ parseFloat(order.shipping_charges).toFixed(2) }}
+                          </div>
+                        </td>
+                        <td>
+                          {{ formatDate(order.created_at) }}
+                          <div v-if="order.delivery_date" class="text-caption text-grey">
+                            Delivery: {{ formatDate(order.delivery_date) }}
+                          </div>
+                        </td>
+                        <td class="text-center">
+                          <v-btn icon size="small" @click="viewOrderDetails(order)">
+                            <v-icon>mdi-eye</v-icon>
+                          </v-btn>
+                          <v-btn icon size="small" color="primary" @click="sendOrderMessage([order])">
+                            <v-icon>mdi-whatsapp</v-icon>
+                          </v-btn>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </v-table>
+
+                  <div class="d-flex justify-end mt-4">
+                    <v-pagination v-model="currentOrderPage" :length="totalOrderPages"
+                      @input="loadOrders"></v-pagination>
+                  </div>
+                </v-card-text>
+              </v-window-item>
+
+              <!-- Contacts Tab -->
+              <v-window-item value="contacts">
+                <v-card-title class="d-flex flex-wrap justify-space-between align-center">
+                  <div class="text-h6">Contacts</div>
+                  <div class="d-flex">
+                    <v-select v-model="filterType" :items="contactTypes" item-title="title" item-value="value"
+                      label="Type" hide-details density="compact" class="mr-2"></v-select>
+                    <v-select v-model="filterStatus" :items="statusOptions" item-title="title" item-value="value"
+                      label="Status" hide-details density="compact"></v-select>
+                    <v-btn icon class="ml-2" @click="resetFilters">
+                      <v-icon>mdi-filter-remove</v-icon>
+                    </v-btn>
+                  </div>
+                </v-card-title>
+
+                <v-card-text>
+                  <v-progress-linear v-if="loading.contacts" indeterminate color="primary"></v-progress-linear>
+
+                  <div v-else-if="!Array.isArray(filteredContacts) || filteredContacts.length === 0"
+                    class="text-center pa-4">
+                    <v-icon size="large" color="grey">mdi-account-multiple</v-icon>
+                    <p class="text-body-1 mt-2">No contacts found.</p>
+                  </div>
+
+                  <v-table v-else>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Company</th>
+                        <th>Country</th>
+                        <th class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="contact in filteredContacts" :key="contact.id">
+                        <td>{{ contact.name }}</td>
+                        <td>
+                          <div>{{ formatPhoneNumber(contact.phone) }}</div>
+                          <div v-if="contact.whatsapp" class="text-caption text-success">
+                            WhatsApp: {{ formatPhoneNumber(contact.whatsapp) }}
+                          </div>
+                        </td>
+                        <td>{{ contact.type || '-' }}</td>
+                        <td>
+                          <v-chip :color="contact.status === 1 ? 'success' : 'grey'" small>
+                            {{ contact.status === 1 ? 'Active' : 'Inactive' }}
+                          </v-chip>
+                        </td>
+                        <td>{{ contact.company_name || '-' }}</td>
+                        <td>{{ contact.country_name || '-' }}</td>
+                        <td class="text-center">
+                          <v-btn icon size="small" @click="viewContact(contact)">
+                            <v-icon>mdi-eye</v-icon>
+                          </v-btn>
+                          <v-btn icon size="small" color="primary" :disabled="!hasWhatsAppNumber(contact)"
+                            @click="openSendMessage(false, contact)">
+                            <v-icon>mdi-whatsapp</v-icon>
+                          </v-btn>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </v-table>
+                </v-card-text>
+              </v-window-item>
+            </v-window>
           </v-card>
         </v-col>
       </v-row>
@@ -1046,7 +681,7 @@ onMounted(() => {
             <span class="text-h6">Send Order Message</span>
           </v-card-title>
           <v-card-text>
-            <v-select v-model="selectedOrders" :items="orders" item-title="order_number" item-value="id"
+            <v-select v-model="selectedOrders" :items="orders" item-title="order_no" item-value="id"
               label="Select Orders" multiple chips :disabled="loading.orders" :loading="loading.orders"
               return-object></v-select>
             <v-select v-model="selectedTemplate" :items="orderTemplates" item-title="name" item-value="name"
@@ -1131,6 +766,60 @@ onMounted(() => {
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn text @click="dialog = false">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Order Details Dialog -->
+      <v-dialog v-model="showOrderDetailsDialog" max-width="800">
+        <v-card>
+          <v-card-title>
+            <span class="text-h6">Order Details - {{ selectedOrder?.order_no }}</span>
+          </v-card-title>
+          <v-card-text>
+            <div v-if="selectedOrder">
+              <v-row>
+                <v-col cols="6">
+                  <h4>Customer Information</h4>
+                  <p><strong>Name:</strong> {{ selectedOrder.client?.name || 'N/A' }}</p>
+                  <p><strong>Phone:</strong> {{ formatPhoneNumber(selectedOrder.client?.phone_number) }}</p>
+                  <p><strong>City:</strong> {{ selectedOrder.client?.city || 'N/A' }}</p>
+                </v-col>
+                <v-col cols="6">
+                  <h4>Order Information</h4>
+                  <p><strong>Status:</strong> {{ selectedOrder.status }}</p>
+                  <p><strong>Delivery Status:</strong> {{ selectedOrder.delivery_status }}</p>
+                  <p><strong>Platform:</strong> {{ selectedOrder.platform }}</p>
+                </v-col>
+              </v-row>
+
+              <v-divider class="my-4"></v-divider>
+
+              <h4>Order Items</h4>
+              <v-table v-if="selectedOrder.order_items && selectedOrder.order_items.length">
+                <thead>
+                  <tr>
+                    <th>Product ID</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in selectedOrder.order_items" :key="item.id">
+                    <td>{{ item.product_id }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ parseFloat(item.price || 0).toFixed(2) }}</td>
+                    <td>${{ parseFloat(item.total_price || 0).toFixed(2) }}</td>
+                  </tr>
+                </tbody>
+              </v-table>
+              <p v-else>No items found for this order.</p>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="showOrderDetailsDialog = false">Close</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>

@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Http\Resources\TemplateResource;
-use App\Models\Template;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreMessageRequest;
+use App\Http\Requests\UpdateMessageRequest;
+use App\Models\Message;
 
-class TemplateController extends Controller
+class MessageController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,8 +14,6 @@ class TemplateController extends Controller
     public function index()
     {
         //
-           $templates = Template::latest()->paginate(20);
-        return TemplateResource::collection($templates);
     }
 
     /**
@@ -30,7 +27,7 @@ class TemplateController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMessageRequest $request)
     {
         //
     }
@@ -38,7 +35,7 @@ class TemplateController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Message $message)
     {
         //
     }
@@ -46,7 +43,7 @@ class TemplateController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Message $message)
     {
         //
     }
@@ -54,7 +51,7 @@ class TemplateController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateMessageRequest $request, Message $message)
     {
         //
     }
@@ -62,7 +59,7 @@ class TemplateController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Message $message)
     {
         //
     }

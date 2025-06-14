@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () {
 
 
     // Order APIs
-    Route::get('v1/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
+    Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
     // Route::post('v1/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
     // Route::get('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
     // Route::put('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); // Update a specific order
@@ -82,21 +82,21 @@ Route::prefix('v1')->group(function () {
 
     // Template APIs
 
-    Route::get('v1/templates', [TemplateController::class, 'index']); // List all templates
-    Route::post('v1/templates', [TemplateController::class, 'store']); // Create a new template
-    Route::get('v1/templates/{id}', [TemplateController::class, 'show']); // Show a specific template
-    Route::put('v1/templates/{id}', [TemplateController::class, 'update']); // Update a specific template
-    Route::delete('v1/templates/{id}', [TemplateController::class, 'destroy']); // Delete a specific template
+    Route::get('/templates', [TemplateController::class, 'index']); // List all templates
+    Route::post('/templates', [TemplateController::class, 'store']); // Create a new template
+    Route::get('/templates/{id}', [TemplateController::class, 'show']); // Show a specific template
+    Route::put('/templates/{id}', [TemplateController::class, 'update']); // Update a specific template
+    Route::delete('/templates/{id}', [TemplateController::class, 'destroy']); // Delete a specific template
 
 
 
-    // Conacts APIs
-    Route::get('v1/contacts', [ContactController::class, 'index']);       // List all contacts
-    Route::post('v1/contacts', [ContactController::class, 'store']);       // Create new contact
-    Route::get('v1/contacts/{contact}', [ContactController::class, 'show']); // Show single contact
-    Route::put('v1/contacts/{contact}', [ContactController::class, 'update']); // Update contact
-    Route::patch('v1contacts/{contact}', [ContactController::class, 'update']); // Also support patch
-    Route::delete('v1/contacts/{contact}', [ContactController::class, 'destroy']); // Delete contact
+    // Contacts APIs
+    Route::get('/contacts', [ContactController::class, 'index']);       // List all contacts
+    Route::post('/contacts', [ContactController::class, 'store']);       // Create new contact
+    Route::get('/contacts/{contact}', [ContactController::class, 'show']); // Show single contact
+    Route::put('/contacts/{contact}', [ContactController::class, 'update']); // Update contact
+    Route::patch('contacts/{contact}', [ContactController::class, 'update']); // Also support patch
+    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']); // Delete contact
 
 
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
@@ -13,17 +14,15 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        // Eager load relationships and paginate
+        $orders = Order::with(['client', 'orderItems', 'vendor'])
+            ->whereNull('deleted_at')
+            ->latest()
+            ->paginate(20);
 
-         $orders = Order::with('client','orderItems','vendor')->get();
-    
-        // Return JSON response
-        return response()->json([
-            'orders' => $orders,
-            'message' => "success"
-        ]);
+        // Return resource collection with pagination structure
+        return OrderResource::collection($orders);
     }
-
     /**
      * Show the form for creating a new resource.
      */

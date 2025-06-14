@@ -9,10 +9,6 @@ class Order extends Model
 {
     use HasFactory;
 
-    
-
-
-
     protected $fillable = [
         'reference',
         'drawer_id',
