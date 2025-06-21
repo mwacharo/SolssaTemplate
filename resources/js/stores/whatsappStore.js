@@ -435,7 +435,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       try {
         this.loading.sending = true
 
-        const response = await axios.post('/api/v1/whatsapp-send', {
+        const response = await axios.post('/api/v1/whatsapp/send-messsage', {
           user_id: userId,
           contacts: this.selectedContacts.map(c => ({
             id: c.id,

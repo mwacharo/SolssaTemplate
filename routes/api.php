@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CredentialController;
 use App\Http\Controllers\Api\Integrations\GoogleSheetController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\WhatsAppController;
+use App\Http\Controllers\Api\WhatsAppWebhookController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
@@ -102,6 +103,12 @@ Route::prefix('v1')->group(function () {
 
 
     // fetchCredentials
+    Route::get('/channel-credentials', [CredentialController::class, 'index']);
+    Route::get('/fetch-credentials', [CredentialController::class, 'fetchCredentials']);
+    Route::get('/credentialable-types', [CredentialController::class, 'getCredentialableTypes']);
+    Route::get('/credentialables', [CredentialController::class, 'getOwnersByType']);
+
+
     Route::post('/channel-credentials', [CredentialController::class, 'store']);
     Route::get('/channel-credentials/{id}', [CredentialController::class, 'show']);
     Route::put('/channel-credentials/{id}', [CredentialController::class, 'update']);
@@ -110,12 +117,20 @@ Route::prefix('v1')->group(function () {
 
 
 
+
+
     // webwhats    webhook 
     // Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'receive']);
-    Route::post('/whatsapp-send', [WhatsAppController::class, 'send']);
+    // Route::post('/whatsapp-send', [WhatsAppController::class, 'send']);
     Route::get('/whatsapp-messages', [WhatsAppController::class, 'index']);
     Route::get('messages/chat/{phone}', [WhatsAppController::class, 'getChat']);
     Route::delete('/whatsapp-messages/{id}', [WhatsAppController::class, 'destroy']);
+    Route::get('/whatsapp/state', [WhatsAppController::class, 'getState']);
+    Route::post('/whatsapp/send-message', [WhatsAppController::class, 'sendMessage']);
+    Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'handle']);
+
+
+
 });
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {

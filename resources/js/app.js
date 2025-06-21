@@ -131,7 +131,7 @@ createInertiaApp({
       .use(vuetify)
       .use(pinia)
       .use(Vue3Toastify, {
-        position: 'top-right',
+        position: 'top',
         autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: true,

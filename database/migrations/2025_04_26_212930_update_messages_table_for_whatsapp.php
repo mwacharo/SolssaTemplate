@@ -12,7 +12,8 @@ return new class extends Migration
             $table->string('from')->nullable();
             $table->string('to')->nullable();
             $table->text('body')->nullable();
-            $table->string('message_type')->default('text');
+            $table->string('message_type')->nullable()->default('text');
+
             $table->text('media_url')->nullable();
             $table->string('media_mime_type')->nullable();
             $table->string('message_status')->default('pending');

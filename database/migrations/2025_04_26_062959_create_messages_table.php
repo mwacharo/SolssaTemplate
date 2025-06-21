@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->string('channel')->nullable(); // SMS, Email, WhatsApp etc.
             $table->string('recipient_name')->nullable();
-            $table->string('recipient_phone');
+            $table->string('recipient_phone')->nullable();
             $table->text('content')->nullable();
             $table->string('status')->default('sent'); // sent, delivered, failed
             $table->timestamp('sent_at')->nullable();

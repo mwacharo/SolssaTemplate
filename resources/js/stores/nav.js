@@ -20,7 +20,9 @@ export const ROUTES = {
     NOTES: 'call-centre.notes',
   },
   USERS: {
-    INDEX: 'users.index',
+    // INDEX: 'users.index',
+      INDEX: 'admin.users', // 👈 This should match Laravel's ->name('admin.users')
+
     ROLES: 'users.roles',
     PERMISSIONS: 'users.permissions',
     TEAMS: 'users.teams',
@@ -142,10 +144,10 @@ export const useNavStore = defineStore('nav', {
         features: ['team-management'],
         children: [
           { title: 'User Management', route: ROUTES.USERS.INDEX, icon: 'mdi-account-group-outline' },
-          { title: 'User Roles', route: ROUTES.USERS.ROLES, icon: 'mdi-account-key-outline' },
-          { title: 'Permissions', route: ROUTES.USERS.PERMISSIONS, icon: 'mdi-shield-key-outline' },
-          { title: 'Teams', route: ROUTES.USERS.TEAMS, icon: 'mdi-account-multiple' },
-          { title: 'Invitations', route: ROUTES.USERS.INVITATIONS, icon: 'mdi-email-send' },
+          // { title: 'User Roles', route: ROUTES.USERS.ROLES, icon: 'mdi-account-key-outline' },
+          // { title: 'Permissions', route: ROUTES.USERS.PERMISSIONS, icon: 'mdi-shield-key-outline' },
+          // { title: 'Teams', route: ROUTES.USERS.TEAMS, icon: 'mdi-account-multiple' },
+          // { title: 'Invitations', route: ROUTES.USERS.INVITATIONS, icon: 'mdi-email-send' },
         ],
       },
 

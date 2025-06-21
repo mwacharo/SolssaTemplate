@@ -3,6 +3,8 @@ import { ref, onMounted, computed, toRefs, watch } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useWhatsAppStore } from '@/stores/whatsappStore'
+import { useAuthStore } from '@/stores/auth'
+
 
 // Initialize the store
 const store = useWhatsAppStore()
@@ -12,8 +14,11 @@ const selectedPhone = ref(null);
 const dialog = ref(false);
 const conversation = ref([]);
 
-// Get user ID
-const userId = computed(() => usePage().props.value.user?.id);
+
+const auth = useAuthStore()
+
+const user = computed(() => auth.user)
+const userId = computed(() => user.value?.id)
 
 // Contact type options
 const contactTypes = [
@@ -65,7 +70,7 @@ const {
   // UI states
   showImportDialog,
   showNewMessageDialog,
-  showTemplateDialog,
+  // showTemplateDialog,
   showOrderImportDialog,
   showOrderMessageDialog,
   activeTab,
@@ -110,10 +115,10 @@ const calculateStats = () => store.calculateStats()
 const calculateOrderStats = () => store.calculateOrderStats()
 const onTemplateSelect = (templateId) => store.onTemplateSelect(templateId)
 const resetFilters = () => store.resetFilters()
-const sendMessage = () => store.sendMessage(userId.value)
-const sendOrderMessage = () => store.sendOrderMessage(userId.value)
-const importContacts = () => store.importContacts(userId.value)
-const importOrders = () => store.importOrders(userId.value)
+const sendMessage = () => store.sendMessage({ userId: userId.value })
+const sendOrderMessage = () => store.sendOrderMessage({ userId: userId.value })
+const importContacts = () => store.importContacts({ userId: userId.value })
+const importOrders = () => store.importOrders({ userId: userId.value })
 const openNewMessageDialog = () => store.openNewMessageDialog()
 const openOrderMessageDialog = () => store.openOrderMessageDialog()
 const deleteMessage = (messageId) => store.deleteMessage(messageId)
@@ -297,10 +302,10 @@ onMounted(async () => {
                 Import Orders
               </v-btn>
 
-              <v-btn color="secondary" block @click="showTemplateDialog = true">
+              <!-- <v-btn color="secondary" block @click="showTemplateDialog = true">
                 <v-icon class="mr-2">mdi-file-document-edit</v-icon>
                 Manage Templates
-              </v-btn>
+              </v-btn> -->
             </v-card-text>
           </v-card>
         </v-col>
@@ -685,7 +690,7 @@ onMounted(async () => {
               label="Select Orders" multiple chips :disabled="loading.orders" :loading="loading.orders"
               return-object></v-select>
             <v-select v-model="selectedTemplate" :items="orderTemplates" item-title="name" item-value="name"
-              label="Select Order Template" @change="onTemplateSelect" class="mt-3" return-object></v-select>
+              label="Select Order Template" @change="p" class="mt-3" return-object></v-select>
             <v-textarea v-model="messageText" label="Message" rows="4" auto-grow class="mt-3"></v-textarea>
           </v-card-text>
           <v-card-actions>
