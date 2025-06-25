@@ -4,24 +4,34 @@ import axios from 'axios'
 
 export const useWhatsAppStore = defineStore('whatsapp', {
   state: () => ({
+    // conversation 
+    dialog: false,
+    loading: false,
+    conversation: [],
+    replyMessage: '',
+    showEmojiPicker: false,
+    attachment: {
+      image: null,
+      audio: null,
+    },
     // Core data
     messages: [],
     contacts: [],
     orders: [],
     templates: [],
-    
+
     // Selected items
     selectedContacts: [],
     selectedOrders: [],
     selectedTemplate: null,
     messageText: '',
-    
+
     // Pagination
     currentPage: 1,
     perPage: 20,
     totalMessages: 0,
     totalOrders: 0,
-    
+
     // Loading states
     loading: {
       messages: false,
@@ -34,7 +44,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       deletingTemplate: false,
       uploadingOrders: false
     },
-    
+
     // UI states
     showImportDialog: false,
     showNewMessageDialog: false,
@@ -42,7 +52,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     showOrderImportDialog: false,
     showOrderMessageDialog: false,
     activeTab: 'messages',
-    
+
     // Filters
     search: '',
     filterType: 'all',
@@ -59,11 +69,11 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       vendorRecallStart: null,
       vendorRecallEnd: null
     },
-    
+
     // Messages
     errorMessage: '',
     successMessage: '',
-    
+
     // Statistics
     stats: {
       sent: 0,
@@ -75,14 +85,14 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       pendingOrders: 0,
       deliveredOrders: 0
     },
-    
+
     // Connection status
     whatsappStatus: 'Connected',
-    
+
     // File uploads
     csvFile: null,
     orderFile: null,
-    
+
     // Predefined templates
     orderTemplates: [
       {
@@ -103,55 +113,60 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       }
     ]
   }),
-  
+
   getters: {
+
+    // conversation getters
+
+        hasAttachment: (state) => !!(state.attachment.image || state.attachment.audio),
+
     filteredContacts: (state) => {
       if (!Array.isArray(state.contacts)) return []
-      
+
       let filtered = [...state.contacts]
-      
+
       if (state.filterType !== 'all') {
         filtered = filtered.filter(contact => contact.type === state.filterType)
       }
-      
+
       if (state.filterStatus !== 'all') {
         filtered = filtered.filter(contact => contact.status === state.filterStatus)
       }
-      
+
       return filtered
     },
-    
+
     filteredOrders: (state) => {
       if (!Array.isArray(state.orders)) return []
-      
+
       let filtered = [...state.orders]
-      
+
       // Status filter
       if (state.orderFilters.status !== 'all') {
         filtered = filtered.filter(order => order.status === state.orderFilters.status)
       }
-      
+
       // Product filter
       if (state.orderFilters.product) {
-        filtered = filtered.filter(order => 
+        filtered = filtered.filter(order =>
           order.product_name?.toLowerCase().includes(state.orderFilters.product.toLowerCase())
         )
       }
-      
+
       // Agent filter
       if (state.orderFilters.agent) {
-        filtered = filtered.filter(order => 
+        filtered = filtered.filter(order =>
           order.agent_name?.toLowerCase().includes(state.orderFilters.agent.toLowerCase())
         )
       }
-      
+
       // Zone filter
       if (state.orderFilters.zone) {
-        filtered = filtered.filter(order => 
+        filtered = filtered.filter(order =>
           order.zone?.toLowerCase().includes(state.orderFilters.zone.toLowerCase())
         )
       }
-      
+
       // Created date range filter
       if (state.orderFilters.createdDateStart) {
         filtered = filtered.filter(order => {
@@ -160,7 +175,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
           return orderDate >= startDate
         })
       }
-      
+
       if (state.orderFilters.createdDateEnd) {
         filtered = filtered.filter(order => {
           const orderDate = new Date(order.created_at)
@@ -168,7 +183,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
           return orderDate <= endDate
         })
       }
-      
+
       // Delivery date range filter
       if (state.orderFilters.deliveryDateStart && state.orderFilters.deliveryDateEnd) {
         filtered = filtered.filter(order => {
@@ -179,7 +194,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
           return deliveryDate >= startDate && deliveryDate <= endDate
         })
       }
-      
+
       // Vendor recall date range filter
       if (state.orderFilters.vendorRecallStart && state.orderFilters.vendorRecallEnd) {
         filtered = filtered.filter(order => {
@@ -190,13 +205,13 @@ export const useWhatsAppStore = defineStore('whatsapp', {
           return recallDate >= startDate && recallDate <= endDate
         })
       }
-      
+
       return filtered
     },
-    
+
     filteredMessages: (state) => {
       if (!state.search || !Array.isArray(state.messages)) return state.messages
-      
+
       const searchTerm = state.search.toLowerCase()
       return state.messages.filter(message =>
         (message.content?.toLowerCase().includes(searchTerm)) ||
@@ -206,19 +221,48 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         (message.order_number?.toLowerCase().includes(searchTerm))
       )
     },
-    
+
     validWhatsappContacts: (state) => {
       if (!Array.isArray(state.contacts)) return []
       return state.contacts.filter(contact => contact.whatsapp || contact.alt_phone || contact.phone)
     },
-    
+
     totalPages: (state) => Math.ceil(state.totalMessages / state.perPage),
     totalOrderPages: (state) => Math.ceil(state.totalOrders / state.perPage),
-    
+
     allTemplates: (state) => [...state.templates, ...state.orderTemplates]
   },
-  
+
   actions: {
+    // conversation actions
+
+
+     setDialog(value) {
+      this.dialog = value
+    },
+
+    appendEmoji(emoji) {
+      this.replyMessage += emoji
+    },
+
+    setAttachmentImage(file) {
+      this.attachment.image = file
+    },
+
+    setAttachmentAudio(file) {
+      this.attachment.audio = file
+    },
+
+    resetAttachment() {
+      this.attachment.image = null
+      this.attachment.audio = null
+    },
+
+    toggleEmojiPicker() {
+      this.showEmojiPicker = !this.showEmojiPicker
+    },
+
+
     // Utility actions
     showError(message) {
       this.errorMessage = message
@@ -226,19 +270,19 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.errorMessage = ''
       }, 5000)
     },
-    
+
     showSuccess(message) {
       this.successMessage = message
       setTimeout(() => {
         this.successMessage = ''
       }, 5000)
     },
-    
+
     formatPhoneNumber(phone) {
       if (!phone) return 'Unknown'
       return phone.replace(/@c\.us$/, '')
     },
-    
+
     // Data loading actions
     async loadMessages(page = 1) {
       try {
@@ -269,7 +313,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.messages = false
       }
     },
-    
+
     async loadContacts() {
       try {
         this.loading.contacts = true
@@ -291,7 +335,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.contacts = false
       }
     },
-    
+
     async loadOrders(page = 1) {
       try {
         this.loading.orders = true
@@ -319,7 +363,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.orders = false
       }
     },
-    
+
     async loadTemplates() {
       try {
         this.loading.templates = true
@@ -341,7 +385,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.templates = false
       }
     },
-    
+
     // Statistics calculation
     calculateStats() {
       if (!Array.isArray(this.messages)) {
@@ -370,7 +414,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         console.error('Error calculating message stats:', error)
       }
     },
-    
+
     calculateOrderStats() {
       if (!Array.isArray(this.orders)) return
 
@@ -391,7 +435,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         console.error('Error calculating order stats:', error)
       }
     },
-    
+
     // Template handling
     onTemplateSelect(templateId) {
       if (!templateId) return
@@ -402,7 +446,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.selectedTemplate = template
       }
     },
-    
+
     // Filter actions
     resetFilters() {
       this.search = ''
@@ -421,7 +465,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         vendorRecallEnd: null
       }
     },
-    
+
     // Message sending
     async sendMessage(userId) {
       if (!this.messageText.trim()) {
@@ -435,16 +479,23 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       try {
         this.loading.sending = true
 
-        const response = await axios.post('/api/v1/whatsapp/send-messsage', {
+        // Deep clone the payload to avoid circular references
+        const contacts = this.selectedContacts.map(c => ({
+          id: c.id,
+          name: c.name,
+          chatId: c.whatsapp || c.alt_phone || c.phone,
+        }))
+
+        const templateId = this.selectedTemplate ? this.selectedTemplate.id : null
+
+        const payload = {
           user_id: userId,
-          contacts: this.selectedContacts.map(c => ({
-            id: c.id,
-            name: c.name,
-            chatId: c.whatsapp || c.alt_phone || c.phone,
-          })),
+          contacts: JSON.parse(JSON.stringify(contacts)),
           message: this.messageText,
-          template_id: this.selectedTemplate?.id || null,
-        })
+          template_id: templateId,
+        }
+
+        const response = await axios.post('/api/v1/whatsapp/send-message', payload)
 
         const now = new Date()
 
@@ -480,7 +531,8 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.sending = false
       }
     },
-    
+
+
     // Order messaging
     async sendOrderMessage(userId) {
       if (!this.messageText.trim()) {
@@ -528,7 +580,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.sending = false
       }
     },
-    
+
     // File import
     async importContacts(userId) {
       if (!this.csvFile) {
@@ -563,7 +615,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.importing = false
       }
     },
-    
+
     async importOrders(userId) {
       if (!this.orderFile) {
         return this.showError('Please select an Excel or CSV file to import')
@@ -597,7 +649,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loading.uploadingOrders = false
       }
     },
-    
+
     // Dialog actions
     async openNewMessageDialog() {
       this.errorMessage = ''
@@ -615,7 +667,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
       this.showNewMessageDialog = true
     },
-    
+
     async openOrderMessageDialog() {
       this.errorMessage = ''
       this.messageText = ''
@@ -632,7 +684,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
       this.showOrderMessageDialog = true
     },
-    
+
     // Delete message
     async deleteMessage(messageId) {
       if (!messageId) {
@@ -655,7 +707,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         }
       }
     },
-    
+
     // Initialize store
     async initialize() {
       this.messages = []

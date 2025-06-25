@@ -13,12 +13,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-
-
 class SendWhatsAppMessageJob implements ShouldQueue
 {
-
-    use Queueable, Dispatchable, Queueable, InteractsWithQueue, SerializesModels;
+    use Queueable, Dispatchable, InteractsWithQueue, SerializesModels;
 
     protected $chatId;
     protected $messageContent;
@@ -26,6 +23,12 @@ class SendWhatsAppMessageJob implements ShouldQueue
 
     public function __construct(string $chatId, string $messageContent, int $userId)
     {
+        Log::info('SendWhatsAppMessageJob: constructor called', [
+            'chatId' => $chatId,
+            'userId' => $userId,
+            'messageContent' => $messageContent,
+        ]);
+
         $this->chatId = $chatId;
         $this->messageContent = $messageContent;
         $this->userId = $userId;
@@ -33,76 +36,109 @@ class SendWhatsAppMessageJob implements ShouldQueue
 
     public function handle()
     {
+        Log::info('SendWhatsAppMessageJob: handle() started', [
+            'chatId' => $this->chatId,
+            'userId' => $this->userId,
+        ]);
+
         // Find user to retrieve credentials
         $user = User::find($this->userId);
+
+        Log::info('SendWhatsAppMessageJob: User debugging', [
+            'user_id' => $this->userId,
+            'user_found' => $user ? 'yes' : 'no',
+            'user_class' => $user ? get_class($user) : 'null',
+            'user_file' => $user ? (new \ReflectionClass($user))->getFileName() : 'null',
+            'has_method' => $user ? method_exists($user, 'channelCredentials') : 'no user',
+            'available_methods' => $user ? implode(', ', array_slice(get_class_methods($user), 0, 10)) : 'no user',
+        ]);
+
         if (!$user) {
             Log::error('SendWhatsAppMessageJob: User not found', ['user_id' => $this->userId]);
             return;
         }
 
-        // Retrieve credentials via your service
-        $credentialService = new DynamicChannelCredentialService($user, 'whatsapp');
-        $instanceId = $credentialService->getInstanceId();    // implement to return your Green-API instanceId
-        $apiToken   = $credentialService->getApiToken();      // return apiTokenInstance
-        $apiUrl     = $credentialService->getApiUrl()
-            ?? config('services.greenapi.url', 'https://api.green-api.com');
-
-        if (!$instanceId || !$apiToken) {
-            Log::error('SendWhatsAppMessageJob: Missing Green-API credentials', [
-                'user_id' => $this->userId,
-                'instanceId' => $instanceId,
-                'apiToken' => $apiToken,
+        // Test the relationship directly
+        try {
+            Log::info('SendWhatsAppMessageJob: Testing direct relationship call');
+            $testCall = $user->channelCredentials();
+            Log::info('SendWhatsAppMessageJob: Direct relationship call successful', [
+                'relationship_type' => get_class($testCall)
+            ]);
+        } catch (\Exception $e) {
+            Log::error('SendWhatsAppMessageJob: Direct relationship call failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
             return;
         }
 
-        // Build the Green-API sendMessage endpoint
-        $endpoint = rtrim($apiUrl, '/')
-            . "/waInstance{$instanceId}/sendMessage/{$apiToken}";
-
-        $payload = [
-            'chatId' => $this->chatId,
-            'message' => $this->messageContent,
-            // if you want to support quotedMessageId: add 'quotedMessageId' => ...
-        ];
-
+        // Now try the service
         try {
+            Log::info('SendWhatsAppMessageJob: About to initialize DynamicChannelCredentialService');
+            $credentialService = new DynamicChannelCredentialService($user, 'whatsapp');
+            Log::info('SendWhatsAppMessageJob: DynamicChannelCredentialService initialized successfully');
+
+            $instanceId = $credentialService->getInstanceId();
+            $apiToken = $credentialService->getApiToken();
+            $apiUrl = $credentialService->getApiUrl() ?? config('services.greenapi.url', 'https://api.green-api.com');
+
+            Log::info('SendWhatsAppMessageJob: Credentials retrieved', [
+                'instanceId' => $instanceId,
+                'apiToken' => $apiToken ? 'present' : 'missing',
+                'apiUrl' => $apiUrl,
+            ]);
+
+            if (!$instanceId || !$apiToken) {
+                Log::error('SendWhatsAppMessageJob: Missing Green-API credentials', [
+                    'user_id' => $this->userId,
+                    'instanceId' => $instanceId,
+                    'apiToken' => $apiToken ? 'present' : 'missing',
+                ]);
+                return;
+            }
+
+            // Build the Green-API sendMessage endpoint
+            $endpoint = rtrim($apiUrl, '/') . "/waInstance{$instanceId}/sendMessage/{$apiToken}";
+
+            $payload = [
+                'chatId' => $this->chatId,
+                'message' => $this->messageContent,
+            ];
+
             Log::info('SendWhatsAppMessageJob: Sending request', [
                 'endpoint' => $endpoint,
                 'payload' => $payload,
-                'user_id' => $this->userId,
             ]);
 
             $response = Http::post($endpoint, $payload);
 
+            Log::info('SendWhatsAppMessageJob: Response received', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
             $status = $response->successful() ? 'sent' : 'failed';
             $responseData = $response->json();
-
-            // Extract Green-API's message ID: usually in response: { idMessage: "..." }
             $externalMessageId = data_get($responseData, 'idMessage');
-            if (!$externalMessageId) {
-                Log::warning('SendWhatsAppMessageJob: missing idMessage in response', [
-                    'response' => $responseData,
-                ]);
-            }
 
-            // Store the outgoing message in your messages table
+            // Store the message
             $msg = Message::create([
-                // adjust fields according to your table columns
-                'chat_id'             => $this->chatId,
-                'from'                => 'system',
-                'to'                  => $this->chatId,
-                'body'                => $this->messageContent,
-                'message_type'        => 'text',
-                'wa_message_id'       => $externalMessageId,
-                'direction'           => 'outgoing',
-                'message_status'      => $status,
+                'chat_id' => $this->chatId,
+                'from' => 'system',
+                'to' => $this->chatId,
+                'content' => $this->messageContent,
+                'message_type' => 'text',
+                'wa_message_id' => $externalMessageId,
+                'direction' => 'outgoing',
+                'message_status' => $status,
                 'external_message_id' => $externalMessageId,
-                'response_payload'    => $responseData,
-                // polymorphic link:
-                'messageable_id'      => $user->id,
-                'messageable_type'    => get_class($user),
-                'timestamp'           => now(),
+                'response_payload' => $responseData,
+                'messageable_id' => $user->id,
+                'messageable_type' => get_class($user),
+                'timestamp' => now(),
             ]);
 
             Log::info('SendWhatsAppMessageJob: Message record created', [
@@ -110,26 +146,38 @@ class SendWhatsAppMessageJob implements ShouldQueue
                 'chat_id' => $this->chatId,
                 'status' => $status,
             ]);
-        } catch (\Throwable $e) {
-            Log::error('SendWhatsAppMessageJob: Exception when sending message', [
+        } catch (\Exception $e) {
+            Log::error('SendWhatsAppMessageJob: Exception in service or HTTP call', [
                 'chatId' => $this->chatId,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            // Optionally: record a failed message entry
-            Message::create([
-                'chat_id'             => $this->chatId,
-                'from'                => 'system',
-                'to'                  => $this->chatId,
-                'body'                => $this->messageContent,
-                'message_type'        => 'text',
-                'direction'           => 'outgoing',
-                'message_status'      => 'failed',
-                'error_message'       => $e->getMessage(),
-                'messageable_id'      => $user->id,
-                'messageable_type'    => get_class($user),
-                'timestamp'           => now(),
-            ]);
+            // Record failed message
+            try {
+                Message::create([
+                    'chat_id' => $this->chatId,
+                    'from' => 'system',
+                    'to' => $this->chatId,
+                    'content' => $this->messageContent,
+
+                    'message_type' => 'text',
+                    'direction' => 'outgoing',
+                    'message_status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                    'messageable_id' => $user->id,
+                    'messageable_type' => get_class($user),
+                    'timestamp' => now(),
+                ]);
+            } catch (\Exception $msgException) {
+                Log::error('SendWhatsAppMessageJob: Failed to create error message record', [
+                    'error' => $msgException->getMessage()
+                ]);
+            }
         }
+
+        Log::info('SendWhatsAppMessageJob: handle() finished');
     }
 }

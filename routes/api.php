@@ -122,12 +122,17 @@ Route::prefix('v1')->group(function () {
     // webwhats    webhook 
     // Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'receive']);
     // Route::post('/whatsapp-send', [WhatsAppController::class, 'send']);
-    Route::get('/whatsapp-messages', [WhatsAppController::class, 'index']);
-    Route::get('messages/chat/{phone}', [WhatsAppController::class, 'getChat']);
+    Route::get('/whatsapp-messages', [WhatsAppController::class, 'listConversations']);
+    // Route::get('messages/chat/{phone}', [WhatsAppController::class, 'getChat']);
     Route::delete('/whatsapp-messages/{id}', [WhatsAppController::class, 'destroy']);
     Route::get('/whatsapp/state', [WhatsAppController::class, 'getState']);
     Route::post('/whatsapp/send-message', [WhatsAppController::class, 'sendMessage']);
     Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'handle']);
+    // Route::get('/conversations', [WhatsAppController::class, 'listConversations']);
+    Route::get('/conversation/{chatId}', [WhatsAppController::class, 'getConversation']);
+
+
+
 
 
 

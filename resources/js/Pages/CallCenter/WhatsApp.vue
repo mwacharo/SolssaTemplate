@@ -4,10 +4,17 @@ import { Head, usePage } from '@inertiajs/vue3';
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useWhatsAppStore } from '@/stores/whatsappStore'
 import { useAuthStore } from '@/stores/auth'
+import { useConversationStore } from '@/stores/useConversationStore'
+
+import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
+
+
 
 
 // Initialize the store
 const store = useWhatsAppStore()
+const conversationStore = useConversationStore()
+
 
 // Local UI state (not managed by store)
 const selectedPhone = ref(null);
@@ -19,6 +26,10 @@ const auth = useAuthStore()
 
 const user = computed(() => auth.user)
 const userId = computed(() => user.value?.id)
+
+console.log('User:', JSON.stringify(user.value))
+
+console.log('User ID:', userId.value)
 
 // Contact type options
 const contactTypes = [
@@ -49,6 +60,10 @@ const orderStatusOptions = [
 // Computed properties from store
 const {
   // Data
+
+  // conversation 
+  attachment,
+  replyMessage,
   messages,
   contacts,
   orders,
@@ -115,7 +130,8 @@ const calculateStats = () => store.calculateStats()
 const calculateOrderStats = () => store.calculateOrderStats()
 const onTemplateSelect = (templateId) => store.onTemplateSelect(templateId)
 const resetFilters = () => store.resetFilters()
-const sendMessage = () => store.sendMessage({ userId: userId.value })
+const sendMessage = () => store.sendMessage(userId.value)
+
 const sendOrderMessage = () => store.sendOrderMessage({ userId: userId.value })
 const importContacts = () => store.importContacts({ userId: userId.value })
 const importOrders = () => store.importOrders({ userId: userId.value })
@@ -158,20 +174,22 @@ const openSendMessage = (isBulk = false, contact = null) => {
   store.showNewMessageDialog = true
 }
 
-const viewMessageDetails = (message) => {
-  selectedPhone.value = message.recipient_phone
-  dialog.value = true
-  loading.value.messages = true
 
-  axios.get(`/api/v1/messages/chat/${message.recipient_phone}`)
-    .then((response) => {
-      conversation.value = response.data
-      loading.value.messages = false
-    })
-    .catch((error) => {
-      console.error("Error loading chat:", error)
-      loading.value.messages = false
-    })
+
+
+
+
+// In your <script setup>
+const viewMessageDetails = (message) => {
+  console.log('viewMessageDetails called with:', message) // Debug log
+  console.log('conversationStore:', conversationStore) // Debug log
+
+  if (message.to) {
+    console.log('Calling openDialog with:', message.to) // Debug log
+    conversationStore.openDialog(message.to)
+  } else {
+    console.log("Missing contact ID in message", message)
+  }
 }
 
 const hasWhatsAppNumber = (contact) => {
@@ -193,6 +211,33 @@ watch(() => store.search, (newValue) => {
     store.loadMessages(store.currentPage)
   }
 })
+
+// Helper functions for conversation dialog
+function getContactName() {
+  // Try to find the contact by selectedPhone
+  if (!selectedPhone.value) return 'Unknown';
+  const contact = contacts.value?.find(
+    c => c.phone === selectedPhone.value || c.whatsapp === selectedPhone.value
+  );
+  return contact?.name || selectedPhone.value;
+}
+
+function getContactPhone() {
+  return selectedPhone.value || '-';
+}
+
+// Add these functions for status chip in conversation dialog
+function getStatusColor() {
+  // You can adjust this logic based on your actual status variable
+  if (whatsappStatus.value === 'Connected') return 'success';
+  if (whatsappStatus.value === 'Connecting...') return 'warning';
+  return 'error';
+}
+
+function getConnectionStatus() {
+  // You can adjust this logic based on your actual status variable
+  return whatsappStatus.value || 'Unknown';
+}
 
 // Component mount
 onMounted(async () => {
@@ -365,7 +410,7 @@ onMounted(async () => {
                         <td>
                           <div>{{ message.recipient_name || 'N/A' }}</div>
                           <div class="text-caption text-grey">
-                            {{ formatPhoneNumber(message.recipient_phone) }}
+                            {{ formatPhoneNumber(message.to) }}
                           </div>
                         </td>
                         <td>
@@ -744,37 +789,194 @@ onMounted(async () => {
       </v-dialog>
 
       <!-- Message Details Dialog -->
-      <v-dialog v-model="dialog" max-width="600">
-        <v-card>
-          <v-card-title>
-            <span class="text-h6">Conversation Details</span>
+      <v-dialog v-model="dialog" max-width="800" persistent>
+        <v-card class="conversation-dialog">
+          <!-- Header with contact info -->
+          <v-card-title class="conversation-header pa-4">
+            <div class="d-flex align-center w-100">
+              <v-avatar color="primary" size="40" class="mr-3">
+                <v-icon color="white">mdi-account</v-icon>
+              </v-avatar>
+              <div class="flex-grow-1">
+                <div class="text-h6 mb-0">{{ getContactName() }}</div>
+                <div class="text-caption text-grey">{{ getContactPhone() }}</div>
+              </div>
+              <v-chip :color="getStatusColor()" small outlined class="mr-2">
+                {{ getConnectionStatus() }}
+              </v-chip>
+              <v-btn icon @click="dialog = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </div>
           </v-card-title>
-          <v-card-text>
-            <v-progress-linear v-if="loading.value" indeterminate color="primary"></v-progress-linear>
-            <div v-else>
-              <div v-if="Array.isArray(conversation) && conversation.length">
-                <div v-for="msg in conversation" :key="msg.id" class="mb-2">
-                  <div>
-                    <strong>{{ msg.sender_name || 'You' }}:</strong>
-                    <span>{{ msg.content }}</span>
-                  </div>
-                  <div class="text-caption text-grey">
-                    {{ msg.created_at?.replace('T', ' ').slice(0, 19) || '-' }}
+
+          <v-divider />
+
+          <!-- Messages Container -->
+          <v-card-text class="pa-0">
+            <v-progress-linear v-if="loading.value" indeterminate color="primary" />
+
+            <div v-else class="messages-container" ref="messagesContainer">
+              <div v-if="Array.isArray(conversation) && conversation.length" class="pa-4">
+                <div v-for="msg in conversation" :key="msg.id" class="message-wrapper mb-3"
+                  :class="getMessageAlignment(msg)">
+                  <!-- Message Bubble -->
+                  <div class="message-bubble elevation-1" :class="getMessageBubbleClass(msg)">
+                    <!-- Sender name for incoming messages -->
+                    <div v-if="isIncomingMessage(msg)" class="message-sender text-caption font-weight-medium mb-1">
+                      {{ msg.sender_name || getContactName() }}
+                    </div>
+
+                    <!-- Message content -->
+                    <div class="message-content">
+                      {{ msg.content }}
+                    </div>
+
+                    <!-- Media attachments -->
+                    <div v-if="msg.image_url" class="message-media mt-2">
+                      <v-img :src="msg.image_url" max-height="200" max-width="300" contain class="rounded"
+                        @click="openImagePreview(msg.image_url)" style="cursor: pointer;" />
+                    </div>
+
+                    <div v-if="msg.audio_url" class="message-media mt-2">
+                      <div class="audio-container">
+                        <v-btn icon small @click="toggleAudio(msg.id)" class="mr-2">
+                          <v-icon>{{ audioStates[msg.id]?.playing ? 'mdi-pause' : 'mdi-play' }}</v-icon>
+                        </v-btn>
+                        <audio :ref="`audio-${msg.id}`" :src="msg.audio_url" @ended="onAudioEnded(msg.id)"
+                          style="display: none;"></audio>
+                        <span class="text-caption">Voice message</span>
+                      </div>
+                    </div>
+
+                    <!-- Message timestamp and status -->
+                    <div class="message-meta d-flex align-center justify-end mt-1">
+                      <span class="text-caption text-grey mr-2">
+                        {{ formatTimestamp(msg.created_at || msg.timestamp) }}
+                      </span>
+                      <v-icon v-if="isOutgoingMessage(msg)" :color="getStatusIconColor(msg.message_status)" size="14">
+                        {{ getStatusIcon(msg.message_status) }}
+                      </v-icon>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div v-else class="text-center text-grey">
-                No conversation found.
+
+              <!-- Empty state -->
+              <div v-else class="empty-state pa-8 text-center">
+                <v-icon size="64" color="grey lighten-2">mdi-message-outline</v-icon>
+                <div class="text-h6 mt-4 text-grey">No messages yet</div>
+                <div class="text-caption text-grey">Start the conversation below</div>
               </div>
             </div>
           </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="dialog = false">Close</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
 
+          <!-- Reply Input Section -->
+          <v-divider />
+          <v-card-text class="reply-section pa-4">
+            <!-- Attachment Preview -->
+            <div v-if="hasAttachment" class="attachment-preview mb-3">
+              <v-chip v-if="attachment.image && attachment.image.length" close @click:close="attachment.image = null"
+                color="blue lighten-4" class="mr-2">
+                <v-icon left small>mdi-image</v-icon>
+                {{ attachment.image[0]?.name }}
+              </v-chip>
+              <v-chip v-if="attachment.audio && attachment.audio.length" close @click:close="attachment.audio = null"
+                color="green lighten-4">
+                <v-icon left small>mdi-microphone</v-icon>
+                {{ attachment.audio[0]?.name }}
+              </v-chip>
+            </div>
+
+            <!-- Message Input -->
+            <div class="message-input-container">
+              <v-textarea v-model="replyMessage" label="Type your message..." rows="2" auto-grow outlined dense
+                hide-details class="message-input" @keydown.enter.exact.prevent="sendMessage"
+                @keydown.enter.shift.exact="addNewLine" />
+
+              <!-- Input Actions -->
+              <div class="input-actions d-flex align-center mt-2">
+                <div class="d-flex align-center flex-grow-1">
+                  <!-- Emoji Button -->
+                  <v-btn icon small @click="showEmojiPicker = !showEmojiPicker" class="mr-2">
+                    <v-icon>mdi-emoticon-happy-outline</v-icon>
+                  </v-btn>
+
+                  <!-- Attachment Buttons -->
+                  <v-menu offset-y>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn icon small v-bind="attrs" v-on="on" class="mr-2">
+                        <v-icon>mdi-attachment</v-icon>
+                      </v-btn>
+                    </template>
+                    <v-list dense>
+                      <v-list-item @click="$refs.imageInput.click()">
+                        <v-list-item-icon>
+                          <v-icon>mdi-image</v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-content>
+                          <v-list-item-title>Image</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                      <v-list-item @click="$refs.audioInput.click()">
+                        <v-list-item-icon>
+                          <v-icon>mdi-microphone</v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-content>
+                          <v-list-item-title>Voice Note</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+
+                  <!-- Hidden file inputs -->
+                  <input ref="imageInput" type="file" accept="image/*" @change="handleImageUpload"
+                    style="display: none;" />
+                  <input ref="audioInput" type="file" accept="audio/*" @change="handleAudioUpload"
+                    style="display: none;" />
+
+                  <!-- Character count -->
+                  <span v-if="replyMessage.length > 0" class="text-caption text-grey ml-2">
+                    {{ replyMessage.length }}
+                  </span>
+                </div>
+
+                <!-- Send Button -->
+                <v-btn color="primary" :disabled="!canSendMessage" @click="sendMessage" class="ml-2" :loading="sending">
+                  <v-icon>mdi-send</v-icon>
+                </v-btn>
+              </div>
+
+              <!-- Emoji Picker -->
+              <v-expand-transition>
+                <div v-if="showEmojiPicker" class="emoji-picker mt-3 pa-3">
+                  <div class="emoji-grid">
+                    <v-btn v-for="emoji in commonEmojis" :key="emoji" text x-small @click="appendEmoji(emoji)"
+                      class="emoji-btn">
+                      {{ emoji }}
+                    </v-btn>
+                  </div>
+                </div>
+              </v-expand-transition>
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Image Preview Dialog -->
+        <v-dialog v-model="imagePreviewDialog" max-width="90vw">
+          <v-card>
+            <v-card-title class="pa-2">
+              <v-spacer />
+              <v-btn icon @click="imagePreviewDialog = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-card-title>
+            <v-card-text class="pa-2">
+              <v-img :src="previewImageUrl" contain max-height="80vh" />
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+      </v-dialog>
       <!-- Order Details Dialog -->
       <v-dialog v-model="showOrderDetailsDialog" max-width="800">
         <v-card>
@@ -828,6 +1030,142 @@ onMounted(async () => {
           </v-card-actions>
         </v-card>
       </v-dialog>
+      <WhatsAppConversation />
+
     </v-container>
+
   </AppLayout>
 </template>
+<style scoped>
+.conversation-dialog {
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.messages-container {
+  height: calc(90vh - 200px);
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.message-wrapper {
+  display: flex;
+  width: 100%;
+}
+
+.message-wrapper.outgoing {
+  justify-content: flex-end;
+}
+
+.message-wrapper.incoming {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.message-bubble.outgoing {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.incoming {
+  background: #f5f5f5;
+  color: #333;
+  border-bottom-left-radius: 4px;
+}
+
+.message-content {
+  line-height: 1.4;
+}
+
+.message-sender {
+  color: #666;
+  font-size: 11px;
+}
+
+.message-meta {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.reply-section {
+  background: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.message-input-container {
+  position: relative;
+}
+
+.attachment-preview {
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f9f9f9;
+}
+
+.emoji-picker {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+}
+
+.emoji-btn {
+  min-width: 40px !important;
+  font-size: 18px;
+}
+
+.audio-container {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.empty-state {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Scrollbar styling */
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+</style>

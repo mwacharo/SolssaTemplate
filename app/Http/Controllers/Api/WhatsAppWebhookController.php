@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebhookController extends Controller
@@ -37,7 +38,9 @@ class WhatsAppWebhookController extends Controller
 
             case 'outgoingMessageStatus':
                 Log::info('✅ Message status update', $payload);
-                break;
+                return $this->handleStatusUpdate($payload);
+
+                // break;
 
             case 'stateInstanceChanged':
                 Log::info('⚙️ Instance state changed: ' . $payload['stateInstance']);
@@ -54,6 +57,7 @@ class WhatsAppWebhookController extends Controller
     protected function handleIncomingMessage(array $payload)
     {
         $chatId   = $payload['senderData']['chatId'] ?? null;
+        $senderId = $payload['senderData']['senderId'] ?? null;
         $text     = $payload['messageData']['textMessageData']['textMessage'] ?? null;
         $quoted   = $payload['messageData']['quotedMessage']['message'] ?? null;
         $quotedId = $payload['messageData']['quotedMessage']['stanzaId'] ?? null;
@@ -88,23 +92,40 @@ class WhatsAppWebhookController extends Controller
     protected function handleOutgoing(array $payload)
     {
         $chatId = $payload['senderData']['chatId'] ?? null;
+        $senderId = $payload['senderData']['sender'] ?? null;
         $text = $payload['messageData']['textMessageData']['textMessage'] ?? null;
 
         if (!$chatId || !$text) {
             return response()->json(['error' => 'Missing outgoing data'], 400);
         }
 
+        // Identify the sender using a helper function
+        Log::info("🔍 Identifying sender for chatId: {$senderId}");
+        $sender = $this->identifySender($senderId);
+
+
+        // Optionally, you can use $sender for messageable_type and messageable_id if needed
+
+            
+        // if (!$sender) {
+        //     Log::warning("🚫 Sender not found for chat ID: {$chatId}")   ;
+
         $msg = Message::updateOrCreate(
-            ['wa_message_id' => $payload['idMessage']],
+            // ['wa_message_id' => $payload['idMessage']],
+            ['external_message_id' => $payload['idMessage']],
             [
                 'chat_id' => $chatId,
                 'from' => 'system',
                 'to' => $chatId,
-                'body' => $text,
+                // 'body' => $text,
+                'content' => $text,
+
                 'message_type' => $payload['messageData']['typeMessage'] ?? 'text',
                 'timestamp' => now(),
                 'direction' => 'outgoing',
                 'message_status' => 'sent',
+                'messageable_type' => \App\Models\User::class,
+                'messageable_id' => $sender ? $sender->id : 1, // Default to 1 if sender not found
             ]
         );
 
@@ -120,10 +141,12 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['error' => 'Missing status data'], 400);
         }
 
-        $msg = Message::where('wa_message_id', $idMessage)->first();
+        $msg = Message::where('external_message_id', $idMessage)->first();
 
         if ($msg) {
-            $msg->message_status = $status;
+            // $msg->message_status = $status;
+            $msg->status = $status;
+
             $msg->timestamp = now();
 
             if ($status === 'delivered') {
@@ -146,5 +169,38 @@ class WhatsAppWebhookController extends Controller
         Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
 
         return response()->json(['warning' => 'Message not found'], 404);
+    }
+
+    private function identifySender($senderId)
+    {
+        // Remove WhatsApp suffix if present (e.g., @c.us)
+        $cleanSenderId = preg_replace('/@.*$/', '', $senderId);
+        Log::info("identifySender: cleanSenderId = {$cleanSenderId}");
+
+        // Remove leading zeros and plus if present
+        $normalized = ltrim($cleanSenderId, '0+');
+        Log::info("identifySender: normalized = {$normalized}");
+
+        // Try to match with phone_number in various formats
+        // 1. Try with country code (e.g., 254...)
+        $user = User::where('phone_number', 'like', "%{$normalized}")->first();
+        Log::info("identifySender: user by normalized = " . ($user ? $user->id : 'not found'));
+        if ($user) {
+            return $user;
+        }
+
+        // 2. Try with leading zero (e.g., 07...)
+        if (strlen($normalized) > 9 && substr($normalized, 0, 3) === '254') {
+            $local = '0' . substr($normalized, 3);
+            Log::info("identifySender: local = {$local}");
+            $user = User::where('phone_number', $local)->first();
+            Log::info("identifySender: user by local = " . ($user ? $user->id : 'not found'));
+            if ($user) {
+                return $user;
+            }
+        }
+
+        // 3. Try with senderId directly (for custom mapping)
+        return User::where('phone_number', $cleanSenderId)->first();
     }
 }

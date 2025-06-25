@@ -14,6 +14,10 @@ use Spatie\Permission\Traits\HasRoles;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 use Spatie\Activitylog\LogOptions;
+use App\Models\ChannelCredential;
+
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+
 
 class User extends Authenticatable
 {
@@ -105,4 +109,19 @@ class User extends Authenticatable
             ->logOnlyDirty()
             ->setDescriptionForEvent(fn(string $eventName) => "User was {$eventName}");
     }
+
+
+
+    // channelCredentials
+
+//     public function channelCredentials(): MorphMany
+// {
+//     return $this->morphMany(ChannelCredential::class, 'credentialable');
+// }
+
+
+    public function channelCredentials()
+{
+    return $this->morphMany(ChannelCredential::class, 'credentialable');
+}
 }

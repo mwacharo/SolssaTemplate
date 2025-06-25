@@ -41,54 +41,94 @@ class WhatsAppController extends Controller
         ]);
     }
 
-
-
-  public function sendMessage(Request $request)
+    public function sendMessage(Request $request)
     {
+        Log::debug('sendMessage called', ['request' => $request->all()]);
+
         $request->validate([
             'message' => 'required|string',
             'user_id' => 'required|integer',
             'order_ids' => 'nullable|array',
             'contact_ids' => 'nullable|array',
+            'contacts' => 'nullable|array',
+            'contacts.*.chatId' => 'required_with:contacts|string',
         ]);
 
         $userId = $request->user_id;
         $messageText = $request->message;
         $queued = 0;
 
-        // Send to orders' clients
+        // 1. Send to orders' clients
         if ($request->filled('order_ids')) {
-            $orders = Order::with('client')
-                ->whereIn('id', $request->order_ids)
-                ->get();
+            Log::debug('Processing order_ids', ['order_ids' => $request->order_ids]);
+
+            $orders = Order::with('client')->whereIn('id', $request->order_ids)->get();
 
             foreach ($orders as $order) {
                 $client = $order->client;
+                Log::debug('Processing order client', ['order_id' => $order->id, 'client' => $client]);
 
                 $phone = $client?->phone_number ?? $client?->alt_phone_number;
-                if (!$phone) continue;
+                if (!$phone) {
+                    Log::warning('No phone found for client', ['order_id' => $order->id, 'client_id' => $client?->id]);
+                    continue;
+                }
 
                 $chatId = preg_replace('/[^0-9]/', '', $phone) . '@c.us';
+                Log::info('Dispatching WhatsApp message job (order)', ['chatId' => $chatId, 'userId' => $userId]);
                 SendWhatsAppMessageJob::dispatch($chatId, $messageText, $userId);
                 $queued++;
             }
         }
 
-        // Send to user's contacts
+        // 2. Send to user's saved contacts
         if ($request->filled('contact_ids')) {
+            Log::debug('Processing contact_ids', ['contact_ids' => $request->contact_ids]);
+
             $user = User::with(['contacts' => function ($q) use ($request) {
                 $q->whereIn('id', $request->contact_ids);
             }])->find($userId);
 
             foreach ($user?->contacts ?? [] as $contact) {
+                Log::debug('Processing user contact', ['contact_id' => $contact->id, 'contact' => $contact]);
+
                 $phone = $contact->phone ?? $contact->alt_phone;
-                if (!$phone) continue;
+                if (!$phone) {
+                    Log::warning('No phone found for contact', ['contact_id' => $contact->id]);
+                    continue;
+                }
 
                 $chatId = preg_replace('/[^0-9]/', '', $phone) . '@c.us';
+                Log::info('Dispatching WhatsApp message job (saved contact)', ['chatId' => $chatId, 'userId' => $userId]);
                 SendWhatsAppMessageJob::dispatch($chatId, $messageText, $userId);
                 $queued++;
             }
         }
+
+        // 3. Send to unknown contacts directly via chatId
+        if ($request->filled('contacts')) {
+            Log::debug('Processing direct contacts array', ['contacts' => $request->contacts]);
+
+            foreach ($request->contacts as $contact) {
+                $rawChatId = $contact['chatId'] ?? null;
+                if (!$rawChatId) {
+                    Log::warning('Missing chatId in direct contact', ['contact' => $contact]);
+                    continue;
+                }
+
+                $chatId = preg_replace('/[^0-9]/', '', $rawChatId) . '@c.us';
+
+                Log::info('Dispatching WhatsApp message job (external contact)', [
+                    'chatId' => $chatId,
+                    'userId' => $userId
+                ]);
+
+                SendWhatsAppMessageJob::dispatch($chatId, $messageText, $userId);
+                $queued++;
+            }
+        }
+
+        Log::info('sendMessage completed', ['queued_count' => $queued]);
 
         return response()->json([
             'status' => 'success',
@@ -113,19 +153,51 @@ class WhatsAppController extends Controller
         return response()->json($messages);
     }
 
+    public function listConversations()
+    {
+        // Get the latest message per chat_id using Eloquent
+        $latestMessages = Message::select('to as chat_id')
+            ->selectRaw('MAX(id) as id')
+            ->groupBy('chat_id');
+
+        $conversations = Message::with('messageable')
+            ->whereIn('id', $latestMessages->pluck('id'))
+            ->orderBy('timestamp', 'desc')
+            ->get();
+
+        return MessageResource::collection($conversations);
+    }
+
+
+
+
+    /**
+     * Get the full message thread for a given chat_id
+     */
+    public function getConversation($chatId)
+    {
+        $messages = Message::where(function ($q) use ($chatId) {
+            $q->where('from', $chatId)
+                ->orWhere('to', $chatId);
+        })->orderBy('timestamp')->get();
+
+        return MessageResource::collection($messages);
+    }
+
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        // Fetch messages with pagination, only not deleted
-        $messages = Message::whereNull('deleted_at')
-            ->latest()
-            ->paginate(20);
+    // public function index()
+    // {
+    //     // Fetch messages with pagination, only not deleted
+    //     $messages = Message::whereNull('deleted_at')
+    //         ->latest()
+    //         ->paginate(20);
 
-        // Return resource collection
-        return MessageResource::collection($messages);
-    }
+    //     // Return resource collection
+    //     return MessageResource::collection($messages);
+    // }
 
 
     /**
