@@ -130,6 +130,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'handle']);
     // Route::get('/conversations', [WhatsAppController::class, 'listConversations']);
     Route::get('/conversation/{chatId}', [WhatsAppController::class, 'getConversation']);
+    Route::post('/whatsapp/retry-message/{id}', [WhatsAppController::class, 'retryMessage']);
 
 
 

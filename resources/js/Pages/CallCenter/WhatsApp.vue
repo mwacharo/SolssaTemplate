@@ -128,7 +128,7 @@ const loadOrders = (page = 1) => store.loadOrders(page)
 const loadTemplates = () => store.loadTemplates()
 const calculateStats = () => store.calculateStats()
 const calculateOrderStats = () => store.calculateOrderStats()
-const onTemplateSelect = (templateId) => store.onTemplateSelect(templateId)
+const onTemplateSelect = (selectedTemplate) => store.onTemplateSelect(selectedTemplate)
 const resetFilters = () => store.resetFilters()
 const sendMessage = () => store.sendMessage(userId.value)
 
@@ -699,30 +699,66 @@ onMounted(async () => {
       </v-row>
 
       <!-- Dialogs and Modals -->
-      <!-- New Message Dialog -->
-      <v-dialog v-model="showNewMessageDialog" max-width="600">
-        <v-card>
-          <v-card-title>
-            <span class="text-h6">Send WhatsApp Message</span>
-          </v-card-title>
-          <v-card-text>
-            <v-select v-model="selectedContacts" :items="validWhatsappContacts" item-title="name" item-value="id"
-              label="Select Recipients" multiple chips :disabled="loading.contacts" :loading="loading.contacts"
-              return-object></v-select>
-            <v-select v-model="selectedTemplate" :items="templates" item-title="name" item-value="id"
-              label="Select Template" @change="onTemplateSelect" :disabled="loading.templates"
-              :loading="loading.templates" return-object class="mt-3"></v-select>
-            <v-textarea v-model="messageText" label="Message" rows="4" auto-grow class="mt-3"></v-textarea>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" :loading="loading.sending" @click="sendMessage">
-              Send
-            </v-btn>
-            <v-btn text @click="showNewMessageDialog = false">Cancel</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+  <v-dialog v-model="store.showNewMessageDialog" max-width="600">
+    <v-card>
+      <v-card-title>
+        <span class="text-h6">Send WhatsApp Message</span>
+      </v-card-title>
+      <v-card-text>
+        <!-- Recipients -->
+        <v-select
+          v-model="store.selectedContacts"
+          :items="store.validWhatsappContacts"
+          item-title="name"
+          item-value="id"
+          label="Select Recipients"
+          multiple
+          chips
+          :disabled="store.loading.contacts"
+          :loading="store.loading.contacts"
+          return-object
+        />
+        
+        <!-- Template Select -->
+        <v-select
+          v-model="store.selectedTemplate"
+          :items="store.allTemplates"
+          item-title="name"
+          item-value="id"
+          label="Select Template"
+          return-object
+          :disabled="store.loading.templates"
+          :loading="store.loading.templates"
+          @update:model-value="store.onTemplateSelect"
+          class="mt-3"
+          clearable
+        />
+        
+        <!-- Message Preview -->
+        <v-textarea
+          v-model="store.messageText"
+          label="Message"
+          rows="4"
+          auto-grow
+          class="mt-3"
+          placeholder="Type your message or select a template above"
+        />
+      </v-card-text>
+      
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn 
+          color="primary" 
+          :loading="store.loading.sending" 
+          @click="sendMessage"
+          :disabled="!store.messageText.trim()"
+        >
+          Send
+        </v-btn>
+        <v-btn text @click="store.showNewMessageDialog = false">Cancel</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 
       <!-- Order Message Dialog -->
       <v-dialog v-model="showOrderMessageDialog" max-width="600">

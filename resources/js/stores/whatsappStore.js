@@ -118,7 +118,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
     // conversation getters
 
-        hasAttachment: (state) => !!(state.attachment.image || state.attachment.audio),
+    hasAttachment: (state) => !!(state.attachment.image || state.attachment.audio),
 
     filteredContacts: (state) => {
       if (!Array.isArray(state.contacts)) return []
@@ -237,7 +237,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     // conversation actions
 
 
-     setDialog(value) {
+    setDialog(value) {
       this.dialog = value
     },
 
@@ -436,16 +436,54 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       }
     },
 
-    // Template handling
-    onTemplateSelect(templateId) {
-      if (!templateId) return
+    // Updated onTemplateSelect method in your Pinia store
+    onTemplateSelect(template) {
+      console.log('Template selected:', template); // Debug log
 
-      const template = this.allTemplates.find(t => t.id === templateId || t.name === templateId)
-      if (template) {
-        this.messageText = template.content
-        this.selectedTemplate = template
+      if (!template || !template.content) {
+        console.log('No template or content found');
+        return;
       }
+
+      this.selectedTemplate = template;
+
+      // Use first selected contact and order for placeholder replacement
+      const contact = this.selectedContacts?.[0] || {};
+      const order = this.selectedOrders?.[0] || {};
+
+      // Build placeholders object for template parsing
+      const placeholders = {
+        customer_name: contact.name || order.customer_name || 'Customer',
+        customer_phone: contact.phone || order.customer_phone || '',
+        order_number: order.order_number || '',
+        product_name: order.product_name || '',
+        price: order.price || '',
+        tracking_id: order.tracking_id || ''
+      };
+
+      // Parse template and update message text
+      this.messageText = this.parseTemplate(template.content, placeholders);
+
+      console.log('Parsed messageText:', this.messageText); // Debug log
     },
+
+    parseTemplate(template, data = {}) {
+      return Object.entries(data).reduce((result, [key, value]) => {
+        const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+        return result.replace(regex, value ?? '')
+      }, template)
+    },
+
+
+
+    // ,    parseTemplate(template, data = {}) {
+    //       return Object.entries(data).reduce((result, [key, value]) => {
+    //         const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    //         return result.replace(regex, value ?? '')
+    //       }, template)
+    //     }
+    //     ,
+
 
     // Filter actions
     resetFilters() {
@@ -468,6 +506,9 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
     // Message sending
     async sendMessage(userId) {
+
+      console.log('Sending message with userId:', userId); // Debug log
+
       if (!this.messageText.trim()) {
         return this.showError('Please enter a message')
       }

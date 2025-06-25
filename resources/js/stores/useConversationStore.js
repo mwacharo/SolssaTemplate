@@ -232,31 +232,21 @@ const openDialog = async (contactId) => {
         return response.json()
     }
 
-    const retryFailedMessage = async (messageId) => {
-        const message = conversation.value.find(msg => msg.id === messageId)
-        if (!message || message.message_status !== 'failed') return
+  
+const retryFailedMessage = async (messageId) => {
+    const message = conversation.value.find(msg => msg.id === messageId)
+    if (!message || message.message_status !== 'failed') return
 
-        message.message_status = 'sending'
+    message.message_status = 'sending'
 
-        try {
-            const response = await fetch(`/api/v1/messages/${messageId}/retry`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getAuthToken()}`
-                }
-            })
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
-
-            message.message_status = 'sent'
-        } catch (error) {
-            console.error('Failed to retry message:', error)
-            message.message_status = 'failed'
-        }
+    try {
+        await axios.post(`/api/v1/whatsapp/retry-message/${messageId}`)
+        message.message_status = 'sent'
+    } catch (error) {
+        console.error('Failed to retry message:', error)
+        message.message_status = 'failed'
     }
+}
 
     const deleteMessage = async (messageId) => {
         try {
