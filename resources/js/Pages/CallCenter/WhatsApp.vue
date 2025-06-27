@@ -7,20 +7,20 @@ import { useAuthStore } from '@/stores/auth'
 import { useConversationStore } from '@/stores/useConversationStore'
 
 import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
-
-
-
+import { useOrderStore } from '@/stores/orderStore' // Adjust path as needed
 
 // Initialize the store
 const store = useWhatsAppStore()
 const conversationStore = useConversationStore()
+const orderStore = useOrderStore()
 
-
+const viewOrderDetails = (order) => {
+  console.log('View', order)
+}
 // Local UI state (not managed by store)
 const selectedPhone = ref(null);
 const dialog = ref(false);
-const conversation = ref([]);
-
+const conversation = ref([])
 
 const auth = useAuthStore()
 
@@ -30,6 +30,20 @@ const userId = computed(() => user.value?.id)
 console.log('User:', JSON.stringify(user.value))
 
 console.log('User ID:', userId.value)
+
+
+
+const orderHeaders = [
+  { title: 'Order #', key: 'order_no' },
+  { title: 'Customer', key: 'client' },
+  { title: 'Vendor', key: 'vendor' },
+  { title: 'Status', key: 'status' },
+  { title: 'Delivery Status', key: 'delivery_status' },
+  { title: 'Items', key: 'order_items' },
+  { title: 'Total Price', key: 'total_price' },
+  { title: 'Date Created', key: 'created_at' },
+  { title: 'Actions', key: 'actions', sortable: false }
+]
 
 // Contact type options
 const contactTypes = [
@@ -58,6 +72,30 @@ const orderStatusOptions = [
 ];
 
 // Computed properties from store
+
+
+const orderDateRangeText = computed(() => {
+  if (!orderStore.orderDateRange || orderStore.orderDateRange.length === 0) {
+    return ''
+  }
+  if (orderStore.orderDateRange.length === 1) {
+    return formatDate(orderStore.orderDateRange[0])
+  }
+  return `${formatDate(orderStore.orderDateRange[0])} - ${formatDate(orderStore.orderDateRange[1])}`
+})
+
+const hasActiveFilters = computed(() => {
+  return !!(
+    orderStore.orderFilterStatus ||
+    orderStore.orderFilterProduct ||
+    orderStore.orderFilterZone ||
+    orderStore.orderFilterAgent ||
+    orderStore.orderFilterRider ||
+    orderStore.orderFilterVendor ||
+    (orderStore.orderDateRange && orderStore.orderDateRange.length > 0) ||
+    orderStore.orderSearch
+  )
+})
 const {
   // Data
 
@@ -175,10 +213,6 @@ const openSendMessage = (isBulk = false, contact = null) => {
 }
 
 
-
-
-
-
 // In your <script setup>
 const viewMessageDetails = (message) => {
   console.log('viewMessageDetails called with:', message) // Debug log
@@ -204,6 +238,23 @@ Type: ${contact.type || 'N/A'}
 Company: ${contact.company_name || 'N/A'}
 Country: ${contact.country_name || 'N/A'}`)
 }
+
+
+const statusColor = (status) => ({
+  active: 'success',
+  inactive: 'grey',
+  pending: 'warning',
+  processing: 'primary',
+  cancelled: 'error'
+}[status?.toLowerCase()] || 'grey')
+
+const deliveryStatusColor = (status) => ({
+  inprogress: 'warning',
+  delivered: 'success',
+  cancelled: 'error',
+  pending: 'primary',
+  shipped: 'info'
+}[status?.toLowerCase()] || 'grey')
 
 // Watch for search changes
 watch(() => store.search, (newValue) => {
@@ -238,6 +289,102 @@ function getConnectionStatus() {
   // You can adjust this logic based on your actual status variable
   return whatsappStatus.value || 'Unknown';
 }
+
+
+const handleFilterChange = () => {
+  // Apply filters immediately for select dropdowns
+  applyFilters()
+}
+
+const handleSearchChange = () => {
+  // Debounce search to avoid too many API calls
+  debouncedFilter.value()
+}
+
+const handleDateChange = () => {
+  orderDateMenu.value = false
+  applyFilters()
+}
+
+const clearDateRange = () => {
+  orderStore.orderDateRange = []
+  applyFilters()
+}
+
+const clearAllFilters = () => {
+  orderStore.clearAllFilters()
+  applyFilters()
+}
+
+const applyFilters = async () => {
+  try {
+    orderStore.loading.orders = true
+
+    // Build filter object
+    const filters = {
+      status: orderStore.orderFilterStatus,
+      product: orderStore.orderFilterProduct,
+      zone: orderStore.orderFilterZone,
+      agent: orderStore.orderFilterAgent,
+      rider: orderStore.orderFilterRider,
+      vendor: orderStore.orderFilterVendor,
+      dateRange: orderStore.orderDateRange,
+      search: orderStore.orderSearch
+    }
+
+    // Remove null/empty values
+    const cleanFilters = Object.fromEntries(
+      Object.entries(filters).filter(([_, value]) =>
+        value !== null && value !== '' &&
+        !(Array.isArray(value) && value.length === 0)
+      )
+    )
+
+    // Apply filters using store action
+    await orderStore.loadOrdersWithFilters(cleanFilters)
+
+  } catch (error) {
+    console.error('Error applying filters:', error)
+    // Handle error appropriately
+  } finally {
+    orderStore.loading.orders = false
+  }
+}
+
+const refreshData = async () => {
+  try {
+    orderStore.loading.refresh = true
+
+    // Refresh data using store actions
+    await Promise.all([
+      orderStore.loadOrderStatusOptions(),
+      orderStore.loadProductOptions(),
+      orderStore.loadZoneOptions(),
+      orderStore.loadAgentOptions(),
+      orderStore.loadRiderOptions(),
+      orderStore.loadVendorOptions()
+    ])
+
+    // Reapply current filters
+    await applyFilters()
+  } catch (error) {
+    console.error('Error refreshing data:', error)
+  } finally {
+    orderStore.loading.refresh = false
+  }
+}
+
+// Show filter dialog
+const showFilterDialog = ref(false);
+
+function openFilterDialog() {
+  showFilterDialog.value = true;
+}
+
+// const formatDate = (date) => {
+//   if (!date) return ''
+//   return new Date(date).toLocaleDateString()
+// }
 
 // Component mount
 onMounted(async () => {
@@ -448,23 +595,23 @@ onMounted(async () => {
                   </div>
                 </v-card-text>
               </v-window-item>
-
               <!-- Orders Tab -->
               <v-window-item value="orders">
+                <!-- Header -->
                 <v-card-title class="d-flex flex-wrap justify-space-between align-center">
                   <div class="text-h6">Orders</div>
-                  <div class="d-flex align-center gap-2">
-                    <v-select v-model="orderFilterStatus" :items="orderStatusOptions" item-title="title"
-                      item-value="value" label="Filter by Status" hide-details density="compact"
-                      class="max-w-xs"></v-select>
-                    <v-btn icon @click="loadOrders" :loading="loading.orders">
-                      <v-icon>mdi-refresh</v-icon>
+
+                  <v-text-field v-model="search" append-icon="mdi-magnify" label="Search orders"
+                    placeholder="Client, Order #, Phone" single-line hide-details density="compact" clearable
+                    class="max-w-xs" @keyup.enter="loadOrders" />
+
+                  <div class="d-flex align-center gap-2 flex-wrap">
+                    <v-btn icon @click="openFilterDialog" :loading="loading.orders" color="primary"
+                      title="Apply Filters">
+                      <v-icon>mdi-filter</v-icon>
                     </v-btn>
                   </div>
                 </v-card-title>
-
-
-
 
                 <!-- Bulk Actions Bar -->
                 <v-card-text v-if="selectedOrders.length > 0" class="py-2">
@@ -473,36 +620,25 @@ onMounted(async () => {
                       <div class="d-flex align-center gap-2">
                         <v-icon>mdi-checkbox-marked</v-icon>
                         <span>{{ selectedOrders.length }} order(s) selected</span>
-                        <v-btn variant="text" size="small" @click="clearSelection">
+                        <v-btn variant="text" size="small" @click="selectedOrders = []">
                           Clear Selection
                         </v-btn>
                       </div>
 
                       <div class="d-flex align-center gap-2 flex-wrap">
-                        <!-- Bulk Delete -->
-                        <v-btn color="error" variant="outlined" size="small" @click="showBulkDeleteDialog = true"
-                          :loading="loading.bulkActions">
+                        <v-btn color="error" variant="outlined" size="small" @click="showBulkDeleteDialog = true">
                           <v-icon start>mdi-delete</v-icon>
                           Delete Selected
                         </v-btn>
-
-                        <!-- Bulk Assign Rider -->
-                        <v-btn color="primary" variant="outlined" size="small" @click="showAssignRiderDialog = true"
-                          :loading="loading.bulkActions">
+                        <!-- <v-btn color="primary" variant="outlined" size="small" @click="showAssignRiderDialog = true">
                           <v-icon start>mdi-motorbike</v-icon>
                           Assign Rider
-                        </v-btn>
-
-                        <!-- Bulk Send Messages -->
-                        <v-btn color="success" variant="outlined" size="small" @click="showBulkMessageDialog = true"
-                          :loading="loading.bulkActions">
+                        </v-btn> -->
+                        <v-btn color="success" variant="outlined" size="small" @click="openNewMessageDialog ">
                           <v-icon start>mdi-whatsapp</v-icon>
                           Send Messages
                         </v-btn>
-
-                        <!-- Bulk Status Update -->
-                        <v-btn color="warning" variant="outlined" size="small" @click="showBulkStatusDialog = true"
-                          :loading="loading.bulkActions">
+                        <v-btn color="warning" variant="outlined" size="small" @click="showBulkStatusDialog = true">
                           <v-icon start>mdi-update</v-icon>
                           Update Status
                         </v-btn>
@@ -511,118 +647,86 @@ onMounted(async () => {
                   </v-alert>
                 </v-card-text>
 
+                <!-- Orders Table -->
                 <v-card-text>
                   <v-progress-linear v-if="loading.orders" indeterminate color="primary"></v-progress-linear>
 
-                  <div v-else-if="!Array.isArray(filteredOrders) || filteredOrders.length === 0"
-                    class="text-center pa-4">
-                    <v-icon size="large" color="grey">mdi-package-variant</v-icon>
-                    <p class="text-body-1 mt-2">No orders found.</p>
-                  </div>
+                  <v-data-table v-else v-model="selectedOrders" v-model:page="currentOrderPage" :headers="orderHeaders"
+                    :items="orders" :items-per-page="perPage" :server-items-length="totalOrderCount"
+                    :loading="loading.orders" :search="search" show-select item-value="id" class="elevation-1">
+                    <!-- Custom Columns -->
+                    <template #item.order_no="{ item }">
+                      <strong>{{ item.order_no }}</strong>
+                      <div v-if="item.reference" class="text-caption text-grey">
+                        Ref: {{ item.reference }}
+                      </div>
+                    </template>
 
-                  <v-table v-else>
-                    <thead>
-                      <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Vendor</th>
-                        <th>Status</th>
-                        <th>Delivery Status</th>
-                        <th>Items</th>
-                        <th>Total Price</th>
-                        <th>Date Created</th>
-                        <th class="text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="order in filteredOrders" :key="order.id">
-                        <td>
-                          <strong>{{ order.order_no }}</strong>
-                          <div v-if="order.reference" class="text-caption text-grey">
-                            Ref: {{ order.reference }}
-                          </div>
-                        </td>
-                        <td>
-                          <div>{{ order.client?.name || 'N/A' }}</div>
-                          <div class="text-caption text-grey">
-                            {{ formatPhoneNumber(order.client?.phone_number) }}
-                          </div>
-                          <div v-if="order.client?.city" class="text-caption text-grey">
-                            {{ order.client.city }}
-                          </div>
-                        </td>
-                        <td>
-                          <div>{{ order.vendor?.name || 'N/A' }}</div>
-                          <div v-if="order.vendor?.company_name" class="text-caption text-grey">
-                            {{ order.vendor.company_name }}
-                          </div>
-                        </td>
-                        <td>
-                          <v-chip :color="{
-                            active: 'success',
-                            inactive: 'grey',
-                            pending: 'warning',
-                            processing: 'primary',
-                            cancelled: 'error'
-                          }[order.status?.toLowerCase()] || 'grey'" small>
-                            {{ order.status || 'Unknown' }}
-                          </v-chip>
-                        </td>
-                        <td>
-                          <v-chip :color="{
-                            'inprogress': 'warning',
-                            'delivered': 'success',
-                            'cancelled': 'error',
-                            'pending': 'primary',
-                            'shipped': 'info'
-                          }[order.delivery_status?.toLowerCase()] || 'grey'" small>
-                            {{ order.delivery_status || 'Unknown' }}
-                          </v-chip>
-                        </td>
-                        <td>
-                          <div v-if="order.order_items && order.order_items.length">
-                            {{ order.order_items.length }} item(s)
-                            <div class="text-caption text-grey">
-                              Qty: {{ getTotalQuantity(order.order_items) }}
-                            </div>
-                          </div>
-                          <div v-else class="text-grey">No items</div>
-                        </td>
-                        <td>
-                          <div v-if="order.total_price">
-                            ${{ parseFloat(order.total_price).toFixed(2) }}
-                          </div>
-                          <div v-else-if="order.invoice_value && order.invoice_value !== '0.00'">
-                            ${{ parseFloat(order.invoice_value).toFixed(2) }}
-                          </div>
-                          <div v-else class="text-grey">$0.00</div>
-                          <div v-if="order.shipping_charges && order.shipping_charges !== '0.00'"
-                            class="text-caption text-grey">
-                            Shipping: ${{ parseFloat(order.shipping_charges).toFixed(2) }}
-                          </div>
-                        </td>
-                        <td>
-                          {{ formatDate(order.created_at) }}
-                          <div v-if="order.delivery_date" class="text-caption text-grey">
-                            Delivery: {{ formatDate(order.delivery_date) }}
-                          </div>
-                        </td>
-                        <td class="text-center">
-                          <v-btn icon size="small" @click="viewOrderDetails(order)">
-                            <v-icon>mdi-eye</v-icon>
-                          </v-btn>
-                          <v-btn icon size="small" color="primary" @click="sendOrderMessage([order])">
-                            <v-icon>mdi-whatsapp</v-icon>
-                          </v-btn>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
+                    <template #item.client="{ item }">
+                      <div>{{ item.client?.name || 'N/A' }}</div>
+                      <div class="text-caption text-grey">
+                        {{ formatPhoneNumber(item.client?.phone_number) }}
+                      </div>
+                      <div v-if="item.client?.city" class="text-caption text-grey">
+                        {{ item.client.city }}
+                      </div>
+                    </template>
 
-                  <div class="d-flex justify-end mt-4">
-                    <v-pagination v-model="currentOrderPage" :length="totalOrderPages"
-                      @input="loadOrders"></v-pagination>
-                  </div>
+                    <template #item.vendor="{ item }">
+                      <div>{{ item.vendor?.name || 'N/A' }}</div>
+                      <div v-if="item.vendor?.company_name" class="text-caption text-grey">
+                        {{ item.vendor.company_name }}
+                      </div>
+                    </template>
+
+                    <template #item.status="{ item }">
+                      <v-chip :color="statusColor(item.status)" small>
+                        {{ item.status || 'Unknown' }}
+                      </v-chip>
+                    </template>
+
+                    <template #item.delivery_status="{ item }">
+                      <v-chip :color="deliveryStatusColor(item.delivery_status)" small>
+                        {{ item.delivery_status || 'Unknown' }}
+                      </v-chip>
+                    </template>
+
+                    <template #item.order_items="{ item }">
+                      <div v-if="item.order_items?.length">
+                        {{ item.order_items.length }} item(s)
+                        <div class="text-caption text-grey">
+                          Qty: {{ getTotalQuantity(item.order_items) }}
+                        </div>
+                      </div>
+                      <div v-else class="text-grey">No items</div>
+                    </template>
+
+                    <template #item.total_price="{ item }">
+                      <div>
+                        ${{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
+                      </div>
+                      <div v-if="item.shipping_charges && item.shipping_charges !== '0.00'"
+                        class="text-caption text-grey">
+                        Shipping: ${{ parseFloat(item.shipping_charges).toFixed(2) }}
+                      </div>
+                    </template>
+
+                    <template #item.created_at="{ item }">
+                      {{ formatDate(item.created_at) }}
+                      <div v-if="item.delivery_date" class="text-caption text-grey">
+                        Delivery: {{ formatDate(item.delivery_date) }}
+                      </div>
+                    </template>
+
+                    <template #item.actions="{ item }">
+                      <v-btn icon size="small" @click="viewOrderDetails(item)">
+                        <v-icon>mdi-eye</v-icon>
+                      </v-btn>
+                      <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
+                        <v-icon>mdi-whatsapp</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-data-table>
                 </v-card-text>
               </v-window-item>
 
@@ -699,66 +803,95 @@ onMounted(async () => {
       </v-row>
 
       <!-- Dialogs and Modals -->
-  <v-dialog v-model="store.showNewMessageDialog" max-width="600">
-    <v-card>
-      <v-card-title>
-        <span class="text-h6">Send WhatsApp Message</span>
-      </v-card-title>
-      <v-card-text>
-        <!-- Recipients -->
-        <v-select
-          v-model="store.selectedContacts"
-          :items="store.validWhatsappContacts"
-          item-title="name"
-          item-value="id"
-          label="Select Recipients"
-          multiple
-          chips
-          :disabled="store.loading.contacts"
-          :loading="store.loading.contacts"
-          return-object
-        />
-        
-        <!-- Template Select -->
-        <v-select
-          v-model="store.selectedTemplate"
-          :items="store.allTemplates"
-          item-title="name"
-          item-value="id"
-          label="Select Template"
-          return-object
-          :disabled="store.loading.templates"
-          :loading="store.loading.templates"
-          @update:model-value="store.onTemplateSelect"
-          class="mt-3"
-          clearable
-        />
-        
-        <!-- Message Preview -->
-        <v-textarea
-          v-model="store.messageText"
-          label="Message"
-          rows="4"
-          auto-grow
-          class="mt-3"
-          placeholder="Type your message or select a template above"
-        />
-      </v-card-text>
-      
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn 
-          color="primary" 
-          :loading="store.loading.sending" 
-          @click="sendMessage"
-          :disabled="!store.messageText.trim()"
-        >
-          Send
-        </v-btn>
-        <v-btn text @click="store.showNewMessageDialog = false">Cancel</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+
+
+      <!-- filter dialog -->
+
+      <v-dialog v-model="showFilterDialog" max-width="400" content-class="custom-filter-dialog" persistent scrollable>
+        <!-- filter dialog -->
+        <v-card>
+          <v-card-title>
+            <span class="text-h6">Order Filters</span>
+          </v-card-title>
+          <v-card-text>
+            <div class="d-flex flex-column gap-2">
+              <!-- Status Filter -->
+              <v-select v-model="orderStore.orderFilterStatus" :items="orderStore.orderStatusOptions" item-title="title"
+                item-value="value" label="Status" hide-details density="compact" clearable class="mb-2"
+                @update:model-value="handleFilterChange" />
+              <!-- Product Filter -->
+              <v-select v-model="orderStore.orderFilterProduct" :items="orderStore.productOptions" item-title="name"
+                item-value="id" label="Product" hide-details density="compact" clearable class="mb-2"
+                @update:model-value="handleFilterChange" />
+              <!-- Zone Filter -->
+              <v-select v-model="orderStore.orderFilterZone" :items="orderStore.zoneOptions" item-title="name"
+                item-value="id" label="Zone" hide-details density="compact" clearable class="mb-2"
+                @update:model-value="handleFilterChange" />
+              <!-- Agent Filter -->
+              <v-select v-model="orderStore.orderFilterAgent" :items="orderStore.agentOptions" item-title="name"
+                item-value="id" label="Agent" hide-details density="compact" clearable class="mb-2"
+                @update:model-value="handleFilterChange" />
+              <!-- Rider Filter -->
+              <v-select v-model="orderStore.orderFilterRider" :items="orderStore.riderOptions" item-title="name"
+                item-value="id" label="Rider" hide-details density="compact" clearable class="mb-2"
+                @update:model-value="handleFilterChange" />
+              <!-- Vendor Filter -->
+              <v-select v-model="orderStore.orderFilterVendor" :items="orderStore.vendorOptions" item-title="name"
+                item-value="id" label="Vendor" hide-details density="compact" clearable class="mb-2"
+                @update:model-value="handleFilterChange" />
+              <!-- Date Range Filter -->
+              <v-menu v-model="orderDateMenu" :close-on-content-click="false" transition="scale-transition" offset-y
+                min-width="auto">
+                <template #activator="{ props }">
+                  <v-text-field v-model="orderDateRangeText" label="Date Range" prepend-icon="mdi-calendar" readonly
+                    v-bind="props" hide-details density="compact" clearable class="mb-2"
+                    @click:clear="clearDateRange" />
+                </template>
+                <v-date-picker v-model="orderStore.orderDateRange" range @update:model-value="handleDateChange" />
+              </v-menu>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn text color="primary" @click="clearAllFilters">Clear All</v-btn>
+            <v-spacer />
+            <v-btn text @click="showFilterDialog = false">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+
+
+      <v-dialog v-model="store.showNewMessageDialog" max-width="600">
+        <v-card>
+          <v-card-title>
+            <span class="text-h6">Send WhatsApp Message</span>
+          </v-card-title>
+          <v-card-text>
+            <!-- Recipients -->
+            <v-select v-model="store.selectedContacts" :items="store.validWhatsappContacts" item-title="name"
+              item-value="id" label="Select Recipients" multiple chips :disabled="store.loading.contacts"
+              :loading="store.loading.contacts" return-object />
+
+            <!-- Template Select -->
+            <v-select v-model="store.selectedTemplate" :items="store.allTemplates" item-title="name" item-value="id"
+              label="Select Template" return-object :disabled="store.loading.templates"
+              :loading="store.loading.templates" @update:model-value="store.onTemplateSelect" class="mt-3" clearable />
+
+            <!-- Message Preview -->
+            <v-textarea v-model="store.messageText" label="Message" rows="4" auto-grow class="mt-3"
+              placeholder="Type your message or select a template above" />
+          </v-card-text>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" :loading="store.loading.sending" @click="sendMessage"
+              :disabled="!store.messageText.trim()">
+              Send
+            </v-btn>
+            <v-btn text @click="store.showNewMessageDialog = false">Cancel</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
       <!-- Order Message Dialog -->
       <v-dialog v-model="showOrderMessageDialog" max-width="600">

@@ -307,8 +307,6 @@
 
 <script setup>
 import { computed } from 'vue'
-
-
 import { nextTick, onMounted, watch, toRefs, ref } from 'vue'
 import { useConversationStore } from '@/stores/useConversationStore'
 import { useWhatsAppStore } from '@/stores/whatsappStore'
