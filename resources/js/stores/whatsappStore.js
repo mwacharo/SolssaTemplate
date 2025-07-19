@@ -19,8 +19,12 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     contacts: [],
     orders: [],
     templates: [],
+    riders: [],
+    agents: [],
 
     // Selected items
+    selectedRiders: [],
+    selectedAgents: [],
     selectedContacts: [],
     selectedOrders: [],
     selectedTemplate: null,
@@ -386,6 +390,55 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       }
     },
 
+
+    async loadRiders() {
+      try {
+        this.loading.riders = true
+        const response = await axios.get('/api/v1/riders')  // Adjust the endpoint as needed    
+        if (response.data?.data && Array.isArray(response.data.data)) {
+          this.riders = response.data.data
+          console.log('Riders loaded:', this.riders.length)
+        } else {
+          console.error('Unexpected API response format:', response.data)
+          this.riders = []
+          this.showError('Failed to load riders')
+        }
+      } catch (error) {
+        console.error('Error loading riders:', error)
+        this.riders = []
+        this.showError(`Failed to load riders: ${error.response?.data?.message || error.message}`)
+      } finally {
+        this.loading.riders = false
+      }
+    },
+
+    async loadAgents() {
+      try {
+        this.loading.agents = true
+        const response = await axios.get('/api/v1/agents') // Adjust the endpoint as needed
+        if (response.data?.data && Array.isArray(response.data.data)) {
+          this.agents = response.data.data.map(agent => ({
+            id: agent.id,
+            name: agent.name,
+            phone: agent.phone,
+            email: agent.email,
+            ...agent
+          }))
+          console.log('Agents loaded:', this.agents.length)
+        } else {
+          console.error('Unexpected API response format:', response.data)
+          this.agents = []
+          this.showError('Failed to load agents')
+        }
+      } catch (error) {
+        console.error('Error loading agents:', error)
+        this.agents = []
+        this.showError(`Failed to load agents: ${error.response?.data?.message || error.message}`)
+      } finally {
+        this.loading.agents = false
+      }
+    },
+
     // Statistics calculation
     calculateStats() {
       if (!Array.isArray(this.messages)) {
@@ -505,9 +558,77 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     },
 
     // Message sending
-    async sendMessage(userId) {
+    // async sendMessage(userId) {
 
-      console.log('Sending message with userId:', userId); // Debug log
+    //   console.log('Sending message with userId:', userId); // Debug log
+
+    //   if (!this.messageText.trim()) {
+    //     return this.showError('Please enter a message')
+    //   }
+
+    //   if (!Array.isArray(this.selectedContacts) || this.selectedContacts.length === 0) {
+    //     return this.showError('Please select at least one recipient')
+    //   }
+
+    //   try {
+    //     this.loading.sending = true
+
+    //     // Deep clone the payload to avoid circular references
+    //     const contacts = this.selectedContacts.map(c => ({
+    //       id: c.id,
+    //       name: c.name,
+    //       chatId: c.whatsapp || c.alt_phone || c.phone,
+    //     }))
+
+    //     const templateId = this.selectedTemplate ? this.selectedTemplate.id : null
+
+    //     const payload = {
+    //       user_id: userId,
+    //       contacts: JSON.parse(JSON.stringify(contacts)),
+    //       message: this.messageText,
+    //       template_id: templateId,
+    //     }
+
+    //     const response = await axios.post('/api/v1/whatsapp/send-message', payload)
+
+    //     const now = new Date()
+
+    //     this.messages.unshift({
+    //       id: response.data?.id || Date.now(),
+    //       content: this.messageText,
+    //       recipients: this.selectedContacts.length,
+    //       status: 'sent',
+    //       message_status: 'sent',
+    //       sent_at: now.toISOString().split('T')[0],
+    //       created_at: now.toISOString(),
+    //       recipient_name: this.selectedContacts.map(c => c.name).join(', '),
+    //       recipient_phone: this.selectedContacts.map(c => c.whatsapp || c.alt_phone || c.phone).join(', '),
+    //       results: response.data?.results || []
+    //     })
+
+    //     this.stats.sent += this.selectedContacts.length
+    //     this.showSuccess(`Message successfully sent to ${this.selectedContacts.length} recipients`)
+
+    //     this.messageText = ''
+    //     this.selectedContacts = []
+    //     this.selectedTemplate = null
+    //     this.showNewMessageDialog = false
+
+    //     setTimeout(() => {
+    //       this.loadMessages(1)
+    //     }, 1000)
+
+    //   } catch (error) {
+    //     console.error('Error sending message:', error)
+    //     this.showError(`Failed to send message: ${error.response?.data?.message || error.message}`)
+    //   } finally {
+    //     this.loading.sending = false
+    //   }
+    // },
+
+
+    async sendMessage(userId) {
+      console.log('Sending message with userId:', userId)
 
       if (!this.messageText.trim()) {
         return this.showError('Please enter a message')
@@ -520,44 +641,122 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       try {
         this.loading.sending = true
 
-        // Deep clone the payload to avoid circular references
-        const contacts = this.selectedContacts.map(c => ({
-          id: c.id,
-          name: c.name,
-          chatId: c.whatsapp || c.alt_phone || c.phone,
-        }))
+        const templateId = this.selectedTemplate?.id || null
 
-        const templateId = this.selectedTemplate ? this.selectedTemplate.id : null
+        // Send personalized messages
+        const results = []
+        for (const contact of this.selectedContacts) {
+          // const order = this.selectedOrders.find(o =>
+          //   o.customer_phone === contact.phone || o.client?.phone_number === contact.phone
+          // )
 
-        const payload = {
-          user_id: userId,
-          contacts: JSON.parse(JSON.stringify(contacts)),
-          message: this.messageText,
-          template_id: templateId,
+          // const order = orders.find(o => o.client?.phone_number === contact.phone)
+
+
+          const order = this.orders.find(o =>
+            this.selectedOrders.includes(o.id) && (
+              o.customer_phone?.replace(/\D/g, '') === contact.phone?.replace(/\D/g, '') ||
+              o.client?.phone_number?.replace(/\D/g, '') === contact.phone?.replace(/\D/g, '') ||
+              o.client?.id === contact.id
+            )
+          )
+          console.log('Matching order for contact:', contact, '->', order)
+
+          if (!order) {
+            console.warn(`No matching order found for contact:`, contact)
+          }
+
+          // Build placeholders as before
+
+
+          const placeholders = {
+            customer_name: contact.name || order?.customer_name || 'Customer',
+            customer_phone: contact.chatId || '',
+            order_number: order?.order_no || order?.order_number || '',
+            product_name:
+              order?.orderItem?.length > 0
+                ? order.orderItem.map(item => item.product?.product_name).join(', ')
+                : '',
+            price:
+              order?.orderItem?.length > 0
+                ? order.orderItem.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)
+                : '0.00',
+            tracking_id: order?.tracking_no || '',
+            client: order.client || null,
+            orderItems: order.orderItem || [],
+            // vendor: order.vendor || null,
+            agent_name: order.agent?.name || '',
+            vendor_name:order.vendor?.name || '',
+
+            agent_name: order.agent?.name || '',
+            agent_phone: order.agent?.phone || '',
+            rider_name: order.rider?.name || '',
+            rider_phone: order.rider?.phone || '',
+            total_price: order.total_price || '0.00'
+          };
+
+          console.log('Placeholders', placeholders) 
+
+          // const placeholders = {
+          //   customer_name: contact.name || order?.customer_name || 'Customer',
+          //   customer_phone: contact.phone || '',
+          //   order_number: order?.order_number || '',
+          //   product_name: order?.product_name || '',
+          //   price: order?.price || '',
+          //   tracking_id: order?.tracking_id || '',
+          //   client: order.client || null,
+          //   orderItems: order.orderItems || [],
+          //   vendor: order.vendor || null,
+          // }
+
+          // Add full order object with relations to payload if available
+          // let fullOrder = null
+          // if (order) {
+          // fullOrder = {
+          //   ...order,
+          //   client: order.client || null,
+          //   orderItems: order.orderitems || [],
+          //   vendor: order.vendor || null
+          // }
+          // }
+
+          const personalizedMessage = this.parseTemplate(this.selectedTemplate?.content || this.messageText, placeholders)
+
+          const payload = {
+            user_id: userId,
+            contacts: [{
+              id: contact.id,
+              name: contact.name,
+              chatId: contact.whatsapp || contact.alt_phone || contact.phone,
+            }],
+            message: personalizedMessage,
+            template_id: templateId,
+            order: order ? {
+              id: order.id,
+              order_no: order.order_no,
+              orderItem: order.orderItems,
+              total_price: order.total_price,
+            } : null,
+            rider: order?.rider || null,
+            agent: order?.agent || null,
+            vendor: order?.vendor || null,
+          }
+
+          console.log('Sending payload:', payload)
+          const response = await axios.post('/api/v1/whatsapp/send-message', payload)
+
+          results.push({
+            contact: contact.name,
+            phone: contact.phone,
+            status: 'sent',
+            result: response.data?.results || []
+          })
         }
 
-        const response = await axios.post('/api/v1/whatsapp/send-message', payload)
-
-        const now = new Date()
-
-        this.messages.unshift({
-          id: response.data?.id || Date.now(),
-          content: this.messageText,
-          recipients: this.selectedContacts.length,
-          status: 'sent',
-          message_status: 'sent',
-          sent_at: now.toISOString().split('T')[0],
-          created_at: now.toISOString(),
-          recipient_name: this.selectedContacts.map(c => c.name).join(', '),
-          recipient_phone: this.selectedContacts.map(c => c.whatsapp || c.alt_phone || c.phone).join(', '),
-          results: response.data?.results || []
-        })
-
-        this.stats.sent += this.selectedContacts.length
-        this.showSuccess(`Message successfully sent to ${this.selectedContacts.length} recipients`)
-
+        this.showSuccess(`Messages sent to ${results.length} recipients`)
         this.messageText = ''
         this.selectedContacts = []
+        this.selectedOrders = []
         this.selectedTemplate = null
         this.showNewMessageDialog = false
 
@@ -566,12 +765,13 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         }, 1000)
 
       } catch (error) {
-        console.error('Error sending message:', error)
-        this.showError(`Failed to send message: ${error.response?.data?.message || error.message}`)
+        console.error('Error sending personalized messages:', error)
+        this.showError(`Failed: ${error.response?.data?.message || error.message}`)
       } finally {
         this.loading.sending = false
       }
-    },
+    }
+    ,
 
 
     // Order messaging
@@ -692,18 +892,76 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     },
 
     // Dialog actions
-    async openNewMessageDialog() {
+    // async openNewMessageDialog() {
+    //   this.errorMessage = ''
+    //   this.messageText = ''
+    //   this.selectedContacts = []
+    //   this.selectedTemplate = null
+
+    //   if ((!Array.isArray(this.contacts) || this.contacts.length === 0) && !this.loading.contacts) {
+    //     await this.loadContacts()
+    //   }
+
+    //   if ((!Array.isArray(this.templates) || this.templates.length === 0) && !this.loading.templates) {
+    //     await this.loadTemplates()
+    //   }
+
+    //   this.showNewMessageDialog = true
+    // },
+
+
+
+
+    async openNewMessageDialog(selectedOrders = []) {
       this.errorMessage = ''
       this.messageText = ''
       this.selectedContacts = []
       this.selectedTemplate = null
 
-      if ((!Array.isArray(this.contacts) || this.contacts.length === 0) && !this.loading.contacts) {
-        await this.loadContacts()
-      }
-
+      // Load templates if not already available
       if ((!Array.isArray(this.templates) || this.templates.length === 0) && !this.loading.templates) {
         await this.loadTemplates()
+      }
+
+      // If order IDs are passed, map them to client info
+      if (Array.isArray(selectedOrders) && selectedOrders.length > 0) {
+        console.log('openNewMessageDialog: selectedOrders:', selectedOrders)
+        this.selectedContacts = selectedOrders
+          .map(id => {
+            const order = this.orders.find(o => o.id === id)
+            if (!order) {
+              console.warn('Order not found for id:', id)
+              return null
+            }
+            if (!order.client) {
+              console.warn('Order has no client:', order)
+              return null
+            }
+            return {
+              id: order.client.id,
+              name: order.client.name || order.client.phone,
+              phone: order.client.phone_number,
+              alt_phone: order.client.alt_phone
+
+            }
+          })
+          .filter(client => {
+            const valid = client?.id && client?.phone
+            if (!valid) {
+              console.warn('Invalid client object:', client)
+            }
+            return valid
+          })
+        console.log('openNewMessageDialog: selectedContacts from orders:', this.selectedContacts)
+      }
+      // 
+      else {
+        // If no orders passed, fallback to loading all contacts
+        if ((!Array.isArray(this.contacts) || this.contacts.length === 0) && !this.loading.contacts) {
+          await this.loadContacts()
+        }
+        this.selectedContacts = []
+        console.log('Loaded all contacts:', this.contacts)
       }
 
       this.showNewMessageDialog = true
@@ -755,12 +1013,16 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       this.contacts = []
       this.orders = []
       this.templates = []
+      this.riders = []
+      this.agents = []
 
       await Promise.all([
         this.loadMessages(1),
         this.loadContacts(),
         this.loadOrders(1),
-        this.loadTemplates()
+        this.loadTemplates(),
+        this.loadRiders(),
+        this.loadAgents()
       ])
     }
   }

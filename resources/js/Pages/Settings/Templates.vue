@@ -33,10 +33,10 @@
                 ></v-text-field>
               </v-col>
               
-              <v-col cols="12" md="6" lg="4">
+              <!-- <v-col cols="12" md="6" lg="4">
                 <v-select
                   v-model="filterChannel"
-                  :items="['All', 'Email', 'SMS', 'Push', 'In-app']"
+                  :items="['All', 'Email', 'SMS', 'Push', 'In-app','']"
                   label="Filter by channel"
                   variant="outlined"
                   density="comfortable"
@@ -45,9 +45,9 @@
                   class="rounded-lg"
                   @update:model-value="filterByChannel"
                 ></v-select>
-              </v-col>
+              </v-col> -->
               
-              <v-col cols="12" md="6" lg="4">
+              <!-- <v-col cols="12" md="6" lg="4">
                 <v-select
                   v-model="filterModule"
                   :items="['All', 'Customer', 'Order', 'Payment', 'Shipping', 'Support']"
@@ -59,7 +59,7 @@
                   class="rounded-lg"
                   @update:model-value="filterByModule"
                 ></v-select>
-              </v-col>
+              </v-col> -->
             </v-row>
           </v-card-text>
           
@@ -212,7 +212,7 @@
                   ></v-text-field>
                 </v-col>
                 
-                <v-col cols="12" md="6">
+                <!-- <v-col cols="12" md="6">
                   <v-select
                     v-model="editedItem.channel"
                     :items="['Email', 'SMS', 'Push', 'In-app']"
@@ -232,9 +232,9 @@
                     prepend-inner-icon="mdi-apps"
                     :rules="[v => !!v || 'Module is required']"
                   ></v-select>
-                </v-col>
+                </v-col> -->
                 
-                <v-col cols="12" md="6">
+                <!-- <v-col cols="12" md="6">
                   <v-select
                     v-model="editedItem.owner_type"
                     :items="[
@@ -249,9 +249,9 @@
                     prepend-inner-icon="mdi-account-cog"
                     :rules="[v => !!v || 'Owner type is required']"
                   ></v-select>
-                </v-col>
+                </v-col> -->
                 
-                <v-col cols="12" md="6" v-if="editedItem.owner_type === 'user'">
+                <!-- <v-col cols="12" md="6" v-if="editedItem.owner_type === 'user'">
                   <v-select
                     v-model="editedItem.owner_id"
                     :items="users"
@@ -262,8 +262,8 @@
                     prepend-inner-icon="mdi-account"
                     :rules="[v => !!v || 'Owner is required']"
                   ></v-select>
-                </v-col>
-                
+                </v-col> -->
+<!--                 
                 <v-col cols="12" md="6" v-if="editedItem.owner_type === 'branch'">
                   <v-select
                     v-model="editedItem.owner_id"
@@ -275,7 +275,7 @@
                     prepend-inner-icon="mdi-office-building"
                     :rules="[v => !!v || 'Branch is required']"
                   ></v-select>
-                </v-col>
+                </v-col> -->
                 
                 <v-col cols="12">
                   <v-textarea
@@ -472,8 +472,8 @@
         searchQuery: "",
         headers: [
           { title: "Template Name", align: "start", key: "name" },
-          { title: "Channel", key: "channel" },
-          { title: "Module", key: "module" },
+          // { title: "Channel", key: "channel" },
+          // { title: "Module", key: "module" },
           { title: "Content", key: "content" },
           { title: "Actions", key: "actions", sortable: false, align: "end" },
         ],
@@ -552,7 +552,7 @@
       dialog(val) {
         if (val) {
           this.fetchUsers();
-          this.fetchBranches();
+          // this.fetchBranches();
         } else {
           this.close();
         }
@@ -587,7 +587,7 @@
         }
       },
       fetchUsers() {
-        axios.get("api/v1/users")
+        axios.get("/api/v1/admin/users")
           .then(response => {
             this.users = response.data;
           })
@@ -596,16 +596,16 @@
             this.$toastr.error("Failed to load users");
           });
       },
-      fetchBranches() {
-        axios.get("api/v1/branches")
-          .then(response => {
-            this.branches = response.data;
-          })
-          .catch(error => {
-            console.error("API Error:", error);
-            this.$toastr.error("Failed to load branches");
-          });
-      },
+      // fetchBranches() {
+      //   axios.get("/api/v1/branches")
+      //     .then(response => {
+      //       this.branches = response.data;
+      //     })
+      //     .catch(error => {
+      //       console.error("API Error:", error);
+      //       this.$toastr.error("Failed to load branches");
+      //     });
+      // },
       initialize() {
         this.loading = true;
         axios.get("/api/v1/templates")

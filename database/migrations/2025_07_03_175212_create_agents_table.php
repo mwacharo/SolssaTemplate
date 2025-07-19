@@ -11,20 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('riders', function (Blueprint $table) {
+        Schema::create('agents', function (Blueprint $table) {
             $table->id();
-               // Foreign key to the users table
+            // $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('country_id')->constrained()->onDelete('cascade');
-            $table->string('name')->nullable();
-            $table->string('email')->nullable();
+
+            $table->foreignId('country_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('email')->unique();
             $table->string('address')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
-            $table->string('vehicle_number')->nullable();
-            $table->string('license_number')->nullable();
             $table->string('phone')->nullable();
-            $table->boolean('status')->default(true);
+            $table->string('status')->default('active');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -35,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('riders');
+        Schema::dropIfExists('agents');
     }
 };

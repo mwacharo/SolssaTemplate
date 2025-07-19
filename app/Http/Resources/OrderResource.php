@@ -108,9 +108,15 @@ class OrderResource extends JsonResource
 
             'created_at' => $this->created_at instanceof \Carbon\Carbon ? $this->created_at->toDateTimeString() : $this->created_at,
             'updated_at' => $this->updated_at instanceof \Carbon\Carbon ? $this->updated_at->toDateTimeString() : $this->updated_at,
+            // 'client' => $this->whenLoaded('client'),
+            // 'vendor' => $this->whenLoaded('vendor'),
+            // 'order_items' => $this->whenLoaded('orderItems'),
             'client' => $this->whenLoaded('client'),
             'vendor' => $this->whenLoaded('vendor'),
-            'order_items' => $this->whenLoaded('orderItems'),
+            'orderItems' => $this->whenLoaded('orderItems'),
+            'agent' => $this->whenLoaded('agent'),
+            'rider' => $this->whenLoaded('rider'),
+
         ];
     }
 }

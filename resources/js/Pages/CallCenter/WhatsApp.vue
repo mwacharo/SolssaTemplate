@@ -7,12 +7,88 @@ import { useAuthStore } from '@/stores/auth'
 import { useConversationStore } from '@/stores/useConversationStore'
 
 import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
+import AssignDialog from './AssignDialog.vue';
 import { useOrderStore } from '@/stores/orderStore' // Adjust path as needed
+
+
+import { notify } from '@/utils/toast';
+
+
 
 // Initialize the store
 const store = useWhatsAppStore()
 const conversationStore = useConversationStore()
 const orderStore = useOrderStore()
+
+
+const dialogMode = ref(null);
+const showDialog = ref(false);
+
+const openDialog = (mode, selectedOrders = []) => {
+  dialogMode.value = mode;
+  showDialog.value = true;
+  // Set selectedOrders in the store or local ref if needed
+  if (selectedOrders && selectedOrders.length) {
+    console.log('openDialog selectedOrders:', JSON.stringify(selectedOrders));
+    store.selectedOrders = selectedOrders;
+  }
+};
+
+const handleConfirm = ({ mode, selected, orders }) => {
+  console.log('handleConfirm called with:', JSON.stringify({ mode, selected, orders }));
+  if (mode === 'rider') {
+    assignRider(selected, orders);
+  } else if (mode === 'agent') {
+    assignAgent(selected, orders);
+  } else if (mode === 'status') {
+    updateStatus(selected, orders);
+  }
+};
+
+
+
+const assignRider = async (riderId, orders) => {
+  try {
+    const response = await axios.post('/api/v1/assign-rider', {
+      rider_id: riderId,
+      order_ids: orders,
+    });
+
+    notify.success(response.data.message || 'Rider assigned successfully');
+  } catch (error) {
+    // notify.error(error.response?.data?.message || 'Failed to assign rider');
+       notify.error('Failed to assign rider');
+
+  }
+};
+
+const assignAgent = async (agentId, orders) => {
+  try {
+    const response = await axios.post('/api/v1/assign-agent', {
+      agent_id: agentId,
+      order_ids: orders,
+    });
+
+    notify.success(response.data.message || 'Agent assigned successfully');
+  } catch (error) {
+    notify.error(error.response?.data?.message || 'Failed to assign agent');
+  }
+};
+
+const updateStatus = async (status, orders) => {
+  try {
+    const response = await axios.post('/api/v1/update-status', {
+      status: status,
+      order_ids: orders,
+    });
+
+    notify.success(response.data.message || 'Status updated successfully');
+  } catch (error) {
+    notify.error(error.response?.data?.message || 'Failed to update status');
+  }
+};
+
+
 
 const viewOrderDetails = (order) => {
   console.log('View', order)
@@ -164,6 +240,9 @@ const loadMessages = (page = 1) => store.loadMessages(page)
 const loadContacts = () => store.loadContacts()
 const loadOrders = (page = 1) => store.loadOrders(page)
 const loadTemplates = () => store.loadTemplates()
+// new
+const loadRiders = () => store.loadRiders()
+const loadAgents = () => store.loadAgents()
 const calculateStats = () => store.calculateStats()
 const calculateOrderStats = () => store.calculateOrderStats()
 const onTemplateSelect = (selectedTemplate) => store.onTemplateSelect(selectedTemplate)
@@ -173,7 +252,12 @@ const sendMessage = () => store.sendMessage(userId.value)
 const sendOrderMessage = () => store.sendOrderMessage({ userId: userId.value })
 const importContacts = () => store.importContacts({ userId: userId.value })
 const importOrders = () => store.importOrders({ userId: userId.value })
-const openNewMessageDialog = () => store.openNewMessageDialog()
+// const openNewMessageDialog = () => store.openNewMessageDialog()
+
+const openNewMessageDialog = (selectedOrders) => {
+  store.openNewMessageDialog(selectedOrders)
+}
+
 const openOrderMessageDialog = () => store.openOrderMessageDialog()
 const deleteMessage = (messageId) => store.deleteMessage(messageId)
 
@@ -255,6 +339,9 @@ const deliveryStatusColor = (status) => ({
   pending: 'primary',
   shipped: 'info'
 }[status?.toLowerCase()] || 'grey')
+
+
+
 
 // Watch for search changes
 watch(() => store.search, (newValue) => {
@@ -390,6 +477,8 @@ function openFilterDialog() {
 onMounted(async () => {
   // Initialize the store which will load all data
   await store.initialize()
+    // notify.success('🎉 Toastify is working!')
+
 })
 </script>
 <template>
@@ -630,18 +719,40 @@ onMounted(async () => {
                           <v-icon start>mdi-delete</v-icon>
                           Delete Selected
                         </v-btn>
-                        <!-- <v-btn color="primary" variant="outlined" size="small" @click="showAssignRiderDialog = true">
+                        <v-btn color="primary" variant="outlined" size="small"
+                          @click="openDialog('rider', selectedOrders)">
                           <v-icon start>mdi-motorbike</v-icon>
                           Assign Rider
-                        </v-btn> -->
-                        <v-btn color="success" variant="outlined" size="small" @click="openNewMessageDialog ">
+                        </v-btn>
+
+                        <v-btn color="secondary" variant="outlined" size="small"
+                          @click="openDialog('agent', selectedOrders)">
+                          <v-icon start>mdi-account-tie</v-icon>
+                          Assign Agent
+                        </v-btn>
+
+
+                        <v-btn color="success" variant="outlined" size="small"
+                          @click="openNewMessageDialog(selectedOrders)">
                           <v-icon start>mdi-whatsapp</v-icon>
                           Send Messages
                         </v-btn>
-                        <v-btn color="warning" variant="outlined" size="small" @click="showBulkStatusDialog = true">
+
+                        <v-btn color="warning" variant="outlined" size="small"
+                          @click="openDialog('status', selectedOrders)">
                           <v-icon start>mdi-update</v-icon>
                           Update Status
                         </v-btn>
+
+
+                        <!-- <v-btn color="success" variant="outlined" size="small" @click="openNewMessageDialog ">
+                          <v-icon start>mdi-whatsapp</v-icon>
+                          Send Messages
+                        </v-btn> -->
+
+
+
+
                       </div>
                     </div>
                   </v-alert>
@@ -1199,6 +1310,14 @@ onMounted(async () => {
           </v-card-actions>
         </v-card>
       </v-dialog>
+
+
+      <!-- bulk actions -->
+
+      <!-- Reusable Dialog -->
+      <AssignDialog v-model="showDialog" :mode="dialogMode" :selected-orders="selectedOrders"
+        @confirmed="handleConfirm" />
+
       <WhatsAppConversation />
 
     </v-container>

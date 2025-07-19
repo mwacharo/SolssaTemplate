@@ -5,9 +5,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Admin\AuditLogController;
 use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CredentialController;
 use App\Http\Controllers\Api\Integrations\GoogleSheetController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\RiderController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\WhatsAppController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
@@ -80,6 +83,11 @@ Route::prefix('v1')->group(function () {
     // Route::get('v1/orders/{id}/status-history', [\App\Http\Controllers\Api\OrderController::class, 'getOrderStatusHistory']); // Get status history for a specific order
 
 
+    Route::post('/assign-rider', [OrderController::class, 'assignRider']);
+    Route::post('/assign-agent', [OrderController::class, 'assignAgent']);
+    Route::post('/update-status', [OrderController::class, 'updateStatus']);
+
+
 
     // Template APIs
 
@@ -115,6 +123,23 @@ Route::prefix('v1')->group(function () {
     Route::delete('/channel-credentials/{id}', [CredentialController::class, 'destroy']);
 
 
+    // rider 
+
+    Route::get('/riders', [RiderController::class, 'index']);
+    Route::post('/riders', [RiderController::class, 'store']);
+    Route::get('/riders/{id}', [RiderController::class, 'show']);
+    Route::put('/riders/{id}', [RiderController::class, 'update']);
+    Route::delete('/riders/{id}', [RiderController::class, 'destroy']);
+
+
+    // Agennt 
+    Route::get('/agents', [AgentController::class, 'index']);
+    Route::post('/agents', [AgentController::class, 'store']);
+    Route::get('/agents/{id}', [AgentController::class, 'show']);
+    Route::put('/agents/{id}', [AgentController::class, 'update']);
+    Route::delete('/agents/{id}', [AgentController::class, 'destroy']);
+
+
 
 
 
@@ -131,12 +156,6 @@ Route::prefix('v1')->group(function () {
     // Route::get('/conversations', [WhatsAppController::class, 'listConversations']);
     Route::get('/conversation/{chatId}', [WhatsAppController::class, 'getConversation']);
     Route::post('/whatsapp/retry-message/{id}', [WhatsAppController::class, 'retryMessage']);
-
-
-
-
-
-
 });
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {

@@ -195,6 +195,17 @@ class Order extends Model
     {
         $this->attributes['order_number'] = strtoupper($value);
     }
+
+
+    public function rider()
+    {
+        return $this->belongsTo(Rider::class);
+    }
+
+    public function agent()
+    {
+        return $this->belongsTo(Agent::class);
+    }
    
     
 }

@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('reference')->nullable();
             $table->foreignId('drawer_id')->nullable();
             $table->foreignId('client_id')->nullable()->constrained('clients')->nullOnDelete();
-            $table->foreignId('agent_id')->nullable()->constrained('users')->nullOnDelete();
             $table->decimal('total_price', 18, 2)->nullable();
             $table->integer('scale')->default(1);
             $table->decimal('invoice_value', 8, 2)->nullable();
@@ -32,7 +31,7 @@ return new class extends Migration
             $table->decimal('shipping_charges', 8, 2)->default(0.00);
             $table->decimal('charges', 8, 2)->default(0.00);
             $table->dateTime('delivery_date')->nullable();
-            $table->dateTime('delivery_d')->nullable();
+            // $table->dateTime('delivery_d')->nullable();
             $table->string('status')->default('Inprogress');
             $table->string('delivery_status')->default('Inprogress');
             $table->foreignId('warehouse_id')->nullable()->constrained('branches')->nullOnDelete();
@@ -89,6 +88,10 @@ return new class extends Migration
             $table->foreignId('order_category_id')->nullable()->constrained('order_categories')->nullOnDelete();
             $table->dateTime('schedule_date')->nullable();
             $table->foreignId('rider_id')->nullable()->constrained('riders')->cascadeOnDelete();
+            $table->foreign('agent_id')
+                ->references('id')
+                ->on('agents')
+                ->onDelete('cascade');
             $table->foreignId('zone_id')->nullable();
             $table->string('checkout_id')->nullable();
             $table->string('longitude')->nullable();

@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateTemplateRequest extends FormRequest
+class UpdateAgentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -22,13 +22,7 @@ class UpdateTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'nullable|string|max:255',
-            'channel' => 'nullable|string|max:255',
-            'module' => 'nullable|string|max:255',
-            'content' => 'required|string',
-            'placeholders' => 'nullable',
-            'owner_type' => 'nullable|string|max:255',
-            'owner_id' => 'nullable|integer',
+            //
         ];
     }
 }

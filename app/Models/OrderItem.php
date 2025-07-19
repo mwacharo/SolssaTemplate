@@ -47,10 +47,7 @@ class OrderItem extends Model
         return $this->belongsTo(Product::class);
     }
 
-    // public function sku()
-    // {
-    //     return $this->belongsTo(Sku::class);
-    // }
+  
 
     public function order()
     {
@@ -61,4 +58,9 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Vendor::class);
     }
+
+      // public function sku()
+    // {
+    //     return $this->belongsTo(Sku::class);
+    // }
 }

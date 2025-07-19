@@ -7,7 +7,9 @@ import { createPinia } from 'pinia';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 // toast
-import Vue3Toastify from 'vue3-toastify'
+// import toast from 'vue3-toastify'
+import  Vue3Toastify  from 'vue3-toastify'; // ✅ Correct import
+
 import 'vue3-toastify/dist/index.css';
 
 // Import Vuetify
@@ -131,13 +133,13 @@ createInertiaApp({
       .use(vuetify)
       .use(pinia)
       .use(Vue3Toastify, {
-        position: 'top',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
+      position: 'top-center', // Changed from 'top-right' to 'top-center'
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
       })
       .mount(el);
   },

@@ -19,6 +19,7 @@ class Template extends Model
         'placeholders',
         'owner_type',
         'owner_id',
+        'country_id',
     ];
 
     protected $casts = [

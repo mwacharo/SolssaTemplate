@@ -11,7 +11,7 @@ class StoreTemplateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,13 @@ class StoreTemplateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'channel' => 'sometimes|nullable|string|max:255',
+            'module' => 'sometimes|nullable|string|max:255',
+            'content' => 'required|string',
+            'placeholders' => 'sometimes|nullable',
+            // 'owner_type' => 'sometimes|nullable|string|max:255',
+            // 'owner_id' => 'sometimes|nullable|integer',
         ];
     }
 }
