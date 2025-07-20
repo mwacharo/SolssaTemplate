@@ -1,274 +1,452 @@
-<!-- <template>
-      <AppLayout title="Dashboard">
-  <div>Page Content Here</div>
-   </AppLayout>
-</template>
 
-<script setup>
-import AppLayout from '@/Layouts/AppLayout.vue';
-
-</script>
-
-
-
-
- -->
 <template>
-     <AppLayout title="Dashboard">
-  <div class="call-history-container">
-    <!-- Table Controls -->
-    <div class="table-controls mb-4">
-      <div class="controls-left">
-        <v-btn
-          color="primary"
-          variant="outlined"
-          @click="refreshData"
-          :loading="agentStore.loading"
-          size="small"
-        >
-          <v-icon start>mdi-refresh</v-icon>
-          Refresh
-        </v-btn>
-        
-        <v-select
-          v-model="itemsPerPage"
-          :items="itemsPerPageOptions"
-          label="Rows per page"
-          variant="outlined"
-          density="compact"
-          style="max-width: 120px;"
-          class="ml-3"
-        />
-      </div>
-      
-      <div class="controls-right">
-        <v-chip
-          color="info"
-          variant="outlined"
-          size="small"
-        >
-          Total: {{ totalItems }}
-        </v-chip>
-      </div>
-    </div>
+  <AppLayout title="Dashboard">
+    <div class="p-4">
+      <!-- Top Information Cards -->
+      <v-container fluid class="pa-2">
+        <v-row>
+          <!-- Quick Actions Card -->
+          <v-col cols="12" md="6">
+            <v-card elevation="2" class="rounded-lg">
+              <v-card-title class="primary white--text d-flex align-center py-3">
+                <v-icon left color="white">mdi-lightning-bolt</v-icon>
+                Quick Actions
+              </v-card-title>
+              <v-card-text class="py-4">
+                <v-list nav dense>
+                  <v-list-item @click="newCall = true" class="rounded-lg mb-2 hover-elevation-2">
+                    <v-list-item-icon>
+                      <v-icon color="success">mdi-phone-plus</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <v-list-item-title>Make a new Call</v-list-item-title>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <v-icon>mdi-chevron-right</v-icon>
+                    </v-list-item-action>
+                  </v-list-item>
 
-    <!-- Data Table -->
-    <v-data-table-server
-      v-model:items-per-page="itemsPerPage"
-      v-model:page="currentPage"
-      v-model:sort-by="sortBy"
-      :headers="headers"
-      :items="agentStore.callHistory"
-      :items-length="totalItems"
-      :loading="agentStore.loading"
-      :search="search"
-      class="call-history-table"
-      density="comfortable"
-      @update:options="loadItems"
-    >
-      <!-- Date Column -->
-      <template #item.created_at="{ item }">
-        <div class="date-cell">
-          <div class="date-primary">{{ formatDate(item.created_at) }}</div>
-          <div class="date-secondary">{{ formatTime(item.created_at) }}</div>
-        </div>
-      </template>
+                  <v-list-item @click="openCallAgent" class="rounded-lg mb-2 hover-elevation-2">
+                    <v-list-item-icon>
+                      <v-icon color="info">mdi-account-voice</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <v-list-item-title>Call an agent</v-list-item-title>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <v-icon>mdi-chevron-right</v-icon>
+                    </v-list-item-action>
+                  </v-list-item>
 
-      <!-- Phone Numbers -->
-      <template #item.callerNumber="{ item }">
-        <div class="phone-cell">
-          <v-icon size="16" color="primary" class="mr-2">mdi-phone-outgoing</v-icon>
-          <span class="phone-number">{{ formatPhoneNumber(item.callerNumber) }}</span>
-        </div>
-      </template>
+                  <v-list-item class="rounded-lg mb-2 hover-elevation-2">
+                    <v-list-item-icon>
+                      <v-icon color="error">mdi-phone-missed</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <v-list-item-title>Missed {{ stats.summary_call_missed }}</v-list-item-title>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <v-badge :content="summary_call_missed" :value="summary_call_missed > 0"
+                          color="error" overlap>
+                        <v-icon>mdi-chevron-right</v-icon>
+                      </v-badge>
+                    </v-list-item-action>
+                  </v-list-item>
 
-      <template #item.destinationNumber="{ item }">
-        <div class="phone-cell">
-          <v-icon size="16" color="success" class="mr-2">mdi-phone-incoming</v-icon>
-          <span class="phone-number">{{ formatPhoneNumber(item.destinationNumber) }}</span>
-        </div>
-      </template>
+                  <v-list-item @click="openQueueDialog" class="rounded-lg hover-elevation-2">
+                    <v-list-item-icon>
+                      <v-icon color="warning">mdi-account-multiple-check</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-content>
+                      <v-list-item-title>Check Queue</v-list-item-title>
+                    </v-list-item-content>
+                    <v-list-item-action>
+                      <v-icon>mdi-chevron-right</v-icon>
+                    </v-list-item-action>
+                  </v-list-item>
+                </v-list>
+              </v-card-text>
+            </v-card>
+          </v-col>
 
-      <!-- Duration -->
-      <template #item.durationInSeconds="{ item }">
-        <v-chip
-          :color="getDurationColor(item.durationInSeconds)"
-          size="small"
-          variant="tonal"
-        >
-          {{ formatDuration(item.durationInSeconds) }}
-        </v-chip>
-      </template>
+          <!-- Agent Information Card -->
+          <v-col cols="12" md="6">
+            <v-card elevation="2" class="rounded-lg">
+              <v-card-title class="primary white--text d-flex align-center py-3">
+                <v-icon left color="white">mdi-account-details</v-icon>
+                Agent Dashboard
+              </v-card-title>
 
-      <!-- Call Status -->
-      <template #item.status="{ item }">
-        <v-chip
-          :color="getStatusColor(item.status)"
-          size="small"
-          variant="flat"
-        >
-          <v-icon start size="12">{{ getStatusIcon(item.status) }}</v-icon>
-          {{ item.status }}
-        </v-chip>
-      </template>
+              <v-card-text class="py-4">
+                <div class="d-flex align-center">
+                  <v-avatar size="60" color="primary" class="mr-4">
+                    <span class="white--text text-h5">{{ userInitials }}</span>
+                  </v-avatar>
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-center">
+                      <div>
+                        <p class="text-h6 mb-0">{{ $page.props.auth.user.name }}</p>
+                        <p class="text-body-2 mb-0 grey--text">
+                          <v-icon small class="mr-1">mdi-email</v-icon>
+                          {{ $page.props.auth.user.email }}
+                        </p>
+                      </div>
+                      <v-spacer></v-spacer>
+                      <v-chip v-if="agent" :color="getStatusColor(agent.status)" small
+                          class="white--text px-2">
+                        <v-icon left small>mdi-circle</v-icon>
+                        {{ getStatusText(agent.status) }}
+                      </v-chip>
+                    </div>
+                  </div>
+                </div>
 
-      <!-- Service Type -->
-      <template #item.description="{ item }">
-        <div class="service-cell">
-          <v-icon
-            :color="getServiceColor(item.description)"
-            size="16"
-            class="mr-2"
-          >
-            {{ getServiceIcon(item.description) }}
-          </v-icon>
-          <span>{{ item.description }}</span>
-        </div>
-      </template>
+                <v-divider class="my-4"></v-divider>
 
-      <!-- Hangup Cause -->
-      <template #item.lastBridgeHangupCause="{ item }">
-        <v-tooltip :text="getHangupCauseDescription(item.lastBridgeHangupCause)">
-          <template #activator="{ props }">
-            <v-chip
-              v-bind="props"
-              :color="getHangupCauseColor(item.lastBridgeHangupCause)"
-              size="small"
+                <v-row class="mt-2">
+                  <v-col cols="12" sm="6">
+                    <v-card class="rounded-lg pa-3 mb-3" outlined>
+                      <div class="d-flex align-center">
+                        <v-icon color="success" left>mdi-phone-check</v-icon>
+                        <div class="ml-2">
+                          <div class="text-caption grey--text">Connected</div>
+                          <div class="text-h6">{{ stats.summary_call_completed }}</div>
+                        </div>
+                      </div>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-card class="rounded-lg pa-3 mb-3" outlined>
+                      <div class="d-flex align-center">
+                        <v-icon color="primary" left>mdi-phone-outgoing</v-icon>
+                        <div class="ml-2">
+                          <div class="text-caption grey--text">Outbound</div>
+                          <div class="text-h6">{{ stats.summary_outbound_call_completed }}</div>
+                        </div>
+                      </div>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-card class="rounded-lg pa-3 mb-3" outlined>
+                      <div class="d-flex align-center">
+                        <v-icon color="info" left>mdi-phone-incoming</v-icon>
+                        <div class="ml-2">
+                          <div class="text-caption grey--text">Incoming</div>
+                          <div class="text-h6">{{ stats.summary_inbound_call_completed }}</div>
+                        </div>
+                      </div>
+                    </v-card>
+                  </v-col>
+
+                  <v-col cols="12" sm="6">
+                    <v-card class="rounded-lg pa-3" outlined>
+                      <div class="d-flex align-center">
+                        <v-icon color="error" left>mdi-phone-cancel</v-icon>
+                        <div class="ml-2">
+                          <div class="text-caption grey--text">Rejected</div>
+                          <div class="text-h6">{{ stats.summary_rejected_incoming_calls + stats.summary_rejected_outgoing_calls }}</div>
+                        </div>
+                      </div>
+                    </v-card>
+                  </v-col>
+                </v-row>
+
+                <v-btn color="primary" text class="mt-2" @click="showCallDetails = !showCallDetails">
+                  {{ showCallDetails ? 'Hide' : 'Show' }} detailed stats
+                  <v-icon right>{{ showCallDetails ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+                </v-btn>
+
+                <v-expand-transition>
+                  <div v-if="showCallDetails">
+                    <v-divider class="my-3"></v-divider>
+                    <v-simple-table dense>
+                      <template v-slot:default>
+                        <tbody>
+                          <tr>
+                            <td>Incoming Rejected</td>
+                            <td class="text-right">{{ stats.summary_rejected_incoming_calls }}</td>
+                          </tr>
+                          <tr>
+                            <td>Outgoing Rejected</td>
+                            <td class="text-right">{{ stats.summary_rejected_outgoing_calls }}</td>
+                          </tr>
+                          <tr>
+                            <td>Outgoing User Busy</td>
+                            <td class="text-right">{{ stats.summary_user_busy_outgoing_calls }}</td>
+                          </tr>
+                        </tbody>
+                      </template>
+                    </v-simple-table>
+                  </div>
+                </v-expand-transition>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
+
+      <!-- Call History Container -->
+      <div class="call-history-container">
+        <!-- Table Controls -->
+        <div class="table-controls mb-4">
+          <div class="controls-left">
+            <v-btn
+              color="primary"
               variant="outlined"
+              @click="refreshData"
+              :loading="agentStore.loading"
+              size="small"
             >
-              {{ item.lastBridgeHangupCause }}
+              <v-icon start>mdi-refresh</v-icon>
+              Refresh
+            </v-btn>
+            
+            <v-select
+              v-model="itemsPerPage"
+              :items="itemsPerPageOptions"
+              label="Rows per page"
+              variant="outlined"
+              density="compact"
+              style="max-width: 120px;"
+              class="ml-3"
+            />
+          </div>
+          
+          <div class="controls-right">
+            <v-chip
+              color="info"
+              variant="outlined"
+              size="small"
+            >
+              Total: {{ totalItems }}
+            </v-chip>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <v-data-table-server
+          v-model:items-per-page="itemsPerPage"
+          v-model:page="currentPage"
+          v-model:sort-by="sortBy"
+          :headers="headers"
+          :items="agentStore.callHistory"
+          :items-length="totalItems"
+          :loading="agentStore.loading"
+          :search="search"
+          class="call-history-table"
+          density="comfortable"
+          @update:options="loadItems"
+        >
+          <!-- Date Column -->
+          <template #item.created_at="{ item }">
+            <div class="date-cell">
+              <div class="date-primary">{{ formatDate(item.created_at) }}</div>
+              <div class="date-secondary">{{ formatTime(item.created_at) }}</div>
+            </div>
+          </template>
+
+          <!-- Phone Numbers -->
+          <template #item.callerNumber="{ item }">
+            <div class="phone-cell">
+              <v-icon size="16" color="primary" class="mr-2">mdi-phone-outgoing</v-icon>
+              <span class="phone-number">{{ formatPhoneNumber(item.callerNumber) }}</span>
+            </div>
+          </template>
+
+          <template #item.destinationNumber="{ item }">
+            <div class="phone-cell">
+              <v-icon size="16" color="success" class="mr-2">mdi-phone-incoming</v-icon>
+              <span class="phone-number">{{ formatPhoneNumber(item.destinationNumber) }}</span>
+            </div>
+          </template>
+
+          <!-- Duration -->
+          <template #item.durationInSeconds="{ item }">
+            <v-chip
+              :color="getDurationColor(item.durationInSeconds)"
+              size="small"
+              variant="tonal"
+            >
+              {{ formatDuration(item.durationInSeconds) }}
             </v-chip>
           </template>
-        </v-tooltip>
-      </template>
 
-      <!-- Call Session State -->
-      <template #item.callSessionState="{ item }">
-        <v-badge
-          :color="getSessionStateColor(item.callSessionState)"
-          dot
-          inline
-        >
-          <span>{{ item.callSessionState }}</span>
-        </v-badge>
-      </template>
+          <!-- Call Status -->
+          <template #item.status="{ item }">
+            <v-chip
+              :color="getStatusColor(item.status)"
+              size="small"
+              variant="flat"
+            >
+              <v-icon start size="12">{{ getStatusIcon(item.status) }}</v-icon>
+              {{ item.status }}
+            </v-chip>
+          </template>
 
-      <!-- Actions -->
-      <template #item.actions="{ item }">
-        <div class="action-buttons">
-          <v-tooltip text="Play Recording">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon
-                size="small"
-                color="primary"
-                variant="outlined"
-                @click="playRecording(item)"
-                :disabled="!item.recordingUrl"
+          <!-- Service Type -->
+          <template #item.description="{ item }">
+            <div class="service-cell">
+              <v-icon
+                :color="getServiceColor(item.description)"
+                size="16"
+                class="mr-2"
               >
-                <v-icon>mdi-play</v-icon>
-              </v-btn>
-            </template>
-          </v-tooltip>
+                {{ getServiceIcon(item.description) }}
+              </v-icon>
+              <span>{{ item.description }}</span>
+            </div>
+          </template>
 
-          <v-tooltip text="Download Recording">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon
-                size="small"
-                color="success"
-                variant="outlined"
-                @click="downloadRecording(item)"
-                :disabled="!item.recordingUrl"
-                class="ml-2"
-              >
-                <v-icon>mdi-download</v-icon>
-              </v-btn>
-            </template>
-          </v-tooltip>
+          <!-- Hangup Cause -->
+          <template #item.lastBridgeHangupCause="{ item }">
+            <v-tooltip :text="getHangupCauseDescription(item.lastBridgeHangupCause)">
+              <template #activator="{ props }">
+                <v-chip
+                  v-bind="props"
+                  :color="getHangupCauseColor(item.lastBridgeHangupCause)"
+                  size="small"
+                  variant="outlined"
+                >
+                  {{ item.lastBridgeHangupCause }}
+                </v-chip>
+              </template>
+            </v-tooltip>
+          </template>
 
-          <v-tooltip text="Call Back">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon
-                size="small"
-                color="warning"
-                variant="outlined"
-                @click="callBack(item)"
-                class="ml-2"
-              >
-                <v-icon>mdi-phone-return</v-icon>
-              </v-btn>
-            </template>
-          </v-tooltip>
+          <!-- Call Session State -->
+          <template #item.callSessionState="{ item }">
+            <v-badge
+              :color="getSessionStateColor(item.callSessionState)"
+              dot
+              inline
+            >
+              <span>{{ item.callSessionState }}</span>
+            </v-badge>
+          </template>
 
-          <v-menu>
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon
-                size="small"
-                variant="text"
-                class="ml-2"
-              >
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn>
-            </template>
-            <v-list density="compact">
-              <v-list-item @click="viewDetails(item)">
-                <template #prepend>
-                  <v-icon>mdi-eye</v-icon>
+          <!-- Actions -->
+          <template #item.actions="{ item }">
+            <div class="action-buttons">
+              <v-tooltip text="Play Recording">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    @click="playRecording(item)"
+                    :disabled="!item.recordingUrl"
+                  >
+                    <v-icon>mdi-play</v-icon>
+                  </v-btn>
                 </template>
-                <v-list-item-title>View Details</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="addToContacts(item)">
-                <template #prepend>
-                  <v-icon>mdi-account-plus</v-icon>
-                </template>
-                <v-list-item-title>Add to Contacts</v-list-item-title>
-              </v-list-item>
-              <v-list-item @click="sendSMS(item)">
-                <template #prepend>
-                  <v-icon>mdi-message</v-icon>
-                </template>
-                <v-list-item-title>Send SMS</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </div>
-      </template>
+              </v-tooltip>
 
-      <!-- No Data -->
-      <template #no-data>
-        <div class="no-data-container">
-          <v-icon size="64" color="grey-lighten-1">mdi-phone-off</v-icon>
-          <h3>No call history found</h3>
-          <p>Call history will appear here once you start making calls.</p>
-        </div>
-      </template>
+              <v-tooltip text="Download Recording">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                    @click="downloadRecording(item)"
+                    :disabled="!item.recordingUrl"
+                    class="ml-2"
+                  >
+                    <v-icon>mdi-download</v-icon>
+                  </v-btn>
+                </template>
+              </v-tooltip>
 
-      <!-- Loading -->
-      <template #loading>
-        <div class="loading-container">
-          <v-progress-circular indeterminate color="primary" size="48" />
-          <p class="mt-4">Loading call history...</p>
-        </div>
-      </template>
-    </v-data-table-server>
-  </div>
+              <v-tooltip text="Call Back">
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    size="small"
+                    color="warning"
+                    variant="outlined"
+                    @click="callBack(item)"
+                    class="ml-2"
+                  >
+                    <v-icon>mdi-phone-return</v-icon>
+                  </v-btn>
+                </template>
+              </v-tooltip>
+
+              <v-menu>
+                <template #activator="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    icon
+                    size="small"
+                    variant="text"
+                    class="ml-2"
+                  >
+                    <v-icon>mdi-dots-vertical</v-icon>
+                  </v-btn>
+                </template>
+                <v-list density="compact">
+                  <v-list-item @click="viewDetails(item)">
+                    <template #prepend>
+                      <v-icon>mdi-eye</v-icon>
+                    </template>
+                    <v-list-item-title>View Details</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="addToContacts(item)">
+                    <template #prepend>
+                      <v-icon>mdi-account-plus</v-icon>
+                    </template>
+                    <v-list-item-title>Add to Contacts</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="sendSMS(item)">
+                    <template #prepend>
+                      <v-icon>mdi-message</v-icon>
+                    </template>
+                    <v-list-item-title>Send SMS</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </div>
+          </template>
+
+          <!-- No Data -->
+          <template #no-data>
+            <div class="no-data-container">
+              <v-icon size="64" color="grey-lighten-1">mdi-phone-off</v-icon>
+              <h3>No call history found</h3>
+              <p>Call history will appear here once you start making calls.</p>
+            </div>
+          </template>
+
+          <!-- Loading -->
+          <template #loading>
+            <div class="loading-container">
+              <v-progress-circular indeterminate color="primary" size="48" />
+              <p class="mt-4">Loading call history...</p>
+            </div>
+          </template>
+        </v-data-table-server>
+      </div>
+    </div>
   </AppLayout>
 </template>
+
+
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue';
 
-// import { useAgentStore } from '@/stores/agent'
-// import { useCallCenterStore } from '@/stores/callCenter'
-// import { useToast } from 'vue-toastification'
+import { useAgentStore } from '@/stores/agent'
+import { useCallCenterStore } from '@/stores/callCenter'
+
+import { notify } from '@/utils/toast';
+
 
 const props = defineProps({
   search: {
@@ -279,9 +457,24 @@ const props = defineProps({
 
 const emit = defineEmits(['refresh'])
 
-// const agentStore = useAgentStore()
-// const callCenterStore = useCallCenterStore()
+const agentStore = useAgentStore()
+const callCenterStore = useCallCenterStore()
 // const toast = useToast()
+
+
+
+
+// Add missing reactive data
+const stats = ref({
+  summary_call_missed: 0,
+  summary_call_completed: 0,
+  summary_outbound_call_completed: 0,
+  summary_inbound_call_completed: 0,
+  summary_rejected_incoming_calls: 0,
+  summary_rejected_outgoing_calls: 0,
+  summary_user_busy_outgoing_calls: 0
+})
+
 
 // Reactive data
 const currentPage = ref(1)
@@ -313,7 +506,7 @@ const loadItems = async (options) => {
     totalItems.value = result.total
   } catch (error) {
     console.error('Error loading call history:', error)
-    toast.error('Failed to load call history')
+    notify('Failed to load call history', 'error')
   }
 }
 

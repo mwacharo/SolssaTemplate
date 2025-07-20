@@ -20,6 +20,27 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+
+
+// Route::get('/login', function () {
+//     return Inertia::render('Login', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+//         'laravelVersion' => Application::VERSION,
+//         'phpVersion' => PHP_VERSION,
+//     ]);
+// })->name('login');
+
+// Route::get('/register', function () {
+//     return Inertia::render('Auth/Register', []);
+// })->name('register');
+
+
+// Route::get('/', function () {
+
+//     return Inertia::render('Welcome');
+// })->name('home');
+
 // Authenticated user routes
 Route::middleware([
     'auth:sanctum',
