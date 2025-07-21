@@ -127,38 +127,38 @@ class WhatsAppController extends Controller
         }
 
         // 3. Send to unknown contacts directly via chatId
-        // if ($request->filled('contacts')) {
-        //     Log::debug('Processing direct contacts array', ['contacts' => $request->contacts]);
+        if ($request->filled('contacts')) {
+            Log::debug('Processing direct contacts array', ['contacts' => $request->contacts]);
 
-        //     foreach ($request->contacts as $contactData) {
-        //         $rawChatId = $contactData['chatId'] ?? null;
-        //         if (!$rawChatId) {
-        //             Log::warning('Missing chatId in direct contact', ['contact' => $contactData]);
-        //             continue;
-        //         }
+            foreach ($request->contacts as $contactData) {
+                $rawChatId = $contactData['chatId'] ?? null;
+                if (!$rawChatId) {
+                    Log::warning('Missing chatId in direct contact', ['contact' => $contactData]);
+                    continue;
+                }
 
-        //         // Create a temporary contact object for placeholder processing
-        //         $tempContact = (object) [
-        //             'name' => $contactData['name'] ?? 'Customer',
-        //             'phone' => $rawChatId,
-        //             'id' => $contactData['id'] ?? null
-        //         ];
+                // Create a temporary contact object for placeholder processing
+                $tempContact = (object) [
+                    'name' => $contactData['name'] ?? 'Customer',
+                    'phone' => $rawChatId,
+                    'id' => $contactData['id'] ?? null
+                ];
 
-        //         // Process message with contact-specific placeholders
-        //         $personalizedMessage = $this->processMessagePlaceholders($messageTemplate, null, $tempContact);
+                // Process message with contact-specific placeholders
+                $personalizedMessage = $this->processMessagePlaceholders($messageTemplate, null, $tempContact);
 
-        //         $chatId = preg_replace('/[^0-9]/', '', $rawChatId) . '@c.us';
+                $chatId = preg_replace('/[^0-9]/', '', $rawChatId) . '@c.us';
 
-        //         Log::info('Dispatching WhatsApp message job (external contact)', [
-        //             'chatId' => $chatId,
-        //             'userId' => $userId,
-        //             'personalized_message' => $personalizedMessage
-        //         ]);
+                Log::info('Dispatching WhatsApp message job (external contact)', [
+                    'chatId' => $chatId,
+                    'userId' => $userId,
+                    'personalized_message' => $personalizedMessage
+                ]);
 
-        //         SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
-        //         $queued++;
-        //     }
-        // }
+                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
+                $queued++;
+            }
+        }
 
 
         if ($request->filled('contacts')) {
@@ -234,7 +234,7 @@ class WhatsAppController extends Controller
         // Order placeholders
         if ($order) {
             $placeholders['order_no'] = $order->order_no ?? $order->no ?? '';
-            $placeholders['product_name'] = $order->product_name ?? $order->product ?? '';
+            // $placeholders['product_name'] = $order->product_name ?? $order->product ?? '';
 
             $placeholders['order_number'] = $order->order_number ?? $order->number ?? '';
             // $placeholders['price'] = $order->total_price ?? $order->amount ?? '';
@@ -294,159 +294,6 @@ class WhatsAppController extends Controller
     }
 
 
-
-
-
-
-
-// private function processMessagePlaceholders($messageTemplate, $order = null, $contact = null)
-// {
-//     Log::debug('processMessagePlaceholders called', [
-//         'messageTemplate' => $messageTemplate,
-//         'order_id' => $order->id ?? null,
-//         'contact_id' => $contact->id ?? null,
-//     ]);
-
-//     $placeholders = $this->buildContactPlaceholders($contact);
-//     $placeholders += $this->buildOrderPlaceholders($order);
-
-//     $processedMessage = $this->renderEachBlocks($messageTemplate, $order);
-
-//     $processedMessage = $this->replacePlaceholders($processedMessage, $placeholders);
-
-//     Log::debug('Final processed message', ['processed' => $processedMessage]);
-
-//     return $processedMessage;
-// }
-
-
-
-
-// private function buildContactPlaceholders($contact): array
-// {
-//     $placeholders = [];
-
-//     if ($contact) {
-//         $placeholders['customer_name'] = $contact->name ?? 'Customer';
-//         $placeholders['client_name'] = $contact->name ?? 'Customer';
-//         $placeholders['customer_phone'] = $contact->phone ?? $contact->phone_number ?? '';
-//         Log::debug('Contact placeholders generated', $placeholders);
-//     }
-
-//     return $placeholders;
-// }
-
-
-// private function buildOrderPlaceholders($order): array
-// {
-//     $placeholders = [];
-
-//     if (!$order) {
-//         return $placeholders;
-//     }
-
-//     $placeholders = [
-//         'order_no' => $order->order_no ?? $order->no ?? '',
-//         'product_name' => '', // Will be filled if available below
-//         'order_number' => $order->order_number ?? $order->number ?? '',
-//         'tracking_id' => $order->tracking_id ?? $order->tracking_number ?? '',
-//         'total_price' => $order->total_price ?? '',
-//         'delivery_date' => $order->delivery_date ?? '',
-//         'status' => $order->status ?? '',
-//         'agent_name' => $order->agent_name ?? '',
-//         'vendor_name' => $order->vendor_name ?? '',
-//         'website_url' => $order->website_url ?? '',
-//         'zone' => $order->zone ?? '',
-//     ];
-
-//     $itemsList = [];
-
-//     if (!empty($order->orderItem) && is_iterable($order->orderItem)) {
-//         foreach ($order->orderItem as $item) {
-//             $qty = $item['quantity'] ?? 1;
-//             $name = $item['product']['product_name'] ?? '';
-//             $itemsList[] = "{$qty} x {$name}";
-//         }
-
-//         // Optional: Set product_name from first item
-//         if (empty($placeholders['product_name']) && isset($order->orderItem[0]['product']['product_name'])) {
-//             $placeholders['product_name'] = $order->orderItem[0]['product']['product_name'];
-//         }
-//     }
-
-//     $placeholders['order_items'] = implode(', ', $itemsList);
-//     Log::debug('Order placeholders generated', $placeholders);
-
-//     return $placeholders;
-// }
-
-
-
-
-// private function renderEachBlocks(string $messageTemplate, $order): string
-// {
-//     if (preg_match('/\{\{\#each\s+orderItems\}\}(.*?)\{\{\/each\}\}/s', $messageTemplate, $matches)) {
-//         $blockTemplate = $matches[1];
-//         $renderedItems = '';
-
-//         Log::debug('Detected orderItems block template', ['block_template' => $blockTemplate]);
-
-//         if (!empty($order->orderItem) && is_iterable($order->orderItem)) {
-//             foreach ($order->orderItem as $item) {
-//                 $rendered = $blockTemplate;
-
-//                 // Replace supported keys in the block
-//                 $replacements = [
-//                     'quantity' => $item['quantity'] ?? 1,
-//                     'product_name' => $item['product']['product_name'] ?? '',
-//                     'price' => $item['price'] ?? '',
-//                     'total_price' => $item['total_price'] ?? '',
-//                 ];
-
-//                 foreach ($replacements as $key => $val) {
-//                     $rendered = preg_replace('/\{\{\s*' . preg_quote($key, '/') . '\s*\}\}/', $val, $rendered);
-//                 }
-
-//                 $renderedItems .= $rendered;
-//             }
-
-//             Log::debug('Rendered orderItems block', ['rendered_block' => $renderedItems]);
-//         } else {
-//             Log::debug('orderItem is empty or not iterable');
-//         }
-
-//         $messageTemplate = str_replace($matches[0], $renderedItems, $messageTemplate);
-//     }
-
-//     return $messageTemplate;
-// }
-
-
-
-
-// private function replacePlaceholders(string $message, array $placeholders): string
-// {
-//     foreach ($placeholders as $key => $value) {
-//         $patterns = [
-//             '/\{\{\s*' . preg_quote($key, '/') . '\s*\}\}/',
-//             '/\{\{' . preg_quote($key, '/') . '\}\}/'
-//         ];
-
-//         foreach ($patterns as $pattern) {
-//             $message = preg_replace($pattern, $value, $message);
-//         }
-//     }
-
-//     // Remove unmatched placeholders like {{some_unknown_placeholder}}
-//     $message = preg_replace('/\{\{[^}]+\}\}/', '', $message);
-
-//     // Normalize spaces
-//     return preg_replace('/\s+/', ' ', trim($message));
-// }
-
-
-
-    
 
     public function getChat($phone)
     {

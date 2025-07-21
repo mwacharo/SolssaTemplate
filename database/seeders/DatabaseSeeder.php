@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             // MessageSeeder::class,
             // ChannelCredentialSeeder::class
 
-            AgentSeeder::class,
+            // AgentSeeder::class,
             // RiderSeeder::class,
 
 

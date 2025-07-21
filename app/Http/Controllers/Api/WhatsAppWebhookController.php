@@ -6,10 +6,27 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
+use App\Models\Client;
 use Illuminate\Support\Facades\Log;
+
+use App\Services\AIResponderService;
+
+use App\Services\WhatsAppService;
+
+
 
 class WhatsAppWebhookController extends Controller
 {
+
+
+    protected $whatsAppService;
+
+
+    public function __construct(WhatsAppService $whatsAppService)
+    {
+        $this->whatsAppService = $whatsAppService;
+    }
+
     public function handle(Request $request)
     {
         $payload = $request->all();
@@ -69,6 +86,42 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['error' => 'Missing data'], 400);
         }
 
+
+        // 🔁 Use AIResponderService to generate a reply
+        // $ai = new AIResponderService();
+        // $reply = $ai->interpretCustomerQuery($text);
+
+        // if ($reply) {
+        //     // 🚀 Send reply via WhatsApp (stub)
+        //     // $this->sendWhatsAppReply($chatId, $reply);
+
+        //     $this->whatsAppService->sendMessage($chatId, $reply , 1); // Assuming user ID 1 for system messages
+
+        // }
+
+
+
+        // 🔍 Find user by chatId (WhatsApp number)
+        $user = Client::where('phone_number', $chatId)->first();
+        $recentOrders = [];
+
+        if ($user) {
+            $recentOrders = $user->orders()
+                ->latest()
+                ->take(5)
+                ->get(['order_no', 'status', 'delivery_date'])
+                ->toArray();
+        }
+
+        // 🧠 AI interpretation with order context
+        $ai = new AIResponderService();
+        $reply = $ai->interpretCustomerQuery($text, $recentOrders);
+
+        // 🟢 Send response
+        if ($reply) {
+            $this->whatsAppService->sendMessage($chatId, $reply, 1); // 1 = System user
+        }
+
         Message::create([
             'chat_id' => $chatId,
             'from' => $chatId,
@@ -106,7 +159,7 @@ class WhatsAppWebhookController extends Controller
 
         // Optionally, you can use $sender for messageable_type and messageable_id if needed
 
-            
+
         // if (!$sender) {
         //     Log::warning("🚫 Sender not found for chat ID: {$chatId}")   ;
 

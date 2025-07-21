@@ -99,22 +99,22 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
     // Predefined templates
     orderTemplates: [
-      {
-        name: 'Order Confirmation',
-        content: 'Hi {{customer_name}}, your order #{{order_number}} for {{product_name}} worth ${{price}} has been confirmed. We will notify you once shipped. Thank you for choosing our courier service!'
-      },
-      {
-        name: 'Shipping Notification',
-        content: 'Hello {{customer_name}}, great news! Your order #{{order_number}} is now shipped and on its way to you. Track your package with tracking ID: {{tracking_id}}'
-      },
-      {
-        name: 'Delivery Confirmation',
-        content: 'Hi {{customer_name}}, your order #{{order_number}} has been successfully delivered. Thank you for your business! Please rate our service.'
-      },
-      {
-        name: 'Payment Reminder',
-        content: 'Dear {{customer_name}}, this is a reminder that payment for order #{{order_number}} worth ${{price}} is still pending. Please complete payment to avoid delays.'
-      }
+      // {
+      //   name: 'Order Confirmation',
+      //   content: 'Hi {{customer_name}}, your order #{{order_number}} for {{product_name}} worth ${{price}} has been confirmed. We will notify you once shipped. Thank you for choosing our courier service!'
+      // },
+      // {
+      //   name: 'Shipping Notification',
+      //   content: 'Hello {{customer_name}}, great news! Your order #{{order_number}} is now shipped and on its way to you. Track your package with tracking ID: {{tracking_id}}'
+      // },
+      // {
+      //   name: 'Delivery Confirmation',
+      //   content: 'Hi {{customer_name}}, your order #{{order_number}} has been successfully delivered. Thank you for your business! Please rate our service.'
+      // },
+      // {
+      //   name: 'Payment Reminder',
+      //   content: 'Dear {{customer_name}}, this is a reminder that payment for order #{{order_number}} worth ${{price}} is still pending. Please complete payment to avoid delays.'
+      // }
     ]
   }),
 
@@ -520,12 +520,20 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       console.log('Parsed messageText:', this.messageText); // Debug log
     },
 
+    // parseTemplate(template, data = {}) {
+    //   return Object.entries(data).reduce((result, [key, value]) => {
+    //     const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    //     return result.replace(regex, value ?? '')
+    //   }, template)
+    // },
+
     parseTemplate(template, data = {}) {
-      return Object.entries(data).reduce((result, [key, value]) => {
-        const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-        return result.replace(regex, value ?? '')
-      }, template)
-    },
+  return Object.entries(data).reduce((result, [key, value]) => {
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    return result.replace(regex, String(value ?? ''))
+  }, template)
+}
+,
 
 
 
@@ -666,36 +674,50 @@ export const useWhatsAppStore = defineStore('whatsapp', {
             console.warn(`No matching order found for contact:`, contact)
           }
 
+
+
+            console.log('Selected order:', JSON.stringify(order, null, 2))
+
+
+    
           // Build placeholders as before
 
 
-          const placeholders = {
+            let orderItemsList = ''
+          
+
+
+            if (Array.isArray(order?.orderItems) && order.orderItems.length > 0) {
+  orderItemsList = order.orderItems.map(item =>
+    `- ${item.quantity} × ${item.product?.product_name || ''}`
+  ).join('\n')
+}
+
+
+            const placeholders = {
             customer_name: contact.name || order?.customer_name || 'Customer',
             customer_phone: contact.chatId || '',
             order_number: order?.order_no || order?.order_number || '',
-            product_name:
-              order?.orderItem?.length > 0
-                ? order.orderItem.map(item => item.product?.product_name).join(', ')
-                : '',
-            price:
-              order?.orderItem?.length > 0
-                ? order.orderItem.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)
-                : '0.00',
+            // product_name:
+            //   Array.isArray(order?.orderItem) && order.orderItem.length > 0
+            //   ? order.orderItem.map(item => item.product?.product_name).join(', ')
+            //   : '',
+            // price:
+            //   Array.isArray(order?.orderItem) && order.orderItem.length > 0
+            //   ? order.orderItem.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)
+            //   : '0.00',
             tracking_id: order?.tracking_no || '',
             client: order.client || null,
-            orderItems: order.orderItem || [],
-            // vendor: order.vendor || null,
-            agent_name: order.agent?.name || '',
-            vendor_name:order.vendor?.name || '',
-
+            order_items: orderItemsList,
             agent_name: order.agent?.name || '',
             agent_phone: order.agent?.phone || '',
+            vendor_name: order.vendor?.name || '',
             rider_name: order.rider?.name || '',
             rider_phone: order.rider?.phone || '',
             total_price: order.total_price || '0.00'
-          };
+            };
 
-          console.log('Placeholders', placeholders) 
+          console.log('Placeholders', placeholders)
 
           // const placeholders = {
           //   customer_name: contact.name || order?.customer_name || 'Customer',
