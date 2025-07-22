@@ -43,7 +43,7 @@ class DynamicChannelCredentialService
         }
 
         // Debug: Log query before execution
-        Log::debug('About to fetch credential', [
+    Log::debug('About to fetch credential', [
             'query' => $query->toSql(),
             'bindings' => $query->getBindings()
         ]);

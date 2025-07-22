@@ -28,21 +28,38 @@ class AIResponderService
 
         $messageWithContext = $orderDetails . $message;
 
+        Log::info('AIResponderService: interpretCustomerQuery called', [
+            'message' => $message,
+            'recentOrders' => $recentOrders,
+            'messageWithContext' => $messageWithContext
+        ]);
+
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
-                'Content-Type' => 'application/json',
-            ])->post('https://api.openai.com/v1/chat/completions', [
+            $payload = [
                 'model' => 'gpt-3.5-turbo',
                 'messages' => [
                     ['role' => 'system', 'content' => 'You are a customer support assistant for a courier company.'],
                     ['role' => 'user', 'content' => $messageWithContext],
                 ],
                 'temperature' => 0.2,
+            ];
+
+            Log::info('AIResponderService: OpenAI payload', $payload);
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
+                'Content-Type' => 'application/json',
+            ])->post('https://api.openai.com/v1/chat/completions', $payload);
+
+            Log::info('AIResponderService: OpenAI response', [
+                'status' => $response->status(),
+                'body' => $response->body()
             ]);
 
             if ($response->successful()) {
-                return $response->json()['choices'][0]['message']['content'];
+                $content = $response->json()['choices'][0]['message']['content'];
+                Log::info('AIResponderService: OpenAI interpreted content', ['content' => $content]);
+                return $content;
             }
 
             Log::error('OpenAI response failed', ['response' => $response->body()]);

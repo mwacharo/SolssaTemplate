@@ -88,10 +88,7 @@ return new class extends Migration
             $table->foreignId('order_category_id')->nullable()->constrained('order_categories')->nullOnDelete();
             $table->dateTime('schedule_date')->nullable();
             $table->foreignId('rider_id')->nullable()->constrained('riders')->cascadeOnDelete();
-            $table->foreign('agent_id')
-                ->references('id')
-                ->on('agents')
-                ->onDelete('cascade');
+            $table->foreignId('agent_id')->nullable()->constrained('agents')->cascadeOnDelete();
             $table->foreignId('zone_id')->nullable();
             $table->string('checkout_id')->nullable();
             $table->string('longitude')->nullable();

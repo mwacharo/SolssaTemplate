@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('content'); // The actual template text with placeholders
             $table->json('placeholders')->nullable(); // JSON array of placeholders
             $table->morphs('owner') ;// owner_type, owner_id (polymorphic relation: User, Vendor, Admin, etc.)
-            $table->foreignId('country_id')->constrained('countries')->onDelete('cascade');
+            $table->foreignId('country_id')->nullable()->constrained('countries')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

@@ -14,7 +14,6 @@
       </v-container>
     </v-app-bar>
 
-    <v-main class="bg-grey-lighten-4">
       <v-container class="py-6">
         <!-- Share Section -->
         <v-card class="mb-6" elevation="1">
@@ -25,7 +24,7 @@
                 <v-card-text class="pa-0">
                   <p class="text-body-2 text-medium-emphasis mb-0">
                     To connect, share your googlesheet with 
-                    <span class="font-mono text-primary">sheets@courier-55c5e.iam.gserviceaccount.com</span>, 
+                    <span class="font-mono text-primary">google-sheets-sync@arcane-indexer-459514-h9.iam.gserviceaccount.com</span>, 
                     then add Sheet.
                   </p>
                 </v-card-text>
@@ -165,7 +164,6 @@
           </v-data-table>
         </v-card>
       </v-container>
-    </v-main>
 
     <!-- Add Sheet Modal -->
     <v-dialog v-model="showAddSheetModal" max-width="500">
@@ -329,6 +327,9 @@ import { ref, computed, onMounted } from 'vue'
 import { defineStore } from 'pinia'
 import { useGoogleSheetsStore } from '@/stores/googleSheets'
 import AppLayout from "@/Layouts/AppLayout.vue";
+
+import { notify } from '@/utils/toast';
+
 
 
 // Use the store

@@ -40,7 +40,7 @@ class WhatsAppWebhookTest extends TestCase
     $response->assertStatus(200);
     $this->assertDatabaseHas('messages', [
         'to' => '254712345678@c.us',
-        'message' => 'Testing from feature test'
+        'content' => 'Testing from feature test'
     ]);
 }
 
