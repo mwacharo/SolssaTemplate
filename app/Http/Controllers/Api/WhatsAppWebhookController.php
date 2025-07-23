@@ -93,7 +93,7 @@ class WhatsAppWebhookController extends Controller
         Log::info("🔍 Looking up client by chatId: {$chatId}");
         $user = $this->identifyClient($chatId);
 
-        $user = Client::where('phone_number', $chatId)->first();
+        // $user = Client::where('phone_number', $chatId)->first();
         $recentOrders = [];
 
         if ($user) {
