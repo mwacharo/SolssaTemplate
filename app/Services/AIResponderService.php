@@ -8,6 +8,133 @@ use Illuminate\Support\Facades\Log;
 class AIResponderService
 {
 
+
+    // /**
+    //  * Interpret a customer query using OpenAI's API.
+    //  *
+    //  * @param string $message The customer query to interpret.
+    //  * @param array $recentOrders Recent orders associated with the customer.
+    //  * @param array $customer Optional customer information (name, id, phone, language, etc.)
+    //  * @param array $conversationHistory Optional conversation history for maintaining context.
+    //  * @return string|null The interpreted response or null on failure.
+    //  */
+    // public function interpretCustomerQuery(
+    //     string $message,
+    //     array $recentOrders = [],
+    //     array $customer = [],
+    //     array $conversationHistory = []
+    // ): ?string {
+    //     $context = $this->buildContext($recentOrders, $customer);
+    //     $messageWithContext = $context . "\n\n" . $message;
+
+    //     // Build messages array with memory (chat history)
+    //     $messages = [
+    //         ['role' => 'system', 'content' => $this->getSystemPrompt($customer)],
+    //     ];
+
+    //     foreach ($conversationHistory as $entry) {
+    //         $messages[] = [
+    //             'role' => $entry['role'],
+    //             'content' => $entry['content'],
+    //         ];
+    //     }
+
+    //     // Append current user message
+    //     $messages[] = ['role' => 'user', 'content' => $messageWithContext];
+
+    //     try {
+    //         $payload = [
+    //             'model' => 'gpt-3.5-turbo',
+    //             'messages' => $messages,
+    //             'temperature' => 0.2,
+    //         ];
+
+    //         Log::info('AIResponderService: Requesting OpenAI', [
+    //             'recentOrdersCount' => count($recentOrders),
+    //             'customerId' => $customer['id'] ?? null,
+    //             'messageSnippet' => substr($message, 0, 100),
+    //         ]);
+
+    //         $response = Http::withHeaders([
+    //             'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
+    //             'Content-Type' => 'application/json',
+    //         ])->post('https://api.openai.com/v1/chat/completions', $payload);
+
+    //         if ($response->successful()) {
+    //             $content = $response->json()['choices'][0]['message']['content'] ?? null;
+
+    //             if ($this->isFallbackResponse($content)) {
+    //                 Log::warning('AIResponderService: AI gave weak response, suggesting escalation.');
+    //                 return "I'm having trouble processing your request. Let me escalate this to a support agent.";
+    //             }
+
+    //             Log::info('AIResponderService: Successful AI response.');
+    //             return $content;
+    //         }
+
+    //         Log::error('AIResponderService: Failed OpenAI response', ['body' => $response->body()]);
+    //     } catch (\Exception $e) {
+    //         Log::error('AIResponderService Exception', ['message' => $e->getMessage()]);
+    //     }
+
+    //     return null;
+    // }
+
+    // private function buildContext(array $orders, array $customer): string
+    // {
+    //     $lines = [];
+
+    //     if (!empty($customer)) {
+    //         $lines[] = "Customer Info:";
+    //         $lines[] = "- Name: {$customer['name']}";
+    //         $lines[] = "- ID: {$customer['id']}";
+    //         if (!empty($customer['language'])) {
+    //             $lines[] = "- Preferred Language: {$customer['language']}";
+    //         }
+    //         $lines[] = "";
+    //     }
+
+    //     if (!empty($orders)) {
+    //         $lines[] = "Recent Orders:";
+    //         foreach ($orders as $order) {
+    //             $lines[] = "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})";
+    //         }
+    //     } else {
+    //         $lines[] = "No recent orders found.";
+    //     }
+
+    //     return implode("\n", $lines);
+    // }
+
+    // private function getSystemPrompt(array $customer): string
+    // {
+    //     $base = "You are a polite, knowledgeable customer support assistant for a courier company.";
+    //     if (!empty($customer['language']) && strtolower($customer['language']) === 'sw') {
+    //         return $base . " Respond in Kiswahili if the user types in Kiswahili.";
+    //     }
+    //     return $base;
+    // }
+
+    // private function isFallbackResponse(?string $response): bool
+    // {
+    //     if (!$response) return true;
+
+    //     $fallbackIndicators = [
+    //         'I am not sure',
+    //         'please contact support',
+    //         'I don’t have enough information',
+    //         'unable to assist',
+    //     ];
+
+    //     foreach ($fallbackIndicators as $phrase) {
+    //         if (stripos($response, $phrase) !== false) {
+    //             return true;
+    //         }
+    //     }
+
+    //     return false;
+    // }
+
     /**
      * Interpret a customer query using OpenAI's API.
      *
@@ -22,6 +149,18 @@ class AIResponderService
             $orderDetails .= "Here are the customer's recent orders:\n";
             foreach ($recentOrders as $order) {
                 $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
+                $orderDetails .= "  Vendor: " . ($order->vendor->name ?? 'N/A') . "\n";
+                $orderDetails .= "  Rider: " . ($order->rider->name ?? 'N/A') . "\n";
+                $orderDetails .= "  Agent: " . ($order->agent->name ?? 'N/A') . "\n";
+                $orderDetails .= "  Client: " . ($order->client->name ?? 'N/A');
+                if (!empty($order->client->phone)) {
+                    $orderDetails .= " (Phone: {$order->client->phone})";
+                }
+                $orderDetails .= "\n";
+                $orderDetails .= "  Items:\n";
+                foreach ($order->orderItems as $item) {
+                    $orderDetails .= "    - {$item->name} x{$item->quantity}\n";
+                }
             }
             $orderDetails .= "\n";
         }
@@ -72,29 +211,10 @@ class AIResponderService
 
 
 
-/**
-     * Compose a message with context (like order summary) and get a helpful response.
-     *
-     * @param array $context
-     * @return string|null
-     */
-    // public function respondToMessageWithContext(array $context): ?string
-    // {
-    //     $prompt = "A customer wrote: \"{$context['message']}\"\n\n";
 
-    //     if (!empty($context['order_summary'])) {
-    //         $prompt .= "Here are the customer's order details:\n";
-    //         foreach ($context['order_summary'] as $order) {
-    //             $prompt .= "- Order #{$order['order_number']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
-    //         }
-    //     } else {
-    //         $prompt .= "No matching order was found for their query.\n";
-    //     }
 
-    //     $prompt .= "\n\nRespond politely and helpfully to the customer.";
 
-    //     return $this->interpretCustomerQuery($prompt);
-    // }
+
 
 
 }

@@ -42,4 +42,16 @@ class Client extends Model
     {
         return $this->hasMany(Order::class);
     }   
+
+
+    //client has messages 
+
+
+    public function messages()
+    {
+        return Message::where(function ($query) {
+            $query->where('to', $this->phone_number)
+                  ->orWhere('from', $this->phone_number);
+        });
+    }
 }

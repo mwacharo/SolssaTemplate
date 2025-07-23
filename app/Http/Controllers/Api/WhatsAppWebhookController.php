@@ -96,17 +96,33 @@ class WhatsAppWebhookController extends Controller
         // $user = Client::where('phone_number', $chatId)->first();
         $recentOrders = [];
 
+        // if ($user) {
+        //     Log::info("✅ Client found: {$user->id}");
+        //     $recentOrders = $user->orders()
+        //     ->latest()
+        //     ->take(5)
+        //     ->get(['order_no', 'status', 'delivery_date'])
+        //     ->toArray();
+        //     Log::info("📦 Recent orders fetched", $recentOrders);
+        // } else {
+        //     Log::warning("🚫 No client found for chatId: {$chatId}");
+        // }
+
+
+
         if ($user) {
             Log::info("✅ Client found: {$user->id}");
+            // Fetch recent orders with all relationships
             $recentOrders = $user->orders()
+            ->with(['orderItems', 'vendor', 'rider', 'agent', 'client'])
             ->latest()
             ->take(5)
-            ->get(['order_no', 'status', 'delivery_date'])
-            ->toArray();
-            Log::info("📦 Recent orders fetched", $recentOrders);
+            ->get();
+            Log::info("📦 Recent orders fetched", $recentOrders->toArray());
         } else {
             Log::warning("🚫 No client found for chatId: {$chatId}");
         }
+
 
         // 🧠 AI interpretation with order context
         $ai = new AIResponderService();
