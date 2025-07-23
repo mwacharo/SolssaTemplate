@@ -202,7 +202,7 @@ class AIResponderService
             $payload = [
                 'model' => 'gpt-3.5-turbo',
                 'messages' => [
-                    ['role' => 'system', 'content' => 'You are a customer support assistant for a courier company.'],
+                    ['role' => 'system', 'content' => 'You are a polite, knowledgeable customer support assistant for a courier company'],
                     ['role' => 'user', 'content' => $messageWithContext],
                 ],
                 'temperature' => 0.2,
