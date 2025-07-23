@@ -21,12 +21,11 @@ class DatabaseSeeder extends Seeder
         // Call the roles and permissions seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
-
-            // CountrySeeder::class,
+            CountrySeeder::class,
             VendorSeeder::class,
-             GoogleSheetSeeder::class,
+            GoogleSheetSeeder::class,
             TemplateSeeder::class,
-               ContactSeeder::class,
+            ContactSeeder::class,
             MessageSeeder::class,
             ChannelCredentialSeeder::class,
             AgentSeeder::class,
