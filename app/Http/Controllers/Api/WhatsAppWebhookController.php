@@ -87,10 +87,12 @@ class WhatsAppWebhookController extends Controller
         }
 
 
+// 
 
-
-        // 🔍 Find user by chatId (WhatsApp number)
+        // 🔍 Find user by chatId (WhatsApp number) using helper
         Log::info("🔍 Looking up client by chatId: {$chatId}");
+        $user = $this->identifyClient($chatId);
+
         $user = Client::where('phone_number', $chatId)->first();
         $recentOrders = [];
 
@@ -139,6 +141,40 @@ class WhatsAppWebhookController extends Controller
         return response()->json(['status' => 'stored']);
     }
 
+
+
+    protected function identifyClient($chatId)
+    {
+        // Remove WhatsApp suffix if present (e.g., @c.us)
+        $cleanChatId = preg_replace('/@.*$/', '', $chatId);
+        Log::info("identifyClient: cleanChatId = {$cleanChatId}");
+
+        // Remove leading zeros and plus if present
+        $normalized = ltrim($cleanChatId, '0+');
+        Log::info("identifyClient: normalized = {$normalized}");
+
+        // Try to match with phone_number in various formats
+        // 1. Try with country code (e.g., 254...)
+        $client = Client::where('phone_number', 'like', "%{$normalized}")->first();
+        Log::info("identifyClient: client by normalized = " . ($client ? $client->id : 'not found'));
+        if ($client) {
+            return $client;
+        }
+
+        // 2. Try with leading zero (e.g., 07...)
+        if (strlen($normalized) > 9 && substr($normalized, 0, 3) === '254') {
+            $local = '0' . substr($normalized, 3);
+            Log::info("identifyClient: local = {$local}");
+            $client = Client::where('phone_number', $local)->first();
+            Log::info("identifyClient: client by local = " . ($client ? $client->id : 'not found'));
+            if ($client) {
+                return $client;
+            }
+        }
+
+        // 3. Try with chatId directly (for custom mapping)
+        return Client::where('phone_number', $cleanChatId)->first();
+    }
     protected function handleOutgoing(array $payload)
     {
         $chatId = $payload['senderData']['chatId'] ?? null;
