@@ -156,7 +156,7 @@ class WhatsAppWebhookController extends Controller
         // Try to match with phone_number in various formats
         // 1. Try with country code (e.g., 254...)
         $client = Client::where('phone_number', 'like', "%{$normalized}")->first();
-        Log::info("identifyClient: client by normalized = " . ($client ? $client->id : 'not found'));
+        Log::info("identifyClient: client by normalized = " . ($client ? $client->id : 'not found') . " (matched phone: " . ($client ? $client->phone_number : 'none') . ")");
         if ($client) {
             return $client;
         }
