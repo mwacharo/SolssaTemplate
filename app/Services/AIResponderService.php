@@ -21,7 +21,7 @@ class AIResponderService
         if (!empty($recentOrders)) {
             $orderDetails .= "Here are the customer's recent orders:\n";
             foreach ($recentOrders as $order) {
-                $orderDetails .= "- Order #{$order['order_number']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
+                $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
             }
             $orderDetails .= "\n";
         }
