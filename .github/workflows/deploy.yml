@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           script: |
-            cd /var/www/solssa
+            cd /var/www/CustomerAI
             git pull origin main
             composer install --no-dev --optimize-autoloader
             php artisan migrate --force
