@@ -36,4 +36,10 @@ class Client extends Model
     // {
     //     return $this->hasMany(CallHistory::class);
     // }
+
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }   
 }
