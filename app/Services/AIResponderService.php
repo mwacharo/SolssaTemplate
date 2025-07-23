@@ -148,19 +148,44 @@ class AIResponderService
         if (!empty($recentOrders)) {
             $orderDetails .= "Here are the customer's recent orders:\n";
             foreach ($recentOrders as $order) {
-                $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
-                $orderDetails .= "  Vendor: " . ($order->vendor->name ?? 'N/A') . "\n";
-                $orderDetails .= "  Rider: " . ($order->rider->name ?? 'N/A') . "\n";
-                $orderDetails .= "  Agent: " . ($order->agent->name ?? 'N/A') . "\n";
-                $orderDetails .= "  Client: " . ($order->client->name ?? 'N/A');
-                if (!empty($order->client->phone)) {
-                    $orderDetails .= " (Phone: {$order->client->phone})";
+            $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
+            // Vendor
+            if (!empty($order['vendor']['name'])) {
+                $orderDetails .= "  Vendor: {$order['vendor']['name']}\n";
+            } else {
+                $orderDetails .= "  Vendor: N/A\n";
+            }
+            // Rider
+            if (!empty($order['rider']['name'])) {
+                $orderDetails .= "  Rider: {$order['rider']['name']}\n";
+            } else {
+                $orderDetails .= "  Rider: N/A\n";
+            }
+            // Agent
+            if (!empty($order['agent']['name'])) {
+                $orderDetails .= "  Agent: {$order['agent']['name']}\n";
+            } else {
+                $orderDetails .= "  Agent: N/A\n";
+            }
+            // Client
+            if (!empty($order['client']['name'])) {
+                $orderDetails .= "  Client: {$order['client']['name']}";
+                if (!empty($order['client']['phone_number'])) {
+                $orderDetails .= " (Phone: {$order['client']['phone_number']})";
                 }
                 $orderDetails .= "\n";
-                $orderDetails .= "  Items:\n";
-                foreach ($order['orderItems'] as $item) {
-                    $orderDetails .= "    - {$item['name']} x{$item['quantity']}\n";
+            } else {
+                $orderDetails .= "  Client: N/A\n";
+            }
+            // Items
+            $orderDetails .= "  Items:\n";
+            if (!empty($order['order_items'])) {
+                foreach ($order['order_items'] as $item) {
+                $orderDetails .= "    - " . (isset($item['name']) ? $item['name'] : 'Item') . " x{$item['quantity']}\n";
                 }
+            } else {
+                $orderDetails .= "    - No items found\n";
+            }
             }
             $orderDetails .= "\n";
         }
