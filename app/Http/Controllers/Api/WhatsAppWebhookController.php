@@ -89,6 +89,7 @@ class WhatsAppWebhookController extends Controller
 
 // 
 
+
         // 🔍 Find user by chatId (WhatsApp number) using helper
         Log::info("🔍 Looking up client by chatId: {$chatId}");
         $user = $this->identifyClient($chatId);
@@ -127,7 +128,7 @@ class WhatsAppWebhookController extends Controller
         // 🧠 AI interpretation with order context
         $ai = new AIResponderService();
         Log::info("🤖 Interpreting customer query: {$text}");
-        $reply = $ai->interpretCustomerQuery($text, $recentOrders);
+        $reply = $ai->interpretCustomerQuery($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
 
         // 🟢 Send response
         if ($reply) {
