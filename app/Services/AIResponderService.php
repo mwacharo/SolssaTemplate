@@ -158,8 +158,8 @@ class AIResponderService
                 }
                 $orderDetails .= "\n";
                 $orderDetails .= "  Items:\n";
-                foreach ($order->orderItems as $item) {
-                    $orderDetails .= "    - {$item->name} x{$item->quantity}\n";
+                foreach ($order['orderItems'] as $item) {
+                    $orderDetails .= "    - {$item['name']} x{$item['quantity']}\n";
                 }
             }
             $orderDetails .= "\n";
