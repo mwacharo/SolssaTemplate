@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChannelCredential;
 use App\Models\User;
 use App\Models\Vendor;
-use Illuminate\Container\Attributes\Log;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -166,6 +166,9 @@ class CredentialController extends Controller
 
     public function store(Request $request)
     {
+
+                Log::info('Update Credential Request Data:', $request->all());
+
         $validator = Validator::make($request->all(), [
             'credentialable_type' => 'required|string',
             'credentialable_id' => 'required|integer',
@@ -205,6 +208,11 @@ class CredentialController extends Controller
 
                 // Update credential fields
                 $credential->provider = $credentialData['provider'] ?? null;
+                $credential->from_name = $credentialData['from_name'] ?? null;
+                $credential->from_address = $credentialData['from_address'] ?? null;
+                $credential->smtp_host = $credentialData['smtp_host'] ?? null;
+                $credential->smtp_port = $credentialData['smtp_port'] ?? null;
+                $credential->encryption = $credentialData['encryption'] ?? null;
                 $credential->api_key = $credentialData['api_key'] ?? null;
                 $credential->api_secret = $credentialData['api_secret'] ?? null;
                 $credential->access_token = $credentialData['access_token'] ?? null;
@@ -221,12 +229,16 @@ class CredentialController extends Controller
                 $credential->page_access_token = $credentialData['page_access_token'] ?? null;
                 $credential->page_id = $credentialData['page_id'] ?? null;
                 $credential->phone_number = $credentialData['phone_number'] ?? null;
+                $credential->instance_id = $credentialData['instance_id'] ?? null;
+                $credential->api_token = $credentialData['api_token'] ?? null;
+                $credential->api_url = $credentialData['api_url'] ?? null;
                 $credential->email_address = $credentialData['email_address'] ?? null;
                 $credential->webhook = $credentialData['webhook'] ?? null;
+                $credential->status = $credentialData['status'];
                 $credential->value = $credentialData['value'] ?? null;
                 $credential->description = $credentialData['description'] ?? null;
-                $credential->status = $credentialData['status'];
                 $credential->meta = $credentialData['meta'] ?? null;
+                $credential->mail_mailer = $credentialData['mail_mailer'] ?? null;
 
                 $credential->save();
                 $savedCredentials[] = $credential;
@@ -264,6 +276,13 @@ class CredentialController extends Controller
 
     public function update(Request $request, string $id)
     {
+
+
+        // log the entire request data for debugging
+
+        Log::info('Update Credential Request Data:', $request->all());
+
+
         $validator = Validator::make($request->all(), [
             'provider' => 'nullable|string',
             'status' => 'required|in:active,inactive',
@@ -282,6 +301,11 @@ class CredentialController extends Controller
 
             // Update credential fields
             $credential->provider = $request->provider ?? $credential->provider;
+            $credential->from_name = $request->from_name ?? $credential->from_name;
+            $credential->from_address = $request->from_address ?? $credential->from_address;
+            $credential->smtp_host = $request->smtp_host ?? $credential->smtp_host;
+            $credential->smtp_port = $request->smtp_port ?? $credential->smtp_port;
+            $credential->encryption = $request->encryption ?? $credential->encryption;
             $credential->api_key = $request->api_key ?? $credential->api_key;
             $credential->api_secret = $request->api_secret ?? $credential->api_secret;
             $credential->access_token = $request->access_token ?? $credential->access_token;
@@ -298,12 +322,16 @@ class CredentialController extends Controller
             $credential->page_access_token = $request->page_access_token ?? $credential->page_access_token;
             $credential->page_id = $request->page_id ?? $credential->page_id;
             $credential->phone_number = $request->phone_number ?? $credential->phone_number;
+            $credential->instance_id = $request->instance_id ?? $credential->instance_id;
+            $credential->api_token = $request->api_token ?? $credential->api_token;
+            $credential->api_url = $request->api_url ?? $credential->api_url;
             $credential->email_address = $request->email_address ?? $credential->email_address;
             $credential->webhook = $request->webhook ?? $credential->webhook;
+            $credential->status = $request->status;
             $credential->value = $request->value ?? $credential->value;
             $credential->description = $request->description ?? $credential->description;
-            $credential->status = $request->status;
             $credential->meta = $request->meta ?? $credential->meta;
+            $credential->mail_mailer = $request->mail_mailer ?? $credential->mail_mailer;
 
             $credential->save();
 

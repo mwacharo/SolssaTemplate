@@ -53,7 +53,7 @@ class WhatsAppController extends Controller
     {
 
         $delayMinutes = 3;
-$counter = 0;
+        $counter = 0;
         Log::debug('sendMessage called', ['request' => $request->all()]);
 
 
@@ -104,10 +104,10 @@ $counter = 0;
                 // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
                 // $queued++;
 
-                  SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-        ->delay(now()->addMinutes($delayMinutes * $counter));
-    $counter++;
-    $queued++;
+                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+                    ->delay(now()->addMinutes($delayMinutes * $counter));
+                $counter++;
+                $queued++;
             }
         }
 
@@ -141,10 +141,10 @@ $counter = 0;
                 // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
                 // $queued++;
 
-                  SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-        ->delay(now()->addMinutes($delayMinutes * $counter));
-    $counter++;
-    $queued++;
+                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+                    ->delay(now()->addMinutes($delayMinutes * $counter));
+                $counter++;
+                $queued++;
             }
         }
 
@@ -181,57 +181,16 @@ $counter = 0;
                 // $queued++;
 
 
-                  SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-        ->delay(now()->addMinutes($delayMinutes * $counter));
-    $counter++;
-    $queued++;
-            }
-        }
-
-
-        if ($request->filled('contacts')) {
-            Log::debug('Processing direct contacts array', ['contacts' => $request->contacts]);
-
-            foreach ($request->contacts as $contactData) {
-                $rawChatId = $contactData['chatId'] ?? null;
-                if (!$rawChatId) {
-                    Log::warning('Missing chatId in direct contact', ['contact' => $contactData]);
-                    continue;
-                }
-
-                $tempContact = (object) [
-                    'name' => $contactData['name'] ?? 'Customer',
-                    'phone' => $rawChatId,
-                    'id' => $contactData['id'] ?? null
-                ];
-
-                // ✅ Extract single order if available
-                $orderData = $request->order ? (object) $request->order : null;
-
-                $personalizedMessage = $this->processMessagePlaceholders(
-                    $messageTemplate,
-                    $orderData,
-                    $tempContact
-                );
-
-                $chatId = preg_replace('/[^0-9]/', '', $rawChatId) . '@c.us';
-
-                Log::info('Dispatching WhatsApp message job (external contact)', [
-                    'chatId' => $chatId,
-                    'userId' => $userId,
-                    'personalized_message' => $personalizedMessage
-                ]);
-
-                // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
-                // $queued++;
-
-
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
                     ->delay(now()->addMinutes($delayMinutes * $counter));
                 $counter++;
                 $queued++;
             }
         }
+
+
+      
+        
 
 
         Log::info('sendMessage completed', ['queued_count' => $queued]);
