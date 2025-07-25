@@ -28,8 +28,9 @@ class DatabaseSeeder extends Seeder
             ContactSeeder::class,
             MessageSeeder::class,
             ChannelCredentialSeeder::class,
-            AgentSeeder::class,
             RiderSeeder::class,
+
+            AgentSeeder::class,
 
 
         ]);
