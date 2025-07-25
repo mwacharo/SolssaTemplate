@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use App\Services\GreenApiService;
 use Illuminate\Support\Facades\Log;
 
+use Carbon\Carbon;
+
+
 
 
 
@@ -52,7 +55,7 @@ class WhatsAppController extends Controller
     public function sendMessage(Request $request)
     {
 
-        $delayMinutes = 3;
+        $delayMinutes = 5;
         $counter = 0;
         Log::debug('sendMessage called', ['request' => $request->all()]);
 
@@ -105,7 +108,7 @@ class WhatsAppController extends Controller
                 // $queued++;
 
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                    ->delay(now()->addMinutes($delayMinutes * $counter));
+                    ->delay(Carbon::now()->addMinutes($delayMinutes * $counter));
                 $counter++;
                 $queued++;
             }
@@ -142,7 +145,7 @@ class WhatsAppController extends Controller
                 // $queued++;
 
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                    ->delay(now()->addMinutes($delayMinutes * $counter));
+                    ->delay(Carbon::now()->addMinutes($delayMinutes * $counter));
                 $counter++;
                 $queued++;
             }
@@ -182,7 +185,7 @@ class WhatsAppController extends Controller
 
 
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                    ->delay(now()->addMinutes($delayMinutes * $counter));
+                    ->delay(Carbon::now()->addMinutes($delayMinutes * $counter));
                 $counter++;
                 $queued++;
             }

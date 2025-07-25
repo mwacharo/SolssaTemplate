@@ -91,13 +91,12 @@ const updateStatus = async (status, orders) => {
 };
 
 
-// Order Details Dialog state and logic
-const showOrderDetailsDialog = ref(false)
-const selectedOrder = ref(null)
+
 
 const viewOrderDetails = (order) => {
-  selectedOrder.value = order
-  showOrderDetailsDialog.value = true
+
+      orderStore.openDialog(order)
+
 }
 // Local UI state (not managed by store)
 const selectedPhone = ref(null);
@@ -1264,7 +1263,7 @@ onMounted(async () => {
         </v-dialog>
       </v-dialog>
       <!-- Order Details Dialog -->
-      <v-dialog v-model="showOrderDetailsDialog" max-width="800">
+      <!-- <v-dialog v-model="showOrderDetailsDialog" max-width="800">
         <v-card>
           <v-card-title>
             <span class="text-h6">Order Details - {{ selectedOrder?.order_no }}</span>
@@ -1316,7 +1315,7 @@ onMounted(async () => {
           </v-card-actions>
         </v-card>
       </v-dialog>
-
+ -->
 
       <!-- bulk actions -->
 

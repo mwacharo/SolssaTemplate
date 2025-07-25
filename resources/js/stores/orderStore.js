@@ -3,39 +3,6 @@ import { defineStore } from 'pinia'
 
 export const useOrderStore = defineStore('order', {
   state: () => ({
-
-    // orderdetails dialog state
-
-    const openDialog = async (contactId) => {
-    console.log('=== openDialog called ===')
-    console.log('contactId:', contactId)
-    
-    selectedContactId.value = contactId
-    dialog.value = true
-    
-    console.log('Dialog set to true:', dialog.value)
-    
-    // Load conversation but don't let it affect dialog state
-    try {
-        await loadConversation(contactId)
-    } catch (error) {
-        console.error('Error loading conversation:', error)
-    }
-    
-    // Ensure dialog is still true after loading
-    if (!dialog.value) {
-        console.log('Dialog was somehow set to false, correcting...')
-        dialog.value = true
-    }
-    
-    console.log('openDialog completed, final dialog state:', dialog.value)
-},
-
-    const closeDialog = () => {
-        dialog.value = false
-        clearForm()
-        selectedContactId.value = null
-    },
     // Filter states
     orderFilterStatus: null,
     orderFilterProduct: null,
@@ -57,6 +24,10 @@ export const useOrderStore = defineStore('order', {
     // Data
     orders: [],
     filteredOrders: [],
+    
+    // Dialog states (if needed for order details)
+    dialog: false,
+    selectedOrderId: null,
     
     // Loading states
     loading: {
@@ -130,6 +101,9 @@ export const useOrderStore = defineStore('order', {
         this.loading.statusOptions = true
         // Replace with your API call
         const response = await fetch('/api/order-statuses')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         this.orderStatusOptions = await response.json()
       } catch (error) {
         console.error('Error loading status options:', error)
@@ -145,6 +119,9 @@ export const useOrderStore = defineStore('order', {
         this.loading.productOptions = true
         // Replace with your API call
         const response = await fetch('/api/products')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         this.productOptions = await response.json()
       } catch (error) {
         console.error('Error loading product options:', error)
@@ -160,6 +137,9 @@ export const useOrderStore = defineStore('order', {
         this.loading.zoneOptions = true
         // Replace with your API call
         const response = await fetch('/api/zones')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         this.zoneOptions = await response.json()
       } catch (error) {
         console.error('Error loading zone options:', error)
@@ -175,6 +155,9 @@ export const useOrderStore = defineStore('order', {
         this.loading.agentOptions = true
         // Replace with your API call
         const response = await fetch('/api/agents')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         this.agentOptions = await response.json()
       } catch (error) {
         console.error('Error loading agent options:', error)
@@ -190,6 +173,9 @@ export const useOrderStore = defineStore('order', {
         this.loading.riderOptions = true
         // Replace with your API call
         const response = await fetch('/api/riders')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         this.riderOptions = await response.json()
       } catch (error) {
         console.error('Error loading rider options:', error)
@@ -205,6 +191,9 @@ export const useOrderStore = defineStore('order', {
         this.loading.vendorOptions = true
         // Replace with your API call
         const response = await fetch('/api/vendors')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         this.vendorOptions = await response.json()
       } catch (error) {
         console.error('Error loading vendor options:', error)
@@ -241,6 +230,9 @@ export const useOrderStore = defineStore('order', {
         
         // Make API call
         const response = await fetch(`/api/orders?${queryParams.toString()}`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
         const data = await response.json()
         
         // Update state
@@ -273,6 +265,60 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
+    // Load specific order details
+    async loadOrder(orderId) {
+      try {
+        this.loading.orders = true
+        const response = await fetch(`/api/orders/${orderId}`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const order = await response.json()
+        return order
+      } catch (error) {
+        console.error('Error loading order:', error)
+        throw error
+      } finally {
+        this.loading.orders = false
+      }
+    },
+
+    // Dialog actions
+    async openDialog(orderId) {
+      console.log('=== openDialog called ===')
+      console.log('orderId:', orderId)
+
+      // If orderId is an object, extract its id property
+      const id = typeof orderId === 'object' && orderId !== null && 'id' in orderId
+      ? orderId.id
+      : orderId
+
+      this.selectedOrderId = id
+      this.dialog = true
+
+      console.log('Dialog set to true:', this.dialog)
+
+      // Load order details but don't let it affect dialog state
+      try {
+      await this.loadOrder(id)
+      } catch (error) {
+      console.error('Error loading order:', error)
+      }
+
+      // Ensure dialog is still true after loading
+      if (!this.dialog) {
+      console.log('Dialog was somehow set to false, correcting...')
+      this.dialog = true
+      }
+
+      console.log('openDialog completed, final dialog state:', this.dialog)
+    },
+
+    closeDialog() {
+      this.dialog = false
+      this.selectedOrderId = null
+    },
+
     // Set pagination
     setPagination(pagination) {
       this.pagination = { ...this.pagination, ...pagination }
@@ -283,6 +329,8 @@ export const useOrderStore = defineStore('order', {
       this.clearAllFilters()
       this.orders = []
       this.filteredOrders = []
+      this.dialog = false
+      this.selectedOrderId = null
       this.pagination = {
         page: 1,
         itemsPerPage: 25,
