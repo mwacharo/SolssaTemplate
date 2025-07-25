@@ -13,11 +13,17 @@ use Illuminate\Http\Request;
 use App\Services\GreenApiService;
 use Illuminate\Support\Facades\Log;
 
+
+
+
 class WhatsAppController extends Controller
 {
 
 
     protected $greenApi;
+
+
+
 
 
     public function __construct(GreenApiService $greenApi)
@@ -45,7 +51,13 @@ class WhatsAppController extends Controller
 
     public function sendMessage(Request $request)
     {
+
+        $delayMinutes = 3;
+$counter = 0;
         Log::debug('sendMessage called', ['request' => $request->all()]);
+
+
+
 
         $request->validate([
             'message' => 'required|string',
@@ -89,8 +101,13 @@ class WhatsAppController extends Controller
                     'personalized_message' => $personalizedMessage
                 ]);
 
-                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
-                $queued++;
+                // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
+                // $queued++;
+
+                  SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+        ->delay(now()->addMinutes($delayMinutes * $counter));
+    $counter++;
+    $queued++;
             }
         }
 
@@ -121,8 +138,13 @@ class WhatsAppController extends Controller
                     'personalized_message' => $personalizedMessage
                 ]);
 
-                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
-                $queued++;
+                // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
+                // $queued++;
+
+                  SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+        ->delay(now()->addMinutes($delayMinutes * $counter));
+    $counter++;
+    $queued++;
             }
         }
 
@@ -155,8 +177,14 @@ class WhatsAppController extends Controller
                     'personalized_message' => $personalizedMessage
                 ]);
 
-                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
-                $queued++;
+                // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
+                // $queued++;
+
+
+                  SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+        ->delay(now()->addMinutes($delayMinutes * $counter));
+    $counter++;
+    $queued++;
             }
         }
 
@@ -194,7 +222,13 @@ class WhatsAppController extends Controller
                     'personalized_message' => $personalizedMessage
                 ]);
 
-                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
+                // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
+                // $queued++;
+
+
+                SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+                    ->delay(now()->addMinutes($delayMinutes * $counter));
+                $counter++;
                 $queued++;
             }
         }
@@ -261,7 +295,6 @@ class WhatsAppController extends Controller
             } else {
                 $placeholders['order_items'] = '';
             }
-
         }
 
         // Replace placeholders in the message

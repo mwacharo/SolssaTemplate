@@ -4,6 +4,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use Laravel\Horizon\Horizon;
+
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -40,6 +43,14 @@ Route::get('/', function () {
 
 //     return Inertia::render('Welcome');
 // })->name('home');
+
+
+// Horizon routes
+
+
+Horizon::auth(function ($request) {
+    return true; // or use proper auth logic
+});
 
 // Authenticated user routes
 Route::middleware([
