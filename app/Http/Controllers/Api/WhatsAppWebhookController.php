@@ -81,10 +81,10 @@ class WhatsAppWebhookController extends Controller
         $type     = $payload['messageData']['typeMessage'] ?? 'textMessage';
         $timestamp = now();
 
-        if (!$chatId || !$text) {
-            Log::warning('🚫 Invalid message payload', $payload);
-            return response()->json(['error' => 'Missing data'], 400);
-        }
+        // if (!$chatId || !$text) {
+        //     Log::warning('🚫 Invalid message payload', $payload);
+        //     return response()->json(['error' => 'Missing data'], 400);
+        // }
 
 
 // 

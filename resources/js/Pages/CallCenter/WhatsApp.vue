@@ -10,6 +10,8 @@ import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
 import AssignDialog from './AssignDialog.vue';
 import { useOrderStore } from '@/stores/orderStore' // Adjust path as needed
 
+import OrderDialogs from './Dialogs/OrderDialogs.vue';
+
 
 import { notify } from '@/utils/toast';
 
@@ -89,9 +91,13 @@ const updateStatus = async (status, orders) => {
 };
 
 
+// Order Details Dialog state and logic
+const showOrderDetailsDialog = ref(false)
+const selectedOrder = ref(null)
 
 const viewOrderDetails = (order) => {
-  console.log('View', order)
+  selectedOrder.value = order
+  showOrderDetailsDialog.value = true
 }
 // Local UI state (not managed by store)
 const selectedPhone = ref(null);
@@ -1319,6 +1325,7 @@ onMounted(async () => {
         @confirmed="handleConfirm" />
 
       <WhatsAppConversation />
+      <OrderDialogs/>
 
     </v-container>
 

@@ -3,6 +3,39 @@ import { defineStore } from 'pinia'
 
 export const useOrderStore = defineStore('order', {
   state: () => ({
+
+    // orderdetails dialog state
+
+    const openDialog = async (contactId) => {
+    console.log('=== openDialog called ===')
+    console.log('contactId:', contactId)
+    
+    selectedContactId.value = contactId
+    dialog.value = true
+    
+    console.log('Dialog set to true:', dialog.value)
+    
+    // Load conversation but don't let it affect dialog state
+    try {
+        await loadConversation(contactId)
+    } catch (error) {
+        console.error('Error loading conversation:', error)
+    }
+    
+    // Ensure dialog is still true after loading
+    if (!dialog.value) {
+        console.log('Dialog was somehow set to false, correcting...')
+        dialog.value = true
+    }
+    
+    console.log('openDialog completed, final dialog state:', dialog.value)
+},
+
+    const closeDialog = () => {
+        dialog.value = false
+        clearForm()
+        selectedContactId.value = null
+    },
     // Filter states
     orderFilterStatus: null,
     orderFilterProduct: null,
