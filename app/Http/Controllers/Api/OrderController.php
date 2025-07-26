@@ -51,13 +51,19 @@ class OrderController extends Controller
     {
         //
     }
-
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        // Eager load relationships for a single order
+        $order = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
+            ->where('id', $id)
+            ->whereNull('deleted_at')
+            ->firstOrFail();
+
+        // Return single order resource
+        return new OrderResource($order);
     }
 
     /**

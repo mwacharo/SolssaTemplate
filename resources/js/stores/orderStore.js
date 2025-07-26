@@ -25,9 +25,10 @@ export const useOrderStore = defineStore('order', {
     orders: [],
     filteredOrders: [],
     
-    // Dialog states (if needed for order details)
+    // Dialog states - ADD selectedOrder to state
     dialog: false,
     selectedOrderId: null,
+    selectedOrder: null, // Add this to store the selected order details
     
     // Loading states
     loading: {
@@ -269,11 +270,13 @@ export const useOrderStore = defineStore('order', {
     async loadOrder(orderId) {
       try {
         this.loading.orders = true
-        const response = await fetch(`/api/orders/${orderId}`)
+        const response = await fetch(`/api/v1/orders/${orderId}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
-        const order = await response.json()
+        const result = await response.json()
+        // If response has a "data" property, use it
+        const order = result.data ? result.data : result
         return order
       } catch (error) {
         console.error('Error loading order:', error)
@@ -283,32 +286,30 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
-    // Dialog actions
+    // Dialog actions - FIXED VERSION
     async openDialog(orderId) {
       console.log('=== openDialog called ===')
       console.log('orderId:', orderId)
 
       // If orderId is an object, extract its id property
       const id = typeof orderId === 'object' && orderId !== null && 'id' in orderId
-      ? orderId.id
-      : orderId
+        ? orderId.id
+        : orderId
 
       this.selectedOrderId = id
       this.dialog = true
 
       console.log('Dialog set to true:', this.dialog)
 
-      // Load order details but don't let it affect dialog state
+      // Load order details
       try {
-      await this.loadOrder(id)
+        const order = await this.loadOrder(id)
+        // Store the order in selectedOrder state property
+        this.selectedOrder = order
+        console.log('Order loaded and stored:', order)
       } catch (error) {
-      console.error('Error loading order:', error)
-      }
-
-      // Ensure dialog is still true after loading
-      if (!this.dialog) {
-      console.log('Dialog was somehow set to false, correcting...')
-      this.dialog = true
+        console.error('Error loading order:', error)
+        this.selectedOrder = null
       }
 
       console.log('openDialog completed, final dialog state:', this.dialog)
@@ -317,11 +318,116 @@ export const useOrderStore = defineStore('order', {
     closeDialog() {
       this.dialog = false
       this.selectedOrderId = null
+      this.selectedOrder = null // Clear the selected order
     },
 
     // Set pagination
     setPagination(pagination) {
       this.pagination = { ...this.pagination, ...pagination }
+    },
+
+    // Update order
+    async updateOrder(orderId, orderData) {
+      try {
+        this.loading.orders = true
+        const response = await fetch(`/api/v1/orders/${orderId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData)
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        const updatedOrder = result.data ? result.data : result
+        
+        // Update the selected order if it matches
+        if (this.selectedOrder && this.selectedOrder.id === orderId) {
+          this.selectedOrder = updatedOrder
+        }
+        
+        // Update in orders array if it exists
+        const orderIndex = this.orders.findIndex(order => order.id === orderId)
+        if (orderIndex !== -1) {
+          this.orders[orderIndex] = updatedOrder
+        }
+        
+        return updatedOrder
+      } catch (error) {
+        console.error('Error updating order:', error)
+        throw error
+      } finally {
+        this.loading.orders = false
+      }
+    },
+
+    // Update client
+    async updateClient(clientId, clientData) {
+      try {
+        this.loading.orders = true
+        const response = await fetch(`/api/v1/clients/${clientId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(clientData)
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const result = await response.json()
+        const updatedClient = result.data ? result.data : result
+        
+        // Update the client in selected order if it matches
+        if (this.selectedOrder && this.selectedOrder.client && this.selectedOrder.client.id === clientId) {
+          this.selectedOrder.client = updatedClient
+        }
+        
+        return updatedClient
+      } catch (error) {
+        console.error('Error updating client:', error)
+        throw error
+      } finally {
+        this.loading.orders = false
+      }
+    },
+
+    // Delete order
+    async deleteOrder(orderId) {
+      try {
+        this.loading.orders = true
+        const response = await fetch(`/api/v1/orders/${orderId}`, {
+          method: 'DELETE'
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        // Remove from orders array
+        this.orders = this.orders.filter(order => order.id !== orderId)
+        this.filteredOrders = this.filteredOrders.filter(order => order.id !== orderId)
+        
+        // Clear selected order if it was deleted
+        if (this.selectedOrder && this.selectedOrder.id === orderId) {
+          this.selectedOrder = null
+          this.selectedOrderId = null
+          this.dialog = false
+        }
+        
+        return true
+      } catch (error) {
+        console.error('Error deleting order:', error)
+        throw error
+      } finally {
+        this.loading.orders = false
+      }
     },
 
     // Reset store to initial state
@@ -331,6 +437,7 @@ export const useOrderStore = defineStore('order', {
       this.filteredOrders = []
       this.dialog = false
       this.selectedOrderId = null
+      this.selectedOrder = null // Clear selected order
       this.pagination = {
         page: 1,
         itemsPerPage: 25,
