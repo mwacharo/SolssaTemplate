@@ -247,7 +247,10 @@ class WhatsAppWebhookController extends Controller
 
     Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
 
-    return response()->json(['warning' => 'Message not found'], 200); // Green API expects 200 regardless
+    // return response()->json(['warning' => 'Message not found'], 200); // Green API expects 200 regardless
+
+        return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
+
 }
 
 
