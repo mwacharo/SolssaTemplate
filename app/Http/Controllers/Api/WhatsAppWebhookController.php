@@ -169,42 +169,87 @@ class WhatsAppWebhookController extends Controller
         }
     }
 
+    // protected function handleStatusUpdate(array $payload)
+    // {
+    //     $idMessage = data_get($payload, 'idMessage');
+    //     $status = data_get($payload, 'status');
+
+    //     if (!$idMessage || !$status) {
+    //         return response()->json(['error' => 'Missing status data'], 400);
+    //     }
+
+    //     // Try both 'external_message_id' and 'wa_message_id'
+    //     $msg = Message::where('external_message_id', $idMessage)
+    //         ->orWhere('wa_message_id', $idMessage)
+    //         ->first();
+
+    //     if ($msg) {
+    //         $msg->status = $status;
+    //         $msg->timestamp = now();
+
+    //         if ($status === 'delivered') {
+    //             $msg->delivered_at = now();
+    //         }
+
+    //         if ($status === 'read') {
+    //             $msg->read_at = now();
+    //         }
+
+    //         if ($status === 'failed') {
+    //             $msg->failed_at = now();
+    //         }
+
+    //         $msg->save();
+
+    //         return response()->json(['status' => 'updated', 'id' => $msg->id]);
+    //     }
+
+    //     Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
+
+    //     return response()->json(['warning' => 'Message not found'], 404);
+    // }
+
+
     protected function handleStatusUpdate(array $payload)
-    {
-        $idMessage = data_get($payload, 'idMessage');
-        $status = data_get($payload, 'status');
+{
+    $idMessage = data_get($payload, 'idMessage');
+    $status = data_get($payload, 'status');
 
-        if (!$idMessage || !$status) {
-            return response()->json(['error' => 'Missing status data'], 400);
-        }
-
-        $msg = Message::where('external_message_id', $idMessage)->first();
-
-        if ($msg) {
-            $msg->status = $status;
-            $msg->timestamp = now();
-
-            if ($status === 'delivered') {
-                $msg->delivered_at = now();
-            }
-
-            if ($status === 'read') {
-                $msg->read_at = now();
-            }
-
-            if ($status === 'failed') {
-                $msg->failed_at = now();
-            }
-
-            $msg->save();
-
-            return response()->json(['status' => 'updated', 'id' => $msg->id]);
-        }
-
-        Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
-
-        return response()->json(['warning' => 'Message not found'], 404);
+    if (!$idMessage || !$status) {
+        Log::warning("❌ Missing status update data: ", $payload);
+        return response()->json(['error' => 'Missing status data'], 200); // Return 200 anyway to satisfy Green API
     }
+
+    $msg = Message::where('external_message_id', $idMessage)
+        ->orWhere('wa_message_id', $idMessage)
+        ->first();
+
+    if ($msg) {
+        $msg->status = $status;
+        $msg->timestamp = now();
+
+        if ($status === 'delivered') {
+            $msg->delivered_at = now();
+        }
+
+        if ($status === 'read') {
+            $msg->read_at = now();
+        }
+
+        if ($status === 'failed') {
+            $msg->failed_at = now();
+        }
+
+        $msg->save();
+
+        return response()->json(['status' => 'updated', 'id' => $msg->id], 200);
+    }
+
+    Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
+
+    return response()->json(['warning' => 'Message not found'], 200); // Green API expects 200 regardless
+}
+
 
     private function identifyClient($chatId)
     {
