@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Log;
 class OrderController extends Controller
 {
 
-
     public function __construct(protected OrderBulkActionService $orderService) {}
 
     /**
@@ -34,11 +33,10 @@ class OrderController extends Controller
         // Return resource collection with pagination structure
         return OrderResource::collection($orders);
     }
+
     /**
      * Show the form for creating a new resource.
      */
-
-
     public function create()
     {
         //
@@ -51,6 +49,7 @@ class OrderController extends Controller
     {
         //
     }
+
     /**
      * Display the specified resource.
      */
@@ -93,7 +92,6 @@ class OrderController extends Controller
     public function assignRider(BulkOrderActionRequest $request)
     {
         Log::info('Assigning rider to orders', ['data' => $request->validated()]);
-        // $this->orderService->assignRider($request->validated());
         $this->orderService->assignRider(
             $request->validated('order_ids'),
             $request->validated('rider_id')
@@ -123,5 +121,25 @@ class OrderController extends Controller
         );
         Log::info('Order status updated successfully');
         return response()->json(['message' => 'Status updated successfully']);
+    }
+
+    /**
+     * Print waybill for an order - Returns PDF stream
+     */
+    public function printWaybill(Request $request, string $id)
+    {
+        try {
+            // Call the service to get the PDF
+            $pdf = $this->orderService->printWaybill($request, $id);
+            
+            // Return the PDF stream
+            return $pdf;
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to generate waybill',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -14,6 +14,10 @@ use App\Http\Controllers\Api\RiderController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\WhatsAppController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
+use App\Http\Controllers\Api\ClientController;
+// use App\Http\Controllers\Api\VendorController;
+// Make sure only one VendorController exists and is imported. If you have multiple, remove or rename the duplicate.
+use App\Http\Controllers\Api\VendorController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
@@ -27,13 +31,14 @@ Route::get('/user', function (Request $request) {
 
 
 Route::prefix('v1')->group(function () {
+        // Route::apiResource('/google-sheets', GoogleSheetController::class);
+
     Route::get('/google-sheets', [GoogleSheetController::class, 'index'])->name('google-sheets.index');
     Route::get('/google-sheets/{id}', [GoogleSheetController::class, 'show'])->name('google-sheets.show');
     Route::post('/google-sheets', [GoogleSheetController::class, 'store'])->name('google-sheets.store');
     Route::put('/google-sheets/{id}', [GoogleSheetController::class, 'update'])->name('google-sheets.update');
     Route::delete('/google-sheets/{id}', [GoogleSheetController::class, 'destroy'])->name('google-sheets.destroy');
 
-    Route::apiResource('/google-sheets', GoogleSheetController::class);
     Route::post('/google-sheets/{id}/read-sheet', [GoogleSheetController::class, 'uploadOrders']);
     // Route::post('v1/google-sheets/{id}/sync-orders', [ApiGoogleSheetController::class, 'updateSheet']);
     Route::post('/google-sheets/{id}/sync-products', [GoogleSheetController::class, 'syncProducts']);
@@ -44,7 +49,15 @@ Route::prefix('v1')->group(function () {
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
     // Route::post('v1/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
-    // Route::put('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); // Update a specific order
+    Route::put('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); // Update a specific order
+
+    // Print waybill
+    Route::get('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
+    Route::get('/{id}/print-waybill', [OrderController::class, 'printWaybill'])->name('orders.print-waybill');
+    Route::get('/{id}/download-waybill', [OrderController::class, 'downloadWaybill'])->name('orders.download-waybill');
+    Route::get('/{id}/preview-waybill', [OrderController::class, 'previewWaybill'])->name('orders.preview-waybill');
+    Route::post('/bulk-print-waybills', [OrderController::class, 'bulkPrintWaybills'])->name('orders.bulk-print-waybills');
+
     // Route::delete('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']); // Delete a specific order
     // Route::get('v1/orders/{id}/products', [\App\Http\Controllers\Api\OrderController::class, 'getOrderProducts']); // Get products for a specific order
     // Route::post('v1/orders/{id}/products', [\App\Http\Controllers\Api\OrderController::class, 'addOrderProducts']); // Add products to a specific order
@@ -140,6 +153,20 @@ Route::prefix('v1')->group(function () {
     Route::delete('/agents/{id}', [AgentController::class, 'destroy']);
 
 
+    // vendor 
+    Route::get('/vendors', [VendorController::class, 'index']);
+    Route::post('/vendors', [VendorController::class, 'store']);
+    Route::get('/vendors/{id}', [VendorController::class, 'show']);
+    Route::put('/vendors/{id}', [VendorController::class, 'update']);
+    Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
+
+    // clients 
+
+    // For clients (you'll need to create these)
+    Route::get('/clients', [ClientController::class, 'index']);
+    Route::post('/clients', [ClientController::class, 'store']);
+    Route::put('/clients/{id}', [ClientController::class, 'update']);
+    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 
 
 

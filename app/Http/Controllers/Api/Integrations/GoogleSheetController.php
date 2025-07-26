@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 
 use App\Http\Requests\StoreGoogleSheetRequest;
 use App\Http\Requests\UpdateGoogleSheetRequest;
+use App\Http\Resources\GoogleSheetResource;
 use App\Models\Client;
 use App\Models\GoogleSheet;
 use App\Models\Order;
@@ -67,9 +68,27 @@ class GoogleSheetController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $sheets
+            'data' => $sheets,
         ]);
     }
+
+    // /**
+    //  * Store a newly created resource in storage.
+    // */
+    // public function store(StoreGoogleSheetRequest $request): JsonResponse
+    // {
+
+    //         $googleSheet = GoogleSheet::create($request->validated());
+
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => new GoogleSheetResource($googleSheet)
+    //         ]);
+
+    // }
+
+
 
     /**
      * Store a newly created resource in storage.
@@ -77,20 +96,78 @@ class GoogleSheetController extends Controller
     public function store(StoreGoogleSheetRequest $request): JsonResponse
     {
         try {
-            $data = $request->validated();
-            $sheet = $this->repository->create($data);
+            // Log the incoming request data
+            Log::info('Google Sheet integration store request:', $request->all());
 
-            return response()->json([
+            // Get validated data
+            $validatedData = $request->validated();
+            Log::info('Validated data:', $validatedData);
+
+            // Enable query logging for debugging
+            DB::enableQueryLog();
+
+            // Attempt to create the GoogleSheet
+            $googleSheet = GoogleSheet::create($validatedData);
+
+            // Log the executed queries
+            Log::info('Executed queries during GoogleSheet creation:', DB::getQueryLog());
+
+            // Log successful creation
+            Log::info('GoogleSheet created successfully:', [
+                'id' => $googleSheet->id,
+                'attributes' => $googleSheet->getAttributes()
+            ]);
+
+            $response = [
                 'success' => true,
-                'message' => 'Google Sheet integration created successfully',
-                'data' => $sheet
-            ], 201);
-        } catch (\Exception $e) {
-            Log::error('Failed to create Google Sheet integration: ' . $e->getMessage());
+                'data' => new GoogleSheetResource($googleSheet)
+            ];
+
+            Log::info('Google Sheet integration store response:', $response);
+
+            return response()->json($response, 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle database-specific errors
+            Log::error('Database error creating Google Sheet integration:', [
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'No SQL available',
+                'bindings' => $e->getBindings() ?? [],
+                'error_code' => $e->getCode(),
+                'request_data' => $request->all()
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create Google Sheet integration'
+                'message' => 'Database error: Failed to create Google Sheet integration',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            Log::error('Validation error creating Google Sheet integration:', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            // Handle all other exceptions
+            Log::error('Failed to create Google Sheet integration:', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'queries' => DB::getQueryLog()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create Google Sheet integration',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }

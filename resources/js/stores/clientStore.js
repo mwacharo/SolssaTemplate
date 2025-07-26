@@ -1,9 +1,13 @@
 // stores/clientStore.js
 import { defineStore } from 'pinia'
+import axios from 'axios'
 
 export const useClientStore = defineStore('client', {
     state: () => ({
-        vendors: []
+        vendors: [],
+        riders: [],
+        loading: false,
+        error: null
     }),
 
     getters: {
@@ -13,175 +17,242 @@ export const useClientStore = defineStore('client', {
         
         getClientById: (state) => (vendorId, clientId) => {
             const vendor = state.vendors.find(v => v.id === vendorId)
-            if (vendor) {
+            if (vendor && vendor.clients) {
                 return vendor.clients.find(client => client.id === clientId)
             }
             return null
         },
         
         getTotalClients: (state) => {
-            return state.vendors.reduce((total, vendor) => total + vendor.clients.length, 0)
+            return state.vendors.reduce((total, vendor) => {
+                return total + (vendor.clients ? vendor.clients.length : 0)
+            }, 0)
         },
         
         getActiveVendors: (state) => {
-            return state.vendors.filter(vendor => vendor.status === 'active')
+            return state.vendors.filter(vendor => vendor.status === 1)
+        },
+        
+        getActiveRiders: (state) => {
+            return state.riders.filter(rider => rider.status === 1)
+        },
+        
+        getVendorsByOnboardingStage: (state) => (stage) => {
+            return state.vendors.filter(vendor => vendor.onboarding_stage === stage)
         }
     },
 
     actions: {
-        initializeData() {
-            // Initialize with sample data if no data exists
-            if (this.vendors.length === 0) {
-                this.vendors = [
-                    {
-                        id: 1,
-                        name: 'Swift Logistics Ltd',
-                        email: 'contact@swiftlogistics.com',
-                        phone: '+254-700-123-456',
-                        address: '123 Industrial Area, Nairobi',
-                        status: 'active',
-                        clients: [
-                            {
-                                id: 1,
-                                name: 'Nairobi Supermarket Chain',
-                                email: 'procurement@nairobisupermarket.com',
-                                phone: '+254-711-234-567',
-                                address: '456 City Center, Nairobi',
-                                status: 'active',
-                                totalOrders: 145
-                            },
-                            {
-                                id: 2,
-                                name: 'East Africa Electronics',
-                                email: 'orders@eaelectronics.com',
-                                phone: '+254-722-345-678',
-                                address: '789 Tech Hub, Westlands',
-                                status: 'active',
-                                totalOrders: 89
-                            }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        name: 'Express Courier Services',
-                        email: 'info@expresscourier.co.ke',
-                        phone: '+254-733-456-789',
-                        address: '321 Mombasa Road, Nairobi',
-                        status: 'active',
-                        clients: [
-                            {
-                                id: 3,
-                                name: 'Mombasa Import Co.',
-                                email: 'logistics@mombasaimport.com',
-                                phone: '+254-741-567-890',
-                                address: '654 Port Area, Mombasa',
-                                status: 'active',
-                                totalOrders: 203
-                            },
-                            {
-                                id: 4,
-                                name: 'Kisumu Distributors',
-                                email: 'orders@kisumudist.com',
-                                phone: '+254-752-678-901',
-                                address: '987 Lakeside, Kisumu',
-                                status: 'inactive',
-                                totalOrders: 67
-                            },
-                            {
-                                id: 5,
-                                name: 'Nakuru Agricultural Supplies',
-                                email: 'supply@nakuruagri.com',
-                                phone: '+254-763-789-012',
-                                address: '147 Farm Road, Nakuru',
-                                status: 'active',
-                                totalOrders: 134
-                            }
-                        ]
-                    },
-                    {
-                        id: 3,
-                        name: 'Reliable Transport Co.',
-                        email: 'service@reliabletransport.com',
-                        phone: '+254-774-890-123',
-                        address: '258 Thika Road, Nairobi',
-                        status: 'active',
-                        clients: [
-                            {
-                                id: 6,
-                                name: 'Eldoret Manufacturing',
-                                email: 'shipping@eldoretmanuf.com',
-                                phone: '+254-785-901-234',
-                                address: '369 Industrial Zone, Eldoret',
-                                status: 'active',
-                                totalOrders: 178
-                            }
-                        ]
-                    },
-                    {
-                        id: 4,
-                        name: 'Kenya Fast Delivery',
-                        email: 'hello@kenyafast.com',
-                        phone: '+254-796-012-345',
-                        address: '741 Ngong Road, Nairobi',
-                        status: 'inactive',
-                        clients: []
-                    }
-                ]
+        async fetchVendors() {
+            this.loading = true
+            this.error = null
+            try {
+                const response = await axios.get('/api/v1/vendors')
+                this.vendors = response.data.data || []
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error fetching vendors:', error)
+            } finally {
+                this.loading = false
             }
         },
 
-        addVendor(vendorData) {
-            this.vendors.push({
-                ...vendorData,
-                id: vendorData.id || Date.now(),
-                status: vendorData.status || 'active',
-                clients: vendorData.clients || []
-            })
-        },
-
-        updateVendor(vendorId, updatedData) {
-            const index = this.vendors.findIndex(vendor => vendor.id === vendorId)
-            if (index !== -1) {
-                this.vendors[index] = { ...this.vendors[index], ...updatedData }
+        async fetchRiders() {
+            this.loading = true
+            this.error = null
+            try {
+                const response = await axios.get('/api/v1/riders')
+                this.riders = response.data.data || []
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error fetching riders:', error)
+            } finally {
+                this.loading = false
             }
         },
 
-        deleteVendor(vendorId) {
-            const index = this.vendors.findIndex(vendor => vendor.id === vendorId)
-            if (index !== -1) {
-                this.vendors.splice(index, 1)
-            }
-        },
-
-        addClient(vendorId, clientData) {
-            const vendor = this.vendors.find(v => v.id === vendorId)
-            if (vendor) {
-                vendor.clients.push({
-                    ...clientData,
-                    id: clientData.id || Date.now(),
-                    status: clientData.status || 'active',
-                    totalOrders: clientData.totalOrders || 0
+        async addVendor(vendorData) {
+            this.loading = true
+            this.error = null
+            try {
+                const response = await axios.post('/api/v1/vendors', {
+                    name: vendorData.name,
+                    company_name: vendorData.company_name || vendorData.name,
+                    email: vendorData.email,
+                    phone: vendorData.phone,
+                    address: vendorData.address,
+                    city: vendorData.city,
+                    state: vendorData.state,
+                    country: vendorData.country,
+                    business_type: vendorData.business_type || 'Corporation',
+                    delivery_mode: vendorData.delivery_mode || 'both',
+                    status: 1
                 })
+                this.vendors.push({ ...response.data, clients: [] })
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error adding vendor:', error)
+                throw error
+            } finally {
+                this.loading = false
             }
         },
 
-        updateClient(vendorId, clientId, updatedData) {
-            const vendor = this.vendors.find(v => v.id === vendorId)
-            if (vendor) {
-                const clientIndex = vendor.clients.findIndex(c => c.id === clientId)
-                if (clientIndex !== -1) {
-                    vendor.clients[clientIndex] = { ...vendor.clients[clientIndex], ...updatedData }
-                }
+        async updateVendor(vendorId, updatedData) {
+            this.loading = true
+            this.error = null
+            try {
+                await axios.put(`/api/v1/vendors/${vendorId}`, updatedData)
+                await this.fetchVendors()
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error updating vendor:', error)
+                throw error
+            } finally {
+                this.loading = false
             }
         },
 
-        deleteClient(vendorId, clientId) {
-            const vendor = this.vendors.find(v => v.id === vendorId)
-            if (vendor) {
-                const clientIndex = vendor.clients.findIndex(c => c.id === clientId)
-                if (clientIndex !== -1) {
-                    vendor.clients.splice(clientIndex, 1)
+        async deleteVendor(vendorId) {
+            this.loading = true
+            this.error = null
+            try {
+                await axios.delete(`/api/v1/vendors/${vendorId}`)
+                this.vendors = this.vendors.filter(v => v.id !== vendorId)
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error deleting vendor:', error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async addClient(vendorId, clientData) {
+            this.loading = true
+            this.error = null
+            try {
+                const response = await axios.post('http://127.0.0.1:8000/api/v1/clients', {
+                    name: clientData.name,
+                    email: clientData.email || null,
+                    phone_number: clientData.phone,
+                    address: clientData.address || null,
+                    city: clientData.city,
+                    vendor_id: vendorId,
+                    status: 'active'
+                })
+                const vendor = this.vendors.find(v => v.id === vendorId)
+                if (vendor) {
+                    if (!vendor.clients) vendor.clients = []
+                    vendor.clients.push(response.data)
                 }
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error adding client:', error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async updateClient(clientId, updatedData) {
+            this.loading = true
+            this.error = null
+            try {
+                await axios.put(`http://127.0.0.1:8000/api/v1/clients/${clientId}`, {
+                    name: updatedData.name,
+                    email: updatedData.email,
+                    phone_number: updatedData.phone,
+                    address: updatedData.address,
+                    city: updatedData.city,
+                    status: updatedData.status
+                })
+                await this.fetchVendors()
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error updating client:', error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async deleteClient(vendorId, clientId) {
+            this.loading = true
+            this.error = null
+            try {
+                await axios.delete(`http://127.0.0.1:8000/api/v1/clients/${clientId}`)
+                const vendor = this.vendors.find(v => v.id === vendorId)
+                if (vendor && vendor.clients) {
+                    vendor.clients = vendor.clients.filter(c => c.id !== clientId)
+                }
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error deleting client:', error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async addRider(riderData) {
+            this.loading = true
+            this.error = null
+            try {
+                const response = await axios.post('/api/v1/riders', {
+                    name: riderData.name,
+                    email: riderData.email,
+                    phone: riderData.phone,
+                    address: riderData.address,
+                    city: riderData.city,
+                    state: riderData.state,
+                    vehicle_number: riderData.vehicle_number,
+                    license_number: riderData.license_number,
+                    status: 1
+                })
+                this.riders.push(response.data)
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error adding rider:', error)
+                throw error
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async initializeData() {
+            await Promise.all([
+                this.fetchVendors(),
+                this.fetchRiders()
+            ])
+        },
+
+        transformVendorForAPI(vendorData) {
+            return {
+                name: vendorData.name,
+                company_name: vendorData.company_name || vendorData.name,
+                email: vendorData.email,
+                billing_email: vendorData.billing_email || vendorData.email,
+                phone: vendorData.phone,
+                address: vendorData.address,
+                city: vendorData.city,
+                state: vendorData.state,
+                country: vendorData.country,
+                business_type: vendorData.business_type || 'Corporation',
+                delivery_mode: vendorData.delivery_mode || 'both',
+                status: vendorData.status || 1
+            }
+        },
+
+        transformClientForAPI(clientData, vendorId) {
+            return {
+                name: clientData.name,
+                email: clientData.email,
+                phone_number: clientData.phone,
+                address: clientData.address,
+                city: clientData.city,
+                vendor_id: vendorId,
+                status: clientData.status || 'active'
             }
         }
     }

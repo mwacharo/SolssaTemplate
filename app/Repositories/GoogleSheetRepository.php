@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\GoogleSheet;
 use App\Repositories\Interfaces\GoogleSheetRepositoryInterface;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class GoogleSheetRepository implements GoogleSheetRepositoryInterface
 {
@@ -17,6 +18,33 @@ class GoogleSheetRepository implements GoogleSheetRepositoryInterface
     public function findById($id)
     {
         return GoogleSheet::find($id);
+    }
+
+
+    // add create method
+    /**
+     * Create a new Google Sheet record
+     *
+     * @param array $data
+     * @return GoogleSheet
+     */
+    public function create(array $data)
+    {
+        // return GoogleSheet::create($data);
+
+           try {
+            Log::info('Creating Google Sheet with data:', $data);
+            
+            $sheet = GoogleSheet::create($data);
+            
+            Log::info('Google Sheet created successfully:', ['id' => $sheet->id]);
+            
+            return $sheet;
+        } catch (\Exception $e) {
+            Log::error('Failed to create Google Sheet in repository: ' . $e->getMessage());
+            Log::error('Data that failed:', $data);
+            throw $e;
+        }
     }
 
     /**
