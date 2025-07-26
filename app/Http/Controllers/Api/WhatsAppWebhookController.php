@@ -49,7 +49,10 @@ class WhatsAppWebhookController extends Controller
                     break;
             }
 
-            return response()->json(['status' => 'received']);
+            // return response()->json(['status' => 'received']);
+
+                return response()->json(['status' => 'ok'], 200);
+
         } catch (\Throwable $e) {
             Log::error('❌ Webhook error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
