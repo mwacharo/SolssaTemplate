@@ -57,7 +57,9 @@ class WhatsAppWebhookController extends Controller
             Log::error('❌ Webhook error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->json(['error' => 'Webhook processing failed'], 500);
+            // return response()->json(['error' => 'Webhook processing failed'], 500);
+            return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
+
         }
     }
 
@@ -165,7 +167,10 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['status' => 'stored_outgoing', 'id' => $msg->id]);
         } catch (\Throwable $e) {
             Log::error("❌ Failed to store outgoing message: " . $e->getMessage());
-            return response()->json(['error' => 'Failed to store outgoing'], 500);
+            // return response()->json(['error' => 'Failed to store outgoing'], 500);
+
+                return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
+
         }
     }
 
