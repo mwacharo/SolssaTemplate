@@ -15,7 +15,7 @@ class RiderSeeder extends Seeder
     {
         // Create 10 riders
         Rider::factory()
-            ->count(10)
+            ->count(2)
             ->create()
             ->each(function ($rider) {
                 // Set the role of the related user to 'rider'

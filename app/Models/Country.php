@@ -18,7 +18,11 @@ class Country extends Model
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
+                'is_active' => 'boolean',
+
     ];
+
+  
 
     public function vendors()
 {
@@ -93,4 +97,21 @@ class Country extends Model
     // {
     //     return $this->hasMany(Review::class);
     // }
+
+    // public function waybillSettings()
+    // {
+    //     return $this->hasMany(WaybillSetting::class);
+    // }
+
+    // protected $casts = [
+    //     'is_active' => 'boolean',
+    // ];
+
+    /**
+     * Get the waybill settings for the country.
+     */
+    public function waybillSettings()
+    {
+        return $this->hasOne(WaybillSetting::class);
+    }
 }

@@ -9,7 +9,7 @@ class ChannelCredentialSeeder extends Seeder
 {
     public function run(): void
     {
-        ChannelCredential::factory()->count(10)->create();
+        ChannelCredential::factory()->count(2)->create();
 
      
     }

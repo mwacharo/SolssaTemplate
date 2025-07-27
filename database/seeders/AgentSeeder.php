@@ -16,7 +16,7 @@ class AgentSeeder extends Seeder
     {
         // Create 10 users with role = 'agent'
         User::factory()
-            ->count(10)
+            ->count(2)
             ->create()
             ->each(function ($user) {
                 Agent::factory()->create([

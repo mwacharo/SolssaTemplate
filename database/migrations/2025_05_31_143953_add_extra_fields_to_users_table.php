@@ -26,6 +26,12 @@ return new class extends Migration
             $table->string('last_login_ip', 45)->nullable()->after('last_login_at');
             $table->boolean('two_factor_enabled')->default(false)->after('last_login_ip');
             $table->string('timezone')->nullable()->after('two_factor_enabled');
+
+            $table->foreignId('country_id')->nullable()->constrained()->after('timezone');
+
+
+            
+            // add country_id
             // $table->string('language', 5)->default('en')->after('timezone');
 
             // 

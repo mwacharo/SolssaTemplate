@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Contact;
+use App\Models\WaybillSetting;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class ContactSeeder extends Seeder
+class WaybillSettingSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -14,7 +14,7 @@ class ContactSeeder extends Seeder
     public function run(): void
     {
         //
-        Contact::factory()->count(2)->create(); // Creating 10 random contacts
+                WaybillSetting::factory()->count(2)->create();
 
     }
 }

@@ -23,7 +23,7 @@ class UpdateGoogleSheetRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sheet_name' => 'sometimes|string|max:255',
+            'sheet_name' => 'required|string|max:255',
             'post_spreadsheet_id' => 'sometimes|string|max:255',
             'active' => 'sometimes|boolean',
             'auto_sync' => 'sometimes|boolean',

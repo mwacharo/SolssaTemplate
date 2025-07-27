@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waybill - Modern Design</title>
+    <title>Waybill - {{ $order->order_no }}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -53,7 +53,18 @@
         .logo {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, 
+                @php
+                    $brandColor = '#667eea'; // default
+                    if (isset($company->brand_color)) {
+                        $brandColor = $company->brand_color;
+                    } elseif (isset($company->options)) {
+                        $options = is_string($company->options) ? json_decode($company->options) : $company->options;
+                        $brandColor = $options->color ?? '#667eea';
+                    }
+                @endphp
+                {{ $brandColor }} 0%, 
+                {{ $brandColor }} 100%);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -100,7 +111,21 @@
             position: absolute;
             top: -8px;
             right: -8px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, 
+                @php
+                    $statusColors = [
+                        'delivered' => ['#10b981', '#059669'],
+                        'in_transit' => ['#3b82f6', '#1d4ed8'],
+                        'pending' => ['#f59e0b', '#d97706'],
+                        'cancelled' => ['#ef4444', '#dc2626'],
+                        'processing' => ['#8b5cf6', '#7c3aed'],
+                        'shipped' => ['#06b6d4', '#0891b2'],
+                        'confirmed' => ['#10b981', '#059669']
+                    ];
+                    $currentStatus = $order->status ?? 'pending';
+                    $colors = $statusColors[$currentStatus] ?? ['#6b7280', '#4b5563'];
+                @endphp
+                {{ $colors[0] }} 0%, {{ $colors[1] }} 100%);
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
@@ -272,8 +297,13 @@
         
         /* Payment Info */
         .payment-section {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
+            background: @php
+                $paymentMethod = $order->payment_method ?? 'cod';
+                echo $paymentMethod == 'cod' ? '#fef3c7' : '#ecfdf5';
+            @endphp;
+            border: 1px solid @php
+                echo $paymentMethod == 'cod' ? '#fbbf24' : '#a7f3d0';
+            @endphp;
             border-radius: 6px;
             padding: 8px;
             margin-bottom: 10px;
@@ -282,7 +312,9 @@
         
         .cod-label {
             font-size: 7px;
-            color: #92400e;
+            color: @php
+                echo $paymentMethod == 'cod' ? '#92400e' : '#065f46';
+            @endphp;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -292,13 +324,17 @@
         .cod-amount {
             font-size: 12px;
             font-weight: 700;
-            color: #92400e;
+            color: @php
+                echo $paymentMethod == 'cod' ? '#92400e' : '#065f46';
+            @endphp;
             margin-bottom: 2px;
         }
         
         .payment-method {
             font-size: 6px;
-            color: #a16207;
+            color: @php
+                echo $paymentMethod == 'cod' ? '#a16207' : '#047857';
+            @endphp;
         }
         
         /* Barcode Section */
@@ -368,16 +404,6 @@
             font-weight: 600;
         }
         
-        /* QR Code */
-        .qr-code {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            transform: scale(0.4);
-            transform-origin: bottom right;
-            opacity: 0.8;
-        }
-        
         /* Print Styles */
         @media print {
             body {
@@ -394,7 +420,14 @@
             }
             
             @page {
-                size: A6;
+                size: @php
+                    $paperSize = 'A6'; // default
+                    if (isset($company->options)) {
+                        $options = is_string($company->options) ? json_decode($company->options) : $company->options;
+                        $paperSize = $options->size ?? 'A6';
+                    }
+                    echo $paperSize;
+                @endphp;
                 margin: 0;
             }
         }
@@ -402,40 +435,46 @@
 </head>
 <body>
     <div class="waybill-container">
-        <div class="status-badge">In Transit</div>
+        <div class="status-badge">
+            {{ ucfirst(str_replace('_', ' ', $order->status ?? 'pending')) }}
+        </div>
         
         <!-- Header -->
         <div class="header">
             <div class="brand-section">
-                <div class="logo">BL</div>
+                <div class="logo">
+                    {{ strtoupper(substr($company->name ?? 'BL', 0, 2)) }}
+                </div>
                 <div class="brand-info">
-                    <h1>BoxLeo</h1>
-                    <div class="brand-tagline">Express Courier</div>
+                    <h1>{{ $company->name ?? 'BoxLeo' }}</h1>
+                    <div class="brand-tagline">{{ $company->template_name ?? 'Express Courier' }}</div>
                 </div>
             </div>
-            <div class="tracking-id">CHPBL0001</div>
+            <div class="tracking-id">{{ $order->order_no }}</div>
         </div>
         
         <!-- Main Content Grid -->
         <div class="content-grid">
             <div class="info-card">
                 <h3>Shipped From</h3>
-                <div class="name">Boxleo Courier & Fulfillment Services Ltd</div>
+                <div class="name">{{ $company->name ?? 'Company Name' }}</div>
                 <div class="details">
-                    0761 976 581-0764<br>
-                    tanzania@boxleocourier.com<br>
-                    Makongo Juu, Dar es Salaam
+                    {{ $company->phone ?? 'N/A' }}<br>
+                    {{ $company->email ?? 'N/A' }}<br>
+                    {{ $company->address ?? 'Company Address' }}
                 </div>
             </div>
             
             <div class="info-card">
                 <h3>Ship To</h3>
-                <div class="name">John Doe</div>
+                <div class="name">{{ $order->client->name ?? 'Customer Name' }}</div>
                 <div class="details">
-                    256753888<br>
-                    Delivery Address
+                    {{ $order->client->phone ?? 'N/A' }}<br>
+                    {{ $order->delivery_address ?? $order->client->address ?? 'Delivery Address' }}
                 </div>
-                <div class="city-tag">Kampala</div>
+                @if(isset($order->client->city))
+                <div class="city-tag">{{ $order->client->city }}</div>
+                @endif
             </div>
         </div>
         
@@ -443,94 +482,115 @@
         <div class="order-summary">
             <div class="summary-header">
                 <h3>Order Summary</h3>
-                <div class="order-number">CHPBL0001</div>
+                <div class="order-number">{{ $order->order_no }}</div>
             </div>
             <div class="summary-grid">
                 <div class="summary-item">
                     <div class="label">Date</div>
-                    <div class="value">22/07/2025</div>
+                    <div class="value">
+                        @php
+                            try {
+                                if ($order->created_at instanceof \Carbon\Carbon) {
+                                    echo $order->created_at->format('d/m/Y');
+                                } elseif (is_string($order->created_at)) {
+                                    echo \Carbon\Carbon::parse($order->created_at)->format('d/m/Y');
+                                } else {
+                                    echo date('d/m/Y');
+                                }
+                            } catch (\Exception $e) {
+                                echo date('d/m/Y');
+                            }
+                        @endphp
+                    </div>
                 </div>
                 <div class="summary-item">
                     <div class="label">Payment</div>
-                    <div class="value">COD</div>
+                    <div class="value">{{ strtoupper($order->payment_method ?? 'COD') }}</div>
                 </div>
                 <div class="summary-item">
                     <div class="label">Items</div>
-                    <div class="value">1</div>
+                    <div class="value">{{ $order->orderItems->count() }}</div>
                 </div>
             </div>
         </div>
         
-        <!-- Product Section -->
-        <div class="product-section">
-            <div class="section-title">Items</div>
-            <div class="product-item">
-                <div class="product-name">Seeds Garden Colorful</div>
-                <div class="product-qty">1</div>
-                <div class="product-service">Delivery</div>
-            </div>
-        </div>
+      <!-- Product Section -->
+<div class="product-section">
+    <div class="section-title">Items</div>
+    @forelse($order->orderItems as $item)
+    <div class="product-item">
+        <div class="product-name">{{ $item->product->product_name ?? 'Product Name' }}</div>
+        <div class="product-qty">{{ $item->quantity ?? 1 }}</div>
+        <div class="product-service">{{ $item->service_type ?? 'Delivery' }}</div>
+    </div>
+    @empty
+    <div class="product-item">
+        <div class="product-name">No items found</div>
+        <div class="product-qty">0</div>
+        <div class="product-service">-</div>
+    </div>
+    @endforelse
+</div>
         
         <!-- Payment Section -->
         <div class="payment-section">
-            <div class="cod-label">Cash on Delivery</div>
-            <div class="cod-amount">KSH 0</div>
-            <div class="payment-method">Pay upon delivery</div>
+            <div class="cod-label">
+                @if($order->payment_method == 'cod')
+                    Cash on Delivery
+                @else
+                    {{ ucfirst($order->payment_method ?? 'Payment') }}
+                @endif
+            </div>
+            <div class="cod-amount">
+                {{ $order->currency ?? 'KSH' }} {{ number_format($order->total_amount ?? 0, 2) }}
+            </div>
+            <div class="payment-method">
+                @if($order->payment_method == 'cod')
+                    Pay upon delivery
+                @else
+                    {{ ucfirst($order->payment_method ?? 'Prepaid') }}
+                @endif
+            </div>
         </div>
         
         <!-- Barcode Section -->
         <div class="barcode-section">
             <div class="barcode">
-                <!-- Barcode would be inserted here -->
-                <svg width="120" height="30" viewBox="0 0 120 30">
-                    <rect x="0" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="4" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="7" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="12" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="15" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="20" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="23" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="28" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="32" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="36" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="40" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="45" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="48" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="52" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="56" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="61" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="64" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="68" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="73" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="76" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="80" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="84" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="89" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="92" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="96" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="100" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="105" y="0" width="2" height="30" fill="#000"/>
-                    <rect x="109" y="0" width="1" height="30" fill="#000"/>
-                    <rect x="112" y="0" width="3" height="30" fill="#000"/>
-                    <rect x="117" y="0" width="2" height="30" fill="#000"/>
-                </svg>
+                {!! $barcode !!}
             </div>
         </div>
         
         <!-- Delivery Info -->
         <div class="delivery-section">
             <div>
-                <div class="delivery-date">Expected: May 23 2025</div>
-                <div class="delivery-agent">By: Alva O'Conner</div>
+                <div class="delivery-date">
+                    Expected: @php
+                        try {
+                            if ($order->expected_delivery_date) {
+                                if ($order->expected_delivery_date instanceof \Carbon\Carbon) {
+                                    echo $order->expected_delivery_date->format('M d Y');
+                                } else {
+                                    echo \Carbon\Carbon::parse($order->expected_delivery_date)->format('M d Y');
+                                }
+                            } else {
+                                echo 'TBD';
+                            }
+                        } catch (\Exception $e) {
+                            echo 'TBD';
+                        }
+                    @endphp
+                </div>
+                <div class="delivery-agent">
+                    By: {{ $order->rider->name ?? $order->agent->name ?? 'Delivery Agent' }}
+                </div>
             </div>
         </div>
         
         <!-- Footer -->
         <div class="footer">
-            <div class="footer-title">Terms & Conditions</div>
+            <div class="footer-title">{{ $company->footer ?? 'Terms & Conditions' }}</div>
             <div class="footer-content">
-                <span class="mpesa-highlight">M-PESA LIPA NAMBA 516559</span>. Return within 12 hours of delivery. 
-                Contact us within 12 hours of receiving the order for any issues or concerns.
+                {!! $company->terms ?? 'Standard terms and conditions apply. Contact us for any issues or concerns.' !!}
             </div>
         </div>
     </div>

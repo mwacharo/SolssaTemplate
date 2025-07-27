@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\WhatsAppController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\CountryController;
 // use App\Http\Controllers\Api\VendorController;
 // Make sure only one VendorController exists and is imported. If you have multiple, remove or rename the duplicate.
 use App\Http\Controllers\Api\VendorController;
@@ -31,7 +32,7 @@ Route::get('/user', function (Request $request) {
 
 
 Route::prefix('v1')->group(function () {
-        // Route::apiResource('/google-sheets', GoogleSheetController::class);
+    // Route::apiResource('/google-sheets', GoogleSheetController::class);
 
     Route::get('/google-sheets', [GoogleSheetController::class, 'index'])->name('google-sheets.index');
     Route::get('/google-sheets/{id}', [GoogleSheetController::class, 'show'])->name('google-sheets.show');
@@ -57,6 +58,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/{id}/download-waybill', [OrderController::class, 'downloadWaybill'])->name('orders.download-waybill');
     Route::get('/{id}/preview-waybill', [OrderController::class, 'previewWaybill'])->name('orders.preview-waybill');
     Route::post('/bulk-print-waybills', [OrderController::class, 'bulkPrintWaybills'])->name('orders.bulk-print-waybills');
+
+
 
     // Route::delete('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']); // Delete a specific order
     // Route::get('v1/orders/{id}/products', [\App\Http\Controllers\Api\OrderController::class, 'getOrderProducts']); // Get products for a specific order
@@ -167,6 +170,34 @@ Route::prefix('v1')->group(function () {
     Route::post('/clients', [ClientController::class, 'store']);
     Route::put('/clients/{id}', [ClientController::class, 'update']);
     Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
+
+
+    // countries 
+
+    Route::get('/countries', [CountryController::class, 'index']);
+    Route::post('/countries', [CountryController::class, 'store']);
+    Route::get('/countries/{id}', [CountryController::class, 'show']);
+    Route::put('/countries/{id}', [CountryController::class, 'update']);
+    Route::delete('/countries/{id}', [CountryController::class, 'destroy']);
+
+    // api/v1/countries/1/settings
+    Route::get('/countries/{id}/settings', [CountryController::class, 'getSettings']);
+
+    // Country-specific waybill settings routes
+    Route::get('/countries/{id}/settings', [CountryController::class, 'getSettings']);
+    Route::post('/countries/{id}/settings', [CountryController::class, 'storeSettings']);
+    Route::put('/countries/{id}/settings', [CountryController::class, 'updateSettings']);
+    Route::delete('/countries/{id}/settings', [CountryController::class, 'destroySettings']);
+
+
+    // waybill settings 
+
+    Route::get('/waybill-settings', [\App\Http\Controllers\Api\WaybillSettingController::class, 'index']); // List all waybill settings
+    Route::post('/waybill-settings', [\App\Http\Controllers\Api\WaybillSettingController::class, 'store']); // Create a new waybill setting
+    Route::get('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'show']); // Show a specific waybill setting
+    Route::put('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'update']); // Update a specific waybill setting
+    Route::delete('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'destroy']); // Delete a specific waybill setting   
+
 
 
 

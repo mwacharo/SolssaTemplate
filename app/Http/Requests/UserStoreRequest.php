@@ -30,7 +30,10 @@ class UserStoreRequest extends FormRequest
             //
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
+            // 'password' => 'required|min:6',
+            'country_id' => 'required|exists:countries,id',
+            // 'phone' => 'nullable|string|max:15',
+            // 'roles' => 'array',
         ];
     }
 }

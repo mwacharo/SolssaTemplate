@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Contact;
 use App\Models\User;
+use App\Models\Country;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -15,24 +16,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-
-
-
         // Call the roles and permissions seeder
         $this->call([
-            // RolesAndPermissionsSeeder::class,
-            // CountrySeeder::class,
-            // VendorSeeder::class,
-            // GoogleSheetSeeder::class,
-            // TemplateSeeder::class,
-            // ContactSeeder::class,
-            // MessageSeeder::class,
-            // ChannelCredentialSeeder::class,
+            RolesAndPermissionsSeeder::class,
+            CountrySeeder::class,
+            VendorSeeder::class,
+            GoogleSheetSeeder::class,
+            TemplateSeeder::class,
+            ContactSeeder::class,
+            MessageSeeder::class,
+            ChannelCredentialSeeder::class,
             RiderSeeder::class,
-
             AgentSeeder::class,
-
-
+            WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
         ]);
 
         // User::factory(10)->withPersonalTeam()->create();
@@ -41,5 +37,18 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Mwacharo',
         //     'email' => '12345678',
         // ]);
+
+        // Create a user with a personal team
+        // First, ensure we have a country to reference
+        $country = Country::first();
+        
+        User::factory()->withPersonalTeam()->create([
+            'name' => 'Mwacharo',
+            'email' => 'john.boxleo@gmail.com',
+            'password' => bcrypt('12345678'),
+            'is_active' => true,
+            'two_factor_enabled' => false,
+            'country_id' => $country ? $country->id : null, // Use first available country or null
+        ]);
     }
 }

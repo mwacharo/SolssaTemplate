@@ -75,9 +75,8 @@
             <v-window-item value="roles">
               <div class="d-flex align-center justify-space-between mb-6">
                 <div>
-                  <h2 class="text-h5 font-weight-medium mb-1">Roles Management</h2>
+                  <!-- <h2 class="text-h5 font-weight-medium mb-1">Roles Management</h2> -->
                   <p class="text-body-2 text-medium-emphasis mb-0">
-                    Configure roles and their associated permissions
                   </p>
                 </div>
                 <v-text-field v-model="roleSearch" prepend-inner-icon="mdi-magnify" placeholder="Search roles..."

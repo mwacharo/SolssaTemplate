@@ -14,7 +14,7 @@ class GoogleSheetSeeder extends Seeder
     public function run(): void
     {
         //
-                GoogleSheet::factory()->count(10)->create(); // Create 10 fake countries
+                GoogleSheet::factory()->count(2)->create(); // Create 10 fake countries
 
     }
 }

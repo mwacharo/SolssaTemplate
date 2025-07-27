@@ -18,53 +18,26 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.name"
-                label="Full Name *"
-                :rules="nameRules"
-                prepend-inner-icon="mdi-account"
-                variant="outlined"
-                density="compact"
-                required
-              ></v-text-field>
+              <v-text-field v-model="formData.name" label="Full Name *" :rules="nameRules"
+                prepend-inner-icon="mdi-account" variant="outlined" density="compact" required></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.username"
-                label="Username"
-                prepend-inner-icon="mdi-account-circle"
-                variant="outlined"
-                density="compact"
-              ></v-text-field>
+              <v-text-field v-model="formData.username" label="Username" prepend-inner-icon="mdi-account-circle"
+                variant="outlined" density="compact"></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.email"
-                label="Email Address *"
-                :rules="emailRules"
-                prepend-inner-icon="mdi-email"
-                variant="outlined"
-                density="compact"
-                type="email"
-                required
-              ></v-text-field>
+              <v-text-field v-model="formData.email" label="Email Address *" :rules="emailRules"
+                prepend-inner-icon="mdi-email" variant="outlined" density="compact" type="email"
+                required></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6" v-if="!isEditing">
-              <v-text-field
-                v-model="formData.password"
-                label="Password *"
-                :rules="passwordRules"
-                prepend-inner-icon="mdi-lock"
-                :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                :type="showPassword ? 'text' : 'password'"
-                @click:append-inner="showPassword = !showPassword"
-                variant="outlined"
-                density="compact"
-                required
-              ></v-text-field>
+              <v-text-field v-model="formData.password" label="Password *" :rules="passwordRules"
+                prepend-inner-icon="mdi-lock" :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                :type="showPassword ? 'text' : 'password'" @click:append-inner="showPassword = !showPassword"
+                variant="outlined" density="compact" required></v-text-field>
             </v-col>
 
             <!-- Client & Contact Information -->
@@ -74,44 +47,33 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.client_name"
-                label="Client Name"
-                prepend-inner-icon="mdi-domain"
-                variant="outlined"
-                density="compact"
-              ></v-text-field>
+              <v-text-field v-model="formData.client_name" label="Client Name" prepend-inner-icon="mdi-domain"
+                variant="outlined" density="compact"></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.phone_number"
-                label="Phone Number"
-                prepend-inner-icon="mdi-phone"
-                variant="outlined"
-                density="compact"
-              ></v-text-field>
+              <v-text-field v-model="formData.phone_number" label="Phone Number" prepend-inner-icon="mdi-phone"
+                variant="outlined" density="compact"></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.alt_number"
-                label="Alternative Number"
-                prepend-inner-icon="mdi-phone-plus"
-                variant="outlined"
-                density="compact"
-              ></v-text-field>
+              <v-text-field v-model="formData.alt_number" label="Alternative Number" prepend-inner-icon="mdi-phone-plus"
+                variant="outlined" density="compact"></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.country_code"
-                label="Country Code"
-                :items="countryCodes"
-                prepend-inner-icon="mdi-flag"
-                variant="outlined"
+              <v-autocomplete 
+                v-model="formData.country" 
+                label="Country" 
+                :items="countries" 
+                item-title="name"
+                item-value="id"
+                prepend-inner-icon="mdi-flag" 
+                variant="outlined" 
                 density="compact"
-              ></v-select>
+                :loading="countriesLoading"
+                clearable
+              ></v-autocomplete>
             </v-col>
 
             <!-- Address Information -->
@@ -121,34 +83,18 @@
             </v-col>
 
             <v-col cols="12">
-              <v-textarea
-                v-model="formData.address"
-                label="Address"
-                prepend-inner-icon="mdi-map-marker"
-                variant="outlined"
-                density="compact"
-                rows="2"
-              ></v-textarea>
+              <v-textarea v-model="formData.address" label="Address" prepend-inner-icon="mdi-map-marker"
+                variant="outlined" density="compact" rows="2"></v-textarea>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.city"
-                label="City"
-                prepend-inner-icon="mdi-city"
-                variant="outlined"
-                density="compact"
-              ></v-text-field>
+              <v-text-field v-model="formData.city" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                density="compact"></v-text-field>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="formData.state"
-                label="State/Province"
-                prepend-inner-icon="mdi-map"
-                variant="outlined"
-                density="compact"
-              ></v-text-field>
+              <v-text-field v-model="formData.state" label="State/Province" prepend-inner-icon="mdi-map"
+                variant="outlined" density="compact"></v-text-field>
             </v-col>
 
             <!-- Settings -->
@@ -158,54 +104,27 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.timezone"
-                label="Timezone"
-                :items="timezones"
-                prepend-inner-icon="mdi-clock"
-                variant="outlined"
-                density="compact"
-              ></v-select>
+              <v-select v-model="formData.timezone" label="Timezone" :items="timezones" prepend-inner-icon="mdi-clock"
+                variant="outlined" density="compact"></v-select>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-select
-                v-model="formData.language"
-                label="Language"
-                :items="languages"
-                prepend-inner-icon="mdi-translate"
-                variant="outlined"
-                density="compact"
-              ></v-select>
+              <v-select v-model="formData.language" label="Language" :items="languages"
+                prepend-inner-icon="mdi-translate" variant="outlined" density="compact"></v-select>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-switch
-                v-model="formData.is_active"
-                label="Active User"
-                color="primary"
-                inset
-              ></v-switch>
+              <v-switch v-model="formData.is_active" label="Active User" color="primary" inset></v-switch>
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-switch
-                v-model="formData.two_factor_enabled"
-                label="Two Factor Authentication"
-                color="primary"
-                inset
-              ></v-switch>
+              <v-switch v-model="formData.two_factor_enabled" label="Two Factor Authentication" color="primary"
+                inset></v-switch>
             </v-col>
 
             <v-col cols="12" v-if="isEditing">
-              <v-text-field
-                v-model="formData.token"
-                label="Token"
-                prepend-inner-icon="mdi-key"
-                variant="outlined"
-                density="compact"
-                readonly
-              ></v-text-field>
+              <v-text-field v-model="formData.token" label="Token" prepend-inner-icon="mdi-key" variant="outlined"
+                density="compact" readonly></v-text-field>
             </v-col>
           </v-row>
         </v-form>
@@ -215,21 +134,11 @@
 
       <v-card-actions class="pa-4">
         <v-spacer></v-spacer>
-        <v-btn
-          color="grey"
-          variant="text"
-          @click="closeDialog"
-          :disabled="usersStore.loading"
-        >
+        <v-btn color="grey" variant="text" @click="closeDialog" :disabled="usersStore.loading">
           Cancel
         </v-btn>
-        <v-btn
-          color="primary"
-          variant="elevated"
-          @click="handleSubmit"
-          :loading="usersStore.loading"
-          :disabled="!valid"
-        >
+        <v-btn color="primary" variant="elevated" @click="handleSubmit" :loading="usersStore.loading"
+          :disabled="!valid">
           {{ isEditing ? 'Update User' : 'Create User' }}
         </v-btn>
       </v-card-actions>
@@ -238,8 +147,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, nextTick } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useUsersStore } from '@/stores/users'
+import { useCountriesStore } from '@/stores/countries'
 
 // Props
 const props = defineProps({
@@ -258,6 +168,31 @@ const emit = defineEmits(['update:modelValue', 'user-saved'])
 
 // Store
 const usersStore = useUsersStore()
+const countriesStore = useCountriesStore()
+
+// Countries loading and options
+const countriesLoading = ref(false)
+const countries = ref([])
+
+const loadCountries = async () => {
+  try {
+    countriesLoading.value = true
+    await countriesStore.fetchCountries()
+    countries.value = countriesStore.countries
+      .filter(country => country.status === 1)
+      .map(country => ({
+        id: country.id,
+        name: country.name,
+        code: country.code,
+        phone_code: country.phone_code
+      }))
+  } catch (error) {
+    console.error('Failed to load countries:', error)
+    countries.value = []
+  } finally {
+    countriesLoading.value = false
+  }
+}
 
 // Reactive data
 const dialog = computed({
@@ -284,7 +219,7 @@ const formData = reactive({
   username: '',
   phone_number: '',
   alt_number: '',
-  country_code: '+1',
+  country: '', // Changed from country_code to country
   time_zone: '',
   language: 'en',
   is_active: true,
@@ -312,20 +247,6 @@ const passwordRules = computed(() => {
 })
 
 // Options data
-const countryCodes = [
-  { title: '+1 (US/Canada)', value: '+1' },
-  { title: '+44 (UK)', value: '+44' },
-  { title: '+91 (India)', value: '+91' },
-  { title: '+86 (China)', value: '+86' },
-  { title: '+49 (Germany)', value: '+49' },
-  { title: '+33 (France)', value: '+33' },
-  { title: '+81 (Japan)', value: '+81' },
-  { title: '+61 (Australia)', value: '+61' },
-  { title: '+55 (Brazil)', value: '+55' },
-  { title: '+7 (Russia)', value: '+7' },
-  { title: '+254 (Kenya)', value: '+254' }
-]
-
 const timezones = [
   { title: 'UTC', value: 'UTC' },
   { title: 'America/New_York (EST)', value: 'America/New_York' },
@@ -367,7 +288,7 @@ const resetForm = () => {
     username: '',
     phone_number: '',
     alt_number: '',
-    country_code: '+1',
+    country: '',
     time_zone: '',
     language: 'en',
     is_active: true,
@@ -427,6 +348,14 @@ const closeDialog = () => {
   resetForm()
 }
 
+// Lifecycle hooks
+onMounted(async () => {
+  // Load countries when component mounts
+  if (countries.value.length === 0) {
+    await loadCountries()
+  }
+})
+
 // Watchers
 watch(() => props.user, (newUser) => {
   if (newUser && dialog.value) {
@@ -438,6 +367,11 @@ watch(() => props.user, (newUser) => {
 
 watch(dialog, (newVal) => {
   if (newVal) {
+    // Load countries when dialog opens if not already loaded
+    if (countries.value.length === 0) {
+      loadCountries()
+    }
+    
     if (props.user) {
       populateForm(props.user)
     } else {

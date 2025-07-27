@@ -1,10 +1,22 @@
 // stores/countries.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: '/api/v1',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+    // Add CSRF token if needed
+    // 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+  }
+})
 
 export const useCountriesStore = defineStore('countries', () => {
   // State
   const countries = ref([])
+  const countrySettings = ref({}) // Store settings by country ID
   const loading = ref(false)
   const error = ref(null)
 
@@ -27,60 +39,13 @@ export const useCountriesStore = defineStore('countries', () => {
   const fetchCountries = async () => {
     loading.value = true
     error.value = null
-    
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/countries')
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
+      const { data } = await api.get('/countries')
       countries.value = data.data || data
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message
       console.error('Error fetching countries:', err)
-      
-      // Fallback with sample data for development
-      countries.value = [
-        {
-          id: 1,
-          name: 'United States',
-          code: 'USA',
-          phone_code: '+1',
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 2,
-          name: 'United Kingdom',
-          code: 'GBR',
-          phone_code: '+44',
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 3,
-          name: 'Canada',
-          code: 'CAN',
-          phone_code: '+1',
-          is_active: true,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        },
-        {
-          id: 4,
-          name: 'Australia',
-          code: 'AUS',
-          phone_code: '+61',
-          is_active: false,
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-01T00:00:00Z'
-        }
-      ]
+      countries.value = []
     } finally {
       loading.value = false
     }
@@ -89,65 +54,24 @@ export const useCountriesStore = defineStore('countries', () => {
   const createCountry = async (countryData) => {
     loading.value = true
     error.value = null
-    
     try {
-      // Validate required fields
       if (!countryData.name || !countryData.code || !countryData.phone_code) {
         throw new Error('Name, code, and phone code are required')
       }
-
-      // Check for duplicate code
       if (getCountryByCode.value(countryData.code.toUpperCase())) {
         throw new Error('Country code already exists')
       }
-
-      // Prepare data
       const dataToSend = {
         name: countryData.name.trim(),
         code: countryData.code.toUpperCase().trim(),
         phone_code: countryData.phone_code.trim(),
         is_active: countryData.is_active ?? true
       }
-
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/countries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          // Add CSRF token if needed
-          // 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(dataToSend)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
-      }
-
-      const newCountry = await response.json()
-      
-      // Add to local state
-      countries.value.unshift(newCountry.data || newCountry)
-      
+      const { data } = await api.post('/countries', dataToSend)
+      countries.value.unshift(data.data || data)
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message
       console.error('Error creating country:', err)
-      
-      // For development - simulate API response
-      const newCountry = {
-        id: Date.now(),
-        name: countryData.name.trim(),
-        code: countryData.code.toUpperCase().trim(),
-        phone_code: countryData.phone_code.trim(),
-        is_active: countryData.is_active ?? true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      countries.value.unshift(newCountry)
-      
       throw err
     } finally {
       loading.value = false
@@ -157,69 +81,28 @@ export const useCountriesStore = defineStore('countries', () => {
   const updateCountry = async (id, countryData) => {
     loading.value = true
     error.value = null
-    
     try {
-      // Validate required fields
       if (!countryData.name || !countryData.code || !countryData.phone_code) {
         throw new Error('Name, code, and phone code are required')
       }
-
-      // Check for duplicate code (excluding current country)
       const existingCountry = getCountryByCode.value(countryData.code.toUpperCase())
       if (existingCountry && existingCountry.id !== id) {
         throw new Error('Country code already exists')
       }
-
-      // Prepare data
       const dataToSend = {
         name: countryData.name.trim(),
         code: countryData.code.toUpperCase().trim(),
         phone_code: countryData.phone_code.trim(),
         is_active: countryData.is_active ?? true
       }
-
-      // Replace with your actual API endpoint
-      const response = await fetch(`/api/countries/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          // Add CSRF token if needed
-          // 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(dataToSend)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
-      }
-
-      const updatedCountry = await response.json()
-      
-      // Update local state
+      const { data } = await api.put(`/countries/${id}`, dataToSend)
       const index = countries.value.findIndex(country => country.id === id)
       if (index !== -1) {
-        countries.value[index] = updatedCountry.data || updatedCountry
+        countries.value[index] = data.data || data
       }
-      
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message
       console.error('Error updating country:', err)
-      
-      // For development - simulate API response
-      const index = countries.value.findIndex(country => country.id === id)
-      if (index !== -1) {
-        countries.value[index] = {
-          ...countries.value[index],
-          name: countryData.name.trim(),
-          code: countryData.code.toUpperCase().trim(),
-          phone_code: countryData.phone_code.trim(),
-          is_active: countryData.is_active ?? true,
-          updated_at: new Date().toISOString()
-        }
-      }
-      
       throw err
     } finally {
       loading.value = false
@@ -229,39 +112,19 @@ export const useCountriesStore = defineStore('countries', () => {
   const deleteCountry = async (id) => {
     loading.value = true
     error.value = null
-    
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch(`/api/countries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-          // Add CSRF token if needed
-          // 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
-      }
-
-      // Remove from local state
+      await api.delete(`/countries/${id}`)
       const index = countries.value.findIndex(country => country.id === id)
       if (index !== -1) {
         countries.value.splice(index, 1)
       }
-      
+      // Also remove settings if they exist
+      if (countrySettings.value[id]) {
+        delete countrySettings.value[id]
+      }
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message
       console.error('Error deleting country:', err)
-      
-      // For development - simulate deletion
-      const index = countries.value.findIndex(country => country.id === id)
-      if (index !== -1) {
-        countries.value.splice(index, 1)
-      }
-      
       throw err
     } finally {
       loading.value = false
@@ -271,15 +134,145 @@ export const useCountriesStore = defineStore('countries', () => {
   const toggleCountryStatus = async (id) => {
     const country = getCountryById.value(id)
     if (!country) return
-
     await updateCountry(id, {
       ...country,
       is_active: !country.is_active
     })
   }
 
+  // Settings-related actions
+  const getCountrySettings = async (countryId) => {
+    try {
+      // Try to get from cache first
+      if (countrySettings.value[countryId]) {
+        return countrySettings.value[countryId]
+      }
+
+      // Fetch from API
+      const { data } = await api.get(`/countries/${countryId}/settings`)
+      let settings = data.data || data
+
+      // If options is a JSON string, parse it
+      if (settings.options && typeof settings.options === 'string') {
+        try {
+          settings.options = JSON.parse(settings.options)
+        } catch (e) {
+          settings.options = {}
+        }
+      }
+
+      // Cache the settings
+      countrySettings.value[countryId] = settings
+
+      return settings
+    } catch (err) {
+      console.error('Error fetching country settings:', err)
+
+      // Return default settings if API fails
+      // const defaultSettings = {
+      //   template_name: `Template for ${getCountryById.value(countryId)?.name || 'Country'}`,
+      //   name: 'Company Name',
+      //   phone: '+1234567890',
+      //   email: 'info@company.com',
+      //   address: 'Company Address',
+      //   terms: 'Standard terms and conditions',
+      //   footer: 'Thank you for your business',
+      //   color: '#1976d2',
+      //   size: 'A4',
+      //   options: {}
+      // }
+
+      // Cache default settings
+      countrySettings.value[countryId] = defaultSettings
+
+      return defaultSettings
+    }
+  }
+
+  const saveCountrySettings = async (countryId, settingsData) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const { data } = await api.post(`/countries/${countryId}/settings`, settingsData)
+      const savedSettings = data.data || data
+      
+      // Update cache
+      countrySettings.value[countryId] = savedSettings
+      
+      return savedSettings
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Error saving country settings:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const updateCountrySettings = async (countryId, settingsData) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      const { data } = await api.put(`/countries/${countryId}/settings`, settingsData)
+      const updatedSettings = data.data || data
+      
+      // Update cache
+      countrySettings.value[countryId] = updatedSettings
+      
+      return updatedSettings
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Error updating country settings:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const deleteCountrySettings = async (countryId) => {
+    loading.value = true
+    error.value = null
+    
+    try {
+      await api.delete(`/countries/${countryId}/settings`)
+      
+      // Remove from cache
+      if (countrySettings.value[countryId]) {
+        delete countrySettings.value[countryId]
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+      console.error('Error deleting country settings:', err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Upload logo (if needed)
+  const uploadLogo = async (file) => {
+    const formData = new FormData()
+    formData.append('logo', file)
+    
+    try {
+      const { data } = await api.post('/upload/logo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
+      return data.url || data.data?.url
+    } catch (err) {
+      console.error('Error uploading logo:', err)
+      throw err
+    }
+  }
+
   const resetStore = () => {
     countries.value = []
+    countrySettings.value = {}
     loading.value = false
     error.value = null
   }
@@ -287,6 +280,7 @@ export const useCountriesStore = defineStore('countries', () => {
   return {
     // State
     countries,
+    countrySettings,
     loading,
     error,
     
@@ -296,12 +290,21 @@ export const useCountriesStore = defineStore('countries', () => {
     activeCountries,
     totalCountries,
     
-    // Actions
+    // Country actions
     fetchCountries,
     createCountry,
     updateCountry,
     deleteCountry,
     toggleCountryStatus,
+    
+    // Settings actions
+    getCountrySettings,
+    saveCountrySettings,
+    updateCountrySettings,
+    deleteCountrySettings,
+    uploadLogo,
+    
+    // Utility
     resetStore
   }
 })

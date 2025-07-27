@@ -9,7 +9,9 @@ namespace App\Services\Order;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Http\Resources\OrderResource;
+use App\Models\WaybillSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Picqer\Barcode\BarcodeGeneratorHTML;
 use Illuminate\Support\Facades\Storage;
@@ -35,66 +37,145 @@ class OrderBulkActionService
 
 
 
-    /**
-     * Print waybill for an order
-     */
-    public function printWaybill(Request $request, string $id)
-    {
-        // Eager load relationships for printing
-        $order = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
-            ->where('id', $id)
-            ->whereNull('deleted_at')
-            ->firstOrFail();
 
-        // Generate barcode
+public function printWaybill(Request $request, string $id)
+{
+    // Fetch order with all related data
+    $order = Order::with([
+        'client', 
+        'orderItems.product', 
+        'vendor', 
+        'rider', 
+        'agent'
+    ])
+    ->where('id', $id)
+    ->whereNull('deleted_at')
+    ->firstOrFail();
+
+    // Generate barcode
+    $generator = new BarcodeGeneratorHTML();
+    $barcode = $generator->getBarcode(
+        $order->order_no, 
+        $generator::TYPE_CODE_128,
+        2, // Width
+        50 // Height
+    );
+
+    // Get waybill settings
+    $company = WaybillSetting::first();
+
+    // Debug: Log the company data structure
+    Log::info('Company data structure:', [
+        'company' => $company ? $company->toArray() : null,
+        'options_type' => $company && isset($company->options) ? gettype($company->options) : 'null',
+        'options_value' => $company && isset($company->options) ? $company->options : null
+    ]);
+
+    // Handle company settings safely
+    if (!$company) {
+        $company = (object) [
+            'name' => config('app.name', 'Your Company'),
+            'phone' => '',
+            'email' => '',
+            'address' => '',
+            'template_name' => 'Express Courier',
+            'options' => (object) ['color' => 'blue', 'size' => 'A6'],
+            'terms' => 'Standard terms and conditions apply.',
+            'footer' => 'Terms & Conditions',
+            'brand_color' => '#667eea'
+        ];
+    } else {
+        // Safely handle options field
+        if (isset($company->options)) {
+            if (is_string($company->options)) {
+                try {
+                    $company->options = json_decode($company->options);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                    }
+                } catch (\Exception $e) {
+                    $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                }
+            } elseif (is_array($company->options)) {
+                $company->options = (object) $company->options;
+            } elseif (!is_object($company->options)) {
+                $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+            }
+        } else {
+            $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+        }
+        
+        // Ensure brand_color exists
+        if (!isset($company->brand_color)) {
+            $company->brand_color = '#667eea';
+        }
+    }
+
+    // Prepare data for the template
+    $data = [
+        'order' => $order,
+        'barcode' => $barcode,
+        'company' => $company
+    ];
+
+    // Determine paper size
+    $paperSize = 'a6';
+    if (isset($company->options->size)) {
+        $paperSize = strtolower($company->options->size);
+    }
+
+    // Generate PDF
+    $pdf = Pdf::loadView('waybill.template', $data)
+        ->setPaper($paperSize, 'portrait')
+        ->setOptions([
+            'dpi' => 150,
+            'defaultFont' => 'sans-serif',
+            'isHtml5ParserEnabled' => true,
+            'isPhpEnabled' => false,
+            'margin-top' => 0,
+            'margin-right' => 0,
+            'margin-bottom' => 0,
+            'margin-left' => 0,
+            'enable-local-file-access' => true,
+        ]);
+
+    return $pdf->stream("waybill_{$order->order_no}.pdf");
+}
+
+    /**
+     * Get waybill data for preview (without generating PDF)
+     */
+    public function getWaybillData(string $orderId)
+    {
+        $order = Order::with([
+            'client', 
+            'orderItems.product', 
+            'vendor', 
+            'rider', 
+            'agent'
+        ])
+        ->where('id', $orderId)
+        ->whereNull('deleted_at')
+        ->firstOrFail();
+
         $generator = new BarcodeGeneratorHTML();
         $barcode = $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128);
 
-        // Generate QR code
-        // $qrCode = QrCode::size(100)->generate($order->order_no);
+        $company = WaybillSetting::when($order->client && $order->client->country_id, function ($query) use ($order) {
+                return $query->where('country_id', $order->client->country_id);
+            })
+            ->first() ?? WaybillSetting::first();
 
-        // Prepare data for PDF
-        $data = [
+        return [
             'order' => $order,
             'barcode' => $barcode,
-            // 'qrCode' => $qrCode,
-            'company' => [
-                'name' => 'Boxleo Courier & Fulfillment Services Ltd',
-                'phone' => '0761 976 581/0764 900539',
-                'email' => 'tanzania@boxleocourier.com',
-                'address' => 'Makongo juu Darajani, University Rd, Dar es Salaam',
-                'terms' => 'All items must be packed securely. Boxleo Courier is not liable for damages to items not properly packed.',
-                'footer' => '<div class="footer-content">
-                    <span class="mpesa-highlight">M-PESA LIPA NAMBA 516559</span>. Return within 12 hours of delivery. 
-                    Contact us within 12 hours of receiving the order for any issues or concerns.
-                </div>',
-            ]
+            'company' => $company
         ];
-
-
-        // Generate PDF with A5 settings
-        $pdf = Pdf::loadView('waybill.template', $data)
-            ->setPaper('a5', 'portrait') 
-            // Changed from 'a4' to 'a5'
-            ->setOptions([
-                'dpi' => 150,
-                'defaultFont' => 'sans-serif',
-                'isHtml5ParserEnabled' => true,
-                'isPhpEnabled' => false,
-                'margin-top' => 0,
-                'margin-right' => 0,
-                'margin-bottom' => 0,
-                'margin-left' => 0,
-            ]);
-
-        return $pdf->stream("waybill_{$order->order_no}.pdf");
-
-        
     }
 
-    /**
-     * Download waybill as PDF
-     */
+
+
+
     public function downloadWaybill(string $id)
     {
         $order = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])

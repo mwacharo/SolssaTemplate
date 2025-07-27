@@ -59,6 +59,15 @@
               color="primary"
               @click="openEditDialog(item)"
             />
+
+            <v-btn
+              icon="mdi-cog"
+              variant="text"
+              size="small"
+              color="secondary"
+              @click="openSettingsDialog(item)"
+            />
+            
             <v-btn
               icon="mdi-delete"
               variant="text"
@@ -174,6 +183,108 @@
         </v-card>
       </v-dialog>
 
+      <!-- Settings Dialog -->
+      <v-dialog v-model="settingsDialog" max-width="600px" persistent>
+        <v-card>
+          <v-card-title class="text-h5">
+            Waybill Settings for {{ selectedCountry?.name || '' }}
+          </v-card-title>
+          
+          <v-card-text>
+            <div v-if="settingsLoading" class="text-center pa-4">
+              <v-progress-circular indeterminate color="primary" />
+            </div>
+            <div v-else>
+              <v-form ref="settingsForm" v-model="settingsFormValid">
+                <v-text-field
+                  v-model="settingsData.template_name"
+                  label="Template Name"
+                  :rules="requiredRules"
+                  variant="outlined"
+                  required
+                />
+                
+                <v-text-field
+                  v-model="settingsData.name"
+                  label="Company Name"
+                  :rules="requiredRules"
+                  variant="outlined"
+                  required
+                />
+                
+                <v-text-field
+                  v-model="settingsData.phone"
+                  label="Phone"
+                  :rules="phoneRules"
+                  variant="outlined"
+                  required
+                />
+                
+                <v-text-field
+                  v-model="settingsData.email"
+                  label="Email"
+                  :rules="emailRules"
+                  variant="outlined"
+                  required
+                />
+                
+                <v-textarea
+                  v-model="settingsData.address"
+                  label="Address"
+                  :rules="requiredRules"
+                  variant="outlined"
+                  rows="2"
+                  required
+                />
+                
+                <v-textarea
+                  v-model="settingsData.terms"
+                  label="Terms"
+                  variant="outlined"
+                  rows="2"
+                />
+                
+                <v-textarea
+                  v-model="settingsData.footer"
+                  label="Footer"
+                  variant="outlined"
+                  rows="2"
+                />
+                
+                <v-text-field
+                  v-model="settingsOptions.color"
+                  label="Waybill Color"
+                  variant="outlined"
+                  placeholder="#1976d2"
+                />
+                
+                <v-select
+                  v-model="settingsOptions.size"
+                  label="Waybill Size"
+                  :items="waybillSizes"
+                  variant="outlined"
+                />
+              </v-form>
+            </div>
+          </v-card-text>
+          
+          <v-card-actions>
+            <v-spacer />
+            <v-btn text @click="closeSettingsDialog">
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              :loading="settingsSaving"
+              :disabled="!settingsFormValid"
+              @click="saveSettings"
+            >
+              Save Settings
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Snackbar for notifications -->
       <v-snackbar
         v-model="snackbar.show"
@@ -207,10 +318,16 @@ const countriesStore = useCountriesStore()
 const searchTerm = ref('')
 const dialog = ref(false)
 const deleteDialog = ref(false)
+const settingsDialog = ref(false)
 const formValid = ref(false)
+const settingsFormValid = ref(false)
 const form = ref(null)
+const settingsForm = ref(null)
 const isEditing = ref(false)
 const countryToDelete = ref(null)
+const selectedCountry = ref(null)
+const settingsLoading = ref(false)
+const settingsSaving = ref(false)
 
 // Form data
 const formData = ref({
@@ -220,6 +337,30 @@ const formData = ref({
   phone_code: '',
   is_active: true
 })
+
+// Settings data
+const settingsData = ref({
+  template_name: '',
+  name: '',
+  phone: '',
+  email: '',
+  address: '',
+  terms: '',
+  footer: ''
+})
+
+const settingsOptions = ref({
+  color: '#1976d2',
+  size: 'A4'
+})
+
+// Waybill size options
+const waybillSizes = [
+  { title: 'A4', value: 'A4' },
+  { title: 'A5', value: 'A5' },
+  { title: 'Letter', value: 'Letter' },
+  { title: 'Legal', value: 'Legal' }
+]
 
 // Snackbar
 const snackbar = ref({
@@ -234,7 +375,7 @@ const headers = [
   { title: 'Code', key: 'code', sortable: true },
   { title: 'Phone Code', key: 'phone_code', sortable: true },
   { title: 'Status', key: 'is_active', sortable: true },
-  { title: 'Actions', key: 'actions', sortable: false, width: '120px' }
+  { title: 'Actions', key: 'actions', sortable: false, width: '150px' }
 ]
 
 // Validation rules
@@ -252,6 +393,20 @@ const codeRules = [
 const phoneCodeRules = [
   v => !!v || 'Phone code is required',
   v => /^\+\d{1,4}$/.test(v) || 'Phone code must start with + followed by 1-4 digits'
+]
+
+const requiredRules = [
+  v => !!v || 'This field is required'
+]
+
+const emailRules = [
+  v => !!v || 'Email is required',
+  v => /.+@.+\..+/.test(v) || 'Email must be valid'
+]
+
+const phoneRules = [
+  v => !!v || 'Phone is required',
+  v => /^[\+]?[0-9\-\(\)\s]+$/.test(v) || 'Phone must be valid'
 ]
 
 // Computed
@@ -286,9 +441,21 @@ const openDeleteDialog = (country) => {
   deleteDialog.value = true
 }
 
+const openSettingsDialog = async (country) => {
+  selectedCountry.value = country
+  settingsDialog.value = true
+  await loadSettings(country.id)
+}
+
 const closeDialog = () => {
   dialog.value = false
   resetForm()
+}
+
+const closeSettingsDialog = () => {
+  settingsDialog.value = false
+  selectedCountry.value = null
+  resetSettingsForm()
 }
 
 const resetForm = () => {
@@ -303,6 +470,29 @@ const resetForm = () => {
   nextTick(() => {
     if (form.value) {
       form.value.resetValidation()
+    }
+  })
+}
+
+const resetSettingsForm = () => {
+  settingsData.value = {
+    template_name: '',
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    terms: '',
+    footer: ''
+  }
+  
+  settingsOptions.value = {
+    color: '#1976d2',
+    size: 'A4'
+  }
+  
+  nextTick(() => {
+    if (settingsForm.value) {
+      settingsForm.value.resetValidation()
     }
   })
 }
@@ -336,6 +526,78 @@ const confirmDelete = async () => {
   }
 }
 
+// Load settings for a country
+const loadSettings = async (countryId) => {
+  settingsLoading.value = true
+  
+  try {
+    // Check if countriesStore has the method, if not, use mock data or API call
+    if (countriesStore.getCountrySettings) {
+      const settings = await countriesStore.getCountrySettings(countryId)
+      
+      if (settings) {
+        settingsData.value = {
+          template_name: settings.template_name || '',
+          name: settings.name || '',
+          phone: settings.phone || '',
+          email: settings.email || '',
+          address: settings.address || '',
+          terms: settings.terms || '',
+          footer: settings.footer || ''
+        }
+        
+        settingsOptions.value = {
+          color: settings.color || '#1976d2',
+          size: settings.size || 'A4'
+        }
+      }
+    } else {
+      // Mock default values if store method doesn't exist
+      console.warn('getCountrySettings method not found in store, using default values')
+      resetSettingsForm()
+    }
+  } catch (error) {
+    console.error('Failed to load settings:', error)
+    showSnackbar('Failed to load settings', 'error')
+    resetSettingsForm()
+  } finally {
+    settingsLoading.value = false
+  }
+}
+
+// Save settings for a country
+const saveSettings = async () => {
+  if (!settingsFormValid.value) return
+
+  settingsSaving.value = true
+  
+  try {
+    const payload = {
+      ...settingsData.value,
+      ...settingsOptions.value,
+      country_id: selectedCountry.value.id
+    }
+
+    // Check if countriesStore has the method
+    if (countriesStore.saveCountrySettings) {
+      await countriesStore.saveCountrySettings(selectedCountry.value.id, payload)
+      showSnackbar('Settings saved successfully', 'success')
+      closeSettingsDialog()
+    } else {
+      // Mock save if store method doesn't exist
+      console.warn('saveCountrySettings method not found in store, simulating save')
+      console.log('Would save settings:', payload)
+      showSnackbar('Settings saved successfully (simulated)', 'success')
+      closeSettingsDialog()
+    }
+  } catch (error) {
+    console.error('Failed to save settings:', error)
+    showSnackbar(error.message || 'Failed to save settings', 'error')
+  } finally {
+    settingsSaving.value = false
+  }
+}
+
 const showSnackbar = (message, color = 'success') => {
   snackbar.value = {
     show: true,
@@ -353,5 +615,9 @@ onMounted(() => {
 <style scoped>
 .v-data-table {
   background-color: transparent;
+}
+
+.v-dialog .v-card {
+  overflow-y: auto;
 }
 </style>

@@ -142,4 +142,29 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+    // bulkprint waybill
+
+    public function bulkPrintWaybill(Request $request)
+    {
+        try {
+            // Validate request
+            $request->validate([
+                'order_ids' => 'required|array',
+                'order_ids.*' => 'exists:orders,id',
+            ]);
+
+            // Call the service to get the PDF
+            $pdf = $this->orderService->bulkPrintWaybills($request->input('order_ids'));
+
+            // Return the PDF stream
+            return $pdf;
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to generate bulk waybill',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

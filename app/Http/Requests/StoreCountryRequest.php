@@ -11,7 +11,7 @@ class StoreCountryRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class StoreCountryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:10',
+            'phone_code' => 'required|string|max:10',
+            'status' => 'nullable|boolean',
         ];
     }
 }

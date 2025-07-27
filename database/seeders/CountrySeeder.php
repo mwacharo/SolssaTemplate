@@ -14,7 +14,7 @@ class CountrySeeder extends Seeder
     public function run(): void
     {
         //
-        Country::factory()->count(10)->create(); // Create 10 fake countries
+        Country::factory()->count(2)->create(); // Create 10 fake countries
 
     }
 }

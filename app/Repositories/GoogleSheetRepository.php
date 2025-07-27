@@ -93,4 +93,18 @@ class GoogleSheetRepository implements GoogleSheetRepositoryInterface
     {
         return $sheet->save();
     }
+
+
+    /**
+     * Delete a Google Sheet record
+     *
+     * @param GoogleSheet $sheet
+     * @return bool|null
+     * @throws \Exception
+     */
+    public function destroy(GoogleSheet $sheet)
+    {
+        return $sheet->delete();
+    }
+
 }

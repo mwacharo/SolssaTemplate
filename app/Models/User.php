@@ -63,6 +63,7 @@ class User extends Authenticatable
         'last_login_ip',
         'two_factor_enabled',
         'timezone',
+        'country_id',
     ];
 
     /**

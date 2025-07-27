@@ -206,6 +206,12 @@ class Order extends Model
     {
         return $this->belongsTo(Agent::class);
     }
+
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
    
     
 }

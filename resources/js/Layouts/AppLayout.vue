@@ -117,11 +117,11 @@ const isGroupExpanded = (groupName) => {
             <ApplicationMark height="32" />
           </template>
           <v-list-item-title class="text-h6">
-            Solssa
+              CRM
           </v-list-item-title>
           <v-list-item-subtitle>
-            We tailor your coat
-          </v-list-item-subtitle>
+
+Lets your business better           </v-list-item-subtitle>
         </v-list-item>
 
         <v-divider class="my-2"></v-divider>
@@ -343,7 +343,7 @@ const isGroupExpanded = (groupName) => {
     <!-- Footer -->
     <v-footer app>
       <div class="text-center w-100">
-        © {{ new Date().getFullYear() }} - Solssa
+        © {{ new Date().getFullYear() }} - CRM
       </div>
     </v-footer>
   </v-app>
