@@ -56,7 +56,7 @@ class OrderController extends Controller
     public function show(string $id)
     {
         // Eager load relationships for a single order
-        $order = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
+        $order = Order::with(['client', 'orderItems.product', 'vendor.products', 'rider', 'agent'])
             ->where('id', $id)
             ->whereNull('deleted_at')
             ->firstOrFail();

@@ -271,6 +271,10 @@ const deleteMessage = (messageId) => store.deleteMessage(messageId)
 const getTotalQuantity = (items) => {
   return items.reduce((total, item) => total + (item.quantity || 0), 0)
 }
+
+const openOrderPrint = (orderId) => {
+  window.open(`/api/v1/orders/${orderId}/print-waybill`, '_blank');
+}
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
@@ -840,7 +844,11 @@ onMounted(async () => {
                       </v-btn>
                       <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
                         <v-icon>mdi-whatsapp</v-icon>
+
                       </v-btn>
+                        <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
+                        <v-icon>mdi-printer</v-icon>
+                        </v-btn>
                     </template>
                   </v-data-table>
                 </v-card-text>
