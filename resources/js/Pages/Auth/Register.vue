@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
@@ -109,4 +109,25 @@ const submit = () => {
             </div>
         </form>
     </AuthenticationCard>
+</template> -->
+
+
+<script setup>
+import { onMounted } from 'vue'
+import { router } from '@inertiajs/vue3'
+
+// Immediately redirect to login
+onMounted(() => {
+//   router.visit(route('login'))
+
+    router.visit(route('home'), {
+        method: 'get',
+        preserveState: true,
+        preserveScroll: true,
+    })
+
+})
+</script>
+<template>
+  <div class="text-center mt-10 text-gray-600">Redirecting...</div>
 </template>

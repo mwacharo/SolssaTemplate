@@ -132,7 +132,7 @@ const togglePasswordVisibility = () => {
 
                   <!-- Links -->
                   <div class="d-flex flex-column gap-2 mt-4">
-                    <Link
+                    <!-- <Link
                       :href="route('register')"
                       class="text-decoration-none"
                     >
@@ -144,7 +144,7 @@ const togglePasswordVisibility = () => {
                       >
                         Sign Up
                       </v-btn>
-                    </Link>
+                    </Link> -->
                     <Link
                       :href="route('password.request')"
                       class="text-decoration-none"

@@ -25,6 +25,13 @@ Route::get('/', function () {
 
 
 
+Route::any('/register', function () {
+    abort(403, 'User registration is disabled.');
+});
+
+
+
+
 // Route::get('/login', function () {
 //     return Inertia::render('Login', [
 //         'canLogin' => Route::has('login'),
