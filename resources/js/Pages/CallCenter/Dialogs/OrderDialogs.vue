@@ -408,7 +408,7 @@
               </v-row>
             </v-tabs-window-item>
 
-            <!-- Enhanced Order Items Tab -->
+            Enhanced Order Items Tab
             <v-tabs-window-item value="items" class="pa-6">
               <v-card variant="outlined">
                 <v-card-title class="d-flex align-center justify-space-between">
@@ -1870,6 +1870,9 @@ const productOptions = ref([
   { id: 2, product_name: 'Wireless Mouse', sku: 'MS002' },
   { id: 3, product_name: 'Keyboard', sku: 'KB003' }
 ])
+
+
+
 
 // Item table headers
 const itemHeaders = [

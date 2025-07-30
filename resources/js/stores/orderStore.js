@@ -204,6 +204,31 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
+    // load vendor products
+
+    async loadVendorProducts(vendorId) {
+      try {
+        this.loading.productOptions = true
+        // Replace with your API call
+        const response = await fetch(`/api/vendors/${vendorId}/products`)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const products = await response.json()
+        // Update product options with vendor products
+        this.productOptions = products.map(product => ({
+          id: product.id,
+          name: product.name,
+          vendorId: product.vendor_id
+        }))
+      } catch (error) {
+        console.error('Error loading vendor products:', error)
+        throw error
+      } finally {
+        this.loading.productOptions = false
+      }
+    },
+
     // Load orders with filters
     async loadOrdersWithFilters(filters = {}) {
       try {

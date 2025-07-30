@@ -118,6 +118,10 @@ Route::middleware([
         Route::get('/ivr', fn() => Inertia::render('Settings/IVROptions'))->name('ivr');
         Route::get('/integrations', fn() => Inertia::render('Settings/Integrations'))->name('integrations');
         Route::get('/templates', fn() => Inertia::render('Settings/Templates'))->name('templates');
+
+        // add call settings
+
+        Route::get('/call-settings', fn() => Inertia::render('Settings/CallSettings'))->name('call-settings');
         Route::get('/features', fn() => Inertia::render('Settings/FeatureToggles'))->name('features');
         Route::get('/notifications', fn() => Inertia::render('Settings/Notifications'))->name('notifications');
         Route::get('/branding', fn() => Inertia::render('Settings/Branding'))->name('branding');

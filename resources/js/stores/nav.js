@@ -45,6 +45,8 @@ export const ROUTES = {
     IVR: 'settings.ivr',
     INTEGRATIONS: 'settings.integrations',
     TEMPLATES: 'settings.templates',
+    // add call settings 
+    CaLL_SETTINGS: 'settings.call-settings',
     // FEATURES: 'settings.features',
     // NOTIFICATIONS: 'settings.notifications',
     // BRANDING: 'settings.branding',
@@ -194,6 +196,7 @@ export const useNavStore = defineStore('nav', {
           { title: 'IVR Options', route: ROUTES.SETTINGS.IVR, icon: 'mdi-phone-settings' },
           { title: 'Integrations', route: ROUTES.SETTINGS.INTEGRATIONS, icon: 'mdi-puzzle' },
           { title: 'Templates', route: ROUTES.SETTINGS.TEMPLATES, icon: 'mdi-file-outline' },
+          { title: 'Call Settings', route: ROUTES.SETTINGS.CaLL_SETTINGS, icon: 'mdi-phone-outline' },
           // { title: 'Feature Toggles', route: ROUTES.SETTINGS.FEATURES, icon: 'mdi-toggle-switch' },
           // { title: 'Notifications', route: ROUTES.SETTINGS.NOTIFICATIONS, icon: 'mdi-bell-cog' },
           // { title: 'Branding', route: ROUTES.SETTINGS.BRANDING, icon: 'mdi-palette' },

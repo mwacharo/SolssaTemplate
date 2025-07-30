@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\CallCenterSetting;
 use App\Models\Contact;
 use App\Models\User;
 use App\Models\Country;
@@ -26,9 +27,13 @@ class DatabaseSeeder extends Seeder
             // ContactSeeder::class,
             // MessageSeeder::class,
             // ChannelCredentialSeeder::class,
-             RiderSeeder::class,
+            //  RiderSeeder::class,
             // AgentSeeder::class,
             // WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
+            
+
+            // CallCenterSettingSeeder::class,
+            IvrOptionSeeder::class,
         ]);
 
         // User::factory(10)->withPersonalTeam()->create();
@@ -40,15 +45,15 @@ class DatabaseSeeder extends Seeder
 
         // Create a user with a personal team
         // First, ensure we have a country to reference
-        $country = Country::first();
+        // $country = Country::first();
         
-        User::factory()->withPersonalTeam()->create([
-            'name' => 'Mwacharo',
-            'email' => 'john.boxleo@gmail.com',
-            'password' => bcrypt('12345678'),
-            'is_active' => true,
-            'two_factor_enabled' => false,
-            'country_id' => $country ? $country->id : null, // Use first available country or null
-        ]);
+        // User::factory()->withPersonalTeam()->create([
+        //     'name' => 'Mwacharo',
+        //     'email' => 'john.boxleo@gmail.com',
+        //     'password' => bcrypt('12345678'),
+        //     'is_active' => true,
+        //     'two_factor_enabled' => false,
+        //     'country_id' => $country ? $country->id : null, // Use first available country or null
+        // ]);
     }
 }
