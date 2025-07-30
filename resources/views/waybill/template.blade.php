@@ -542,7 +542,7 @@
                 @endif
             </div>
             <div class="cod-amount">
-                {{ $order->currency ?? 'KSH' }} {{ number_format($order->total_amount ?? 0, 2) }}
+                {{ 'KSH ' . number_format($order->total_price ?? 0, 2) }}
             </div>
             <div class="payment-method">
                 @if($order->payment_method == 'cod')

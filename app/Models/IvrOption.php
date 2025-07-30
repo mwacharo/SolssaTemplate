@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class IvrOption extends Model
 {
-    /** @use HasFactory<\Database\Factories\IvrOptionFactory> */
+    /** @use HasFactor
+     * y<\Database\Factories\IvrOptionFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'option_number',
+        'description',
+        'forward_number',
+        'phone_number',
+        'status',
+        'branch_id',
+        'country_id',
+    ];
 }

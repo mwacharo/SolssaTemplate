@@ -252,6 +252,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import axios from "axios";
 import { ref } from "vue";
+import { notify } from '@/utils/toast';
 
 export default {
     components: {
@@ -312,18 +313,21 @@ export default {
     methods: {
         initialize() {
             this.loading = true;
-            axios.get("api/v1/ivr-options")
-                .then(response => {
-                    this.ivrOptions = response.data.ivrOptions || [];
-                    this.filteredIvrOptions = [...this.ivrOptions];
-                    this.loading = false;
-                })
-                .catch(error => {
-                    console.error("API Error:", error);
-                    this.loading = false;
-                    // Show error notification
-                    this.$toast?.error("Failed to load IVR options");
-                });
+            axios.get("/api/v1/ivr-options")
+            .then(response => {
+                // Handle paginated API response
+                const data = response.data;
+                // If response is paginated, use data.data; otherwise fallback
+                this.ivrOptions = Array.isArray(data.data) ? data.data : (data.ivrOptions || []);
+                this.filteredIvrOptions = [...this.ivrOptions];
+                this.loading = false;
+                notify({ type: "success", message: "IVR options loaded successfully" });
+            })
+            .catch(error => {
+                console.error("API Error:", error);
+                this.loading = false;
+                notify({ type: "error", message: "Failed to load IVR options" });
+            });
         },
 
         debounceSearch() {
@@ -384,14 +388,12 @@ export default {
                     this.applyFilters(); // Refresh filtered list
                     this.deleteDialog = false;
                     this.deleting = false;
-                    // Show success notification
-                    this.$toast?.success("IVR option deleted successfully");
+                    notify({ type: "success", message: "IVR option deleted successfully" });
                 })
                 .catch(error => {
                     console.error("Deletion error:", error);
                     this.deleting = false;
-                    // Show error notification
-                    this.$toast?.error("Failed to delete IVR option");
+                    notify({ type: "error", message: "Failed to delete IVR option" });
                 });
         },
 
@@ -434,14 +436,12 @@ export default {
                     this.close();
                     this.saving = false;
 
-                    // Show success notification
-                    this.$toast?.success(`IVR option ${this.editedIndex > -1 ? 'updated' : 'created'} successfully`);
+                    notify({ type: "success", message: `IVR option ${this.editedIndex > -1 ? 'updated' : 'created'} successfully` });
                 })
                 .catch(error => {
                     console.error("Saving error:", error);
                     this.saving = false;
-                    // Show error notification
-                    this.$toast?.error(`Failed to ${this.editedIndex > -1 ? 'update' : 'create'} IVR option`);
+                    notify({ type: "error", message: `Failed to ${this.editedIndex > -1 ? 'update' : 'create'} IVR option` });
                 });
         },
 
@@ -454,13 +454,11 @@ export default {
                     Object.assign(this.ivrOptions[index], response.data);
                     this.applyFilters(); // Refresh filtered list
 
-                    // Show success notification
-                    this.$toast?.success(`Option ${item.option_number} ${updatedItem.status === 'active' ? 'activated' : 'deactivated'}`);
+                    notify({ type: "success", message: `Option ${item.option_number} ${updatedItem.status === 'active' ? 'activated' : 'deactivated'}` });
                 })
                 .catch(error => {
                     console.error("Status toggle error:", error);
-                    // Show error notification
-                    this.$toast?.error("Failed to update status");
+                    notify({ type: "error", message: "Failed to update status" });
                 });
         },
 
@@ -491,15 +489,26 @@ export default {
 
             return phone; // Return original if not 10 digits
         },
+       validatePhoneNumber(value) {
+    // Allow standard 10-digit numbers or BoxleoKenya.Mwacharo format
+    if (!value) return 'Phone number is required';
 
-        validatePhoneNumber(value) {
-            // Basic validation - can be enhanced based on your requirements
-            const numericOnly = value.replace(/\D/g, '');
-            if (numericOnly.length < 10) {
-                return 'Phone number must have at least 10 digits';
-            }
-            return true;
-        }
+    // Check for BoxleoKenya.Mwacharo format
+    // Accept any format like "Word.Word" (letters only, dot in between)
+    const boxleoPattern = /^[A-Za-z]+\.[A-Za-z]+$/;
+    if (boxleoPattern.test(value)) {
+        return null; // Valid
+    }
+
+    // For regular phone numbers, check if we have at least 10 digits
+    // This allows letters, spaces, dashes, parentheses, etc.
+    const numericOnly = value.replace(/\D/g, '');
+    if (numericOnly.length < 10) {
+        return 'Phone number must have at least 10 digits or be in Username.Name format';
+    }
+    
+    return null; // Valid
+}
     },
 };
 </script>

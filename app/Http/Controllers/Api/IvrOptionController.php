@@ -51,8 +51,13 @@ class IvrOptionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(IvrOption $ivrOption)
+    // public function destroy(IvrOption $ivrOption)
+    // {
+    //     $ivrOption->delete();
+    //     return response()->json(null, Response::HTTP_NO_CONTENT);
+    public function destroy($id)
     {
+        $ivrOption = IvrOption::findOrFail($id);
         $ivrOption->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
