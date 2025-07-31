@@ -17,6 +17,7 @@ use Stevebauman\Location\Facades\Location;
 
 use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -68,6 +69,9 @@ class UserController extends Controller
 
     public function store(UserStoreRequest $request)
     {
+
+        // log info
+        Log::info('Creating User:', $request->validated());
         $user = $this->userService->create($request->validated());
 
           $user->ownedTeams()->create([

@@ -1,18 +1,20 @@
 <template>
   <v-dialog v-model="dialog" max-width="1400" persistent scrollable>
     <v-card class="order-details-card">
-      <!-- Enhanced Header with AI Insights -->
+      <!-- Header -->
       <v-card-title class="pa-6 pb-4 gradient-header">
-        <div class="d-flex align-center  w-100">
+        <div class="d-flex align-center w-100">
           <div class="d-flex align-center">
             <v-avatar size="48" color="primary" class="me-4">
-              <v-icon icon="mdi-package-variant" size="24" />
+              <v-icon :icon="isCreateMode ? 'mdi-plus' : 'mdi-package-variant'" size="24" />
             </v-avatar>
             <div>
-              <h2 class="text-h5 mb-1 text-white">{{ order?.order_no || 'Loading...' }}</h2>
+              <h2 class="text-h5 mb-1 text-white">
+                {{ isCreateMode ? 'Create New Order' : (order?.order_no || 'Loading...') }}
+              </h2>
               <div class="d-flex align-center gap-2">
                 <v-chip 
-                  v-if="order" 
+                  v-if="order && !isCreateMode" 
                   :color="getStatusColor(order.status)" 
                   variant="flat" 
                   size="small"
@@ -20,50 +22,15 @@
                 >
                   {{ order.status }}
                 </v-chip>
-                <v-chip 
-                  v-if="order?.ai_risk_score" 
-                  :color="getRiskColor(order.ai_risk_score)" 
-                  variant="outlined" 
-                  size="small"
-                >
-                  <v-icon start size="small">mdi-brain</v-icon>
-                  Risk: {{ order.ai_risk_score }}%
-                </v-chip>
-                <v-chip 
-                  v-if="order?.predicted_delay" 
-                  color="warning" 
-                  variant="outlined" 
-                  size="small"
-                >
-                  <v-icon start size="small">mdi-clock-alert</v-icon>
-                  +{{ order.predicted_delay }}min
+                <v-chip v-if="isCreateMode" color="info" variant="flat" size="small">
+                  Draft
                 </v-chip>
               </div>
             </div>
           </div>
           <div class="d-flex align-center gap-2">
-            <!-- AI Assistant Button -->
             <v-btn
-              icon="mdi-robot"
-              variant="text"
-              size="small"
-              color="white"
-              @click="openAIAssistant"
-              :loading="aiProcessing"
-            >
-              <v-tooltip activator="parent" location="bottom">AI Assistant</v-tooltip>
-            </v-btn>
-            <v-btn
-              icon="mdi-auto-fix"
-              variant="text"
-              size="small"
-              color="white"
-              @click="triggerAutoOptimization"
-              :loading="optimizing"
-            >
-              <v-tooltip activator="parent" location="bottom">Auto-Optimize</v-tooltip>
-            </v-btn>
-            <v-btn
+              v-if="!isCreateMode"
               icon="mdi-refresh"
               variant="text"
               size="small"
@@ -82,70 +49,24 @@
         </div>
       </v-card-title>
 
-      <!-- AI Insights Banner -->
-      <v-banner
-        v-if="aiInsights.length > 0"
-        color="info"
-        icon="mdi-lightbulb"
-        class="ai-insights-banner"
-      >
-        <template #text>
-          <div class="d-flex align-center justify-space-between">
-            <div>
-              <strong>AI Insights:</strong> {{ aiInsights[currentInsightIndex]?.message }}
-            </div>
-            <div class="d-flex gap-2">
-              <v-btn
-                v-if="aiInsights[currentInsightIndex]?.action"
-                size="small"
-                variant="outlined"
-                @click="executeAIAction(aiInsights[currentInsightIndex].action)"
-              >
-                {{ aiInsights[currentInsightIndex].action.label }}
-              </v-btn>
-              <v-btn
-                icon="mdi-close"
-                size="small"
-                variant="text"
-                @click="dismissInsight"
-              />
-            </div>
-          </div>
-        </template>
-      </v-banner>
-
       <v-divider />
 
       <v-card-text class="pa-0">
-        <div v-if="!order || isLoading" class="pa-8 text-center">
+        <div v-if="(!order && !isCreateMode) || isLoading" class="pa-8 text-center">
           <v-progress-circular indeterminate color="primary" size="64" />
-          <p class="text-h6 mt-4">Loading order details...</p>
-          <p class="text-body-2 text-medium-emphasis">AI is analyzing order data...</p>
+          <p class="text-h6 mt-4">{{ isCreateMode ? 'Preparing new order...' : 'Loading order details...' }}</p>
         </div>
 
         <div v-else>
-          <!-- Enhanced Tabs with AI Indicators -->
+          <!-- Tabs -->
           <v-tabs v-model="activeTab" color="primary" class="border-b bg-surface">
             <v-tab value="overview" prepend-icon="mdi-view-dashboard">
               <span class="font-weight-medium">Overview</span>
-              <v-badge
-                v-if="automationAlerts.overview > 0"
-                :content="automationAlerts.overview"
-                color="error"
-                inline
-                class="ml-2"
-              />
-            </v-tab>
-            <v-tab value="ai-automation" prepend-icon="mdi-robot">
-              <span class="font-weight-medium">AI & Automation</span>
-              <v-chip size="x-small" variant="flat" color="success" class="ml-2">
-                Smart
-              </v-chip>
             </v-tab>
             <v-tab value="items" prepend-icon="mdi-cart">
               <span class="font-weight-medium">Items</span>
               <v-chip size="x-small" variant="flat" color="primary" class="ml-2">
-                {{ (order.orderItems || []).length }}
+                {{ (currentOrder.orderItems || []).length }}
               </v-chip>
             </v-tab>
             <v-tab value="charges" prepend-icon="mdi-currency-usd">
@@ -157,57 +78,21 @@
             <v-tab value="fulfillment" prepend-icon="mdi-truck-delivery">
               <span class="font-weight-medium">Fulfillment</span>
             </v-tab>
-            <v-tab value="smart-routing" prepend-icon="mdi-map-marker-path">
-              <span class="font-weight-medium">Smart Routing</span>
-              <v-badge
-                v-if="routeOptimized"
-                dot
-                color="success"
-                inline
-                class="ml-2"
-              />
-            </v-tab>
-            <v-tab value="predictive" prepend-icon="mdi-crystal-ball">
-              <span class="font-weight-medium">Predictions</span>
-            </v-tab>
-            <v-tab value="communications" prepend-icon="mdi-message-processing">
-              <span class="font-weight-medium">Smart Comms</span>
-            </v-tab>
           </v-tabs>
 
           <v-tabs-window v-model="activeTab">
-            <!-- Overview Tab with AI Enhancements -->
+            <!-- Overview Tab -->
             <v-tabs-window-item value="overview" class="pa-6">
               <v-row>
-                <!-- AI-Enhanced Order Summary -->
+                <!-- Order Summary -->
                 <v-col cols="12" lg="8">
                   <v-card variant="outlined" class="h-100">
                     <v-card-title class="d-flex align-center justify-space-between">
                       <div class="d-flex align-center">
                         <v-icon icon="mdi-clipboard-text" class="me-2" color="primary" />
                         Order Details
-                        <v-chip
-                          v-if="order.ai_confidence_score"
-                          size="small"
-                          variant="outlined"
-                          color="success"
-                          class="ml-3"
-                        >
-                          <v-icon start size="small">mdi-check-decagram</v-icon>
-                          {{ order.ai_confidence_score }}% Verified
-                        </v-chip>
                       </div>
-                      <div class="d-flex gap-2">
-                        <v-btn
-                          color="info"
-                          variant="outlined"
-                          size="small"
-                          @click="runAIValidation"
-                          :loading="validating"
-                        >
-                          <v-icon start>mdi-brain</v-icon>
-                          AI Validate
-                        </v-btn>
+                      <div class="d-flex gap-2" v-if="!isCreateMode">
                         <v-btn
                           v-if="!editingOrder"
                           color="primary"
@@ -218,6 +103,25 @@
                           <v-icon start>mdi-pencil</v-icon>
                           Edit
                         </v-btn>
+                        <div v-else class="d-flex gap-2">
+                          <v-btn
+                            color="success"
+                            variant="flat"
+                            size="small"
+                            @click="saveOrderChanges"
+                            :loading="saving"
+                          >
+                            <v-icon start>mdi-check</v-icon>
+                            Save
+                          </v-btn>
+                          <v-btn
+                            variant="outlined"
+                            size="small"
+                            @click="cancelOrderEdit"
+                          >
+                            Cancel
+                          </v-btn>
+                        </div>
                       </div>
                     </v-card-title>
                     <v-card-text>
@@ -226,102 +130,109 @@
                           <div class="info-grid">
                             <div class="info-item">
                               <div class="label">Order Number</div>
-                              <div class="value d-flex align-center">
-                                {{ order.order_no }}
-                                <v-btn
-                                  v-if="order.duplicate_likelihood > 70"
-                                  icon="mdi-content-duplicate"
-                                  size="x-small"
-                                  variant="text"
-                                  color="warning"
-                                  class="ml-2"
-                                >
-                                  <v-tooltip activator="parent">
-                                    Possible duplicate detected ({{ order.duplicate_likelihood }}%)
-                                  </v-tooltip>
-                                </v-btn>
-                              </div>
+                              <v-text-field
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.order_no"
+                                variant="outlined"
+                                density="compact"
+                                placeholder="AUTO-GENERATED"
+                                :disabled="!isCreateMode"
+                              />
+                              <div v-else class="value">{{ currentOrder.order_no }}</div>
+                            </div>
+                            <div class="info-item">
+                              <div class="label">Reference</div>
+                              <v-text-field
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.reference"
+                                variant="outlined"
+                                density="compact"
+                                placeholder="Optional reference"
+                              />
+                              <div v-else class="value">{{ currentOrder.reference || '-' }}</div>
                             </div>
                             <div class="info-item">
                               <div class="label">Platform</div>
-                              <v-chip variant="outlined" size="small">{{ order.platform }}</v-chip>
+                              <v-select
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.platform"
+                                :items="platformOptions"
+                                variant="outlined"
+                                density="compact"
+                              />
+                              <v-chip v-else variant="outlined" size="small">{{ currentOrder.platform }}</v-chip>
                             </div>
                             <div class="info-item">
-                              <div class="label">Auto-Priority (AI)</div>
-                              <v-chip :color="getPriorityColor(order.ai_suggested_priority)" variant="flat" size="small">
-                                {{ order.ai_suggested_priority || 'Standard' }}
-                                <v-icon 
-                                  v-if="order.priority !== order.ai_suggested_priority"
-                                  end 
-                                  size="small"
-                                  color="warning"
-                                >
-                                  mdi-alert
-                                </v-icon>
+                              <div class="label">Status</div>
+                              <v-select
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.status"
+                                :items="statusOptions"
+                                variant="outlined"
+                                density="compact"
+                              />
+                              <v-chip v-else :color="getStatusColor(currentOrder.status)" variant="flat" size="small">
+                                {{ currentOrder.status || 'Pending' }}
                               </v-chip>
-                            </div>
-                            <div class="info-item">
-                              <div class="label">Estimated Delivery</div>
-                              <div class="value d-flex align-center">
-                                {{ formatDateTime(order.ai_estimated_delivery) }}
-                                <v-chip
-                                  size="x-small"
-                                  variant="flat"
-                                  :color="getAccuracyColor(order.prediction_accuracy)"
-                                  class="ml-2"
-                                >
-                                  {{ order.prediction_accuracy }}% accurate
-                                </v-chip>
-                              </div>
                             </div>
                           </div>
                         </v-col>
                         <v-col cols="12" md="6">
                           <div class="info-grid">
                             <div class="info-item">
-                              <div class="label">Created</div>
-                              <div class="value">{{ formatDateTime(order.created_at) }}</div>
+                              <div class="label">Client</div>
+                              <v-autocomplete
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.client_id"
+                                :items="clientOptions"
+                                item-title="name"
+                                item-value="id"
+                                variant="outlined"
+                                density="compact"
+                                clearable
+                                :loading="loadingClients"
+                                @update:search="searchClients"
+                              />
+                              <div v-else class="value">{{ currentOrder.client?.name || '-' }}</div>
                             </div>
                             <div class="info-item">
-                              <div class="label">AI Risk Assessment</div>
-                              <v-progress-linear
-                                :model-value="order.ai_risk_score"
-                                :color="getRiskProgressColor(order.ai_risk_score)"
-                                height="20"
-                                rounded
-                              >
-                                <template #default="{ value }">
-                                  <strong class="text-caption">{{ Math.ceil(value) }}% Risk</strong>
-                                </template>
-                              </v-progress-linear>
+                              <div class="label">Vendor</div>
+                              <v-autocomplete
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.vendor_id"
+                                :items="vendorOptions"
+                                item-title="company_name"
+                                item-value="id"
+                                variant="outlined"
+                                density="compact"
+                                clearable
+                                :loading="loadingVendors"
+                                @update:model-value="onVendorChange"
+                              />
+                              <div v-else class="value">{{ currentOrder.vendor?.company_name || '-' }}</div>
                             </div>
                             <div class="info-item">
-                              <div class="label">Auto-Assigned Rider</div>
-                              <div class="value d-flex align-center">
-                                {{ order.auto_assigned_rider || 'Pending Assignment' }}
-                                <v-btn
-                                  v-if="!order.auto_assigned_rider"
-                                  size="x-small"
-                                  variant="outlined"
-                                  color="primary"
-                                  class="ml-2"
-                                  @click="autoAssignRider"
-                                  :loading="assigning"
-                                >
-                                  Auto-Assign
-                                </v-btn>
-                              </div>
+                              <div class="label">Delivery Date</div>
+                              <v-text-field
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.delivery_date"
+                                type="datetime-local"
+                                variant="outlined"
+                                density="compact"
+                              />
+                              <div v-else class="value">{{ formatDateTime(currentOrder.delivery_date) }}</div>
                             </div>
                             <div class="info-item">
-                              <div class="label">Fraud Score</div>
-                              <v-chip 
-                                :color="getFraudColor(order.fraud_score)" 
-                                variant="flat" 
-                                size="small"
-                              >
-                                <v-icon start size="small">mdi-shield-check</v-icon>
-                                {{ order.fraud_score || 0 }}% Risk
-                              </v-chip>
+                              <div class="label">Weight (kg)</div>
+                              <v-text-field
+                                v-if="isCreateMode || editingOrder"
+                                v-model="orderEdit.weight"
+                                type="number"
+                                step="0.1"
+                                variant="outlined"
+                                density="compact"
+                              />
+                              <div v-else class="value">{{ currentOrder.weight || 0 }} kg</div>
                             </div>
                           </div>
                         </v-col>
@@ -330,77 +241,65 @@
                   </v-card>
                 </v-col>
 
-                <!-- AI-Powered Quick Actions -->
+                <!-- Quick Actions -->
                 <v-col cols="12" lg="4">
                   <v-card variant="outlined" class="h-100">
                     <v-card-title>
-                      <v-icon icon="mdi-robot" class="me-2" color="primary" />
-                      AI-Powered Actions
+                      <v-icon icon="mdi-flash" class="me-2" color="primary" />
+                      {{ isCreateMode ? 'Create Actions' : 'Quick Actions' }}
                     </v-card-title>
                     <v-card-text>
                       <div class="d-flex flex-column gap-3">
                         <v-btn
-                          color="primary"
+                          v-if="isCreateMode"
+                          color="success"
                           variant="flat"
                           block
-                          @click="autoOptimizeRoute"
-                          :loading="optimizing"
+                          @click="createOrder"
+                          :loading="saving"
                         >
-                          <v-icon start>mdi-map-marker-path</v-icon>
-                          Auto-Optimize Route
+                          <v-icon start>mdi-plus</v-icon>
+                          Create Order
                         </v-btn>
-                        <v-btn
-                          color="success"
-                          variant="outlined"
-                          block
-                          @click="predictDeliveryIssues"
-                          :loading="predicting"
-                        >
-                          <v-icon start>mdi-crystal-ball</v-icon>
-                          Predict Issues
-                        </v-btn>
-                        <v-btn
-                          color="info"
-                          variant="outlined"
-                          block
-                          @click="generateSmartNotifications"
-                        >
-                          <v-icon start>mdi-bell-ring</v-icon>
-                          Smart Notify
-                        </v-btn>
-                        <v-btn
-                          color="warning"
-                          variant="outlined"
-                          block
-                          @click="runFraudCheck"
-                          :loading="checkingFraud"
-                        >
-                          <v-icon start>mdi-shield-search</v-icon>
-                          Fraud Check
-                        </v-btn>
-                      </div>
-
-                      <v-divider class="my-4" />
-
-                      <!-- AI Metrics -->
-                      <div class="text-subtitle-2 mb-3">AI Insights</div>
-                      <div class="metrics-grid">
-                        <div class="metric-item">
-                          <div class="metric-value text-h6 text-success">{{ order.ai_efficiency_score || 85 }}%</div>
-                          <div class="metric-label">Efficiency</div>
-                        </div>
-                        <div class="metric-item">
-                          <div class="metric-value text-h6 text-primary">{{ formatCurrency(order.ai_cost_savings || 25) }}</div>
-                          <div class="metric-label">AI Savings</div>
-                        </div>
-                        <div class="metric-item">
-                          <div class="metric-value text-h6 text-info">{{ order.ai_confidence_score || 92 }}%</div>
-                          <div class="metric-label">Confidence</div>
-                        </div>
-                        <div class="metric-item">
-                          <div class="metric-value text-h6 text-warning">{{ order.carbon_footprint || 2.5 }}kg</div>
-                          <div class="metric-label">CO₂ Impact</div>
-                        </div>
+                        <template v-else>
+                          <v-btn
+                            color="primary"
+                            variant="flat"
+                            block
+                            @click="callClient"
+                            :disabled="!currentOrder.client?.phone_number"
+                          >
+                            <v-icon start>mdi-phone</v-icon>
+                            Call Client
+                          </v-btn>
+                          <v-btn
+                            color="success"
+                            variant="outlined"
+                            block
+                            @click="updateStatus('confirmed')"
+                          >
+                            <v-icon start>mdi-check-circle</v-icon>
+                            Confirm Order
+                          </v-btn>
+                          <v-btn
+                            color="info"
+                            variant="outlined"
+                            block
+                            @click="printOrder"
+                          >
+                            <v-icon start>mdi-printer</v-icon>
+                            Print Order
+                          </v-btn>
+                          <v-btn
+                            color="warning"
+                            variant="outlined"
+                            block
+                            @click="updateStatus('cancelled')"
+                          >
+                            <v-icon start>mdi-cancel</v-icon>
+                            Cancel Order
+                          </v-btn>
+                        </template>
                       </div>
                     </v-card-text>
                   </v-card>
@@ -408,7 +307,7 @@
               </v-row>
             </v-tabs-window-item>
 
-            Enhanced Order Items Tab
+            <!-- Order Items Tab -->
             <v-tabs-window-item value="items" class="pa-6">
               <v-card variant="outlined">
                 <v-card-title class="d-flex align-center justify-space-between">
@@ -416,12 +315,12 @@
                     <v-icon icon="mdi-cart" class="me-2" color="primary" />
                     Order Items
                     <v-chip variant="outlined" size="small" class="ml-3">
-                      {{ (order.orderItems || []).length }} items
+                      {{ (currentOrder.orderItems || []).length }} items
                     </v-chip>
                   </div>
                   <div class="d-flex gap-2">
                     <v-btn
-                      v-if="!editingItems"
+                      v-if="!editingItems && !isCreateMode"
                       color="primary"
                       variant="outlined"
                       size="small"
@@ -435,7 +334,7 @@
                       variant="outlined"
                       size="small"
                       @click="addNewItem"
-                      :disabled="!editingItems"
+                      :disabled="!editingItems && !isCreateMode"
                     >
                       <v-icon start>mdi-plus</v-icon>
                       Add Item
@@ -464,14 +363,14 @@
                 <v-card-text class="pa-0">
                   <v-data-table
                     :headers="itemHeaders"
-                    :items="editingItems ? itemsEdit : (order.orderItems || [])"
+                    :items="editingItems || isCreateMode ? itemsEdit : (currentOrder.orderItems || [])"
                     class="order-items-table"
                     :loading="saving"
                     loading-text="Updating items..."
                   >
                     <template #item.product="{ item }">
-                      <div v-if="editingItems" class="d-flex align-center gap-2">
-                        <v-select
+                      <div v-if="editingItems || isCreateMode" class="d-flex align-center gap-2">
+                        <v-autocomplete
                           v-model="item.product_id"
                           :items="productOptions"
                           item-title="product_name"
@@ -479,6 +378,8 @@
                           variant="outlined"
                           density="compact"
                           style="min-width: 200px;"
+                          :loading="loadingProducts"
+                          @update:model-value="onProductChange(item)"
                         />
                       </div>
                       <div v-else class="d-flex align-center">
@@ -497,7 +398,7 @@
 
                     <template #item.quantity="{ item }">
                       <v-text-field
-                        v-if="editingItems"
+                        v-if="editingItems || isCreateMode"
                         v-model.number="item.quantity"
                         type="number"
                         variant="outlined"
@@ -512,7 +413,7 @@
 
                     <template #item.price="{ item }">
                       <v-text-field
-                        v-if="editingItems"
+                        v-if="editingItems || isCreateMode"
                         v-model.number="item.price"
                         type="number"
                         step="0.01"
@@ -527,7 +428,7 @@
 
                     <template #item.discount="{ item }">
                       <v-text-field
-                        v-if="editingItems"
+                        v-if="editingItems || isCreateMode"
                         v-model.number="item.discount"
                         type="number"
                         step="0.01"
@@ -547,7 +448,7 @@
                     </template>
 
                     <template #item.actions="{ item }">
-                      <div v-if="editingItems" class="d-flex gap-1">
+                      <div v-if="editingItems || isCreateMode" class="d-flex gap-1">
                         <v-btn
                           icon="mdi-content-duplicate"
                           variant="text"
@@ -587,7 +488,7 @@
                         Pricing Breakdown
                       </div>
                       <v-btn
-                        v-if="!editingCharges"
+                        v-if="!editingCharges && !isCreateMode"
                         color="primary"
                         variant="outlined"
                         size="small"
@@ -596,7 +497,7 @@
                         <v-icon start>mdi-pencil</v-icon>
                         Edit Charges
                       </v-btn>
-                      <div v-else class="d-flex gap-2">
+                      <div v-else-if="editingCharges" class="d-flex gap-2">
                         <v-btn
                           color="success"
                           variant="flat"
@@ -620,15 +521,15 @@
                       <div class="charges-breakdown">
                         <div class="charge-item">
                           <div class="charge-label">Subtotal (Items)</div>
-                          <div class="charge-value">{{ formatCurrency(order.subtotal || orderTotal) }}</div>
+                          <div class="charge-value">{{ formatCurrency(calculateItemsTotal()) }}</div>
                         </div>
                         
                         <div class="charge-item">
-                          <div class="charge-label">Delivery Fee</div>
+                          <div class="charge-label">Shipping Charges</div>
                           <div class="charge-value">
                             <v-text-field
-                              v-if="editingCharges"
-                              v-model.number="chargesEdit.delivery_fee"
+                              v-if="editingCharges || isCreateMode"
+                              v-model.number="chargesEdit.shipping_charges"
                               type="number"
                               step="0.01"
                               variant="outlined"
@@ -636,16 +537,16 @@
                               prefix="$"
                               style="width: 120px;"
                             />
-                            <span v-else>{{ formatCurrency(order.delivery_fee || 0) }}</span>
+                            <span v-else>{{ formatCurrency(currentOrder.shipping_charges || 0) }}</span>
                           </div>
                         </div>
 
                         <div class="charge-item">
-                          <div class="charge-label">Service Fee</div>
+                          <div class="charge-label">Other Charges</div>
                           <div class="charge-value">
                             <v-text-field
-                              v-if="editingCharges"
-                              v-model.number="chargesEdit.service_fee"
+                              v-if="editingCharges || isCreateMode"
+                              v-model.number="chargesEdit.charges"
                               type="number"
                               step="0.01"
                               variant="outlined"
@@ -653,24 +554,7 @@
                               prefix="$"
                               style="width: 120px;"
                             />
-                            <span v-else>{{ formatCurrency(order.service_fee || 0) }}</span>
-                          </div>
-                        </div>
-
-                        <div class="charge-item">
-                          <div class="charge-label">Tax</div>
-                          <div class="charge-value">
-                            <v-text-field
-                              v-if="editingCharges"
-                              v-model.number="chargesEdit.tax_amount"
-                              type="number"
-                              step="0.01"
-                              variant="outlined"
-                              density="compact"
-                              prefix="$"
-                              style="width: 120px;"
-                            />
-                            <span v-else>{{ formatCurrency(order.tax_amount || 0) }}</span>
+                            <span v-else>{{ formatCurrency(currentOrder.charges || 0) }}</span>
                           </div>
                         </div>
 
@@ -678,8 +562,8 @@
                           <div class="charge-label">Discount</div>
                           <div class="charge-value text-success">
                             <v-text-field
-                              v-if="editingCharges"
-                              v-model.number="chargesEdit.discount_amount"
+                              v-if="editingCharges || isCreateMode"
+                              v-model.number="chargesEdit.discount"
                               type="number"
                               step="0.01"
                               variant="outlined"
@@ -687,7 +571,7 @@
                               prefix="-$"
                               style="width: 120px;"
                             />
-                            <span v-else>-{{ formatCurrency(order.discount_amount || 0) }}</span>
+                            <span v-else>-{{ formatCurrency(currentOrder.discount || 0) }}</span>
                           </div>
                         </div>
 
@@ -714,24 +598,34 @@
                       <div class="payment-info">
                         <div class="info-item">
                           <div class="label">Payment Method</div>
-                          <v-chip variant="outlined" size="small">
-                            {{ order.payment_method || 'Cash on Delivery' }}
-                          </v-chip>
-                        </div>
-                        <div class="info-item">
-                          <div class="label">Payment Status</div>
-                          <v-chip :color="getPaymentStatusColor(order.payment_status)" variant="flat" size="small">
-                            {{ order.payment_status || 'Pending' }}
+                          <v-select
+                            v-if="editingCharges || isCreateMode"
+                            v-model="chargesEdit.payment_method"
+                            :items="paymentMethods"
+                            variant="outlined"
+                            density="compact"
+                          />
+                          <v-chip v-else variant="outlined" size="small">
+                            {{ currentOrder.payment_method || 'Cash on Delivery' }}
                           </v-chip>
                         </div>
                         <div class="info-item">
                           <div class="label">Amount Paid</div>
-                          <div class="value text-success">{{ formatCurrency(order.amount_paid || 0) }}</div>
+                          <v-text-field
+                            v-if="editingCharges || isCreateMode"
+                            v-model.number="chargesEdit.amount_paid"
+                            type="number"
+                            step="0.01"
+                            variant="outlined"
+                            density="compact"
+                            prefix="$"
+                          />
+                          <div v-else class="value text-success">{{ formatCurrency(currentOrder.amount_paid || 0) }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Outstanding</div>
                           <div class="value text-error">
-                            {{ formatCurrency(calculateTotalWithCharges() - (order.amount_paid || 0)) }}
+                            {{ formatCurrency(calculateTotalWithCharges() - (currentOrder.amount_paid || 0)) }}
                           </div>
                         </div>
                       </div>
@@ -741,7 +635,7 @@
               </v-row>
             </v-tabs-window-item>
 
-            <!-- Enhanced Client Tab -->
+            <!-- Client Tab -->
             <v-tabs-window-item value="client" class="pa-6">
               <v-card variant="outlined">
                 <v-card-title class="d-flex align-center justify-space-between">
@@ -750,12 +644,15 @@
                       <v-icon icon="mdi-account" size="24" />
                     </v-avatar>
                     <div>
-                      <div class="text-h6">{{ order.client?.name || 'Unknown Client' }}</div>
-                      <div class="text-caption text-medium-emphasis">Client ID: {{ order.client?.id || '-' }}</div>
+                      <div class="text-h6">{{ currentOrder.client?.name || 'Select Client' }}</div>
+                      <div class="text-caption text-medium-emphasis">
+                        Client ID: {{ currentOrder.client?.id || '-' }}
+                      </div>
                     </div>
                   </div>
                   <div class="d-flex gap-2">
                     <v-btn
+                      v-if="currentOrder.client?.phone_number"
                       color="primary"
                       variant="outlined"
                       size="small"
@@ -765,7 +662,7 @@
                       Call
                     </v-btn>
                     <v-btn
-                      v-if="!editingClient"
+                      v-if="!editingClient && !isCreateMode"
                       color="primary"
                       variant="outlined"
                       size="small"
@@ -774,7 +671,7 @@
                       <v-icon start>mdi-pencil</v-icon>
                       Edit
                     </v-btn>
-                    <div v-else class="d-flex gap-2">
+                    <div v-else-if="editingClient" class="d-flex gap-2">
                       <v-btn
                         color="success"
                         variant="flat"
@@ -795,51 +692,48 @@
                     </div>
                   </div>
                 </v-card-title>
-                <v-card-text>
+                
+                <v-card-text v-if="currentOrder.client || isCreateMode">
                   <v-row>
                     <v-col cols="12" md="6">
                       <div class="info-grid">
                         <div class="info-item">
                           <div class="label">Full Name</div>
                           <v-text-field
-                            v-if="editingClient"
+                            v-if="editingClient || isCreateMode"
                             v-model="clientEdit.name"
                             variant="outlined"
                             density="compact"
                           />
-                          <div v-else class="value">{{ order.client?.name || '-' }}</div>
+                          <div v-else class="value">{{ currentOrder.client?.name || '-' }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Phone Number</div>
                           <v-text-field
-                            v-if="editingClient"
+                            v-if="editingClient || isCreateMode"
                             v-model="clientEdit.phone_number"
                             variant="outlined"
                             density="compact"
                           />
                           <div v-else class="value">
-                            <a :href="`tel:${order.client?.phone_number}`" class="text-decoration-none">
-                              {{ order.client?.phone_number || '-' }}
+                            <a :href="`tel:${currentOrder.client?.phone_number}`" class="text-decoration-none">
+                              {{ currentOrder.client?.phone_number || '-' }}
                             </a>
                           </div>
                         </div>
                         <div class="info-item">
                           <div class="label">Email</div>
                           <v-text-field
-                            v-if="editingClient"
+                            v-if="editingClient || isCreateMode"
                             v-model="clientEdit.email"
                             variant="outlined"
                             density="compact"
                           />
                           <div v-else class="value">
-                            <a :href="`mailto:${order.client?.email}`" class="text-decoration-none">
-                              {{ order.client?.email || '-' }}
+                            <a :href="`mailto:${currentOrder.client?.email}`" class="text-decoration-none">
+                              {{ currentOrder.client?.email || '-' }}
                             </a>
                           </div>
-                        </div>
-                        <div class="info-item">
-                          <div class="label">Customer Since</div>
-                          <div class="value">{{ formatDate(order.client?.created_at) }}</div>
                         </div>
                       </div>
                     </v-col>
@@ -848,46 +742,41 @@
                         <div class="info-item">
                           <div class="label">Delivery Address</div>
                           <v-textarea
-                            v-if="editingClient"
+                            v-if="editingClient || isCreateMode"
                             v-model="clientEdit.address"
                             variant="outlined"
                             density="compact"
                             rows="3"
                           />
-                          <div v-else class="value">{{ order.client?.address || '-' }}</div>
+                          <div v-else class="value">{{ currentOrder.client?.address || '-' }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">City</div>
                           <v-text-field
-                            v-if="editingClient"
+                            v-if="editingClient || isCreateMode"
                             v-model="clientEdit.city"
                             variant="outlined"
                             density="compact"
                           />
-                          <div v-else class="value">{{ order.client?.city || '-' }}</div>
-                        </div>
-                        <div class="info-item">
-                          <div class="label">Client Status</div>
-                          <v-chip 
-                            :color="order.client?.status === 'active' ? 'success' : 'error'" 
-                            variant="flat" 
-                            size="small"
-                          >
-                            {{ order.client?.status || '-' }}
-                          </v-chip>
-                        </div>
-                        <div class="info-item">
-                          <div class="label">Total Orders</div>
-                          <div class="value">{{ order.client?.total_orders || '0' }}</div>
+                          <div v-else class="value">{{ currentOrder.client?.city || '-' }}</div>
                         </div>
                       </div>
                     </v-col>
                   </v-row>
                 </v-card-text>
+                
+                <v-card-text v-else class="text-center py-8">
+                  <v-icon icon="mdi-account-off" size="48" class="text-medium-emphasis mb-3" />
+                  <p class="text-body-2 text-medium-emphasis">No client selected</p>
+                  <v-btn color="primary" variant="outlined" size="small" class="mt-2" @click="activeTab = 'overview'">
+                    <v-icon start>mdi-plus</v-icon>
+                    Select Client
+                  </v-btn>
+                </v-card-text>
               </v-card>
             </v-tabs-window-item>
 
-            <!-- Fulfillment Tab (Vendor, Agent, Rider) -->
+            <!-- Fulfillment Tab -->
             <v-tabs-window-item value="fulfillment" class="pa-6">
               <v-row>
                 <!-- Vendor Information -->
@@ -900,33 +789,33 @@
                       <div>
                         <div class="text-subtitle-1">Vendor</div>
                         <div class="text-caption text-medium-emphasis">
-                          {{ order.vendor?.company_name || 'No vendor assigned' }}
+                          {{ currentOrder.vendor?.company_name || 'No vendor assigned' }}
                         </div>
                       </div>
                     </v-card-title>
-                    <v-card-text v-if="order.vendor">
+                    <v-card-text v-if="currentOrder.vendor">
                       <div class="info-grid">
                         <div class="info-item">
                           <div class="label">Company</div>
-                          <div class="value">{{ order.vendor.company_name }}</div>
+                          <div class="value">{{ currentOrder.vendor.company_name }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Contact Person</div>
-                          <div class="value">{{ order.vendor.name }}</div>
+                          <div class="value">{{ currentOrder.vendor.name }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Phone</div>
                           <div class="value">
-                            <a :href="`tel:${order.vendor.phone}`" class="text-decoration-none">
-                              {{ order.vendor.phone }}
+                            <a :href="`tel:${currentOrder.vendor.phone}`" class="text-decoration-none">
+                              {{ currentOrder.vendor.phone }}
                             </a>
                           </div>
                         </div>
                         <div class="info-item">
                           <div class="label">Email</div>
                           <div class="value">
-                            <a :href="`mailto:${order.vendor.email}`" class="text-decoration-none">
-                              {{ order.vendor.email }}
+                            <a :href="`mailto:${currentOrder.vendor.email}`" class="text-decoration-none">
+                              {{ currentOrder.vendor.email }}
                             </a>
                           </div>
                         </div>
@@ -935,10 +824,6 @@
                     <v-card-text v-else class="text-center py-8">
                       <v-icon icon="mdi-store-off" size="48" class="text-medium-emphasis mb-3" />
                       <p class="text-body-2 text-medium-emphasis">No vendor assigned</p>
-                      <v-btn color="primary" variant="outlined" size="small" class="mt-2">
-                        <v-icon start>mdi-plus</v-icon>
-                        Assign Vendor
-                      </v-btn>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -953,41 +838,48 @@
                       <div>
                         <div class="text-subtitle-1">Agent</div>
                         <div class="text-caption text-medium-emphasis">
-                          {{ order.agent?.name || 'No agent assigned' }}
+                          {{ currentOrder.agent?.name || 'No agent assigned' }}
                         </div>
                       </div>
                     </v-card-title>
-                    <v-card-text v-if="order.agent">
+                    <v-card-text v-if="currentOrder.agent">
                       <div class="info-grid">
                         <div class="info-item">
                           <div class="label">Name</div>
-                          <div class="value">{{ order.agent.name }}</div>
+                          <div class="value">{{ currentOrder.agent.name }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Employee ID</div>
-                          <div class="value">{{ order.agent.employee_id }}</div>
+                          <div class="value">{{ currentOrder.agent.employee_id }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Phone</div>
                           <div class="value">
-                            <a :href="`tel:${order.agent.phone}`" class="text-decoration-none">
-                              {{ order.agent.phone }}
+                            <a :href="`tel:${currentOrder.agent.phone}`" class="text-decoration-none">
+                              {{ currentOrder.agent.phone }}
                             </a>
                           </div>
                         </div>
                         <div class="info-item">
                           <div class="label">Department</div>
-                          <div class="value">{{ order.agent.department }}</div>
+                          <div class="value">{{ currentOrder.agent.department }}</div>
                         </div>
                       </div>
                     </v-card-text>
                     <v-card-text v-else class="text-center py-8">
                       <v-icon icon="mdi-account-off" size="48" class="text-medium-emphasis mb-3" />
                       <p class="text-body-2 text-medium-emphasis">No agent assigned</p>
-                      <v-btn color="primary" variant="outlined" size="small" class="mt-2">
-                        <v-icon start>mdi-plus</v-icon>
-                        Assign Agent
-                      </v-btn>
+                      <v-select
+                        v-if="isCreateMode || editingOrder"
+                        v-model="orderEdit.agent_id"
+                        :items="agentOptions"
+                        item-title="name"
+                        item-value="id"
+                        variant="outlined"
+                        density="compact"
+                        label="Select Agent"
+                        class="mt-2"
+                      />
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -1002,32 +894,32 @@
                       <div>
                         <div class="text-subtitle-1">Rider</div>
                         <div class="text-caption text-medium-emphasis">
-                          {{ order.rider?.name || 'No rider assigned' }}
+                          {{ currentOrder.rider?.name || 'No rider assigned' }}
                         </div>
                       </div>
                     </v-card-title>
-                    <v-card-text v-if="order.rider">
+                    <v-card-text v-if="currentOrder.rider">
                       <div class="info-grid">
                         <div class="info-item">
                           <div class="label">Name</div>
-                          <div class="value">{{ order.rider.name }}</div>
+                          <div class="value">{{ currentOrder.rider.name }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Phone</div>
                           <div class="value">
-                            <a :href="`tel:${order.rider.phone}`" class="text-decoration-none">
-                              {{ order.rider.phone }}
+                            <a :href="`tel:${currentOrder.rider.phone}`" class="text-decoration-none">
+                              {{ currentOrder.rider.phone }}
                             </a>
                           </div>
                         </div>
                         <div class="info-item">
                           <div class="label">Vehicle</div>
-                          <div class="value">{{ order.rider.vehicle_type }} - {{ order.rider.vehicle_number }}</div>
+                          <div class="value">{{ currentOrder.rider.vehicle_type }} - {{ currentOrder.rider.vehicle_number }}</div>
                         </div>
                         <div class="info-item">
                           <div class="label">Status</div>
-                          <v-chip :color="getRiderStatusColor(order.rider.status)" variant="flat" size="small">
-                            {{ order.rider.status }}
+                          <v-chip :color="getRiderStatusColor(currentOrder.rider.status)" variant="flat" size="small">
+                            {{ currentOrder.rider.status }}
                           </v-chip>
                         </div>
                       </div>
@@ -1035,710 +927,17 @@
                     <v-card-text v-else class="text-center py-8">
                       <v-icon icon="mdi-motorbike-off" size="48" class="text-medium-emphasis mb-3" />
                       <p class="text-body-2 text-medium-emphasis">No rider assigned</p>
-                      <v-btn color="primary" variant="outlined" size="small" class="mt-2">
-                        <v-icon start>mdi-plus</v-icon>
-                        Assign Rider
-                      </v-btn>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-tabs-window-item>
-            <v-tabs-window-item value="ai-automation" class="pa-6">
-              <v-row>
-                <!-- Automation Controls -->
-                <v-col cols="12" md="6">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-cog-sync" class="me-2" color="primary" />
-                      Automation Settings
-                    </v-card-title>
-                    <v-card-text>
-                      <div class="automation-controls">
-                        <v-switch
-                          v-model="automationSettings.autoRiderAssignment"
-                          label="Auto Rider Assignment"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                        />
-                        <v-switch
-                          v-model="automationSettings.smartRouting"
-                          label="Smart Route Optimization"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                        />
-                        <v-switch
-                          v-model="automationSettings.predictiveAlerts"
-                          label="Predictive Delay Alerts"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                        />
-                        <v-switch
-                          v-model="automationSettings.autoStatusUpdates"
-                          label="Auto Status Updates"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                        />
-                        <v-switch
-                          v-model="automationSettings.fraudDetection"
-                          label="Real-time Fraud Detection"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                        />
-                        <v-switch
-                          v-model="automationSettings.customerSentimentTracking"
-                          label="Customer Sentiment Analysis"
-                          color="primary"
-                          density="compact"
-                          hide-details
-                        />
-                      </div>
-
-                      <v-divider class="my-4" />
-
-                      <div class="text-subtitle-2 mb-3">AI Models Performance</div>
-                      <div class="ai-models">
-                        <div class="model-item">
-                          <div class="d-flex justify-space-between align-center">
-                            <span>Route Optimization</span>
-                            <v-chip size="small" color="success">98.5% accuracy</v-chip>
-                          </div>
-                          <v-progress-linear value="98.5" color="success" height="4" />
-                        </div>
-                        <div class="model-item">
-                          <div class="d-flex justify-space-between align-center">
-                            <span>Delivery Prediction</span>
-                            <v-chip size="small" color="success">94.2% accuracy</v-chip>
-                          </div>
-                          <v-progress-linear value="94.2" color="success" height="4" />
-                        </div>
-                        <div class="model-item">
-                          <div class="d-flex justify-space-between align-center">
-                            <span>Fraud Detection</span>
-                            <v-chip size="small" color="warning">87.8% accuracy</v-chip>
-                          </div>
-                          <v-progress-linear value="87.8" color="warning" height="4" />
-                        </div>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-
-                <!-- AI Analytics -->
-                <v-col cols="12" md="6">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-chart-line" class="me-2" color="primary" />
-                      AI Analytics Dashboard
-                    </v-card-title>
-                    <v-card-text>
-                      <!-- Real-time Processing Status -->
-                      <div class="ai-processing-status mb-4">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-subtitle-2">AI Processing Status</span>
-                          <v-chip size="small" color="success" variant="flat">
-                            <v-icon start size="small">mdi-check-circle</v-icon>
-                            Active
-                          </v-chip>
-                        </div>
-                        <v-progress-linear
-                          :model-value="aiProcessingLoad"
-                          color="primary"
-                          height="8"
-                          rounded
-                        >
-                          <template #default="{ value }">
-                            <span class="text-caption">{{ Math.ceil(value) }}% Load</span>
-                          </template>
-                        </v-progress-linear>
-                      </div>
-
-                      <!-- Automation Statistics -->
-                      <div class="automation-stats">
-                        <div class="stat-row">
-                          <span>Orders Auto-Processed Today:</span>
-                          <strong>{{ todayStats.autoProcessed || 245 }}</strong>
-                        </div>
-                        <div class="stat-row">
-                          <span>AI Cost Savings (24h):</span>
-                          <strong class="text-success">{{ formatCurrency(todayStats.costSavings || 1250) }}</strong>
-                        </div>
-                        <div class="stat-row">
-                          <span>Route Optimizations:</span>
-                          <strong>{{ todayStats.routeOptimizations || 89 }}</strong>
-                        </div>
-                        <div class="stat-row">
-                          <span>Fraud Incidents Prevented:</span>
-                          <strong class="text-error">{{ todayStats.fraudPrevented || 3 }}</strong>
-                        </div>
-                        <div class="stat-row">
-                          <span>Average Delivery Accuracy:</span>
-                          <strong>{{ todayStats.deliveryAccuracy || 96.7 }}%</strong>
-                        </div>
-                      </div>
-
-                      <v-btn
-                        color="primary"
+                      <v-select
+                        v-if="isCreateMode || editingOrder"
+                        v-model="orderEdit.rider_id"
+                        :items="riderOptions"
+                        item-title="name"
+                        item-value="id"
                         variant="outlined"
-                        block
-                        class="mt-4"
-                        @click="openAIAnalytics"
-                      >
-                        <v-icon start>mdi-chart-box</v-icon>
-                        Full AI Analytics
-                      </v-btn>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-
-              <!-- AI Training & Learning -->
-              <v-row class="mt-6">
-                <v-col cols="12">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-school" class="me-2" color="primary" />
-                      Machine Learning Pipeline
-                    </v-card-title>
-                    <v-card-text>
-                      <v-row>
-                        <v-col cols="12" md="4">
-                          <div class="learning-module">
-                            <v-icon icon="mdi-database" size="32" color="info" class="mb-2" />
-                            <h4>Data Collection</h4>
-                            <p class="text-caption">Real-time order, delivery, and customer data ingestion</p>
-                            <v-progress-linear value="100" color="info" height="4" />
-                            <div class="text-caption mt-1">Status: Active</div>
-                          </div>
-                        </v-col>
-                        <v-col cols="12" md="4">
-                          <div class="learning-module">
-                            <v-icon icon="mdi-brain" size="32" color="warning" class="mb-2" />
-                            <h4>Model Training</h4>
-                            <p class="text-caption">Continuous learning from delivery patterns and outcomes</p>
-                            <v-progress-linear value="87" color="warning" height="4" />
-                            <div class="text-caption mt-1">Next Training: 2 hours</div>
-                          </div>
-                        </v-col>
-                        <v-col cols="12" md="4">
-                          <div class="learning-module">
-                            <v-icon icon="mdi-rocket-launch" size="32" color="success" class="mb-2" />
-                            <h4>Model Deployment</h4>
-                            <p class="text-caption">Auto-deployment of improved models to production</p>
-                            <v-progress-linear value="94" color="success" height="4" />
-                            <div class="text-caption mt-1">Last Deploy: 6 hours ago</div>
-                          </div>
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-tabs-window-item>
-
-            <!-- Smart Routing Tab -->
-            <v-tabs-window-item value="smart-routing" class="pa-6">
-              <v-row>
-                <v-col cols="12" md="8">
-                  <v-card variant="outlined">
-                    <v-card-title class="d-flex align-center justify-space-between">
-                      <div class="d-flex align-center">
-                        <v-icon icon="mdi-map-marker-path" class="me-2" color="primary" />
-                        AI Route Optimization
-                      </div>
-                      <div class="d-flex gap-2">
-                        <v-btn
-                          color="success"
-                          variant="outlined"
-                          size="small"
-                          @click="recalculateRoute"
-                          :loading="optimizing"
-                        >
-                          <v-icon start>mdi-refresh</v-icon>
-                          Recalculate
-                        </v-btn>
-                        <v-btn
-                          color="primary"
-                          variant="flat"
-                          size="small"
-                          @click="applyOptimizedRoute"
-                          :disabled="!routeOptimized"
-                        >
-                          <v-icon start>mdi-check</v-icon>
-                          Apply Route
-                        </v-btn>
-                      </div>
-                    </v-card-title>
-                    <v-card-text>
-                      <!-- Route Map Placeholder -->
-                      <div class="route-map-container mb-4">
-                        <div class="route-map-placeholder">
-                          <v-icon icon="mdi-map" size="64" color="primary" />
-                          <p class="text-h6 mt-2">Interactive Route Map</p>
-                          <p class="text-body-2 text-medium-emphasis">
-                            Real-time route optimization with traffic, weather, and delivery constraints
-                          </p>
-                        </div>
-                      </div>
-
-                      <!-- Route Details -->
-                      <div class="route-details">
-                        <v-row>
-                          <v-col cols="6" md="3">
-                            <div class="route-metric">
-                              <div class="metric-value text-h6 text-primary">{{ routeData.distance }}km</div>
-                              <div class="metric-label">Total Distance</div>
-                              <div class="metric-improvement text-success">
-                                <v-icon size="small">mdi-arrow-down</v-icon>
-                                -{{ routeData.distanceSaved }}km saved
-                              </div>
-                            </div>
-                          </v-col>
-                          <v-col cols="6" md="3">
-                            <div class="route-metric">
-                              <div class="metric-value text-h6 text-warning">{{ routeData.duration }}min</div>
-                              <div class="metric-label">Est. Duration</div>
-                              <div class="metric-improvement text-success">
-                                <v-icon size="small">mdi-arrow-down</v-icon>
-                                -{{ routeData.timeSaved }}min saved
-                              </div>
-                            </div>
-                          </v-col>
-                          <v-col cols="6" md="3">
-                            <div class="route-metric">
-                              <div class="metric-value text-h6 text-info">{{ formatCurrency(routeData.fuelCost) }}</div>
-                              <div class="metric-label">Fuel Cost</div>
-                              <div class="metric-improvement text-success">
-                                <v-icon size="small">mdi-arrow-down</v-icon>
-                                {{ formatCurrency(routeData.fuelSaved) }} saved
-                              </div>
-                            </div>
-                          </v-col>
-                          <v-col cols="6" md="3">
-                            <div class="route-metric">
-                              <div class="metric-value text-h6 text-error">{{ routeData.co2 }}kg</div>
-                              <div class="metric-label">CO₂ Emissions</div>
-                              <div class="metric-improvement text-success">
-                                <v-icon size="small">mdi-arrow-down</v-icon>
-                                -{{ routeData.co2Saved }}kg reduced
-                              </div>
-                            </div>
-                          </v-col>
-                        </v-row>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-
-                <v-col cols="12" md="4">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-cog" class="me-2" color="primary" />
-                      Route Optimization Settings
-                    </v-card-title>
-                    <v-card-text>
-                      <div class="optimization-settings">
-                        <div class="setting-item">
-                          <v-switch
-                            v-model="routeSettings.avoidTraffic"
-                            label="Avoid Traffic"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                          />
-                        </div>
-                        <div class="setting-item">
-                          <v-switch
-                            v-model="routeSettings.weatherConsideration"
-                            label="Weather Consideration"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                          />
-                        </div>
-                        <div class="setting-item">
-                          <v-switch
-                            v-model="routeSettings.prioritizeSpeed"
-                            label="Prioritize Speed"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                          />
-                        </div>
-                        <div class="setting-item">
-                          <v-switch
-                            v-model="routeSettings.ecoFriendly"
-                            label="Eco-Friendly Route"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                          />
-                        </div>
-
-                        <v-divider class="my-4" />
-
-                        <div class="text-subtitle-2 mb-3">Optimization Algorithm</div>
-                        <v-select
-                          v-model="routeSettings.algorithm"
-                          :items="['Fastest', 'Shortest', 'Most Economical', 'Balanced', 'AI Hybrid']"
-                          label="Algorithm"
-                          variant="outlined"
-                          density="compact"
-                        />
-
-                        <div class="text-subtitle-2 mb-3 mt-4">Vehicle Constraints</div>
-                        <v-text-field
-                          v-model="routeSettings.vehicleCapacity"
-                          label="Vehicle Capacity (kg)"
-                          type="number"
-                          variant="outlined"
-                          density="compact"
-                        />
-                        <v-text-field
-                          v-model="routeSettings.maxDeliveryTime"
-                          label="Max Delivery Window (hours)"
-                          type="number"
-                          variant="outlined"
-                          density="compact"
-                        />
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-tabs-window-item>
-
-            <!-- Predictive Analytics Tab -->
-            <v-tabs-window-item value="predictive" class="pa-6">
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-crystal-ball" class="me-2" color="primary" />
-                      Delivery Predictions
-                    </v-card-title>
-                    <v-card-text>
-                      <div class="prediction-item">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-subtitle-2">On-Time Delivery Probability</span>
-                          <v-chip :color="getProbabilityColor(predictions.onTime)" size="small">
-                            {{ predictions.onTime }}%
-                          </v-chip>
-                        </div>
-                        <v-progress-linear 
-                          :model-value="predictions.onTime" 
-                          :color="getProbabilityColor(predictions.onTime)"
-                          height="8" 
-                        />
-                      </div>
-
-                      <div class="prediction-item">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-subtitle-2">Customer Satisfaction Score</span>
-                          <v-chip color="success" size="small">{{ predictions.satisfaction }}/5</v-chip>
-                        </div>
-                        <v-progress-linear 
-                          :model-value="(predictions.satisfaction / 5) * 100" 
-                          color="success"
-                          height="8" 
-                        />
-                      </div>
-
-                      <div class="prediction-item">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-subtitle-2">Weather Impact Risk</span>
-                          <v-chip :color="getRiskColor(predictions.weatherRisk)" size="small">
-                            {{ predictions.weatherRisk }}%
-                          </v-chip>
-                        </div>
-                        <v-progress-linear 
-                          :model-value="predictions.weatherRisk" 
-                          :color="getRiskColor(predictions.weatherRisk)"
-                          height="8" 
-                        />
-                      </div>
-
-                      <div class="prediction-item">
-                        <div class="d-flex justify-space-between align-center mb-2">
-                          <span class="text-subtitle-2">Return/Rejection Probability</span>
-                          <v-chip :color="getRiskColor(predictions.returnRisk)" size="small">
-                            {{ predictions.returnRisk }}%
-                          </v-chip>
-                        </div>
-                        <v-progress-linear 
-                          :model-value="predictions.returnRisk" 
-                          :color="getRiskColor(predictions.returnRisk)"
-                          height="8" 
-                        />
-                      </div>
-
-                      <v-alert
-                        v-if="predictions.alerts.length > 0"
-                        type="warning"
-                        variant="tonal"
-                        class="mt-4"
-                      >
-                        <div class="text-subtitle-2 mb-1">AI Predictions Alert</div>
-                        <ul class="text-body-2">
-                          <li v-for="alert in predictions.alerts" :key="alert">{{ alert }}</li>
-                        </ul>
-                      </v-alert>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-
-                <v-col cols="12" md="6">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-trending-up" class="me-2" color="primary" />
-                      Demand Forecasting
-                    </v-card-title>
-                    <v-card-text>
-                      <div class="forecast-chart-placeholder mb-4">
-                        <v-icon icon="mdi-chart-line" size="48" color="primary" />
-                        <p class="text-subtitle-1 mt-2">7-Day Demand Forecast</p>
-                        <p class="text-caption text-medium-emphasis">
-                          AI-powered prediction based on historical patterns, seasonality, and external factors
-                        </p>
-                      </div>
-
-                      <div class="forecast-insights">
-                        <div class="insight-item">
-                          <v-icon icon="mdi-trending-up" color="success" size="small" class="me-2" />
-                          <span>Peak demand expected tomorrow 2-4 PM</span>
-                        </div>
-                        <div class="insight-item">
-                          <v-icon icon="mdi-weather-rainy" color="warning" size="small" class="me-2" />
-                          <span>Weather may impact deliveries on Friday</span>
-                        </div>
-                        <div class="insight-item">
-                          <v-icon icon="mdi-account-group" color="info" size="small" class="me-2" />
-                          <span>15% increase in orders expected due to local event</span>
-                        </div>
-                        <div class="insight-item">
-                          <v-icon icon="mdi-truck" color="error" size="small" class="me-2" />
-                          <span>Recommend adding 2 extra riders for weekend</span>
-                        </div>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-
-              <!-- Recommended Actions -->
-              <v-row class="mt-6">
-                <v-col cols="12">
-                  <v-card variant="outlined">
-                    <v-card-title>
-                      <v-icon icon="mdi-lightbulb" class="me-2" color="primary" />
-                      AI Recommendations
-                    </v-card-title>
-                    <v-card-text>
-                      <v-row>
-                        <v-col cols="12" md="4" v-for="recommendation in aiRecommendations" :key="recommendation.id">
-                          <v-card variant="tonal" :color="recommendation.priority">
-                            <v-card-text>
-                              <div class="d-flex align-center mb-2">
-                                <v-icon :icon="recommendation.icon" class="me-2" />
-                                <span class="text-subtitle-2">{{ recommendation.title }}</span>
-                              </div>
-                              <p class="text-body-2 mb-3">{{ recommendation.description }}</p>
-                              <div class="d-flex justify-space-between align-center">
-                                <v-chip size="small" variant="outlined">
-                                  Impact: {{ recommendation.impact }}
-                                </v-chip>
-                                <v-btn
-                                  size="small"
-                                  variant="outlined"
-                                  @click="implementRecommendation(recommendation)"
-                                >
-                                  Apply
-                                </v-btn>
-                              </div>
-                            </v-card-text>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-tabs-window-item>
-
-            <!-- Smart Communications Tab -->
-            <v-tabs-window-item value="communications" class="pa-6">
-              <v-row>
-                <v-col cols="12" md="8">
-                  <v-card variant="outlined">
-                    <v-card-title class="d-flex align-center justify-space-between">
-                      <div class="d-flex align-center">
-                        <v-icon icon="mdi-message-processing" class="me-2" color="primary" />
-                        AI-Powered Communications
-                      </div>
-                      <v-btn color="primary" variant="outlined" size="small" @click="generateSmartMessage">
-                        <v-icon start>mdi-auto-fix</v-icon>
-                        Generate Message
-                      </v-btn>
-                    </v-card-title>
-                    <v-card-text>
-                      <!-- AI Message Suggestions -->
-                      <div class="message-suggestions mb-4">
-                        <div class="text-subtitle-2 mb-3">AI Message Suggestions</div>
-                        <div class="suggestion-cards">
-                          <v-card 
-                            v-for="suggestion in messageSuggestions" 
-                            :key="suggestion.type"
-                            variant="outlined"
-                            class="suggestion-card"
-                            @click="selectMessageSuggestion(suggestion)"
-                          >
-                            <v-card-text class="pa-3">
-                              <div class="d-flex align-center mb-2">
-                                <v-icon :icon="suggestion.icon" size="small" class="me-2" />
-                                <span class="text-subtitle-2">{{ suggestion.title }}</span>
-                                <v-spacer />
-                                <v-chip size="x-small" :color="suggestion.urgency">{{ suggestion.type }}</v-chip>
-                              </div>
-                              <p class="text-body-2">{{ suggestion.preview }}</p>
-                            </v-card-text>
-                          </v-card>
-                        </div>
-                      </div>
-
-                      <!-- Voice-to-Text -->
-                      <v-card variant="tonal" color="info" class="mb-4">
-                        <v-card-text>
-                          <div class="d-flex align-center">
-                            <v-btn
-                              :icon="isRecording ? 'mdi-stop' : 'mdi-microphone'"
-                              :color="isRecording ? 'error' : 'primary'"
-                              variant="flat"
-                              @click="toggleVoiceRecording"
-                              class="me-3"
-                            />
-                            <div>
-                              <div class="text-subtitle-2">Voice-to-Text</div>
-                              <div class="text-caption">
-                                {{ isRecording ? 'Recording... Tap to stop' : 'Tap to record your message' }}
-                              </div>
-                            </div>
-                          </div>
-                          <div v-if="voiceTranscript" class="mt-3 pa-3 bg-surface rounded">
-                            <div class="text-caption text-medium-emphasis mb-1">Transcribed:</div>
-                            <div class="text-body-2">{{ voiceTranscript }}</div>
-                          </div>
-                        </v-card-text>
-                      </v-card>
-
-                      <!-- Message Composer -->
-                      <v-textarea
-                        v-model="messageComposer.content"
-                        label="Compose Message"
-                        variant="outlined"
-                        rows="4"
-                        placeholder="Type your message or use AI suggestions..."
+                        density="compact"
+                        label="Select Rider"
+                        class="mt-2"
                       />
-                      
-                      <div class="d-flex align-center gap-2 mt-3">
-                        <v-select
-                          v-model="messageComposer.tone"
-                          :items="['Professional', 'Friendly', 'Urgent', 'Apologetic', 'Informative']"
-                          label="Tone"
-                          variant="outlined"
-                          density="compact"
-                          style="max-width: 150px;"
-                        />
-                        <v-select
-                          v-model="messageComposer.language"
-                          :items="['English', 'Spanish', 'French', 'German', 'Chinese']"
-                          label="Language"
-                          variant="outlined"
-                          density="compact"
-                          style="max-width: 120px;"
-                        />
-                        <v-spacer />
-                        <v-btn color="info" variant="outlined" @click="improveMessage">
-                          <v-icon start>mdi-magic-staff</v-icon>
-                          AI Improve
-                        </v-btn>
-                        <v-btn color="success" variant="flat" @click="sendMessage">
-                          <v-icon start>mdi-send</v-icon>
-                          Send
-                        </v-btn>
-                      </div>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-
-                <v-col cols="12" md="4">
-                  <v-card variant="outlined" class="h-100">
-                    <v-card-title>
-                      <v-icon icon="mdi-chart-arc" class="me-2" color="primary" />
-                      Communication Analytics
-                    </v-card-title>
-                    <v-card-text>
-                      <!-- Customer Sentiment -->
-                      <div class="sentiment-analysis mb-4">
-                        <div class="text-subtitle-2 mb-2">Customer Sentiment</div>
-                        <div class="sentiment-score">
-                          <v-progress-circular
-                            :model-value="customerSentiment.score"
-                            :color="getSentimentColor(customerSentiment.score)"
-                            size="80"
-                            width="8"
-                          >
-                            <span class="text-h6">{{ customerSentiment.score }}%</span>
-                          </v-progress-circular>
-                          <div class="sentiment-label mt-2">
-                            <v-chip :color="getSentimentColor(customerSentiment.score)" size="small">
-                              {{ customerSentiment.label }}
-                            </v-chip>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Communication Stats -->
-                      <div class="communication-stats">
-                        <div class="stat-item">
-                          <div class="stat-label">Messages Sent Today</div>
-                          <div class="stat-value">{{ communicationStats.messagesSent }}</div>
-                        </div>
-                        <div class="stat-item">
-                          <div class="stat-label">Response Rate</div>
-                          <div class="stat-value text-success">{{ communicationStats.responseRate }}%</div>
-                        </div>
-                        <div class="stat-item">
-                          <div class="stat-label">Avg Response Time</div>
-                          <div class="stat-value">{{ communicationStats.avgResponseTime }}</div>
-                        </div>
-                        <div class="stat-item">
-                          <div class="stat-label">Customer Satisfaction</div>
-                          <div class="stat-value text-info">{{ communicationStats.satisfaction }}/5</div>
-                        </div>
-                      </div>
-
-                      <!-- AI Chatbot Integration -->
-                      <v-divider class="my-4" />
-                      <div class="chatbot-section">
-                        <div class="text-subtitle-2 mb-2">AI Chatbot Status</div>
-                        <div class="d-flex align-center justify-space-between">
-                          <div>
-                            <div class="text-body-2">Auto-Response</div>
-                            <div class="text-caption text-medium-emphasis">Handling {{ chatbotStats.activeChats }} chats</div>
-                          </div>
-                          <v-switch
-                            v-model="chatbotEnabled"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                          />
-                        </div>
-                      </div>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -1748,93 +947,112 @@
         </div>
       </v-card-text>
 
-      <!-- Enhanced Actions with AI -->
+      <!-- Actions -->
       <v-divider />
       <v-card-actions class="pa-6">
-        <v-btn
-          color="error"
-          variant="outlined"
-          @click="deleteOrder"
-          :disabled="!order"
-        >
-          <v-icon icon="mdi-delete" start />
-          Delete Order
-        </v-btn>
-        <v-btn
-          color="info"
-          variant="outlined"
-          @click="runFullAIAnalysis"
-          :disabled="!order"
-          :loading="aiAnalyzing"
-        >
-          <v-icon icon="mdi-brain" start />
-          Full AI Analysis
-        </v-btn>
-        <v-spacer />
-        <v-btn
-          variant="outlined"
-          @click="exportAIReport"
-          :disabled="!order"
-          class="me-3"
-        >
-          <v-icon icon="mdi-file-chart" start />
-          AI Report
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          @click="autoExecuteOptimizations"
-          :disabled="!order"
-          :loading="executing"
-        >
-          <v-icon icon="mdi-auto-fix" start />
-          Auto-Execute All
-        </v-btn>
+        <div v-if="isCreateMode" class="d-flex w-100 gap-3">
+          <v-btn
+            variant="outlined"
+            @click="resetForm"
+          >
+            <v-icon icon="mdi-refresh" start />
+            Reset Form
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            @click="closeDialog"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="success"
+            variant="flat"
+            @click="createOrder"
+            :loading="saving"
+            :disabled="!canCreateOrder"
+          >
+            <v-icon icon="mdi-plus" start />
+            Create Order
+          </v-btn>
+        </div>
+        
+        <div v-else class="d-flex w-100 gap-3">
+          <v-btn
+            color="error"
+            variant="outlined"
+            @click="deleteOrder"
+            :disabled="!order"
+          >
+            <v-icon icon="mdi-delete" start />
+            Delete Order
+          </v-btn>
+          <v-btn
+            color="info"
+            variant="outlined"
+            @click="duplicateOrder"
+            :disabled="!order"
+          >
+            <v-icon icon="mdi-content-duplicate" start />
+            Duplicate Order
+          </v-btn>
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            @click="printOrder"
+            :disabled="!order"
+            class="me-3"
+          >
+            <v-icon icon="mdi-printer" start />
+            Print
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            @click="saveAllChanges"
+            :disabled="!order || !hasChanges"
+            :loading="saving"
+          >
+            <v-icon icon="mdi-content-save" start />
+            Save All Changes
+          </v-btn>
+        </div>
       </v-card-actions>
     </v-card>
 
-    <!-- AI Assistant Dialog -->
-    <v-dialog v-model="aiAssistantDialog" max-width="600">
+    <!-- Confirmation Dialogs -->
+    <v-dialog v-model="deleteConfirmDialog" max-width="400">
       <v-card>
-        <v-card-title class="d-flex align-center">
-          <v-icon icon="mdi-robot" class="me-2" color="primary" />
-          AI Assistant
+        <v-card-title class="text-h6">
+          <v-icon icon="mdi-alert" color="error" class="me-2" />
+          Confirm Delete
         </v-card-title>
         <v-card-text>
-          <div class="ai-chat-container">
-            <div class="ai-messages">
-              <div v-for="message in aiMessages" :key="message.id" class="ai-message">
-                <div class="message-avatar">
-                  <v-avatar size="32" :color="message.sender === 'ai' ? 'primary' : 'secondary'">
-                    <v-icon :icon="message.sender === 'ai' ? 'mdi-robot' : 'mdi-account'" />
-                  </v-avatar>
-                </div>
-                <div class="message-content">
-                  <div class="message-text">{{ message.text }}</div>
-                  <div class="message-time">{{ formatTime(message.timestamp) }}</div>
-                </div>
-              </div>
-            </div>
-            <v-text-field
-              v-model="aiQuery"
-              label="Ask AI about this order..."
-              variant="outlined"
-              density="compact"
-              append-icon="mdi-send"
-              @click:append="sendAIQuery"
-              @keydown.enter="sendAIQuery"
-              :loading="aiProcessing"
-            />
-          </div>
+          Are you sure you want to delete this order? This action cannot be undone.
         </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="deleteConfirmDialog = false">Cancel</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmDelete" :loading="saving">
+            Delete
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-dialog>
 </template>
 
 <script setup>
-import { computed, toRefs, ref, watch, onMounted } from 'vue'
+import { computed, toRefs, ref, watch, nextTick } from 'vue'
 import { useOrderStore } from '@/stores/orderStore'
+
+// Props
+const props = defineProps({
+  createMode: {
+    type: Boolean,
+    default: false
+  }
+})
 
 // Pinia store usage
 const orderStore = useOrderStore()
@@ -1843,14 +1061,12 @@ const { dialog } = toRefs(orderStore)
 // Local state
 const activeTab = ref('overview')
 const saving = ref(false)
-const aiProcessing = ref(false)
-const optimizing = ref(false)
-const validating = ref(false)
-const predicting = ref(false)
-const checkingFraud = ref(false)
-const assigning = ref(false)
-const aiAnalyzing = ref(false)
-const executing = ref(false)
+const deleteConfirmDialog = ref(false)
+
+// Loading states
+const loadingClients = ref(false)
+const loadingVendors = ref(false)
+const loadingProducts = ref(false)
 
 // Editing states
 const editingOrder = ref(false)
@@ -1864,15 +1080,19 @@ const clientEdit = ref({})
 const itemsEdit = ref([])
 const chargesEdit = ref({})
 
+// Create mode state
+const isCreateMode = ref(props.createMode)
+
 // Options
-const productOptions = ref([
-  { id: 1, product_name: 'Laptop Computer', sku: 'LT001' },
-  { id: 2, product_name: 'Wireless Mouse', sku: 'MS002' },
-  { id: 3, product_name: 'Keyboard', sku: 'KB003' }
-])
+const clientOptions = ref([])
+const vendorOptions = ref([])
+const productOptions = ref([])
+const agentOptions = ref([])
+const riderOptions = ref([])
 
-
-
+const platformOptions = ['Website', 'Mobile App', 'Phone', 'WhatsApp', 'Facebook', 'Instagram']
+const statusOptions = ['Inprogress', 'active', 'inactive']
+const paymentMethods = ['Cash on Delivery', 'Card', 'Bank Transfer', 'Mobile Money', 'PayPal']
 
 // Item table headers
 const itemHeaders = [
@@ -1884,196 +1104,199 @@ const itemHeaders = [
   { title: 'Actions', key: 'actions', sortable: false, align: 'center' }
 ]
 
-// AI and Automation state
-const aiInsights = ref([
-  {
-    message: "Route can be optimized to save 15 minutes and $12 in fuel costs",
-    action: { label: "Optimize Route", type: "route_optimization" }
-  },
-  {
-    message: "Customer satisfaction score is predicted to be high (4.7/5) based on delivery time",
-    action: null
-  },
-  {
-    message: "Weather conditions may cause 10-minute delay. Consider proactive communication",
-    action: { label: "Send Alert", type: "weather_alert" }
-  }
-])
-
-const currentInsightIndex = ref(0)
-const automationAlerts = ref({ overview: 2, items: 0, routing: 1 })
-const routeOptimized = ref(false)
-
-// Automation settings
-const automationSettings = ref({
-  autoRiderAssignment: true,
-  smartRouting: true,
-  predictiveAlerts: true,
-  autoStatusUpdates: true,
-  fraudDetection: true,
-  customerSentimentTracking: true
-})
-
-// AI Processing metrics
-const aiProcessingLoad = ref(67)
-const todayStats = ref({
-  autoProcessed: 245,
-  costSavings: 1250,
-  routeOptimizations: 89,
-  fraudPrevented: 3,
-  deliveryAccuracy: 96.7
-})
-
-// Route data
-const routeData = ref({
-  distance: 12.4,
-  distanceSaved: 2.1,
-  duration: 35,
-  timeSaved: 8,
-  fuelCost: 15.80,
-  fuelSaved: 3.20,
-  co2: 4.2,
-  co2Saved: 0.8
-})
-
-const routeSettings = ref({
-  avoidTraffic: true,
-  weatherConsideration: true,
-  prioritizeSpeed: false,
-  ecoFriendly: true,
-  algorithm: 'AI Hybrid',
-  vehicleCapacity: 50,
-  maxDeliveryTime: 4
-})
-
-// Predictions
-const predictions = ref({
-  onTime: 87,
-  satisfaction: 4.3,
-  weatherRisk: 25,
-  returnRisk: 8,
-  alerts: [
-    "Traffic congestion detected on main route",
-    "Weather may impact delivery after 3 PM"
-  ]
-})
-
-// AI Recommendations
-const aiRecommendations = ref([
-  {
-    id: 1,
-    title: "Optimize Delivery Window",
-    description: "Adjust delivery time by 30 minutes to avoid traffic and improve efficiency",
-    impact: "High",
-    priority: "success",
-    icon: "mdi-clock-fast"
-  },
-  {
-    id: 2,
-    title: "Assign Premium Rider",
-    description: "Customer has VIP status. Recommend assigning top-rated rider for better experience",
-    impact: "Medium",
-    priority: "info",
-    icon: "mdi-star"
-  },
-  {
-    id: 3,
-    title: "Proactive Communication",
-    description: "Send update about potential weather delay to manage customer expectations",
-    impact: "Medium",
-    priority: "warning",
-    icon: "mdi-message-alert"
-  }
-])
-
-// Communications
-const messageSuggestions = ref([
-  {
-    type: "UPDATE",
-    title: "Delivery Update",
-    preview: "Your order is on the way and will arrive in approximately 25 minutes...",
-    icon: "mdi-truck-delivery",
-    urgency: "info"
-  },
-  {
-    type: "DELAY",
-    title: "Delay Notification",
-    preview: "We're experiencing a slight delay due to traffic conditions...",
-    icon: "mdi-clock-alert",
-    urgency: "warning"
-  },
-  {
-    type: "COMPLETED",
-    title: "Delivery Confirmation",
-    preview: "Your order has been successfully delivered. Thank you for choosing us!",
-    icon: "mdi-check-circle",
-    urgency: "success"
-  }
-])
-
-const messageComposer = ref({
-  content: '',
-  tone: 'Professional',
-  language: 'English'
-})
-
-const isRecording = ref(false)
-const voiceTranscript = ref('')
-
-const customerSentiment = ref({
-  score: 78,
-  label: 'Positive'
-})
-
-const communicationStats = ref({
-  messagesSent: 42,
-  responseRate: 89,
-  avgResponseTime: '3.2 min',
-  satisfaction: 4.5
-})
-
-const chatbotEnabled = ref(true)
-const chatbotStats = ref({
-  activeChats: 15
-})
-
-// AI Assistant
-const aiAssistantDialog = ref(false)
-const aiQuery = ref('')
-const aiMessages = ref([
-  {
-    id: 1,
-    sender: 'ai',
-    text: 'Hello! I\'m your AI assistant. I can help you optimize this order, predict issues, or answer questions about delivery logistics.',
-    timestamp: new Date()
-  }
-])
-
 // Computed properties
 const order = computed(() => orderStore.selectedOrder)
 const isLoading = computed(() => orderStore.loading.orders)
 
-const orderTotal = computed(() => {
-  if (!order.value?.orderItems) return 0
-  return order.value.orderItems.reduce((sum, item) => {
-    return sum + (item.total_price || 0)
-  }, 0)
-})
-
-// Lifecycle
-onMounted(() => {
-  // Simulate real-time AI processing
-  setInterval(() => {
-    aiProcessingLoad.value = Math.max(20, Math.min(95, aiProcessingLoad.value + (Math.random() - 0.5) * 10))
-  }, 5000)
-
-  // Rotate AI insights
-  setInterval(() => {
-    if (aiInsights.value.length > 0) {
-      currentInsightIndex.value = (currentInsightIndex.value + 1) % aiInsights.value.length
+const currentOrder = computed(() => {
+  if (isCreateMode.value) {
+    return {
+      ...orderEdit.value,
+      orderItems: itemsEdit.value,
+      client: clientOptions.value.find(c => c.id === orderEdit.value.client_id),
+      vendor: vendorOptions.value.find(v => v.id === orderEdit.value.vendor_id),
+      agent: agentOptions.value.find(a => a.id === orderEdit.value.agent_id),
+      rider: riderOptions.value.find(r => r.id === orderEdit.value.rider_id)
     }
-  }, 10000)
+  }
+  return order.value || {}
 })
+
+const hasChanges = computed(() => {
+  return editingOrder.value || editingClient.value || editingItems.value || editingCharges.value || isCreateMode.value
+})
+
+const canCreateOrder = computed(() => {
+  return isCreateMode.value && 
+         orderEdit.value.client_id && 
+         itemsEdit.value.length > 0 && 
+         itemsEdit.value.every(item => item.product_id && item.quantity > 0)
+})
+
+// Initialize create mode
+watch(() => props.createMode, (newVal) => {
+  isCreateMode.value = newVal
+  if (newVal) {
+    initializeCreateMode()
+  }
+}, { immediate: true })
+
+// Initialize create mode data
+function initializeCreateMode() {
+  orderEdit.value = {
+    order_no: '',
+    reference: '',
+    platform: 'Website',
+    status: 'Inprogress',
+    client_id: null,
+    vendor_id: null,
+    agent_id: null,
+    rider_id: null,
+    delivery_date: null,
+    weight: 0,
+    customer_notes: ''
+  }
+  
+  itemsEdit.value = []
+  
+  chargesEdit.value = {
+    shipping_charges: 0,
+    charges: 0,
+    discount: 0,
+    payment_method: 'Cash on Delivery',
+    amount_paid: 0
+  }
+  
+  clientEdit.value = {
+    name: '',
+    phone_number: '',
+    email: '',
+    address: '',
+    city: ''
+  }
+  
+  // Load options
+  loadAllOptions()
+}
+
+// Load all dropdown options
+async function loadAllOptions() {
+  try {
+    await Promise.all([
+      loadClients(),
+      loadVendors(),
+      loadAgents(),
+      loadRiders()
+    ])
+  } catch (error) {
+    console.error('Error loading options:', error)
+  }
+}
+
+// Load clients
+async function loadClients(search = '') {
+  loadingClients.value = true
+  try {
+    const response = await fetch(`/api/clients?search=${search}&limit=50`)
+    if (response.ok) {
+      const data = await response.json()
+      clientOptions.value = data.clients || data
+    }
+  } catch (error) {
+    console.error('Error loading clients:', error)
+  } finally {
+    loadingClients.value = false
+  }
+}
+
+// Load vendors
+async function loadVendors() {
+  loadingVendors.value = true
+  try {
+    const response = await fetch('/api/v1/vendors')
+    if (response.ok) {
+      const data = await response.json()
+      vendorOptions.value = data.vendors || data
+    }
+  } catch (error) {
+    console.error('Error loading vendors:', error)
+  } finally {
+    loadingVendors.value = false
+  }
+}
+
+// Load agents
+async function loadAgents() {
+  try {
+    const response = await fetch('/api/v1/agents')
+    if (response.ok) {
+      const data = await response.json()
+      agentOptions.value = data.agents || data
+    }
+  } catch (error) {
+    console.error('Error loading agents:', error)
+  }
+}
+
+// Load riders
+async function loadRiders() {
+  try {
+    const response = await fetch('/api/v1/riders')
+    if (response.ok) {
+      const data = await response.json()
+      riderOptions.value = data.riders || data
+    }
+  } catch (error) {
+    console.error('Error loading riders:', error)
+  }
+}
+
+// Load products by vendor
+async function loadProductsByVendor(vendorId) {
+  if (!vendorId) {
+    productOptions.value = []
+    return
+  }
+  
+  loadingProducts.value = true
+  try {
+    const response = await fetch(`/api/products/vendor/${vendorId}`)
+    if (response.ok) {
+      const data = await response.json()
+      productOptions.value = data.products || data
+    }
+  } catch (error) {
+    console.error('Error loading products:', error)
+  } finally {
+    loadingProducts.value = false
+  }
+}
+
+// Search clients
+function searchClients(search) {
+  if (search && search.length > 2) {
+    loadClients(search)
+  }
+}
+
+// Vendor change handler
+function onVendorChange(vendorId) {
+  loadProductsByVendor(vendorId)
+  // Clear existing items when vendor changes
+  if (isCreateMode.value || editingItems.value) {
+    itemsEdit.value = []
+  }
+}
+
+// Product change handler
+function onProductChange(item) {
+  const product = productOptions.value.find(p => p.id === item.product_id)
+  if (product) {
+    item.price = product.price || 0
+    item.product = product
+    updateItemTotal(item)
+  }
+}
 
 // Helper functions
 function formatDate(dateStr) {
@@ -2084,11 +1307,6 @@ function formatDate(dateStr) {
 function formatDateTime(dateStr) {
   if (!dateStr) return '-'
   return new Date(dateStr).toLocaleString()
-}
-
-function formatTime(dateStr) {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 function formatCurrency(amount) {
@@ -2103,70 +1321,18 @@ function formatCurrency(amount) {
 function getStatusColor(status) {
   const colors = {
     'pending': 'warning',
-    'confirmed': 'info',
+    'inprogress': 'info',
+    'active': 'success',
+    'confirmed': 'success',
     'processing': 'primary',
     'completed': 'success',
-    'cancelled': 'error'
+    'cancelled': 'error',
+    'inactive': 'error'
   }
-  return colors[status?.toLowerCase()] || 'default'
-}
-
-function getRiskColor(score) {
-  if (score < 30) return 'success'
-  if (score < 70) return 'warning'
-  return 'error'
-}
-
-function getRiskProgressColor(score) {
-  if (score < 30) return 'success'
-  if (score < 70) return 'warning'
-  return 'error'
-}
-
-function getPriorityColor(priority) {
-  const colors = {
-    'low': 'success',
-    'standard': 'info',
-    'high': 'warning',
-    'urgent': 'error',
-    'critical': 'error'
+  if (typeof status === 'string') {
+    return colors[status.toLowerCase()] || 'default'
   }
-  return colors[priority?.toLowerCase()] || 'info'
-}
-
-function getAccuracyColor(accuracy) {
-  if (accuracy >= 90) return 'success'
-  if (accuracy >= 70) return 'warning'
-  return 'error'
-}
-
-function getFraudColor(score) {
-  if (score < 20) return 'success'
-  if (score < 50) return 'warning'
-  return 'error'
-}
-
-function getProbabilityColor(prob) {
-  if (prob >= 80) return 'success'
-  if (prob >= 60) return 'warning'
-  return 'error'
-}
-
-function getSentimentColor(score) {
-  if (score >= 70) return 'success'
-  if (score >= 40) return 'warning'
-  return 'error'
-}
-
-function getPaymentStatusColor(status) {
-  const colors = {
-    'pending': 'warning',
-    'paid': 'success',
-    'partial': 'info',
-    'failed': 'error',
-    'refunded': 'secondary'
-  }
-  return colors[status?.toLowerCase()] || 'warning'
+  return 'default'
 }
 
 function getRiderStatusColor(status) {
@@ -2179,17 +1345,20 @@ function getRiderStatusColor(status) {
   return colors[status?.toLowerCase()] || 'default'
 }
 
-
-
-
 // Order editing functions
 function startEditingOrder() {
   editingOrder.value = true
   orderEdit.value = {
-    priority: order.value.priority,
-    service_type: order.value.service_type,
+    reference: order.value.reference,
+    platform: order.value.platform,
+    status: order.value.status,
+    client_id: order.value.client_id,
+    vendor_id: order.value.vendor_id,
+    agent_id: order.value.agent_id,
+    rider_id: order.value.rider_id,
     delivery_date: order.value.delivery_date,
-    weight: order.value.weight
+    weight: order.value.weight,
+    customer_notes: order.value.customer_notes
   }
 }
 
@@ -2255,10 +1424,7 @@ function cancelItemsEdit() {
 async function saveItemsChanges() {
   saving.value = true
   try {
-    // Update order items via API
-    console.log('Saving items changes:', itemsEdit.value)
-    // Here you would call the API to update items
-    // await orderStore.updateOrderItems(order.value.id, itemsEdit.value)
+    await orderStore.updateOrderItems(order.value.id, itemsEdit.value)
     editingItems.value = false
     itemsEdit.value = []
   } catch (error) {
@@ -2269,7 +1435,7 @@ async function saveItemsChanges() {
 }
 
 function addNewItem() {
-  itemsEdit.value.push({
+  const newItem = {
     id: `temp-${Date.now()}`,
     product_id: null,
     quantity: 1,
@@ -2277,11 +1443,12 @@ function addNewItem() {
     discount: 0,
     total_price: 0,
     product: { product_name: '', sku: '' }
-  })
+  }
+  itemsEdit.value.push(newItem)
 }
 
 function duplicateItem(item) {
-  const newItem = { ...item, id: `temp-${Date.now()}` }
+  const newItem = { ...item, id: `temp-${Date.now()}-${Math.random()}` }
   const index = itemsEdit.value.findIndex(i => i.id === item.id)
   itemsEdit.value.splice(index + 1, 0, newItem)
 }
@@ -2301,20 +1468,19 @@ function updateItemTotal(item) {
 }
 
 function calculateItemsTotal() {
-  if (editingItems.value) {
-    return itemsEdit.value.reduce((sum, item) => sum + (item.total_price || 0), 0)
-  }
-  return orderTotal.value
+  const items = (editingItems.value || isCreateMode.value) ? itemsEdit.value : (currentOrder.value.orderItems || [])
+  return items.reduce((sum, item) => sum + (item.total_price || 0), 0)
 }
 
 // Charges editing functions
 function startEditingCharges() {
   editingCharges.value = true
   chargesEdit.value = {
-    delivery_fee: order.value.delivery_fee || 0,
-    service_fee: order.value.service_fee || 0,
-    tax_amount: order.value.tax_amount || 0,
-    discount_amount: order.value.discount_amount || 0
+    shipping_charges: order.value.shipping_charges || 0,
+    charges: order.value.charges || 0,
+    discount: order.value.discount || 0,
+    payment_method: order.value.payment_method || 'Cash on Delivery',
+    amount_paid: order.value.amount_paid || 0
   }
 }
 
@@ -2338,268 +1504,182 @@ async function saveChargesChanges() {
 
 function calculateTotalWithCharges() {
   const subtotal = calculateItemsTotal()
-  if (editingCharges.value) {
-    const delivery = Number(chargesEdit.value.delivery_fee) || 0
-    const service = Number(chargesEdit.value.service_fee) || 0
-    const tax = Number(chargesEdit.value.tax_amount) || 0
-    const discount = Number(chargesEdit.value.discount_amount) || 0
-    return subtotal + delivery + service + tax - discount
-  }
+  const charges = (editingCharges.value || isCreateMode.value) ? chargesEdit.value : currentOrder.value
   
-  const delivery = Number(order.value?.delivery_fee) || 0
-  const service = Number(order.value?.service_fee) || 0
-  const tax = Number(order.value?.tax_amount) || 0
-  const discount = Number(order.value?.discount_amount) || 0
-  return subtotal + delivery + service + tax - discount
+  const shipping = Number(charges.shipping_charges) || 0
+  const otherCharges = Number(charges.charges) || 0
+  const discount = Number(charges.discount) || 0
+  
+  return subtotal + shipping + otherCharges - discount
 }
 
+// Create order function
+async function createOrder() {
+  if (!canCreateOrder.value) return
+  
+  saving.value = true
+  try {
+    const orderData = {
+      ...orderEdit.value,
+      ...chargesEdit.value,
+      items: itemsEdit.value.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price,
+        discount: item.discount || 0
+      })),
+      sub_total: calculateItemsTotal(),
+      total_price: calculateTotalWithCharges()
+    }
+    
+    const response = await fetch('/api/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(orderData)
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to create order')
+    }
+    
+    const result = await response.json()
+    
+    // Switch to view mode with the new order
+    isCreateMode.value = false
+    orderStore.selectedOrder = result.data
+    orderStore.selectedOrderId = result.data.id
+    
+    // Reload orders list
+    orderStore.loadOrdersWithFilters(orderStore.currentFilters)
+    
+  } catch (error) {
+    console.error('Failed to create order:', error)
+  } finally {
+    saving.value = false
+  }
+}
+
+// Action functions
 function callClient() {
-  if (order.value?.client?.phone_number) {
-    window.open(`tel:${order.value.client.phone_number}`)
+  const phone = currentOrder.value?.client?.phone_number
+  if (phone) {
+    window.open(`tel:${phone}`)
   }
 }
 
-// AI Functions
-async function openAIAssistant() {
-  aiAssistantDialog.value = true
-}
-
-async function sendAIQuery() {
-  if (!aiQuery.value.trim()) return
+async function updateStatus(status) {
+  if (!order.value) return
   
-  // Add user message
-  aiMessages.value.push({
-    id: Date.now(),
-    sender: 'user',
-    text: aiQuery.value,
-    timestamp: new Date()
-  })
-
-  const query = aiQuery.value
-  aiQuery.value = ''
-  aiProcessing.value = true
-
-  // Simulate AI processing
-  setTimeout(() => {
-    const responses = [
-      "Based on the order data, I recommend optimizing the route to save 15% in delivery time.",
-      "The customer has a 92% satisfaction rate. This order should proceed smoothly.",
-      "Weather conditions are favorable. No delivery delays expected.",
-      "I've analyzed similar orders and predict a 97% on-time delivery probability."
-    ]
-    
-    aiMessages.value.push({
-      id: Date.now(),
-      sender: 'ai',
-      text: responses[Math.floor(Math.random() * responses.length)],
-      timestamp: new Date()
-    })
-    
-    aiProcessing.value = false
-  }, 1500)
-}
-
-async function triggerAutoOptimization() {
-  optimizing.value = true
-  
-  // Simulate optimization process
-  setTimeout(() => {
-    routeOptimized.value = true
-    optimizing.value = false
-    
-    // Add success insight
-    aiInsights.value.unshift({
-      message: "Route optimization completed! Saved 8 minutes and $3.20 in fuel costs",
-      action: null
-    })
-  }, 2000)
-}
-
-async function runAIValidation() {
-  validating.value = true
-  
-  setTimeout(() => {
-    validating.value = false
-    // Update order with AI validation results
-    if (order.value) {
-      order.value.ai_confidence_score = 96
-      order.value.ai_risk_score = 15
-    }
-  }, 1500)
-}
-
-async function predictDeliveryIssues() {
-  predicting.value = true
-  
-  setTimeout(() => {
-    predicting.value = false
-    predictions.value.alerts.push("New prediction: Customer may not be available between 2-3 PM")
-  }, 1000)
-}
-
-async function runFraudCheck() {
-  checkingFraud.value = true
-  
-  setTimeout(() => {
-    checkingFraud.value = false
-    if (order.value) {
-      order.value.fraud_score = Math.floor(Math.random() * 20) // Low fraud score
-    }
-  }, 1500)
-}
-
-async function autoAssignRider() {
-  assigning.value = true
-  
-  setTimeout(() => {
-    assigning.value = false
-    if (order.value) {
-      order.value.auto_assigned_rider = "John Smith (Rating: 4.9)"
-    }
-  }, 1000)
-}
-
-// Automation Functions
-async function generateSmartNotifications() {
-  console.log('Generating smart notifications based on customer preferences and delivery status')
-}
-
-async function autoOptimizeRoute() {
-  optimizing.value = true
-  
-  setTimeout(() => {
-    optimizing.value = false
-    routeOptimized.value = true
-    
-    // Update route data with optimized values
-    routeData.value.distance = Math.max(8, routeData.value.distance - 2.1)
-    routeData.value.duration = Math.max(20, routeData.value.duration - 8)
-  }, 2000)
-}
-
-async function recalculateRoute() {
-  optimizing.value = true
-  
-  setTimeout(() => {
-    optimizing.value = false
-    // Simulate new route calculation
-    routeData.value = {
-      distance: 11.2,
-      distanceSaved: 3.3,
-      duration: 28,
-      timeSaved: 15,
-      fuelCost: 14.20,
-      fuelSaved: 4.80,
-      co2: 3.8,
-      co2Saved: 1.2
-    }
-  }, 1500)
-}
-
-function applyOptimizedRoute() {
-  console.log('Applying optimized route to delivery system')
-  routeOptimized.value = false
-}
-
-// Communication Functions
-function generateSmartMessage() {
-  const templates = [
-    "Hi! Your order is being prepared and will be delivered within the estimated time window.",
-    "Good news! Your delivery is ahead of schedule and should arrive 10 minutes early.",
-    "We're experiencing slight delays due to traffic, but your order is still on track for delivery."
-  ]
-  
-  messageComposer.value.content = templates[Math.floor(Math.random() * templates.length)]
-}
-
-function selectMessageSuggestion(suggestion) {
-  messageComposer.value.content = suggestion.preview
-}
-
-function toggleVoiceRecording() {
-  isRecording.value = !isRecording.value
-  
-  if (isRecording.value) {
-    // Simulate voice recording
-    setTimeout(() => {
-      if (isRecording.value) {
-        voiceTranscript.value = "The customer called asking about delivery time"
-        isRecording.value = false
-      }
-    }, 3000)
+  saving.value = true
+  try {
+    await orderStore.updateOrder(order.value.id, { status })
+  } catch (error) {
+    console.error('Failed to update status:', error)
+  } finally {
+    saving.value = false
   }
 }
 
-function improveMessage() {
-  // Simulate AI message improvement
-  const improved = "Thank you for your order! We're pleased to inform you that your delivery is currently being prepared with the utmost care. Based on current conditions, we anticipate arrival within your specified time window. We'll keep you updated throughout the process."
-  messageComposer.value.content = improved
+function printOrder() {
+  window.print()
 }
 
-function sendMessage() {
-  console.log('Sending message:', messageComposer.value)
-  messageComposer.value.content = ''
-}
-
-// Action Functions
-function dismissInsight() {
-  aiInsights.value.splice(currentInsightIndex.value, 1)
-  if (aiInsights.value.length === 0) {
-    currentInsightIndex.value = 0
-  } else {
-    currentInsightIndex.value = currentInsightIndex.value % aiInsights.value.length
+function duplicateOrder() {
+  if (!order.value) return
+  
+  // Switch to create mode with duplicated data
+  isCreateMode.value = true
+  
+  orderEdit.value = {
+    ...order.value,
+    order_no: '',
+    reference: `${order.value.reference || order.value.order_no}-COPY`,
+    status: 'Inprogress'
   }
-}
-
-function executeAIAction(action) {
-  console.log('Executing AI action:', action)
   
-  switch (action.type) {
-    case 'route_optimization':
-      autoOptimizeRoute()
-      break
-    case 'weather_alert':
-      generateSmartNotifications()
-      break
-    default:
-      console.log('Unknown action type')
+  itemsEdit.value = order.value.orderItems?.map(item => ({
+    ...item,
+    id: `temp-${Date.now()}-${Math.random()}`
+  })) || []
+  
+  chargesEdit.value = {
+    shipping_charges: order.value.shipping_charges || 0,
+    charges: order.value.charges || 0,
+    discount: order.value.discount || 0,
+    payment_method: order.value.payment_method || 'Cash on Delivery',
+    amount_paid: 0
   }
-}
-
-function implementRecommendation(recommendation) {
-  console.log('Implementing recommendation:', recommendation)
-}
-
-async function runFullAIAnalysis() {
-  aiAnalyzing.value = true
   
-  setTimeout(() => {
-    aiAnalyzing.value = false
-    console.log('Full AI analysis completed')
-  }, 3000)
+  activeTab.value = 'overview'
 }
 
-async function autoExecuteOptimizations() {
-  executing.value = true
+async function saveAllChanges() {
+  if (!hasChanges.value) return
   
-  setTimeout(() => {
-    executing.value = false
-    console.log('All optimizations executed automatically')
-  }, 2500)
-}
-
-function exportAIReport() {
-  console.log('Exporting AI analysis report')
-}
-
-function openAIAnalytics() {
-  console.log('Opening full AI analytics dashboard')
+  saving.value = true
+  try {
+    const promises = []
+    
+    if (editingOrder.value) {
+      promises.push(saveOrderChanges())
+    }
+    if (editingClient.value) {
+      promises.push(saveClientChanges())
+    }
+    if (editingItems.value) {
+      promises.push(saveItemsChanges())
+    }
+    if (editingCharges.value) {
+      promises.push(saveChargesChanges())
+    }
+    
+    await Promise.all(promises)
+    
+  } catch (error) {
+    console.error('Failed to save all changes:', error)
+  } finally {
+    saving.value = false
+  }
 }
 
 // Standard functions
 function closeDialog() {
+  if (hasChanges.value && !isCreateMode.value) {
+    if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+      resetEditing()
+    } else {
+      return
+    }
+  }
+  
   orderStore.closeDialog()
+  resetDialog()
+}
+
+function resetEditing() {
+  editingOrder.value = false
+  editingClient.value = false
+  editingItems.value = false
+  editingCharges.value = false
+  orderEdit.value = {}
+  clientEdit.value = {}
+  itemsEdit.value = []
+  chargesEdit.value = {}
+}
+
+function resetDialog() {
   activeTab.value = 'overview'
+  isCreateMode.value = false
+  resetEditing()
+}
+
+function resetForm() {
+  if (isCreateMode.value) {
+    initializeCreateMode()
+    activeTab.value = 'overview'
+  }
 }
 
 function refreshOrder() {
@@ -2609,310 +1689,48 @@ function refreshOrder() {
 }
 
 function deleteOrder() {
-  if (!order.value || !confirm('Are you sure you want to delete this order?')) return
-  orderStore.deleteOrder(order.value.id)
-  closeDialog()
+  deleteConfirmDialog.value = true
 }
 
-// function startEditingOrder() {
-//   console.log('Start editing order')
-// }
-
-function printOrder() {
-  console.log('Print order')
+async function confirmDelete() {
+  if (!order.value) return
+  
+  saving.value = true
+  try {
+    await orderStore.deleteOrder(order.value.id)
+    deleteConfirmDialog.value = false
+    closeDialog()
+  } catch (error) {
+    console.error('Failed to delete order:', error)
+  } finally {
+    saving.value = false
+  }
 }
+
+// Watch for dialog changes
+watch(dialog, (newVal) => {
+  if (newVal && !isCreateMode.value) {
+    // Load options when dialog opens in edit mode
+    loadAllOptions()
+    
+    // Load vendor products if vendor is set
+    if (order.value?.vendor_id) {
+      loadProductsByVendor(order.value.vendor_id)
+    }
+  } else if (!newVal) {
+    // Reset dialog when closed
+    resetDialog()
+  }
+})
+
+// Watch for create mode changes
+watch(() => isCreateMode.value, (newVal) => {
+  if (newVal) {
+    editingItems.value = true
+    editingCharges.value = true
+    editingOrder.value = true
+  } else {
+    resetEditing()
+  }
+})
 </script>
-
-<style scoped>
-.order-details-card {
-  max-height: 95vh;
-}
-
-.gradient-header {
-  background: linear-gradient(135deg, rgb(var(--v-theme-primary)), rgb(var(--v-theme-secondary)));
-}
-
-.ai-insights-banner {
-  border-left: 4px solid rgb(var(--v-theme-info));
-}
-
-.info-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.info-item .label {
-  font-size: 0.75rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
-
-.info-item .value {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.metric-item {
-  text-align: center;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.metric-value {
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.metric-label {
-  font-size: 0.75rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-.automation-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ai-models {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.model-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.automation-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgb(var(--v-border-color));
-}
-
-.learning-module {
-  text-align: center;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.route-map-placeholder {
-  text-align: center;
-  padding: 40px;
-  border: 2px dashed rgb(var(--v-border-color));
-  border-radius: 8px;
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.route-details {
-  margin-top: 16px;
-}
-
-.route-metric {
-  text-align: center;
-  padding: 16px;
-  border-radius: 8px;
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.metric-improvement {
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 4px;
-}
-
-.optimization-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.prediction-item {
-  margin-bottom: 20px;
-}
-
-.forecast-chart-placeholder {
-  text-align: center;
-  padding: 32px;
-  border: 2px dashed rgb(var(--v-border-color));
-  border-radius: 8px;
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.forecast-insights {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.insight-item {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-radius: 4px;
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.suggestion-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.suggestion-card {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.suggestion-card:hover {
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-
-.sentiment-analysis {
-  text-align: center;
-}
-
-.sentiment-score {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.communication-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid rgb(var(--v-border-color));
-}
-
-.ai-chat-container {
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-}
-
-.ai-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  background-color: rgb(var(--v-theme-surface-variant));
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.ai-message {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.message-content {
-  flex: 1;
-}
-
-.message-text {
-  background-color: rgb(var(--v-theme-surface));
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 4px;
-}
-
-.message-time {
-  font-size: 0.75rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-}
-
-.border-b {
-  border-bottom: 1px solid rgb(var(--v-border-color));
-}
-
-.gap-2 {
-  gap: 8px;
-}
-
-.gap-3 {
-  gap: 12px;
-}
-
-.charges-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.charge-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-}
-
-.charge-item.total-charge {
-  border-top: 2px solid rgb(var(--v-border-color));
-  padding-top: 16px;
-  margin-top: 8px;
-}
-
-.charge-label {
-  font-weight: 500;
-}
-
-.charge-value {
-  font-weight: 600;
-}
-
-.payment-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.order-items-table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.order-items-table tbody tr:hover {
-  background-color: rgb(var(--v-theme-surface-variant));
-}
-</style>

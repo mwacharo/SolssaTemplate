@@ -63,7 +63,7 @@
 
             <v-col cols="12" md="6">
               <v-autocomplete 
-                v-model="formData.country" 
+                v-model="formData.country_id" 
                 label="Country" 
                 :items="countries" 
                 item-title="name"
@@ -219,7 +219,7 @@ const formData = reactive({
   username: '',
   phone_number: '',
   alt_number: '',
-  country: '', // Changed from country_code to country
+  country_id: '', 
   time_zone: '',
   language: 'en',
   is_active: true,
@@ -288,7 +288,7 @@ const resetForm = () => {
     username: '',
     phone_number: '',
     alt_number: '',
-    country: '',
+    country_id: '',
     time_zone: '',
     language: 'en',
     is_active: true,

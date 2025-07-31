@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\CountryController;
 // Make sure only one VendorController exists and is imported. If you have multiple, remove or rename the duplicate.
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\IvrOptionController;
+use App\Http\Controllers\Api\ProductController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
@@ -52,7 +53,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
     // Route::post('v1/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
-    Route::put('v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); // Update a specific order
+    Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); // Update a specific order
 
     // Print waybill
     Route::get('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
@@ -99,6 +100,30 @@ Route::prefix('v1')->group(function () {
     // Route::get('v1/orders/{id}/export-template', [\App\Http\Controllers\Api\OrderController::class, 'exportOrderTemplate']); // Export order template for a specific order
     // Route::post('v1/orders/{id}/import-template', [\App\Http\Controllers\Api\OrderController::class, 'importOrderTemplate']); // Import order template for a specific order
     // Route::get('v1/orders/{id}/status-history', [\App\Http\Controllers\Api\OrderController::class, 'getOrderStatusHistory']); // Get status history for a specific order
+
+
+
+    // products APIs
+    Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']); // List all products
+    Route::post('/products', [\App\Http\Controllers\Api\ProductController::class, 'store']); // Create a new product
+    Route::get('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'show']); // Show a specific product
+    Route::put('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'update']); // Update a specific product
+    Route::delete('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'destroy']); // Delete a specific product
+
+
+    //     // prodcuts of a vendor
+
+    Route::get('/products/vendor/{vendorId}', [\App\Http\Controllers\Api\ProductController::class, 'productsByVendor']); // Get products by vendor
+
+
+
+    Route::get('/products', [ProductController::class, 'index']); // All products
+    Route::get('/products/vendor/{vendorId}', [ProductController::class, 'productsByVendor']); // Products by vendor
+    Route::get('/vendors', [VendorController::class, 'index']); // All vendors
+    Route::get('/agents', [AgentController::class, 'index']); // All agents
+    Route::get('/riders', [RiderController::class, 'index']); // All riders
+    // Route::get('zones', [ZoneController::class, 'index']); // All zones
+    Route::get('/order-statuses', [OrderController::class, 'statuses']); // Order status options
 
 
     Route::post('/assign-rider', [OrderController::class, 'assignRider']);

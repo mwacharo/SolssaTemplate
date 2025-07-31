@@ -15,7 +15,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 use Spatie\Activitylog\LogOptions;
 use App\Models\ChannelCredential;
-
+use App\Models\Scopes\CountryScope;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 
@@ -32,6 +32,14 @@ class User extends Authenticatable
     use HasTeams;
     use Notifiable;
     use TwoFactorAuthenticatable;
+
+
+
+    // protected static function booted()
+    // {
+    //     static::addGlobalScope(new CountryScope);
+    // }
+
 
 
 
@@ -115,14 +123,14 @@ class User extends Authenticatable
 
     // channelCredentials
 
-//     public function channelCredentials(): MorphMany
-// {
-//     return $this->morphMany(ChannelCredential::class, 'credentialable');
-// }
+    //     public function channelCredentials(): MorphMany
+    // {
+    //     return $this->morphMany(ChannelCredential::class, 'credentialable');
+    // }
 
 
     public function channelCredentials()
-{
-    return $this->morphMany(ChannelCredential::class, 'credentialable');
-}
+    {
+        return $this->morphMany(ChannelCredential::class, 'credentialable');
+    }
 }

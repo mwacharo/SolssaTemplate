@@ -96,6 +96,15 @@ export const ROUTES = {
     TICKET: 'support.ticket',
   },
 
+  // add warehousing 
+  WAREHOUSING: {
+    INDEX: 'warehousing.index',
+    PRODUCTS: 'warehousing.products',
+    STOCK: 'warehousing.stock',
+    // ORDERS: 'warehousing.orders',
+    // SUPPLIERS: 'warehousing.suppliers',
+  },
+
 }
 
 export const useNavStore = defineStore('nav', {
@@ -309,7 +318,22 @@ export const useNavStore = defineStore('nav', {
         ],
       },
 
-     
+      // warehousing
+      {
+        title: 'Warehousing',
+        icon: 'mdi-warehouse',
+        route: ROUTES.WAREHOUSING.INDEX,
+        roles: ['admin', 'staff'],
+        plans: ['Pro', 'Enterprise'],
+        features: ['warehousing'],  
+        children: [
+          { title: 'Warehouse Dashboard', route: ROUTES.WAREHOUSING.INDEX, icon: 'mdi-warehouse-outline' },
+          { title: 'Products', route: ROUTES.WAREHOUSING.PRODUCTS, icon: 'mdi-package-variant-closed' },
+          { title: 'Stock Management', route: ROUTES.WAREHOUSING.STOCK, icon: 'mdi-warehouse' },
+          // { title: 'Orders', route: ROUTES.WAREHOUSING.ORDERS, icon: 'mdi-cart-outline' },
+          //{ title: 'Suppliers', route: ROUTES.WAREHOUSING.SUPPLIERS, icon: 'mdi-account-multiple-outline' },
+        ],
+      },
     ],
   }),
 

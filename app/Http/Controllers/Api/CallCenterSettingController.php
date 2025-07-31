@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCallCenterSettingRequest;
 use App\Http\Requests\UpdateCallCenterSettingRequest;
 use App\Models\CallCenterSetting;
 use App\Http\Resources\CallCenterSettingResource;
+use Illuminate\Support\Facades\Log;
 
 class CallCenterSettingController extends Controller
 {
@@ -24,6 +25,9 @@ class CallCenterSettingController extends Controller
      */
     public function store(StoreCallCenterSettingRequest $request)
     {
+
+        // log the request data for debugging
+        Log::info('Storing Call Center Setting:', $request->validated());
         $setting = CallCenterSetting::create($request->validated());
         return new CallCenterSettingResource($setting);
     }

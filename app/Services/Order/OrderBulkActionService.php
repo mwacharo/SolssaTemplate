@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Http\Resources\OrderResource;
 use App\Models\WaybillSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Picqer\Barcode\BarcodeGeneratorHTML;
@@ -20,6 +21,88 @@ use Illuminate\Support\Facades\Storage;
 
 class OrderBulkActionService
 {
+
+    /**
+     * Create a new order with provided data.
+     */
+    public function createOrder(array $data): Order
+    {
+        return DB::transaction(function () use ($data) {
+            // Create Order core fields
+            $order = Order::create([
+                'order_no' => $data['order_no'] ?? null,
+                'delivery_date' => $data['delivery_date'] ?? null,
+                'status' => $data['status'] ?? 'pending',
+                'delivery_status' => $data['delivery_status'] ?? 'pending',
+                'agent_id' => $data['agent_id'] ?? null,
+                'rider_id' => $data['rider_id'] ?? null,
+            ]);
+
+            // Create client
+            if (isset($data['client'])) {
+                $order->client()->create($data['client']);
+            }
+
+            // Create order items
+            if (isset($data['items'])) {
+                foreach ($data['items'] as $itemData) {
+                    $order->items()->create($itemData);
+                }
+            }
+
+            return $order->load(['client', 'items', 'agent', 'rider']);
+        });
+    }
+
+
+
+
+
+
+    public function updateOrder(Order $order, array $data): Order
+    {
+        return DB::transaction(function () use ($order, $data) {
+            // Update Order core fields
+            $order->update([
+                'order_no' => $data['order_no'] ?? $order->order_no,
+                'delivery_date' => $data['delivery_date'] ?? $order->delivery_date,
+                'status' => $data['status'] ?? $order->status,
+                'delivery_status' => $data['delivery_status'] ?? $order->delivery_status,
+                'agent_id' => $data['agent_id'] ?? $order->agent_id,
+                'rider_id' => $data['rider_id'] ?? $order->rider_id,
+            ]);
+
+            // Update client
+            if (isset($data['client'])) {
+                $order->client->update($data['client']);
+            }
+
+            // Update or create order items
+            if (isset($data['items'])) {
+                $existingIds = [];
+
+                foreach ($data['items'] as $itemData) {
+                    if (isset($itemData['id'])) {
+                        // Update
+                        $item = $order->items()->find($itemData['id']);
+                        if ($item) {
+                            $item->update($itemData);
+                            $existingIds[] = $item->id;
+                        }
+                    } else {
+                        // Create
+                        $newItem = $order->items()->create($itemData);
+                        $existingIds[] = $newItem->id;
+                    }
+                }
+
+                // Delete removed items
+                $order->items()->whereNotIn('id', $existingIds)->delete();
+            }
+
+            return $order->load(['client', 'items', 'agent', 'rider']);
+        });
+    }
     public function assignRider(array $orderIds, int $riderId): void
     {
         Order::whereIn('id', $orderIds)->update(['rider_id' => $riderId]);

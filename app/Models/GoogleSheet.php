@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\CountryScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,6 +16,12 @@ class GoogleSheet extends Model
     ,SoftDeletes;
 
     use BelongsToUserAndCountry;
+
+
+      protected static function booted()
+    {
+        static::addGlobalScope(new CountryScope);
+    }
 
 
 

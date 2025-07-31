@@ -5,9 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
+use App\Models\Scopes\CountryScope;
+use App\Models\OrderCategory;
+
+
 class Order extends Model
 {
+
+   
     use HasFactory;
+
+
+     protected static function booted()
+    {
+        static::addGlobalScope(new CountryScope);
+    }
 
     protected $fillable = [
         'reference',
