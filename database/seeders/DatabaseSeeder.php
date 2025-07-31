@@ -33,27 +33,27 @@ class DatabaseSeeder extends Seeder
             
 
             // CallCenterSettingSeeder::class,
-            IvrOptionSeeder::class,
+            // IvrOptionSeeder::class,
         ]);
 
-        // User::factory(10)->withPersonalTeam()->create();
+        User::factory(1)->withPersonalTeam()->create();
 
-        // User::factory()->withPersonalTeam()->create([
-        //     'name' => 'Mwacharo',
-        //     'email' => '12345678',
-        // ]);
+        User::factory()->withPersonalTeam()->create([
+            'name' => 'Mwacharo',
+            'email' => '12345678',
+        ]);
 
         // Create a user with a personal team
         // First, ensure we have a country to reference
-        // $country = Country::first();
+        $country = Country::first();
         
-        // User::factory()->withPersonalTeam()->create([
-        //     'name' => 'Mwacharo',
-        //     'email' => 'john.boxleo@gmail.com',
-        //     'password' => bcrypt('12345678'),
-        //     'is_active' => true,
-        //     'two_factor_enabled' => false,
-        //     'country_id' => $country ? $country->id : null, // Use first available country or null
-        // ]);
+        User::factory()->withPersonalTeam()->create([
+            'name' => 'Mwacharo',
+            'email' => 'john.boxleo@gmail.com',
+            'password' => bcrypt('0741821113'),
+            'is_active' => true,
+            'two_factor_enabled' => false,
+            'country_id' => $country ? $country->id : null, // Use first available country or null
+        ]);
     }
 }
