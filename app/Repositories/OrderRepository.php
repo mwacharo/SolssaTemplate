@@ -130,6 +130,7 @@ class OrderRepository implements OrderRepositoryInterface
             'client_id' => $client->id,
             'client_name' => $data['client_name'],
             'cod_amount' => $data['cod_amount'],
+            'total_price' => $data['cod_amount'],
             'address' => $data['address'],
             'country' => $data['country'],
             'phone' => $data['phone'],
@@ -143,6 +144,7 @@ class OrderRepository implements OrderRepositoryInterface
             'user_id' => $userId,
             'branch_id' => $sheet->branch_id,
             'vendor_id' => $sheet->vendor_id,
+            'country_id' => $sheet->country_id,
         ]);
     }
 

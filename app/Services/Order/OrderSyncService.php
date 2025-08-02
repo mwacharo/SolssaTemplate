@@ -168,7 +168,9 @@ class OrderSyncService
     public function processSheetData($values, $headers, $sheet)
     {
         $headers = array_map('strtolower', array_map('trim', $headers));
-        $values = array_map('array_map', array_fill(0, count($values), 'trim'), $values);
+        $values = array_map(function($row) {
+            return array_map('trim', $row);
+        }, $values);
         $orderData = [];
 
         foreach ($values as $row) {
@@ -205,28 +207,40 @@ class OrderSyncService
      */
     private function createOrderData($data, $sheet)
     {
-        $cod_amount = str_replace(',', '', $data['cod amount'] ?? null);
+        // Normalize keys to lowercase and trim spaces for reliable access
+        $normalized = [];
+        foreach ($data as $k => $v) {
+            $normalized_key = strtolower(trim($k));
+            $normalized[$normalized_key] = $v;
+        }
+        $cod_amount = str_replace(',', '', $normalized['cod amount'] ?? $normalized['cod_amount'] ?? $normalized['codamount'] ?? null);
         return [
-            'order_no' => $data['order id'] ?? null,
-            'invoice_no' => $data['invoice number'] ?? null,
+            'order_no' => $normalized['order id'] ?? null,
+            'invoice_no' => $normalized['invoice number'] ?? null,
+            'total_price' => is_numeric($cod_amount) ? $cod_amount : null,
             'cod_amount' => is_numeric($cod_amount) ? $cod_amount : null,
-            'client_name' => $data['client name'] ?? null,
-            'address' => $data['address'] ?? null,
-            'country' => $data['receier country*'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'city' => $data['city'] ?? null,
+
+
+            'client_name' => $normalized['client name'] ?? null,
+            'address' => $normalized['address'] ?? null,
+            'country' => $normalized['receier country*'] ?? null,
+            'phone' => $normalized['phone'] ?? null,
+            'city' => $normalized['city'] ?? null,
             'products' => [],
-            'quantity' => $data['quantity'] ?? null,
-            'status' => $data['status'] ?? null,
-            'delivery_date' => $data['delivery date'] ?? null,
-            'special_instruction' => $data['special instructiuons'] ?? null,
+            'quantity' => $normalized['quantity'] ?? null,
+            'status' => $normalized['status'] ?? null,
+            'delivery_date' => $normalized['delivery date'] ?? null,
+            'special_instruction' => $normalized['special instructiuons'] ?? null,
             'distance' => 0,
             'invoice_value' => 0,
-            'pod_returned' => isset($data['documents received ']) && strtolower($data['documents received ']) === 'yes' ? 1 : 0,
+            'pod_returned' => isset($normalized['documents received']) && strtolower($normalized['documents received']) === 'yes' ? 1 : 0,
             'vendor_id' => $sheet->vendor_id,
             'branch_id' => $sheet->branch_id,
+            // 'user_id' => auth()->id() ?? null,
+            // 'country_id' => optional(auth()->user())->country_id,
+
         ];
-    }
+    }               
 
     /**
      * Create product data from sheet row

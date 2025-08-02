@@ -22,7 +22,7 @@ class UpdateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reference' => 'sometimes|string|max:255',
+            'reference' => 'nullable|string|max:255',
             'drawer_id' => 'nullable|exists:drawers,id',
             'client_id' => 'nullable|exists:clients,id',
             'total_price' => 'nullable|numeric|min:0',

@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Models;
+// use App\Traits\BelongsToUserAndCountry;
+
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +17,8 @@ class Order extends Model
 
    
     use HasFactory;
+        // use BelongsToUserAndCountry;
+
 
 
      protected static function booted()
@@ -108,6 +112,7 @@ class Order extends Model
         'order_category_id',
         'driver_id',
         'vehicle_id',
+        // 'cod_amount',
     ];
 
     protected $casts = [

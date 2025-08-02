@@ -1044,7 +1044,8 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loadOrders(1),
         this.loadTemplates(),
         this.loadRiders(),
-        this.loadAgents()
+        this.loadAgents(),
+        
       ])
     }
   }

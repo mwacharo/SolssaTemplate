@@ -58,7 +58,6 @@ class OrderBulkActionService
 
 
 
-
     public function updateOrder(Order $order, array $data): Order
     {
         return DB::transaction(function () use ($order, $data) {
@@ -73,34 +72,34 @@ class OrderBulkActionService
             ]);
 
             // Update client
-            if (isset($data['client'])) {
+            if (isset($data['client']) && $order->client) {
                 $order->client->update($data['client']);
             }
 
-            // Update or create order items
+            // Update or create order items using orderItems() relationship
             if (isset($data['items'])) {
                 $existingIds = [];
 
                 foreach ($data['items'] as $itemData) {
                     if (isset($itemData['id'])) {
                         // Update
-                        $item = $order->items()->find($itemData['id']);
+                        $item = $order->orderItems()->find($itemData['id']);
                         if ($item) {
                             $item->update($itemData);
                             $existingIds[] = $item->id;
                         }
                     } else {
                         // Create
-                        $newItem = $order->items()->create($itemData);
+                        $newItem = $order->orderItems()->create($itemData);
                         $existingIds[] = $newItem->id;
                     }
                 }
 
                 // Delete removed items
-                $order->items()->whereNotIn('id', $existingIds)->delete();
+                $order->orderItems()->whereNotIn('id', $existingIds)->delete();
             }
 
-            return $order->load(['client', 'items', 'agent', 'rider']);
+            return $order->load(['client', 'orderItems', 'agent', 'rider']);
         });
     }
     public function assignRider(array $orderIds, int $riderId): void

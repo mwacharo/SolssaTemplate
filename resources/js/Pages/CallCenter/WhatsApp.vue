@@ -823,11 +823,11 @@ onMounted(async () => {
 
                     <template #item.total_price="{ item }">
                       <div>
-                        ${{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
+                        KSH{{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
                       </div>
                       <div v-if="item.shipping_charges && item.shipping_charges !== '0.00'"
                         class="text-caption text-grey">
-                        Shipping: ${{ parseFloat(item.shipping_charges).toFixed(2) }}
+                        Shipping: KSH{{ parseFloat(item.shipping_charges).toFixed(2) }}
                       </div>
                     </template>
 
