@@ -1,4 +1,3 @@
-
 <template>
   <AppLayout title="Dashboard">
     <div class="p-4">
@@ -14,7 +13,7 @@
               </v-card-title>
               <v-card-text class="py-4">
                 <v-list nav dense>
-                  <v-list-item @click="newCall = true" class="rounded-lg mb-2 hover-elevation-2">
+                  <v-list-item @click="openNewcall" class="rounded-lg mb-2 hover-elevation-2">
                     <v-list-item-icon>
                       <v-icon color="success">mdi-phone-plus</v-icon>
                     </v-list-item-icon>
@@ -46,10 +45,7 @@
                       <v-list-item-title>Missed {{ stats.summary_call_missed }}</v-list-item-title>
                     </v-list-item-content>
                     <v-list-item-action>
-                      <v-badge :content="summary_call_missed" :value="summary_call_missed > 0"
-                          color="error" overlap>
-                        <v-icon>mdi-chevron-right</v-icon>
-                      </v-badge>
+
                     </v-list-item-action>
                   </v-list-item>
 
@@ -92,10 +88,11 @@
                         </p>
                       </div>
                       <v-spacer></v-spacer>
-                      <v-chip v-if="agent" :color="getStatusColor(agent.status)" small
-                          class="white--text px-2">
+
+
+                      <v-chip :color="webrtc.connectionStatusColor" small class="white--text px-2">
                         <v-icon left small>mdi-circle</v-icon>
-                        {{ getStatusText(agent.status) }}
+                        {{ webrtc.connectionStatusText }}
                       </v-chip>
                     </div>
                   </div>
@@ -146,7 +143,8 @@
                         <v-icon color="error" left>mdi-phone-cancel</v-icon>
                         <div class="ml-2">
                           <div class="text-caption grey--text">Rejected</div>
-                          <div class="text-h6">{{ stats.summary_rejected_incoming_calls + stats.summary_rejected_outgoing_calls }}</div>
+                          <div class="text-h6">{{ stats.summary_rejected_incoming_calls +
+                            stats.summary_rejected_outgoing_calls }}</div>
                         </div>
                       </div>
                     </v-card>
@@ -192,53 +190,26 @@
         <!-- Table Controls -->
         <div class="table-controls mb-4">
           <div class="controls-left">
-            <v-btn
-              color="primary"
-              variant="outlined"
-              @click="refreshData"
-              :loading="agentStore.loading"
-              size="small"
-            >
+            <v-btn color="primary" variant="outlined" @click="refreshData" :loading="agentStore.loading" size="small">
               <v-icon start>mdi-refresh</v-icon>
               Refresh
             </v-btn>
-            
-            <v-select
-              v-model="itemsPerPage"
-              :items="itemsPerPageOptions"
-              label="Rows per page"
-              variant="outlined"
-              density="compact"
-              style="max-width: 120px;"
-              class="ml-3"
-            />
+
+            <v-select v-model="itemsPerPage" :items="itemsPerPageOptions" label="Rows per page" variant="outlined"
+              density="compact" style="max-width: 120px;" class="ml-3" />
           </div>
-          
+
           <div class="controls-right">
-            <v-chip
-              color="info"
-              variant="outlined"
-              size="small"
-            >
+            <v-chip color="info" variant="outlined" size="small">
               Total: {{ totalItems }}
             </v-chip>
           </div>
         </div>
 
         <!-- Data Table -->
-        <v-data-table-server
-          v-model:items-per-page="itemsPerPage"
-          v-model:page="currentPage"
-          v-model:sort-by="sortBy"
-          :headers="headers"
-          :items="agentStore.callHistory"
-          :items-length="totalItems"
-          :loading="agentStore.loading"
-          :search="search"
-          class="call-history-table"
-          density="comfortable"
-          @update:options="loadItems"
-        >
+        <v-data-table-server v-model:items-per-page="itemsPerPage" v-model:page="currentPage" v-model:sort-by="sortBy"
+          :headers="headers" :items="agentStore.callHistory" :items-length="totalItems" :loading="agentStore.loading"
+          :search="search" class="call-history-table" density="comfortable" @update:options="loadItems">
           <!-- Date Column -->
           <template #item.created_at="{ item }">
             <div class="date-cell">
@@ -264,22 +235,14 @@
 
           <!-- Duration -->
           <template #item.durationInSeconds="{ item }">
-            <v-chip
-              :color="getDurationColor(item.durationInSeconds)"
-              size="small"
-              variant="tonal"
-            >
+            <v-chip :color="getDurationColor(item.durationInSeconds)" size="small" variant="tonal">
               {{ formatDuration(item.durationInSeconds) }}
             </v-chip>
           </template>
 
           <!-- Call Status -->
           <template #item.status="{ item }">
-            <v-chip
-              :color="getStatusColor(item.status)"
-              size="small"
-              variant="flat"
-            >
+            <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
               <v-icon start size="12">{{ getStatusIcon(item.status) }}</v-icon>
               {{ item.status }}
             </v-chip>
@@ -288,11 +251,7 @@
           <!-- Service Type -->
           <template #item.description="{ item }">
             <div class="service-cell">
-              <v-icon
-                :color="getServiceColor(item.description)"
-                size="16"
-                class="mr-2"
-              >
+              <v-icon :color="getServiceColor(item.description)" size="16" class="mr-2">
                 {{ getServiceIcon(item.description) }}
               </v-icon>
               <span>{{ item.description }}</span>
@@ -303,12 +262,8 @@
           <template #item.lastBridgeHangupCause="{ item }">
             <v-tooltip :text="getHangupCauseDescription(item.lastBridgeHangupCause)">
               <template #activator="{ props }">
-                <v-chip
-                  v-bind="props"
-                  :color="getHangupCauseColor(item.lastBridgeHangupCause)"
-                  size="small"
-                  variant="outlined"
-                >
+                <v-chip v-bind="props" :color="getHangupCauseColor(item.lastBridgeHangupCause)" size="small"
+                  variant="outlined">
                   {{ item.lastBridgeHangupCause }}
                 </v-chip>
               </template>
@@ -317,11 +272,7 @@
 
           <!-- Call Session State -->
           <template #item.callSessionState="{ item }">
-            <v-badge
-              :color="getSessionStateColor(item.callSessionState)"
-              dot
-              inline
-            >
+            <v-badge :color="getSessionStateColor(item.callSessionState)" dot inline>
               <span>{{ item.callSessionState }}</span>
             </v-badge>
           </template>
@@ -331,15 +282,8 @@
             <div class="action-buttons">
               <v-tooltip text="Play Recording">
                 <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                    @click="playRecording(item)"
-                    :disabled="!item.recordingUrl"
-                  >
+                  <v-btn v-bind="props" icon size="small" color="primary" variant="outlined"
+                    @click="playRecording(item)" :disabled="!item.recordingUrl">
                     <v-icon>mdi-play</v-icon>
                   </v-btn>
                 </template>
@@ -347,16 +291,8 @@
 
               <v-tooltip text="Download Recording">
                 <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon
-                    size="small"
-                    color="success"
-                    variant="outlined"
-                    @click="downloadRecording(item)"
-                    :disabled="!item.recordingUrl"
-                    class="ml-2"
-                  >
+                  <v-btn v-bind="props" icon size="small" color="success" variant="outlined"
+                    @click="downloadRecording(item)" :disabled="!item.recordingUrl" class="ml-2">
                     <v-icon>mdi-download</v-icon>
                   </v-btn>
                 </template>
@@ -364,15 +300,8 @@
 
               <v-tooltip text="Call Back">
                 <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon
-                    size="small"
-                    color="warning"
-                    variant="outlined"
-                    @click="callBack(item)"
-                    class="ml-2"
-                  >
+                  <v-btn v-bind="props" icon size="small" color="warning" variant="outlined" @click="callBack(item)"
+                    class="ml-2">
                     <v-icon>mdi-phone-return</v-icon>
                   </v-btn>
                 </template>
@@ -380,13 +309,7 @@
 
               <v-menu>
                 <template #activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon
-                    size="small"
-                    variant="text"
-                    class="ml-2"
-                  >
+                  <v-btn v-bind="props" icon size="small" variant="text" class="ml-2">
                     <v-icon>mdi-dots-vertical</v-icon>
                   </v-btn>
                 </template>
@@ -433,6 +356,12 @@
         </v-data-table-server>
       </div>
     </div>
+
+  <CallDialogs v-model="callStore.dialogType" />
+
+    <!-- Call Dialogs -->
+    <!-- <CallDialogs v-model:dialogType="dialogType" v-model:isSmsDialog="isSmsDialog" v-model:callData="callData"
+      v-model:contactForm="contactForm" @close="closeDialog" @saveContact="saveContact" @sendSms="sendSms" /> -->
   </AppLayout>
 </template>
 
@@ -441,13 +370,14 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue';
-
 import { useAgentStore } from '@/stores/agent'
-import { useCallCenterStore } from '@/stores/callCenter'
-
+import { useCallCenterStore } from '@/stores/callCenter';
 import { notify } from '@/utils/toast';
+import { useWebRTCStore } from '@/stores/webrtc'
 
+import CallDialogs from './Dialogs/CallDialogs.vue';
 
+const webrtc = useWebRTCStore()
 const props = defineProps({
   search: {
     type: String,
@@ -456,13 +386,8 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['refresh'])
-
 const agentStore = useAgentStore()
-const callCenterStore = useCallCenterStore()
-// const toast = useToast()
-
-
-
+const callStore = useCallCenterStore()
 
 // Add missing reactive data
 const stats = ref({
@@ -474,8 +399,6 @@ const stats = ref({
   summary_rejected_outgoing_calls: 0,
   summary_user_busy_outgoing_calls: 0
 })
-
-
 // Reactive data
 const currentPage = ref(1)
 const itemsPerPage = ref(15)
@@ -506,7 +429,7 @@ const loadItems = async (options) => {
     totalItems.value = result.total
   } catch (error) {
     console.error('Error loading call history:', error)
-    notify('Failed to load call history', 'error')
+    notify.error('Failed to load call history', 'error')
   }
 }
 
@@ -546,11 +469,11 @@ const formatPhoneNumber = (phone) => {
 
 const formatDuration = (seconds) => {
   if (!seconds || seconds === 0) return '0s'
-  
+
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = seconds % 60
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m ${secs}s`
   } else if (minutes > 0) {
@@ -646,7 +569,7 @@ const playRecording = (item) => {
   if (item.recordingUrl) {
     window.open(item.recordingUrl, '_blank')
   } else {
-    toast.error('Recording not available')
+    notify.error('Recording not available')
   }
 }
 
@@ -657,7 +580,7 @@ const downloadRecording = (item) => {
     link.download = `call-recording-${item.id}.mp3`
     link.click()
   } else {
-    toast.error('Recording not available')
+    notify.error('Recording not available')
   }
 }
 
@@ -665,9 +588,9 @@ const callBack = (item) => {
   const phoneNumber = item.callerNumber || item.destinationNumber
   if (phoneNumber) {
     callCenterStore.makeCall(phoneNumber)
-    toast.info(`Calling back ${phoneNumber}`)
+    notify.info(`Calling back ${phoneNumber}`)
   } else {
-    toast.error('Phone number not available')
+    notify.error('Phone number not available')
   }
 }
 
@@ -678,13 +601,79 @@ const viewDetails = (item) => {
 
 const addToContacts = (item) => {
   console.log('Add to contacts:', item)
-  toast.success('Added to contacts')
+  notify.success('Added to contacts')
 }
 
 const sendSMS = (item) => {
   console.log('Send SMS to:', item)
-  toast.info('SMS composer opened')
+  notify.info('SMS composer opened')
 }
+
+
+// write functions to open the dedined dialogs 
+
+
+
+const openNewcall = () => {
+  console.debug('you clicked me')
+  if (typeof callStore.openNewCallDialog === 'function') {
+    callStore.openNewCallDialog()
+  } else {
+    notify.error('New Call dialog function not implemented in callStore')
+  }
+}
+// Open dialog for "Call an agent"
+const openCallAgent = () => {
+  if (typeof callStore.openCallAgentDialog === 'function') {
+    callStore.openCallAgentDialog()
+  } else {
+    notify.error('Call Agent dialog function not implemented in callStore')
+  }
+}
+
+// Open dialog for "Check Queue"
+const openQueueDialog = () => {
+  if (typeof callStore.openQueueDialog === 'function') {
+    callStore.openQueueDialog()
+  } else {
+    notify.error('Queue dialog function not implemented in callStore')
+  }
+}
+
+// Close dialog handler
+const closeDialog = () => {
+  callStore.Dialog()
+
+}
+
+// Save contact handler (stub)
+const saveContact = (contact) => {
+  notify.success('Contact saved')
+  closeDialog()
+}
+
+// Send SMS handler (stub)
+const sendSms = (smsData) => {
+  notify.success('SMS sent')
+  closeDialog()
+}
+
+// User initials for avatar
+const userInitials = computed(() => {
+  const name = (typeof $page !== 'undefined' && $page.props?.auth?.user?.name) || ''
+  return name.split(' ').map(n => n[0]).join('').toUpperCase()
+})
+
+
+
+// Open dialog for "Make a new Call"
+// watch(newCall, (val) => {
+//   if (val) {
+//     dialogType.value = 'newCall'
+//     callData.value = null
+//   }
+// })
+
 
 // Watch for search changes
 watch(() => props.search, () => {
@@ -828,22 +817,22 @@ onMounted(() => {
   .call-history-container {
     padding: 1rem;
   }
-  
+
   .table-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .controls-left,
   .controls-right {
     justify-content: center;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   :deep(.v-data-table) {
     font-size: 0.8rem;
   }

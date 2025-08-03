@@ -84,7 +84,7 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
-        'token',
+        // 'token',
     ];
 
     /**

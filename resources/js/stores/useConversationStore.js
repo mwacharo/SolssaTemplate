@@ -137,10 +137,6 @@ const openDialog = async (contactId) => {
     }
 
 
-
-
-    
-
     const sendMessage = async () => {
         if (!canSendMessage.value) return
 

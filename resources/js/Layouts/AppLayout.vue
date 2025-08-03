@@ -4,13 +4,20 @@ import { computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
-import { useNavStore } from '@/stores/nav' 
+import { useNavStore } from '@/stores/nav' ;
+import { onMounted } from 'vue';
+import { useWebRTCStore } from '@/stores/webrtc';
+
 
 defineProps({
     title: String,
 });
 
 const navStore = useNavStore()
+
+
+const webrtc = useWebRTCStore();
+
 
 // For development - enable all features and permissions
 const userRole = 'admin'
@@ -105,6 +112,17 @@ const toggleGroup = (groupName) => {
 const isGroupExpanded = (groupName) => {
   return expandedGroups.value.includes(groupName);
 };
+
+  console.log("Initializing Africastalking...");
+
+onMounted(async () => {
+  await webrtc.initializeAfricastalking();
+
+    console.log("Initialization complete");
+
+});
+
+
 </script>
 
 <template>

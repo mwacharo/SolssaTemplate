@@ -47,8 +47,6 @@ const handleConfirm = ({ mode, selected, orders }) => {
   }
 };
 
-
-
 const assignRider = async (riderId, orders) => {
   try {
     const response = await axios.post('/api/v1/assign-rider', {
@@ -89,9 +87,6 @@ const updateStatus = async (status, orders) => {
     notify.error(error.response?.data?.message || 'Failed to update status');
   }
 };
-
-
-
 
 const viewOrderDetails = (order) => {
 
