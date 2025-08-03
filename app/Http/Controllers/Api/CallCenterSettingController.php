@@ -43,8 +43,11 @@ class CallCenterSettingController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCallCenterSettingRequest $request, CallCenterSetting $callCenterSetting)
+    public function update(UpdateCallCenterSettingRequest $request, $id)
     {
+        // Log the entire request data for debugging
+        Log::info('Updating Call Center Setting:', $request->all());
+        $callCenterSetting = CallCenterSetting::findOrFail($id);
         $callCenterSetting->update($request->validated());
         return new CallCenterSettingResource($callCenterSetting);
     }
@@ -52,8 +55,9 @@ class CallCenterSettingController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CallCenterSetting $callCenterSetting)
+    public function destroy($id)
     {
+        $callCenterSetting = CallCenterSetting::findOrFail($id);
         $callCenterSetting->delete();
         return response()->json(null, 204);
     }

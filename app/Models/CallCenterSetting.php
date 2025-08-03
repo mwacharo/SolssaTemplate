@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToUserAndCountry;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CallCenterSetting extends Model
 {
-    use HasFactory;
+    use HasFactory,
+    BelongsToUserAndCountry;
 
     protected $fillable = [
         'country_id',

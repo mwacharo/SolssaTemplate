@@ -155,12 +155,15 @@ export function useCallCenterSettingsComposable() {
 
   // Voice options for dropdown
   const voiceOptions = [
-    { value: 'alloy', label: 'Alloy' },
-    { value: 'echo', label: 'Echo' },
-    { value: 'fable', label: 'Fable' },
-    { value: 'nova', label: 'Nova' },
-    { value: 'onyx', label: 'Onyx' },
-    { value: 'shimmer', label: 'Shimmer' }
+        { value: 'woman', label: 'woman' },
+ { value: 'man', label: 'man' },
+    // { value: 'alloy', label: 'Alloy' },
+    // { value: 'echo', label: 'Echo' },
+    // { value: 'fable', label: 'Fable' },
+    // { value: 'nova', label: 'Nova' },
+    // { value: 'onyx', label: 'Onyx' },
+    // { value: 'shimmer', label: 'Shimmer' }
+
   ]
 
   // Log level options

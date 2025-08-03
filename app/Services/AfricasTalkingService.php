@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Models\Ticket;
 use App\Models\Contact;
+use App\Models\CallCenterSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Exception;
 use PHPUnit\Framework\Attributes\Ticket as AttributesTicket;
 
-class VoiceCallService
+class AfricasTalkingService
 {
     protected $africastalking;
     protected $config;
@@ -38,33 +39,40 @@ class VoiceCallService
      */
     private function getCallConfig(): array
     {
+       
+        $settings = CallCenterSetting::first();
+
         return [
             'africastalking' => [
-                'username' => config('services.africastalking.username'),
-                'api_key' => config('services.africastalking.api_key'),
-                'phone' => config('services.africastalking.phone'),
+            'country_id' => $settings['country_id'] ?? null,
+            'username' => $settings['username'] ?? null,
+            'api_key' => $settings['api_key'] ?? null,
+            'phone' => $settings['phone'] ?? null,
+            'sandbox' => isset($settings['sandbox']) ? (bool)$settings['sandbox'] : false,
             ],
             'voice' => [
-                'default_voice' => config('voice.default_voice', 'woman'),
-                'timeout' => config('voice.timeout', 3),
-                'max_agents' => config('call_center.max_agents', 10),
-                'queue_timeout' => config('call_center.queue_timeout', 300),
-                'recording_enabled' => config('voice.recording_enabled', true),
+            'default_voice' => $settings['default_voice'] ?? 'woman',
+            'timeout' => isset($settings['timeout']) ? (int)$settings['timeout'] : 3,
+            'recording_enabled' => isset($settings['recording_enabled']) ? (bool)$settings['recording_enabled'] : true,
             ],
             'urls' => [
-                'callback_url' => config('voice.callback_url'),
-                'event_callback_url' => config('voice.event_callback_url'),
-                'ringback_tone' => config('voice.ringback_tone'),
-                'voicemail_callback' => config('voice.voicemail_callback'),
+            'callback_url' => $settings['callback_url'] ?? null,
+            'event_callback_url' => $settings['event_callback_url'] ?? null,
+            'ringback_tone' => $settings['ringback_tone'] ?? null,
+            'voicemail_callback' => $settings['voicemail_callback'] ?? null,
             ],
             'messages' => [
-                'welcome' => config('voice.messages.welcome', 'Welcome to our service.'),
-                'no_input' => config('voice.messages.no_input', 'We did not receive any input. Goodbye.'),
-                'invalid_option' => config('voice.messages.invalid_option', 'Invalid option selected. Please try again.'),
-                'connecting_agent' => config('voice.messages.connecting_agent', 'Connecting you to an agent.'),
-                'agents_busy' => config('voice.messages.agents_busy', 'All agents are currently busy. Please leave a message.'),
-                'voicemail_prompt' => config('voice.messages.voicemail_prompt', 'Please leave a message after the tone.'),
-            ]
+            'welcome' => $settings['welcome_message'] ?? 'Welcome to our service.',
+            'no_input' => $settings['no_input_message'] ?? 'We did not receive any input. Goodbye.',
+            'invalid_option' => $settings['invalid_option_message'] ?? 'Invalid option selected. Please try again.',
+            'connecting_agent' => $settings['connecting_agent_message'] ?? 'Connecting you to an agent.',
+            'agents_busy' => $settings['agents_busy_message'] ?? 'All agents are currently busy. Please leave a message.',
+            'voicemail_prompt' => $settings['voicemail_prompt'] ?? 'Please leave a message after the tone.',
+            ],
+            'fallback_number' => $settings['fallback_number'] ?? null,
+            'default_forward_number' => $settings['default_forward_number'] ?? null,
+            'debug_mode' => isset($settings['debug_mode']) ? (bool)$settings['debug_mode'] : false,
+            'log_level' => $settings['log_level'] ?? 'info',
         ];
     }
 
@@ -846,6 +854,8 @@ class VoiceCallService
      */
     public function generateTokens(?array $userIds = null): array
     {
+
+        
         $apiKey = $this->config['africastalking']['api_key'];
         $username = $this->config['africastalking']['username'];
         $phoneNumber = $this->config['africastalking']['phone'];
@@ -861,12 +871,12 @@ class VoiceCallService
         foreach ($users as $user) {
             try {
                 // Ensure unique client name
-                if (empty($user->client_name)) {
-                    $user->client_name = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
+                if (empty($user->username)) {
+                    $user->username = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
                     $user->save();
                 }
 
-                $clientName = str_replace(' ', '', $user->client_name);
+                $clientName = str_replace(' ', '', $user->username);
                 $incoming = $user->can_receive_calls ?? true;
                 $outgoing = $user->can_call ?? true;
 

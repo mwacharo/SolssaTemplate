@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Admin\AuditLogController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\CallCenterSettingController;
+use App\Http\Controllers\Api\CallCentreController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CredentialController;
 use App\Http\Controllers\Api\Integrations\GoogleSheetController;
@@ -277,7 +278,7 @@ Route::prefix('v1')->group(function () {
     // Route::get('v1/call-centre-play-welcome', [ApiCallCentreController::class, 'messageBuilderPlayWelcome']);
     // Route::post('v1/call-centre-transfer-call', [ApiCallCentreController::class, 'transferCall']);
     // Route::post('v1/call-centre-dequeue-call', [ApiCallCentreController::class, 'dequeueCall']);
-    // Route::post('v1/call-centre-generate-token', [ApiCallCentreController::class, 'getToken']);
+    Route::get('/token', [CallCentreController::class, 'getToken']);
     // Route::get('v1/call-waiting-history', [ApiCallCentreController::class, 'getCallWaitingHistory']);
     // Route::get('v1/call-agent-history/{id}', [ApiCallCentreController::class, 'getAgentCallHistory']);
 

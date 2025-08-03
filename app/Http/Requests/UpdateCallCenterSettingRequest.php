@@ -11,7 +11,7 @@ class UpdateCallCenterSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,7 @@ class UpdateCallCenterSettingRequest extends FormRequest
     public function rules(): array
     {
        return [
-          'country_id' => 'required|exists:countries,id',
+        //   'country_id' => 'required|exists:countries,id',
           'username' => 'required|string|max:255',
           'api_key' => 'required|string|max:255',
           'phone' => 'required|string|max:20',
