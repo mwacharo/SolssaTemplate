@@ -261,8 +261,11 @@ class AfricasTalkingService
         Log::info("No available agent found, showing IVR menu");
         // return $this->generateDynamicMenu();
 
+        // Africa's Talking expects plain XML, not a Laravel response object
         $xml = $this->generateDynamicMenu();
-        return response($xml, 200)->header('Content-Type', 'application/xml');
+        header('Content-Type: application/xml');
+        echo $xml;
+        exit;
     }
 
     /**
