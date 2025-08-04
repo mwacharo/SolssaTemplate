@@ -89,7 +89,31 @@ class CallCentreController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }   
+    }  
+    
+    
+    public function fetchCallHistory()
+    {
+        try {
+            // Assuming you have injected AfricasTalkingService via the constructor or use app() helper
+            $africasTalkingService = app(\App\Services\AfricasTalkingService::class);
+
+            $result = $africasTalkingService->fetchCallHistory();
+
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Fetch call history failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fetch call history failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Display a listing of the resource.
      */

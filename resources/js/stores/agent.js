@@ -22,7 +22,7 @@ export const useAgentStore = defineStore('agent', {
                 // Remove undefined params
                 Object.keys(params).forEach(k => params[k] === undefined && delete params[k])
 
-                const response = await axios.get('/api/agent/call-history', { params })
+                const response = await axios.get('/api/v1/agent/call-history', { params })
                 this.callHistory = response.data.data || []
                 return {
                     total: response.data.total || 0,

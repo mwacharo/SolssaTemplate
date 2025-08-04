@@ -232,7 +232,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
             }
             
             // Otherwise, use API call
-            const response = await axios.post('/api/call-center/make-call', {
+            const response = await axios.post('/api/v1/call-center/make-call', {
                 phoneNumber,
                 ...options
             })
@@ -268,7 +268,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
             }
 
             if (activeCall.value) {
-                await axios.post(`/api/call-center/end/${activeCall.value.id}`)
+                await axios.post(`/api/v1/call-center/end/${activeCall.value.id}`)
                 
                 // Add to call history
                 callHistory.value.unshift({
@@ -294,7 +294,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
                 return
             }
 
-            await axios.post(`/api/call-center/reject/${call.id}`)
+            await axios.post(`/api/v1/call-center/reject/${call.id}`)
             // Note: incomingCall should be managed by WebRTC store
             webrtcStore.setIncomingCall(null)
         } catch (error) {
@@ -316,7 +316,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
             }
 
             isOnHold.value = !isOnHold.value
-            await axios.post(`/api/call-center/hold/${activeCall.value.id}`, {
+            await axios.post(`/api/v1/call-center/hold/${activeCall.value.id}`, {
                 hold: isOnHold.value
             })
         } catch (error) {
@@ -334,7 +334,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
             }
 
             isMuted.value = !isMuted.value
-            await axios.post(`/api/call-center/mute/${activeCall.value.id}`, {
+            await axios.post(`/api/v1/call-center/mute/${activeCall.value.id}`, {
                 mute: isMuted.value
             })
         } catch (error) {
@@ -346,7 +346,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
     // Transfer call
     async function transferCall(targetNumber) {
         try {
-            await axios.post(`/api/call-center/transfer/${activeCall.value.id}`, {
+            await axios.post(`/api/v1/call-center/transfer/${activeCall.value.id}`, {
                 targetNumber
             })
             
@@ -438,7 +438,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
     // Agent status management
     async function updateAgentStatus(status) {
         try {
-            await axios.post('/api/call-center/agent/status', { status })
+            await axios.post('/api/v1/call-center/agent/status', { status })
             agentStatus.value = status
         } catch (error) {
             callError.value = 'Failed to update status'
@@ -448,7 +448,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
     // Fetch queue status
     async function fetchQueueStatus() {
         try {
-            const response = await axios.get('/api/call-center/queue/status')
+            const response = await axios.get('/api/v1/call-center/queue/status')
             queueStatus.value = response.data
         } catch (error) {
             console.error('Failed to fetch queue status:', error)
@@ -458,7 +458,7 @@ export const useCallCenterStore = defineStore('callCenter', () => {
     // Fetch agent list
     async function fetchAgentList() {
         try {
-            const response = await axios.get('/api/call-center/agents')
+            const response = await axios.get('/api/v1/call-center/agents')
             agentList.value = response.data
         } catch (error) {
             console.error('Failed to fetch agent list:', error)
