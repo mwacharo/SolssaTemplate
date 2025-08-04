@@ -187,7 +187,9 @@ class AfricasTalkingService
         switch ($callSessionState) {
             case 'Ringing':
                 $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
-                return $this->generateDialResponse($clientDialedNumber);
+                // return $this->generateDialResponse($clientDialedNumber);
+                 $xml = $this->generateDialResponse($clientDialedNumber);
+            return response($xml, 200)->header('Content-Type', 'application/xml');
 
             case 'CallInitiated':
                 $this->updateCallHistory($sessionId, ['status' => 'initiated']);
@@ -218,7 +220,9 @@ class AfricasTalkingService
                 break;
         }
 
-        return '';
+        // return '';
+            return response('', 200)->header('Content-Type', 'application/xml');
+
     }
 
     /**
@@ -601,7 +605,7 @@ class AfricasTalkingService
     {
         $cleanNumber = preg_replace('/^\+/', '', trim($clientDialedNumber));
         
-        $response = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $response = '<?xml version="1.0" encoding="UTF-8"?>';
         $response .= '<Response>';
         $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"/>';
         $response .= '</Response>';
