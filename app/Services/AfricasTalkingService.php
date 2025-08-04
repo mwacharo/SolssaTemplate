@@ -329,7 +329,7 @@ class AfricasTalkingService
             return null;
         }
 
-        $contact = Contact::where('phone_number', $callerNumber)->first();
+        $contact = Contact::where('phone', $callerNumber)->first();
 
         if (!$contact) {
             return null;
