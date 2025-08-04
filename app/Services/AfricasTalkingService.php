@@ -353,11 +353,13 @@ class AfricasTalkingService
     }
 
     // Get the most recent order by caller with agent assigned
-    $order = Order::with('agent')
-        ->where('phone_number', $callerNumber)
-        ->whereNotNull('agent_id')
-        ->latest()
-        ->first();
+    $order = Order::whereHas('client', function ($query) use ($callerNumber) {
+        $query->where('phone_number', $callerNumber);
+    })
+    ->whereNotNull('agent_id')
+    ->with('agent', 'client')
+    ->latest()
+    ->first();
 
     // Validate order and check if agent is available
     if (!$order || !$order->agent || $order->agent->status !== 'available') {
