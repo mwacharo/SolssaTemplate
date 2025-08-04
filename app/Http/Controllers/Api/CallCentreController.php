@@ -49,7 +49,7 @@ class CallCentreController extends Controller
             // Assuming you have injected AfricasTalkingService via the constructor or use app() helper
             $africasTalkingService = app(\App\Services\AfricasTalkingService::class);
 
-            $result = $africasTalkingService->handleVoiceCallback();
+            $result = $africasTalkingService->handleVoiceCallback(request());
 
             return response()->json([
                 'success' => true,
@@ -74,7 +74,7 @@ class CallCentreController extends Controller
             // Assuming you have injected AfricasTalkingService via the constructor or use app() helper
             $africasTalkingService = app(\App\Services\AfricasTalkingService::class);
 
-            $result = $africasTalkingService->handleEventCallback();
+            $result = $africasTalkingService->handleEventCallback(request());
 
             return response()->json([
                 'success' => true,
