@@ -186,9 +186,10 @@
                                 <v-col cols="12" md="6">
                                     <v-text-field v-model="editedItem.phone_number" label="Virtual Number"
                                         variant="outlined"
-                                        :rules="[v => !!v || 'Virtual number is required', validatePhoneNumber]"
-                                        hint="The virtual phone number" persistent-hint required
-                                        v-mask="phoneNumberMask"></v-text-field>
+                                        :rules="[v => !!v || 'Virtual number is required']"
+                                        
+                                        
+                                        ></v-text-field>
                                 </v-col>
 
                                 <v-col cols="12" md="6">
