@@ -41,6 +41,55 @@ class CallCentreController extends Controller
             ], 500);
         }
     }
+
+
+    public function handleVoiceCallback ()
+    {
+        try {
+            // Assuming you have injected AfricasTalkingService via the constructor or use app() helper
+            $africasTalkingService = app(\App\Services\AfricasTalkingService::class);
+
+            $result = $africasTalkingService->handleVoiceCallback();
+
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Voice callback handling failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Voice callback handling failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }  
+    
+    
+
+    public function handleEventCallback()
+    {
+        try {
+            // Assuming you have injected AfricasTalkingService via the constructor or use app() helper
+            $africasTalkingService = app(\App\Services\AfricasTalkingService::class);
+
+            $result = $africasTalkingService->handleEventCallback();
+
+            return response()->json([
+                'success' => true,
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            Log::error('SMS callback handling failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'SMS callback handling failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }   
     /**
      * Display a listing of the resource.
      */

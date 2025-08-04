@@ -760,7 +760,7 @@ class AfricasTalkingService
             $payload = $request->all();
 
             // Update call history with event data
-            CallHistory::updateOrCreate(
+            fetchCallHistory::updateOrCreate(
                 ['sessionId' => $payload['sessionId'] ?? null],
                 [
                     'callerNumber' => $payload['callerNumber'] ?? null,
