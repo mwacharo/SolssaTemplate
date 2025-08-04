@@ -43,4 +43,19 @@ class CallHistory extends Model
         'updated_at',
         'deleted_at',
     ];
+
+
+    // add relationship with User model
+
+    // Relationship with User model (agent)
+    public function agent()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relationship with IVR Option model
+    public function ivrOption()
+    {
+        return $this->belongsTo(IvrOption::class, 'ivr_option_id');
+    }
 }
