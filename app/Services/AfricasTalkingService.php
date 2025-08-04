@@ -416,7 +416,7 @@ class AfricasTalkingService
                 'agent_id' => $agent->id,
                 'sessionId' => $sessionId
             ]);
-            return null;
+            return 0;
         }
     }
 
@@ -537,7 +537,7 @@ class AfricasTalkingService
             $user = User::where('phone', $ivrOption->forward_number)->first();
         }
 
-        CallHistory::updateOrCreate(
+           CallHistory::updateOrCreate(
             ['sessionId' => $sessionId],
             [
                 'callerNumber' => $callerNumber,
@@ -702,13 +702,13 @@ class AfricasTalkingService
     private function updateCallHistory(string $sessionId, array $data): void
     {
         try {
-            $call = CallHistory::updateOrCreate(['sessionId' => $sessionId], $data);
-            
+            CallHistory::updateOrCreate(['sessionId' => $sessionId], $data);
+
             // Optionally broadcast event
-            if (class_exists(CallStatusUpdated::class)) {
-                broadcast(new CallStatusUpdated($call));
-            }
-            
+            // if (class_exists(CallStatusUpdated::class)) {
+            //     broadcast(new CallStatusUpdated($call));
+            // }
+
             Log::info("Call history updated", [
                 'sessionId' => $sessionId,
                 'data' => $data
