@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateIvrOptionRequest;
 use App\Http\Resources\IvrOptionResource;
 use App\Models\IvrOption;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class IvrOptionController extends Controller
 {
@@ -42,8 +43,10 @@ class IvrOptionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateIvrOptionRequest $request, IvrOption $ivrOption)
+    public function update(UpdateIvrOptionRequest $request, $id)
     {
+        Log::info('Update IVR Option Request:', $request->all());
+        $ivrOption = IvrOption::findOrFail($id);
         $ivrOption->update($request->validated());
         return new IvrOptionResource($ivrOption);
     }
