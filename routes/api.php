@@ -255,8 +255,8 @@ Route::prefix('v1')->group(function () {
 
     // // callcentre 
 
-    Route::post('v1/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
-    Route::post('v1/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
+    Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
+    Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
     // Route::get('v1/voice-token', [ApiCallCentreController::class, 'generateToken']);
     // Route::get('v1/call-history', [ApiCallCentreController::class, 'fetchCallHistory']);
 
