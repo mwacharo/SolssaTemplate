@@ -259,7 +259,10 @@ class AfricasTalkingService
 
         // No agent available, show IVR menu
         Log::info("No available agent found, showing IVR menu");
-        return $this->generateDynamicMenu();
+        // return $this->generateDynamicMenu();
+
+        $xml = $this->generateDynamicMenu();
+        return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 
     /**
