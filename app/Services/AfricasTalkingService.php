@@ -601,7 +601,7 @@ class AfricasTalkingService
     {
         $cleanNumber = preg_replace('/^\+/', '', trim($clientDialedNumber));
         
-        $response = '<?xml version="1.0" encoding="UTF-8"?>';
+        $response = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $response .= '<Response>';
         $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"/>';
         $response .= '</Response>';

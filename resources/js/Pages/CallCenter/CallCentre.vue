@@ -421,7 +421,7 @@ const headers = [
   { title: 'Date', value: 'created_at', width: '140px' },
   { title: 'Call Start', value: 'callStartTime', width: '140px' },
   { title: 'Direction', value: 'direction', width: '100px' },
-  { title: 'Caller', value: 'callerNumber', width: '130px' },
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          { title: 'Caller', value: 'callerNumber', width: '130px' },
   { title: 'Caller Carrier', value: 'callerCarrierName', width: '120px' },
   { title: 'Caller Country', value: 'callerCountryCode', width: '100px' },
   { title: 'Destination', value: 'destinationNumber', width: '130px' },
