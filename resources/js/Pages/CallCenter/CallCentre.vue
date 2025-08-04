@@ -207,9 +207,19 @@
         </div>
 
         <!-- Data Table -->
-        <v-data-table-server v-model:items-per-page="itemsPerPage" v-model:page="currentPage" v-model:sort-by="sortBy"
-          :headers="headers" :items="agentStore.callHistory" :items-length="totalItems" :loading="agentStore.loading"
-          :search="search" class="call-history-table" density="comfortable" @update:options="loadItems">
+        <v-data-table-server
+          v-model:items-per-page="itemsPerPage"
+          v-model:page="currentPage"
+          v-model:sort-by="sortBy"
+          :headers="headers"
+          :items="agentStore.callHistory"
+          :items-length="totalItems"
+          :loading="agentStore.loading"
+          :search="search"
+          class="call-history-table"
+          density="comfortable"
+          @update:options="loadItems"
+        >
           <!-- Date Column -->
           <template #item.created_at="{ item }">
             <div class="date-cell">
@@ -235,8 +245,8 @@
 
           <!-- Duration -->
           <template #item.durationInSeconds="{ item }">
-            <v-chip :color="getDurationColor(item.durationInSeconds)" size="small" variant="tonal">
-              {{ formatDuration(item.durationInSeconds) }}
+            <v-chip :color="getDurationColor(Number(item.durationInSeconds))" size="small" variant="tonal">
+              {{ formatDuration(Number(item.durationInSeconds)) }}
             </v-chip>
           </template>
 
@@ -262,8 +272,7 @@
           <template #item.lastBridgeHangupCause="{ item }">
             <v-tooltip :text="getHangupCauseDescription(item.lastBridgeHangupCause)">
               <template #activator="{ props }">
-                <v-chip v-bind="props" :color="getHangupCauseColor(item.lastBridgeHangupCause)" size="small"
-                  variant="outlined">
+                <v-chip v-bind="props" :color="getHangupCauseColor(item.lastBridgeHangupCause)" size="small" variant="outlined">
                   {{ item.lastBridgeHangupCause }}
                 </v-chip>
               </template>
