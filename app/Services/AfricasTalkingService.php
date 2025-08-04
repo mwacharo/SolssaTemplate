@@ -39,35 +39,35 @@ class AfricasTalkingService
      */
     private function getCallConfig(): array
     {
-       
+
         $settings = CallCenterSetting::first();
 
         return [
             'africastalking' => [
-            'country_id' => $settings['country_id'] ?? null,
-            'username' => $settings['username'] ?? null,
-            'api_key' => $settings['api_key'] ?? null,
-            'phone' => $settings['phone'] ?? null,
-            'sandbox' => isset($settings['sandbox']) ? (bool)$settings['sandbox'] : false,
+                'country_id' => $settings['country_id'] ?? null,
+                'username' => $settings['username'] ?? null,
+                'api_key' => $settings['api_key'] ?? null,
+                'phone' => $settings['phone'] ?? null,
+                'sandbox' => isset($settings['sandbox']) ? (bool)$settings['sandbox'] : false,
             ],
             'voice' => [
-            'default_voice' => $settings['default_voice'] ?? 'woman',
-            'timeout' => isset($settings['timeout']) ? (int)$settings['timeout'] : 3,
-            'recording_enabled' => isset($settings['recording_enabled']) ? (bool)$settings['recording_enabled'] : true,
+                'default_voice' => $settings['default_voice'] ?? 'woman',
+                'timeout' => isset($settings['timeout']) ? (int)$settings['timeout'] : 3,
+                'recording_enabled' => isset($settings['recording_enabled']) ? (bool)$settings['recording_enabled'] : true,
             ],
             'urls' => [
-            'callback_url' => $settings['callback_url'] ?? null,
-            'event_callback_url' => $settings['event_callback_url'] ?? null,
-            'ringback_tone' => $settings['ringback_tone'] ?? null,
-            'voicemail_callback' => $settings['voicemail_callback'] ?? null,
+                'callback_url' => $settings['callback_url'] ?? null,
+                'event_callback_url' => $settings['event_callback_url'] ?? null,
+                'ringback_tone' => $settings['ringback_tone'] ?? null,
+                'voicemail_callback' => $settings['voicemail_callback'] ?? null,
             ],
             'messages' => [
-            'welcome' => $settings['welcome_message'] ?? 'Welcome to our service.',
-            'no_input' => $settings['no_input_message'] ?? 'We did not receive any input. Goodbye.',
-            'invalid_option' => $settings['invalid_option_message'] ?? 'Invalid option selected. Please try again.',
-            'connecting_agent' => $settings['connecting_agent_message'] ?? 'Connecting you to an agent.',
-            'agents_busy' => $settings['agents_busy_message'] ?? 'All agents are currently busy. Please leave a message.',
-            'voicemail_prompt' => $settings['voicemail_prompt'] ?? 'Please leave a message after the tone.',
+                'welcome' => $settings['welcome_message'] ?? 'Welcome to our service.',
+                'no_input' => $settings['no_input_message'] ?? 'We did not receive any input. Goodbye.',
+                'invalid_option' => $settings['invalid_option_message'] ?? 'Invalid option selected. Please try again.',
+                'connecting_agent' => $settings['connecting_agent_message'] ?? 'Connecting you to an agent.',
+                'agents_busy' => $settings['agents_busy_message'] ?? 'All agents are currently busy. Please leave a message.',
+                'voicemail_prompt' => $settings['voicemail_prompt'] ?? 'Please leave a message after the tone.',
             ],
             'fallback_number' => $settings['fallback_number'] ?? null,
             'default_forward_number' => $settings['default_forward_number'] ?? null,
@@ -163,13 +163,13 @@ class AfricasTalkingService
     private function isOutgoingCall(string $callerNumber): bool
     {
         $outgoingPatterns = config('voice.outgoing_patterns', ['BoxleoKenya']);
-        
+
         foreach ($outgoingPatterns as $pattern) {
             if (str_contains($callerNumber, $pattern)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -188,8 +188,15 @@ class AfricasTalkingService
             case 'Ringing':
                 $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
                 // return $this->generateDialResponse($clientDialedNumber);
-                 $xml = $this->generateDialResponse($clientDialedNumber);
-            return response($xml, 200)->header('Content-Type', 'application/xml');
+                //      $xml = $this->generateDialResponse($clientDialedNumber);
+                // return response($xml, 200)->header('Content-Type', 'application/xml');
+
+                $xml = $this->generateDialResponse($clientDialedNumber);
+
+                // Manually set the correct content type
+                header('Content-Type: application/xml');
+                echo $xml;
+                exit; // Stop Laravel from adding anything else
 
             case 'CallInitiated':
                 $this->updateCallHistory($sessionId, ['status' => 'initiated']);
@@ -221,8 +228,7 @@ class AfricasTalkingService
         }
 
         // return '';
-            return response('', 200)->header('Content-Type', 'application/xml');
-
+        return response('', 200)->header('Content-Type', 'application/xml');
     }
 
     /**
@@ -245,7 +251,7 @@ class AfricasTalkingService
 
         // Try to assign available agent based on priority routing
         $assignedAgentNumber = $this->getAvailableAgent($callerNumber, $sessionId);
-        
+
         if ($assignedAgentNumber) {
             Log::info("Routing call to assigned agent", ['agentNumber' => $assignedAgentNumber]);
             return $this->createDialResponse($assignedAgentNumber);
@@ -324,7 +330,7 @@ class AfricasTalkingService
         }
 
         $contact = Contact::where('phone_number', $callerNumber)->first();
-        
+
         if (!$contact) {
             return null;
         }
@@ -365,14 +371,13 @@ class AfricasTalkingService
 
         // Filter agents with permission to receive calls
         $availableAgents = $availableAgents->filter(function ($user) {
-            return method_exists($user, 'hasPermissionTo') ? 
-                $user->hasPermissionTo('can_receive_calls') : 
-                ($user->can_receive_calls ?? true);
+            return method_exists($user, 'hasPermissionTo') ?
+                $user->hasPermissionTo('can_receive_calls') : ($user->can_receive_calls ?? true);
         });
 
         // Implement round-robin logic
         $lastAssignedAgent = Cache::get('last_assigned_agent_id', 0);
-        
+
         foreach ($availableAgents as $agent) {
             if ($agent->id > $lastAssignedAgent) {
                 Cache::put('last_assigned_agent_id', $agent->id, 3600);
@@ -500,13 +505,13 @@ class AfricasTalkingService
     private function isAgentOption(IvrOption $option): bool
     {
         $agentKeywords = config('voice.agent_keywords', ['agent', 'speak to agent', 'customer service']);
-        
+
         foreach ($agentKeywords as $keyword) {
             if (stripos($option->description, $keyword) !== false) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -516,7 +521,7 @@ class AfricasTalkingService
     private function handleAgentRequest(string $callerNumber, string $sessionId): string
     {
         $agentNumber = $this->getAvailableAgent($callerNumber, $sessionId);
-        
+
         if ($agentNumber) {
             return $this->createVoiceResponse($this->config['messages']['connecting_agent'], $agentNumber);
         }
@@ -531,17 +536,17 @@ class AfricasTalkingService
     private function updateCallHistoryWithSelection(string $sessionId, string $callerNumber, IvrOption $ivrOption): void
     {
         $user = null;
-        
+
         // Try to find user by phone number or forward number
         if ($ivrOption->phone_number) {
             $user = User::where('phone_number', $ivrOption->phone_number)->first();
         }
-        
+
         if (!$user && $ivrOption->forward_number) {
             $user = User::where('phone', $ivrOption->forward_number)->first();
         }
 
-           CallHistory::updateOrCreate(
+        CallHistory::updateOrCreate(
             ['sessionId' => $sessionId],
             [
                 'callerNumber' => $callerNumber,
@@ -570,15 +575,15 @@ class AfricasTalkingService
 
         $response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n";
         $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\">{$message}</Say>\n";
-        
+
         if ($phoneNumber) {
             $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-            $ringbackAttr = $this->config['urls']['ringback_tone'] ? 
+            $ringbackAttr = $this->config['urls']['ringback_tone'] ?
                 'ringbackTone="' . $this->config['urls']['ringback_tone'] . '"' : '';
-            
+
             $response .= "<Dial {$recordAttr} sequential=\"true\" {$ringbackAttr} phoneNumbers=\"{$phoneNumber}\"/>\n";
         }
-        
+
         $response .= "</Response>";
 
         return $response;
@@ -590,12 +595,12 @@ class AfricasTalkingService
     private function createDialResponse(string $phoneNumber): string
     {
         $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-        $ringbackAttr = $this->config['urls']['ringback_tone'] ? 
+        $ringbackAttr = $this->config['urls']['ringback_tone'] ?
             'ringbackTone="' . $this->config['urls']['ringback_tone'] . '"' : '';
 
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n" .
-               "<Dial {$recordAttr} sequential=\"true\" {$ringbackAttr} phoneNumbers=\"{$phoneNumber}\"/>\n" .
-               "</Response>";
+            "<Dial {$recordAttr} sequential=\"true\" {$ringbackAttr} phoneNumbers=\"{$phoneNumber}\"/>\n" .
+            "</Response>";
     }
 
     /**
@@ -604,7 +609,7 @@ class AfricasTalkingService
     private function generateDialResponse(string $clientDialedNumber): string
     {
         $cleanNumber = preg_replace('/^\+/', '', trim($clientDialedNumber));
-        
+
         $response = '<?xml version="1.0" encoding="UTF-8"?>';
         $response .= '<Response>';
         $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"/>';
@@ -743,7 +748,7 @@ class AfricasTalkingService
         ];
 
         $this->updateCallHistory($sessionId, $data);
-        
+
         Log::info("Call finalized", [
             'sessionId' => $sessionId,
             'data' => $data
@@ -789,8 +794,8 @@ class AfricasTalkingService
             );
 
             // Check if call is completed and reset agent status
-            $completed = strtolower($payload['callSessionState'] ?? '') === 'completed' || 
-                        strtolower($payload['status'] ?? '') === 'completed';
+            $completed = strtolower($payload['callSessionState'] ?? '') === 'completed' ||
+                strtolower($payload['status'] ?? '') === 'completed';
 
             if ($completed && isset($payload['sessionId'])) {
                 $this->resetAgentStatus($payload['sessionId']);
@@ -802,7 +807,7 @@ class AfricasTalkingService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return ['error' => 'Internal Server Error'];
         }
     }
@@ -859,7 +864,7 @@ class AfricasTalkingService
     public function generateTokens(?array $userIds = null): array
     {
 
-        
+
         $apiKey = $this->config['africastalking']['api_key'];
         $username = $this->config['africastalking']['username'];
         $phoneNumber = $this->config['africastalking']['phone'];
@@ -937,7 +942,7 @@ class AfricasTalkingService
     private function makeTokenRequest(array $payload, string $apiKey): array
     {
         $url = 'https://webrtc.africastalking.com/capability-token/request';
-        
+
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -949,11 +954,11 @@ class AfricasTalkingService
         ]);
 
         $response = curl_exec($ch);
-        
+
         if (curl_errno($ch)) {
             throw new Exception('cURL Error: ' . curl_error($ch));
         }
-        
+
         curl_close($ch);
 
         return json_decode($response, true) ?? [];
@@ -972,7 +977,7 @@ class AfricasTalkingService
 
         try {
             $voice = $this->africastalking->voice();
-            
+
             $result = $voice->uploadMediaFile([
                 "phoneNumber" => $phoneNumber,
                 "url" => $fileUrl
@@ -1051,7 +1056,7 @@ class AfricasTalkingService
             $nextQueuedCall->save();
 
             $voice = $this->africastalking->voice();
-            
+
             $response = $voice->dequeue([
                 'callId' => $callId,
                 'phoneNumber' => $nextQueuedCall->phone_number,
@@ -1194,7 +1199,7 @@ class AfricasTalkingService
             ];
         } catch (Exception $e) {
             Log::error("Error fetching call history: " . $e->getMessage());
-            
+
             return [
                 'success' => false,
                 'message' => 'Failed to fetch call history',
