@@ -284,9 +284,9 @@ class AfricasTalkingService
         }
 
         // Priority 3: Check for recent orders
-        $agent = $this->getAgentFromOrders($callerNumber);
-        if ($agent) {
-            return $this->assignAgent($agent, $sessionId);
+        $orderAndAgent = $this->getOrderAndAgent($callerNumber);
+        if ($orderAndAgent && isset($orderAndAgent['agent'])) {
+            return $this->assignAgent($orderAndAgent['agent'], $sessionId);
         }
 
         // Priority 4: Round-robin assignment to available agents
@@ -343,24 +343,34 @@ class AfricasTalkingService
     /**
      * Get agent from recent orders
      */
-    private function getAgentFromOrders(string $callerNumber): ?User
-    {
-        if (!class_exists(Order::class)) {
-            return null;
-        }
 
-        $order = Order::where('customer_phone', $callerNumber)
-            ->latest()
-            ->first();
 
-        if (!$order || !$order->agent_id) {
-            return null;
-        }
 
-        return User::where('id', $order->agent_id)
-            ->where('status', 'available')
-            ->first();
+     private function getOrderAndAgent(string $callerNumber): array|null
+{
+    if (!class_exists(Order::class)) {
+        return null;
     }
+
+    // Get the most recent order by caller with agent assigned
+    $order = Order::with('agent')
+        ->where('phone_number', $callerNumber)
+        ->whereNotNull('agent_id')
+        ->latest()
+        ->first();
+
+    // Validate order and check if agent is available
+    if (!$order || !$order->agent || $order->agent->status !== 'available') {
+        return null;
+    }
+
+    // Return both order and agent
+    return [
+        'order' => $order,
+        'agent' => $order->agent,
+    ];
+}
+
 
     /**
      * Get next available agent using round-robin or other logic
