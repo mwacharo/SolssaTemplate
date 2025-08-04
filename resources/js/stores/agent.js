@@ -12,28 +12,32 @@ export const useAgentStore = defineStore('agent', {
             this.loading = true
             this.error = null
             try {
-                // Build query params
-                const params = {
-                    page: options.page || 1,
-                    per_page: options.itemsPerPage || 15,
-                    sort: options.sortBy?.length ? options.sortBy.map(s => (s.desc ? '-' : '') + s.key).join(',') : undefined,
-                    search: options.search || undefined,
-                }
-                // Remove undefined params
-                Object.keys(params).forEach(k => params[k] === undefined && delete params[k])
+            // Build query params
+            const params = {
+                page: options.page || 1,
+                per_page: options.itemsPerPage || 15,
+                sort: options.sortBy?.length ? options.sortBy.map(s => (s.desc ? '-' : '') + s.key).join(',') : undefined,
+                search: options.search || undefined,
+            }
+            // Remove undefined params
+            Object.keys(params).forEach(k => params[k] === undefined && delete params[k])
 
-                const response = await axios.get('/api/v1/call-history', { params })
-                this.callHistory = response.data.data || []
-                return {
-                    total: response.data.total || 0,
-                    data: this.callHistory,
-                }
+            const response = await axios.get('/api/v1/call-history', { params })
+            // Adjust for nested data structure in backend response
+            const callHistoryData = response.data?.data?.data?.data || []
+            const total = response.data?.data?.data?.total || 0
+
+            this.callHistory = callHistoryData
+            return {
+                total,
+                data: callHistoryData,
+            }
             } catch (e) {
-                this.error = e
-                this.callHistory = []
-                throw e
+            this.error = e
+            this.callHistory = []
+            throw e
             } finally {
-                this.loading = false
+            this.loading = false
             }
         },
         clearCallHistory() {
