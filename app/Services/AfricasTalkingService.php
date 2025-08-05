@@ -545,7 +545,11 @@ class AfricasTalkingService
         }
 
         // No agents available - record voicemail
-        return $this->createVoicemailResponse();
+        // Africa's Talking expects plain XML, not a Laravel response object
+        $xml = $this->createVoicemailResponse();
+        header('Content-Type: application/xml');
+        echo $xml;
+        exit;
     }
 
     /**
