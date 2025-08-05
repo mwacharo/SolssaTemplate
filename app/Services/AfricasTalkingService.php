@@ -461,7 +461,11 @@ class AfricasTalkingService
                 'sessionId' => $sessionId
             ]);
 
-            return $agent->phone_number;
+            // return $agent->phone_number;
+            return $agent->username;
+
+
+
         } catch (Exception $e) {
             Log::error("Error assigning agent", [
                 'error' => $e->getMessage(),
