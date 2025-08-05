@@ -26,17 +26,34 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
     const afClient = ref(null);
     const incomingCallDialog = ref(false);
-    const incomingCall = ref({ from: '', duration: '' });
+    // const incomingCall = ref({ from: '', duration: '' });
+    const incomingCall = ref(null);
+
+
+
     const connection_active = ref(false);
 
 
     const connectionStatusColor = computed(() => {
-    return connection_active.value ? 'success' : 'error'; // green if ready
-  });
+        return connection_active.value ? 'success' : 'error'; // green if ready
+    });
 
-  const connectionStatusText = computed(() => {
-    return connection_active.value ? 'Online' : 'Offline';
-  });
+    const connectionStatusText = computed(() => {
+        return connection_active.value ? 'Online' : 'Offline';
+    });
+
+
+
+    function setIncomingCall(data) {
+        incomingCall.value = data;
+        incomingCallDialog.value = true;
+    }
+
+    function closeIncomingCallDialog() {
+        incomingCallDialog.value = false;
+        incomingCall.value = null;
+    }
+
 
     async function waitForToken() {
         return new Promise((resolve) => {
@@ -89,17 +106,23 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
             client.on('incomingcall', (event) => {
                 console.log("📞 Incoming call from", event.from);
-                incomingCallDialog.value = true;
-                incomingCall.value = {
+
+
+                webrtcStore.setIncomingCall({
                     from: event.from,
                     duration: 'Connecting...',
-                };
+                });
+                // incomingCallDialog.value = true;
+                // incomingCall.value = {
+                //     from: event.from,
+                //     duration: 'Connecting...',
+                // };
                 // Debugging: Log the state after setting incomingCallDialog
-                if (incomingCallDialog.value) {
-                    console.debug("✅ incomingCallDialog is true. Incoming call state:", incomingCall.value);
-                } else {
-                    console.debug("❌ incomingCallDialog is false.");
-                }
+                // if (incomingCallDialog.value) {
+                //     console.debug("✅ incomingCallDialog is true. Incoming call state:", incomingCall.value);
+                // } else {
+                //     console.debug("❌ incomingCallDialog is false.");
+                // }
             });
 
             client.on('hangup', (event) => {
@@ -122,6 +145,10 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         connection_active,
         connectionStatusColor,
         connectionStatusText,
+        incomingCall,
+        incomingCallDialog,
+        setIncomingCall,
+        closeIncomingCallDialog,
         initializeAfricastalking,
     };
 });

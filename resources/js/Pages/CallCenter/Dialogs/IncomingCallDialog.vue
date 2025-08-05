@@ -457,21 +457,30 @@ const callOutcomes = [
 ]
 
 // FIXED: Direct reactivity to store values
-const incomingCallDialog = computed({
-  get: () => {
-    console.log('🔍 Getting incomingCallDialog:', webrtcStore.incomingCallDialog)
-    return webrtcStore.incomingCallDialog
-  },
-  set: (value) => {
-    console.log('🔍 Setting incomingCallDialog:', value)
-    webrtcStore.incomingCallDialog = value
-  }
-})
+// const incomingCallDialog = computed({
+//   get: () => {
+//     console.log('🔍 Getting incomingCallDialog:', webrtcStore.incomingCallDialog)
+//     return webrtcStore.incomingCallDialog
+//   },
+//   set: (value) => {
+//     console.log('🔍 Setting incomingCallDialog:', value)
+//     webrtcStore.incomingCallDialog = value
+//   }
+// })
 
-const incomingCall = computed(() => {
-  console.log('🔍 Getting incomingCall:', webrtcStore.incomingCall)
-  return webrtcStore.incomingCall
-})
+
+const incomingCallDialog = computed({
+  get: () => webrtcStore.incomingCallDialog,
+  set: (val) => webrtcStore.incomingCallDialog = val,
+});
+
+const incomingCall = computed(() => webrtcStore.incomingCall);
+
+
+// const incomingCall = computed(() => {
+//   console.log('🔍 Getting incomingCall:', webrtcStore.incomingCall)
+//   return webrtcStore.incomingCall
+// })
 
 // Sample caller info (in real app, this would be fetched based on phone number)
 const callerInfo = ref({
