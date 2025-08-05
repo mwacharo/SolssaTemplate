@@ -439,42 +439,77 @@ class AfricasTalkingService
 
     /**
      * Assign agent and update status
-     */
+    //  */
+    // private function assignAgent(User $agent, string $sessionId): string
+    // {
+    //     try {
+    //         Log::info("Assigning agent", [
+    //             'agent_id' => $agent->id,
+    //             'phone_number' => $agent->phone_number,
+    //             'sessionId' => $sessionId
+    //         ]);
+
+    //         $agent->update([
+    //             'status' => 'busy',
+    //             'sessionId' => $sessionId ?: uniqid()
+    //         ]);
+
+    //         $this->updateCallHistory($sessionId, ['user_id' => $agent->id]);
+
+    //         Log::info("Agent assigned successfully", [
+    //             'agent_id' => $agent->id,
+    //             'sessionId' => $sessionId
+    //         ]);
+
+    //         // return $agent->phone_number;
+    //         return $agent->username;
+
+
+
+    //     } catch (Exception $e) {
+    //         Log::error("Error assigning agent", [
+    //             'error' => $e->getMessage(),
+    //             'agent_id' => $agent->id,
+    //             'sessionId' => $sessionId
+    //         ]);
+    //         return 0;
+    //     }
+    // }
+
+
+
     private function assignAgent(User $agent, string $sessionId): string
-    {
-        try {
-            Log::info("Assigning agent", [
-                'agent_id' => $agent->id,
-                'phone_number' => $agent->phone_number,
-                'sessionId' => $sessionId
-            ]);
+{
+    try {
+        \Log::info("Assigning agent", [
+            'agent_id' => $agent->id,
+            'phone_number' => $agent->phone_number,
+            'sessionId' => $sessionId
+        ]);
 
-            $agent->update([
-                'status' => 'busy',
-                'sessionId' => $sessionId ?: uniqid()
-            ]);
+        $agent->update([
+            'status' => 'busy',
+            'sessionId' => $sessionId ?: uniqid()
+        ]);
 
-            $this->updateCallHistory($sessionId, ['user_id' => $agent->id]);
+        $this->updateCallHistory($sessionId, ['user_id' => $agent->id]);
 
-            Log::info("Agent assigned successfully", [
-                'agent_id' => $agent->id,
-                'sessionId' => $sessionId
-            ]);
+        \Log::info("Agent assigned successfully", [
+            'agent_id' => $agent->id,
+            'sessionId' => $sessionId
+        ]);
 
-            // return $agent->phone_number;
-            return $agent->username;
-
-
-
-        } catch (Exception $e) {
-            Log::error("Error assigning agent", [
-                'error' => $e->getMessage(),
-                'agent_id' => $agent->id,
-                'sessionId' => $sessionId
-            ]);
-            return 0;
-        }
+        // Always return a string (never null)
+        return (string) ($agent->username ?? $agent->phone_number ?? '');
+    } catch (Exception $e) {
+        \Log::error("Error assigning agent", [
+            'error' => $e->getMessage(),
+            'agent_id' => $agent->id ?? null,
+            'sessionId' => $sessionId
+        ]);
+        return '';
     }
+}
 
     /**
      * Generate dynamic IVR menu from database
