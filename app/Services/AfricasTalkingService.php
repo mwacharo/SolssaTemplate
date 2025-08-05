@@ -691,18 +691,25 @@ class AfricasTalkingService
     }
 
     /**
-     * Create dial response for direct routing
+     * Create dial response for outgoing calls
      */
-    private function createDialResponse(string $phoneNumber): string
-    {
-        $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-        $ringbackAttr = $this->config['urls']['ringback_tone'] ?
-            'ringbackTone="' . $this->config['urls']['ringback_tone'] . '"' : '';
 
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n" .
-            "<Dial {$recordAttr} sequential=\"true\" {$ringbackAttr} phoneNumbers=\"{$phoneNumber}\"/>\n" .
-            "</Response>";
-    }
+    private function createDialResponse(string $phoneNumber): string
+{
+    $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
+    $ringbackAttr = $this->config['urls']['ringback_tone']
+        ? ' ringbackTone="' . $this->config['urls']['ringback_tone'] . '"'
+        : '';
+
+    // Add space before each attribute if it’s not empty to avoid malformed tags
+    $attributes = trim("$recordAttr$ringbackAttr");
+
+    return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        . "<Response>\n"
+        . "  <Dial $attributes sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
+        . "</Response>";
+}
+
 
     /**
      * Generate dial response for outgoing calls
