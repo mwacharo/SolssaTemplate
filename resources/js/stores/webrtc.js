@@ -94,6 +94,12 @@ export const useWebRTCStore = defineStore('webrtc', () => {
                     from: event.from,
                     duration: 'Connecting...',
                 };
+                // Debugging: Log the state after setting incomingCallDialog
+                if (incomingCallDialog.value) {
+                    console.debug("✅ incomingCallDialog is true. Incoming call state:", incomingCall.value);
+                } else {
+                    console.debug("❌ incomingCallDialog is false.");
+                }
             });
 
             client.on('hangup', (event) => {
