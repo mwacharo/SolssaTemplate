@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Debug info - remove in production -->
-    <div v-if="debugMode" class="debug-overlay">
+    <!-- <div v-if="debugMode" class="debug-overlay">
       <p>Dialog State: {{ incomingCallDialog }}</p>
       <p>Store Dialog: {{ webrtcStore.incomingCallDialog }}</p>
       <p>Incoming Call: {{ JSON.stringify(incomingCall) }}</p>
       <button @click="debugMode = false">Hide Debug</button>
-    </div>
+    </div> -->
 
     <!-- Incoming Call Dialog -->
     <v-dialog 

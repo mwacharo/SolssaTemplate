@@ -7,6 +7,8 @@ import Banner from '@/Components/Banner.vue';
 import { useNavStore } from '@/stores/nav' ;
 import { onMounted } from 'vue';
 import { useWebRTCStore } from '@/stores/webrtc';
+import IncomingCallDialog from '@/Pages/CallCenter/Dialogs/IncomingCallDialog.vue'
+
 
 
 defineProps({
@@ -364,5 +366,7 @@ Lets your business better           </v-list-item-subtitle>
         © {{ new Date().getFullYear() }} - CRM
       </div>
     </v-footer>
+    <IncomingCallDialog />
+
   </v-app>
 </template>
