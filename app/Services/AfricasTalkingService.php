@@ -566,9 +566,9 @@ class AfricasTalkingService
                 // redirecting to soft phone
 
         if (!$user && $ivrOption->forward_number) {
-            // $user = User::where('phone_number', $ivrOption->forward_number)->first();
+            $user = User::where('phone_number', $ivrOption->forward_number)->first();
 
-         $user = User::where('username', $ivrOption->forward_number)->first();
+        //  $user = User::where('username', $ivrOption->forward_number)->first();
 
         }
 
