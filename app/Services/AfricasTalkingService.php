@@ -694,7 +694,7 @@ class AfricasTalkingService
      * Create dial response for outgoing calls
      */
 
-    private function createDialResponse(string $phoneNumber): string
+    private function createDialResponse(string $phoneNumber): void
 {
     $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
     $ringbackAttr = $this->config['urls']['ringback_tone']
@@ -704,10 +704,14 @@ class AfricasTalkingService
     // Add space before each attribute if it’s not empty to avoid malformed tags
     $attributes = trim("$recordAttr$ringbackAttr");
 
-    return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
         . "<Response>\n"
         . "  <Dial $attributes sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
         . "</Response>";
+
+    header('Content-Type: application/xml');
+    echo $xml;
+    exit;
 }
 
 
