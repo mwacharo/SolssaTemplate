@@ -616,6 +616,11 @@ class AfricasTalkingService
 
         $response .= "</Response>";
 
+
+        //   // Print the response onto the page so that our gateway can read it
+    // header('Content-type: application/xml');
+    // echo $response;
+
         return $response;
     }
 
