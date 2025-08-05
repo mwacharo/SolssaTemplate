@@ -556,12 +556,20 @@ class AfricasTalkingService
         $user = null;
 
         // Try to find user by phone number or forward number
+
+        // redirecting to real phone number
         if ($ivrOption->phone_number) {
             $user = User::where('phone_number', $ivrOption->phone_number)->first();
         }
 
+
+                // redirecting to soft phone
+
         if (!$user && $ivrOption->forward_number) {
-            $user = User::where('phone', $ivrOption->forward_number)->first();
+            // $user = User::where('phone_number', $ivrOption->forward_number)->first();
+
+         $user = User::where('username', $ivrOption->forward_number)->first();
+
         }
 
         CallHistory::updateOrCreate(
