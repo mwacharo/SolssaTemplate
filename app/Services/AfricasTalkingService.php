@@ -616,10 +616,12 @@ class AfricasTalkingService
 
         $response .= "</Response>";
 
-
-        //   // Print the response onto the page so that our gateway can read it
-    // header('Content-type: application/xml');
-    // echo $response;
+        // Always return raw XML, not JSON
+        if (php_sapi_name() !== 'cli') {
+            header('Content-Type: application/xml');
+            echo $response;
+            exit;
+        }
 
         return $response;
     }
