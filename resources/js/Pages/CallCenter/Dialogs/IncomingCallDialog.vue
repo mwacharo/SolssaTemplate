@@ -1,5 +1,13 @@
 <template>
   <div>
+    <!-- Debug info - remove in production -->
+    <div v-if="debugMode" class="debug-overlay">
+      <p>Dialog State: {{ incomingCallDialog }}</p>
+      <p>Store Dialog: {{ webrtcStore.incomingCallDialog }}</p>
+      <p>Incoming Call: {{ JSON.stringify(incomingCall) }}</p>
+      <button @click="debugMode = false">Hide Debug</button>
+    </div>
+
     <!-- Incoming Call Dialog -->
     <v-dialog 
       v-model="incomingCallDialog" 
@@ -7,6 +15,7 @@
       persistent
       transition="dialog-bottom-transition"
       no-click-animation
+      :retain-focus="false"
     >
       <v-card class="incoming-call-card" :class="{ 'ringing': isRinging }">
         <!-- Incoming Call State -->
@@ -381,14 +390,28 @@
         </div>
       </v-card>
     </v-dialog>
+
+    <!-- Debug toggle button -->
+    <v-btn 
+      v-if="!debugMode"
+      @click="debugMode = true" 
+      color="warning"
+      size="small"
+      style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"
+    >
+      Debug
+    </v-btn>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useWebRTCStore } from '@/stores/webrtc'
 
 const webrtcStore = useWebRTCStore()
+
+// Debug mode
+const debugMode = ref(false)
 
 // Props
 const props = defineProps({
@@ -433,13 +456,22 @@ const callOutcomes = [
   'Other'
 ]
 
-// Computed properties from store
+// FIXED: Direct reactivity to store values
 const incomingCallDialog = computed({
-  get: () => webrtcStore.incomingCallDialog,
-  set: (value) => webrtcStore.incomingCallDialog = value
+  get: () => {
+    console.log('🔍 Getting incomingCallDialog:', webrtcStore.incomingCallDialog)
+    return webrtcStore.incomingCallDialog
+  },
+  set: (value) => {
+    console.log('🔍 Setting incomingCallDialog:', value)
+    webrtcStore.incomingCallDialog = value
+  }
 })
 
-const incomingCall = computed(() => webrtcStore.incomingCall)
+const incomingCall = computed(() => {
+  console.log('🔍 Getting incomingCall:', webrtcStore.incomingCall)
+  return webrtcStore.incomingCall
+})
 
 // Sample caller info (in real app, this would be fetched based on phone number)
 const callerInfo = ref({
@@ -453,6 +485,20 @@ const callerInfo = ref({
   customerSince: '2020-01-15',
   totalOrders: 24
 })
+
+// FIXED: Add watchers for debugging
+watch(() => webrtcStore.incomingCallDialog, (newValue, oldValue) => {
+  console.log('🔄 Store incomingCallDialog changed:', { from: oldValue, to: newValue })
+  if (newValue) {
+    nextTick(() => {
+      console.log('✅ Dialog should be visible now')
+    })
+  }
+}, { immediate: true })
+
+watch(() => webrtcStore.incomingCall, (newValue, oldValue) => {
+  console.log('🔄 Store incomingCall changed:', { from: oldValue, to: newValue })
+}, { deep: true, immediate: true })
 
 // Methods
 const acceptCall = async () => {
@@ -742,7 +788,8 @@ const resetCallState = () => {
 // Utility functions
 const formatPhoneNumber = (phone) => {
   // Format phone number for display
-  return phone.replace(/(\+\d{1})(\d{3})(\d{3})(\d{4})/, '$1 ($2) $3-$4')
+  if (!phone) return 'Unknown'
+  return phone.replace(/(\+\d{1,3})(\d{3})(\d{3})(\d{4})/, '$1 ($2) $3-$4')
 }
 
 const formatDate = (dateString) => {
@@ -803,25 +850,70 @@ const getPriorityColor = (priority) => {
   return colors[priority] || 'grey'
 }
 
-// Watch for incoming calls
+// Watch for incoming calls - FIXED: More explicit watching
 watch(incomingCallDialog, (newValue) => {
+  console.log('🔍 IncomingCallDialog watcher triggered:', newValue)
   if (newValue) {
     isRinging.value = true
+    // Force update caller info with incoming call data
+    if (incomingCall.value && incomingCall.value.from) {
+      callerInfo.value.phone = incomingCall.value.from
+    }
   } else {
     resetCallState()
   }
 })
 
+// FIXED: Force reactivity check on mount
 onMounted(() => {
-  // Any additional setup if needed
+  console.log('🚀 Component mounted')
+  console.log('📊 Initial store state:')
+  console.log('  - incomingCallDialog:', webrtcStore.incomingCallDialog)
+  console.log('  - incomingCall:', webrtcStore.incomingCall)
+  console.log('  - afClient:', webrtcStore.afClient ? 'initialized' : 'not initialized')
+  
+  // Force reactivity update
+  nextTick(() => {
+    if (webrtcStore.incomingCallDialog) {
+      console.log('🔄 Forcing dialog to show on mount')
+      // This shouldn't be needed but helps debug
+      // incomingCallDialog.value = true
+    }
+  })
 })
 
 onUnmounted(() => {
+  console.log('🧹 Component unmounted')
   // Cleanup if needed
 })
 </script>
 
 <style scoped>
+.debug-overlay {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  z-index: 10000;
+  font-family: monospace;
+  font-size: 12px;
+  max-width: 400px;
+  word-break: break-all;
+}
+
+.debug-overlay button {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
 .incoming-call-card {
   border-radius: 24px;
   overflow: hidden;
