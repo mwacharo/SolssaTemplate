@@ -274,31 +274,51 @@ class AfricasTalkingService
     public function getAvailableAgent(string $callerNumber, string $sessionId): ?string
     {
         Log::info('Checking for available agents with priority routing', [
-            'callerNumber' => $callerNumber
+            'callerNumber' => $callerNumber,
+            'sessionId' => $sessionId,
         ]);
 
         // Priority 1: Check if caller has an open ticket
+        Log::debug('Checking for agent from open ticket', ['callerNumber' => $callerNumber]);
         $agent = $this->getAgentFromTicket($callerNumber);
         if ($agent) {
+            Log::info('Agent found from open ticket', ['agent_id' => $agent->id]);
             return $this->assignAgent($agent, $sessionId);
+        } else {
+            Log::debug('No agent found from open ticket', ['callerNumber' => $callerNumber]);
         }
 
         // Priority 2: Check if caller is in agent contacts
+        Log::debug('Checking for agent from contacts', ['callerNumber' => $callerNumber]);
         $agent = $this->getAgentFromContacts($callerNumber);
         if ($agent) {
+            Log::info('Agent found from contacts', ['agent_id' => $agent->id]);
             return $this->assignAgent($agent, $sessionId);
+        } else {
+            Log::debug('No agent found from contacts', ['callerNumber' => $callerNumber]);
         }
 
         // Priority 3: Check for recent orders
+        Log::debug('Checking for agent from recent orders', ['callerNumber' => $callerNumber]);
         $orderAndAgent = $this->getOrderAndAgent($callerNumber);
         if ($orderAndAgent && isset($orderAndAgent['agent'])) {
+            Log::info('Agent found from recent order', [
+                'agent_id' => $orderAndAgent['agent']->id,
+                'order_id' => $orderAndAgent['order']->id ?? null
+            ]);
             return $this->assignAgent($orderAndAgent['agent'], $sessionId);
+        } else {
+            Log::debug('No agent found from recent orders', ['callerNumber' => $callerNumber]);
         }
 
         // Priority 4: Round-robin assignment to available agents
+        Log::debug('Checking for next available agent (round-robin)');
         $agent = $this->getNextAvailableAgent();
         if ($agent) {
+            Log::info('Agent assigned via round-robin', ['agent_id' => $agent->id]);
             return $this->assignAgent($agent, $sessionId);
+        } else {
+            Log::warning('No available agent found for assignment', ['callerNumber' => $callerNumber]);
         }
 
         return null;
@@ -385,13 +405,18 @@ class AfricasTalkingService
      */
     private function getNextAvailableAgent(): ?User
     {
+        Log::info('Fetching available agents for round-robin assignment');
         $availableAgents = User::where('status', 'ready')->get();
+        Log::debug('Available agents fetched', [
+            'count' => $availableAgents->count(),
+            'agent_ids' => $availableAgents->pluck('id')->toArray()
+        ]);
 
         // Filter agents with permission to receive calls
-        $availableAgents = $availableAgents->filter(function ($user) {
-            return method_exists($user, 'hasPermissionTo') ?
-                $user->hasPermissionTo('can_receive_calls') : ($user->can_receive_calls ?? true);
-        });
+        // $availableAgents = $availableAgents->filter(function ($user) {
+        //     return method_exists($user, 'hasPermissionTo') ?
+        //         $user->hasPermissionTo('can_receive_calls') : ($user->can_receive_calls ?? true);
+        // });
 
         // Implement round-robin logic
         $lastAssignedAgent = Cache::get('last_assigned_agent_id', 0);
