@@ -741,38 +741,44 @@ onMounted(() => {
 }
 
 .call-history-table {
-  background: rgba(255, 255, 255, 0.05);
+  background: #ffffff;
   border-radius: 12px;
   overflow: hidden;
 }
 
+/* Fix data table styling for better visibility */
 :deep(.v-data-table__wrapper) {
   border-radius: 12px;
+  background: #ffffff;
 }
 
 :deep(.v-data-table-header) {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f5f5f5;
 }
 
 :deep(.v-data-table-header th) {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: #1976d2 !important;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
 }
 
 :deep(.v-data-table tbody tr) {
   transition: background-color 0.3s ease;
+  background: #ffffff;
 }
 
 :deep(.v-data-table tbody tr:hover) {
-  background: rgba(255, 255, 255, 0.05);
+  background: #f5f5f5 !important;
 }
 
 :deep(.v-data-table tbody td) {
-  color: rgba(255, 255, 255, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #333333 !important;
+  border-bottom: 1px solid #e0e0e0;
+  background: transparent;
 }
 
+/* Specific fixes for custom cell content */
 .date-cell {
   display: flex;
   flex-direction: column;
@@ -780,12 +786,12 @@ onMounted(() => {
 
 .date-primary {
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+  color: #333333 !important;
 }
 
 .date-secondary {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #666666 !important;
 }
 
 .phone-cell {
@@ -796,11 +802,13 @@ onMounted(() => {
 .phone-number {
   font-family: 'Roboto Mono', monospace;
   font-size: 0.85rem;
+  color: #333333 !important;
 }
 
 .service-cell {
   display: flex;
   align-items: center;
+  color: #333333 !important;
 }
 
 .action-buttons {
@@ -813,22 +821,85 @@ onMounted(() => {
 .loading-container {
   text-align: center;
   padding: 3rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #666666;
 }
 
 .no-data-container h3 {
   margin: 1rem 0 0.5rem 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: #333333;
 }
 
 .no-data-container p {
   margin: 0;
   font-size: 0.9rem;
+  color: #666666;
 }
 
 .loading-container p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: #666666;
+}
+
+/* Dark theme support (optional) */
+.theme--dark .call-history-table {
+  background: #1e1e1e;
+}
+
+.theme--dark :deep(.v-data-table__wrapper) {
+  background: #1e1e1e;
+}
+
+.theme--dark :deep(.v-data-table-header) {
+  background: #2d2d2d;
+}
+
+.theme--dark :deep(.v-data-table-header th) {
+  color: #ffffff !important;
+  border-bottom: 1px solid #424242;
+  background: #2d2d2d;
+}
+
+.theme--dark :deep(.v-data-table tbody tr) {
+  background: #1e1e1e;
+}
+
+.theme--dark :deep(.v-data-table tbody tr:hover) {
+  background: #2d2d2d !important;
+}
+
+.theme--dark :deep(.v-data-table tbody td) {
+  color: #ffffff !important;
+  border-bottom: 1px solid #424242;
+}
+
+.theme--dark .date-primary {
+  color: #ffffff !important;
+}
+
+.theme--dark .date-secondary {
+  color: #b0b0b0 !important;
+}
+
+.theme--dark .phone-number {
+  color: #ffffff !important;
+}
+
+.theme--dark .service-cell {
+  color: #ffffff !important;
+}
+
+.theme--dark .no-data-container,
+.theme--dark .loading-container {
+  color: #b0b0b0;
+}
+
+.theme--dark .no-data-container h3 {
+  color: #ffffff;
+}
+
+.theme--dark .no-data-container p,
+.theme--dark .loading-container p {
+  color: #b0b0b0;
 }
 
 /* Responsive design */
@@ -860,7 +931,7 @@ onMounted(() => {
 /* Custom scrollbars */
 :deep(.v-data-table__wrapper) {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  scrollbar-color: #c0c0c0 transparent;
 }
 
 :deep(.v-data-table__wrapper::-webkit-scrollbar) {
@@ -869,16 +940,29 @@ onMounted(() => {
 }
 
 :deep(.v-data-table__wrapper::-webkit-scrollbar-track) {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f0f0f0;
   border-radius: 4px;
 }
 
 :deep(.v-data-table__wrapper::-webkit-scrollbar-thumb) {
-  background: rgba(255, 255, 255, 0.3);
+  background: #c0c0c0;
   border-radius: 4px;
 }
 
 :deep(.v-data-table__wrapper::-webkit-scrollbar-thumb:hover) {
-  background: rgba(255, 255, 255, 0.5);
+  background: #a0a0a0;
+}
+
+/* Additional fixes for chip colors to ensure visibility */
+:deep(.v-chip) {
+  color: #ffffff !important;
+}
+
+:deep(.v-chip.v-chip--variant-outlined) {
+  color: inherit !important;
+}
+
+:deep(.v-chip.v-chip--variant-tonal) {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 </style>

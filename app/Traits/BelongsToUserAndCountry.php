@@ -9,7 +9,7 @@ trait BelongsToUserAndCountry
 {
     public static function bootBelongsToUserAndCountry(): void
     {
-        Log::info('BelongsToUserAndCountry trait booting...');
+        // Log::info('BelongsToUserAndCountry trait booting...');
 
         static::creating(function ($model) {
             if (Auth::check()) {
