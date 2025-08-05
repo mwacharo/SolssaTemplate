@@ -108,7 +108,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
                 console.log("📞 Incoming call from", event.from);
 
 
-                webrtcStore.setIncomingCall({
+                setIncomingCall({
                     from: event.from,
                     duration: 'Connecting...',
                 });
