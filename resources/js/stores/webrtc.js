@@ -80,7 +80,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         const params = {
             sounds: {
                 // dialing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
-                // ringing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
+                ringing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
             },
         };
 
@@ -112,17 +112,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
                     from: event.from,
                     duration: 'Connecting...',
                 });
-                // incomingCallDialog.value = true;
-                // incomingCall.value = {
-                //     from: event.from,
-                //     duration: 'Connecting...',
-                // };
-                // Debugging: Log the state after setting incomingCallDialog
-                // if (incomingCallDialog.value) {
-                //     console.debug("✅ incomingCallDialog is true. Incoming call state:", incomingCall.value);
-                // } else {
-                //     console.debug("❌ incomingCallDialog is false.");
-                // }
+            
             });
 
             client.on('hangup', (event) => {

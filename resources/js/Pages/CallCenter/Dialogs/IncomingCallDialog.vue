@@ -1,12 +1,5 @@
 <template>
   <div>
-    <!-- Debug info - remove in production -->
-    <!-- <div v-if="debugMode" class="debug-overlay">
-      <p>Dialog State: {{ incomingCallDialog }}</p>
-      <p>Store Dialog: {{ webrtcStore.incomingCallDialog }}</p>
-      <p>Incoming Call: {{ JSON.stringify(incomingCall) }}</p>
-      <button @click="debugMode = false">Hide Debug</button>
-    </div> -->
 
     <!-- Incoming Call Dialog -->
     <v-dialog 
@@ -456,17 +449,6 @@ const callOutcomes = [
   'Other'
 ]
 
-// FIXED: Direct reactivity to store values
-// const incomingCallDialog = computed({
-//   get: () => {
-//     console.log('🔍 Getting incomingCallDialog:', webrtcStore.incomingCallDialog)
-//     return webrtcStore.incomingCallDialog
-//   },
-//   set: (value) => {
-//     console.log('🔍 Setting incomingCallDialog:', value)
-//     webrtcStore.incomingCallDialog = value
-//   }
-// })
 
 
 const incomingCallDialog = computed({
@@ -477,10 +459,6 @@ const incomingCallDialog = computed({
 const incomingCall = computed(() => webrtcStore.incomingCall);
 
 
-// const incomingCall = computed(() => {
-//   console.log('🔍 Getting incomingCall:', webrtcStore.incomingCall)
-//   return webrtcStore.incomingCall
-// })
 
 // Sample caller info (in real app, this would be fetched based on phone number)
 const callerInfo = ref({
