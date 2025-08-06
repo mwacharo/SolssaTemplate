@@ -222,6 +222,8 @@ Lets your business better           </v-list-item-subtitle>
     <v-app-bar app flat>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       
+
+      <!-- href   -->
       <v-app-bar-title>
         <Link :href="route('dashboard')" class="text-decoration-none text-primary">
           <ApplicationMark class="mr-2" height="32" />
