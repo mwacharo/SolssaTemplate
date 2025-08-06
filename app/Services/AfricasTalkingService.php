@@ -278,15 +278,15 @@ class AfricasTalkingService
             'sessionId' => $sessionId,
         ]);
 
-        // Priority 1: Check if caller has an open ticket
-        Log::debug('Checking for agent from open ticket', ['callerNumber' => $callerNumber]);
-        $agent = $this->getAgentFromTicket($callerNumber);
-        if ($agent) {
-            Log::info('Agent found from open ticket', ['agent_id' => $agent->id]);
-            return $this->assignAgent($agent, $sessionId);
-        } else {
-            Log::debug('No agent found from open ticket', ['callerNumber' => $callerNumber]);
-        }
+        // // Priority 1: Check if caller has an open ticket
+        // Log::debug('Checking for agent from open ticket', ['callerNumber' => $callerNumber]);
+        // $agent = $this->getAgentFromTicket($callerNumber);
+        // if ($agent) {
+        //     Log::info('Agent found from open ticket', ['agent_id' => $agent->id]);
+        //     return $this->assignAgent($agent, $sessionId);
+        // } else {
+        //     Log::debug('No agent found from open ticket', ['callerNumber' => $callerNumber]);
+        // }
 
         // Priority 2: Check if caller is in agent contacts
         Log::debug('Checking for agent from contacts', ['callerNumber' => $callerNumber]);
