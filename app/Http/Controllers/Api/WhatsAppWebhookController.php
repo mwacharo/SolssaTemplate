@@ -226,7 +226,6 @@ class WhatsAppWebhookController extends Controller
     }
 
     $msg = Message::where('external_message_id', $idMessage)
-        ->orWhere('wa_message_id', $idMessage)
         ->first();
 
     if ($msg) {

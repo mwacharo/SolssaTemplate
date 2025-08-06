@@ -1,4 +1,4 @@
-<?php
+channel-credentials<?php
 
 use App\Http\Controllers\Api\Admin\UserRolePermissionController;
 use Illuminate\Http\Request;
