@@ -103,7 +103,7 @@ class WhatsAppWebhookController extends Controller
         if ($reply) {
             Log::info("📤 Sending AI reply to {$chatId}: {$reply}");
             try {
-                $this->whatsAppService->sendMessage($chatId, $reply, 1); // 1 = System user
+                $this->whatsAppService->sendMessage($chatId, $reply, 35); // 1 = System user
             } catch (\Throwable $e) {
                 Log::error("❌ WhatsAppService error: " . $e->getMessage());
             }
