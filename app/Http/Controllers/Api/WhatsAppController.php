@@ -107,8 +107,14 @@ class WhatsAppController extends Controller
                 // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
                 // $queued++;
 
+                Log::info('Dispatching delayed job', [
+                    'delay' => now()->addMinutes(5),
+                    'job' => 'SendWhatsAppMessageJob',
+                    'user_id' => $userId
+                ]);
+
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                    ->delay(Carbon::now()->addMinutes($delayMinutes * $counter));
+                    ->delay($delayMinutes * $counter);
                 $counter++;
                 $queued++;
             }
@@ -144,8 +150,14 @@ class WhatsAppController extends Controller
                 // SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId);
                 // $queued++;
 
+                Log::info('Dispatching delayed job', [
+                    'delay' => now()->addMinutes(5),
+                    'job' => 'SendWhatsAppMessageJob',
+                    'user_id' => $userId
+                ]);
+
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                    ->delay(Carbon::now()->addMinutes($delayMinutes * $counter));
+                    ->delay($delayMinutes * $counter);
                 $counter++;
                 $queued++;
             }
@@ -184,16 +196,23 @@ class WhatsAppController extends Controller
                 // $queued++;
 
 
+                Log::info('Dispatching delayed job', [
+                    'delay' => now()->addMinutes(5),
+                    'job' => 'SendWhatsAppMessageJob',
+                    'user_id' => $userId
+                ]);
+
+
                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                    ->delay(Carbon::now()->addMinutes($delayMinutes * $counter));
+                    ->delay($delayMinutes * $counter);
                 $counter++;
                 $queued++;
             }
         }
 
 
-      
-        
+
+
 
 
         Log::info('sendMessage completed', ['queued_count' => $queued]);
