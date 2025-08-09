@@ -528,12 +528,12 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     // },
 
     parseTemplate(template, data = {}) {
-  return Object.entries(data).reduce((result, [key, value]) => {
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-    return result.replace(regex, String(value ?? ''))
-  }, template)
-}
-,
+      return Object.entries(data).reduce((result, [key, value]) => {
+        const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+        return result.replace(regex, String(value ?? ''))
+      }, template)
+    }
+    ,
 
 
 
@@ -565,18 +565,15 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       }
     },
 
-    
+
     async sendMessage(userId) {
       console.log('Sending message with userId:', userId)
-
       if (!this.messageText.trim()) {
         return this.showError('Please enter a message')
       }
-
       if (!Array.isArray(this.selectedContacts) || this.selectedContacts.length === 0) {
         return this.showError('Please select at least one recipient')
       }
-
       try {
         this.loading.sending = true
 
@@ -585,96 +582,52 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         // Send personalized messages
         const results = []
         for (const contact of this.selectedContacts) {
-          // const order = this.selectedOrders.find(o =>
-          //   o.customer_phone === contact.phone || o.client?.phone_number === contact.phone
-          // )
+          // Debug: log selectedOrders and orders
+          console.log('selectedOrders:', this.selectedOrders)
+          console.log('orders:', this.orders)
 
-          // const order = orders.find(o => o.client?.phone_number === contact.phone)
-
-
-          const order = this.orders.find(o =>
-            this.selectedOrders.includes(o.id) && (
+          // Ensure selectedOrders is an array of IDs
+          const selectedOrderIds = this.selectedOrders.map(o => typeof o === 'object' ? o.id : o)
+          const order = this.orders.find(o => {
+            if (!o) return false
+            const match = selectedOrderIds.includes(o.id) && (
               o.customer_phone?.replace(/\D/g, '') === contact.phone?.replace(/\D/g, '') ||
               o.client?.phone_number?.replace(/\D/g, '') === contact.phone?.replace(/\D/g, '') ||
               o.client?.id === contact.id
             )
-          )
-          console.log('Matching order for contact:', contact, '->', order)
+            return match
+          })
 
           if (!order) {
             console.warn(`No matching order found for contact:`, contact)
+            // Optionally skip sending for this contact:
+            // continue
           }
 
+          let orderItemsList = ''
+          if (order && Array.isArray(order.orderItems) && order.orderItems.length > 0) {
+            orderItemsList = order.orderItems.map(item =>
+              `- ${item.quantity} × ${item.product?.product_name || ''}`
+            ).join('\n')
+          }
 
-
-            console.log('Selected order:', JSON.stringify(order, null, 2))
-
-
-    
-          // Build placeholders as before
-
-
-            let orderItemsList = ''
-          
-
-
-            if (Array.isArray(order?.orderItems) && order.orderItems.length > 0) {
-  orderItemsList = order.orderItems.map(item =>
-    `- ${item.quantity} × ${item.product?.product_name || ''}`
-  ).join('\n')
-}
-
-
-            const placeholders = {
+          const placeholders = {
             customer_name: contact.name || order?.customer_name || 'Customer',
             customer_phone: contact.chatId || '',
             order_number: order?.order_no || order?.order_number || '',
-            // product_name:
-            //   Array.isArray(order?.orderItem) && order.orderItem.length > 0
-            //   ? order.orderItem.map(item => item.product?.product_name).join(', ')
-            //   : '',
-            // price:
-            //   Array.isArray(order?.orderItem) && order.orderItem.length > 0
-            //   ? order.orderItem.reduce((sum, item) => sum + parseFloat(item.price || 0), 0).toFixed(2)
-            //   : '0.00',
             tracking_id: order?.tracking_no || '',
-            client: order.client || null,
+            client: order?.client || null,
             order_items: orderItemsList,
-            agent_name: order.agent?.name || '',
-            agent_phone: order.agent?.phone || '',
-            vendor_name: order.vendor?.name || '',
-            rider_name: order.rider?.name || '',
-            rider_phone: order.rider?.phone || '',
-            total_price: order.total_price || '0.00'
-            };
+            agent_name: order?.agent?.name || '',
+            agent_phone: order?.agent?.phone || '',
+            vendor_name: order?.vendor?.name || '',
+            rider_name: order?.rider?.name || '',
+            rider_phone: order?.rider?.phone || '',
+            total_price: order?.total_price || '0.00'
+          };
 
           console.log('Placeholders', placeholders)
-
-          // const placeholders = {
-          //   customer_name: contact.name || order?.customer_name || 'Customer',
-          //   customer_phone: contact.phone || '',
-          //   order_number: order?.order_number || '',
-          //   product_name: order?.product_name || '',
-          //   price: order?.price || '',
-          //   tracking_id: order?.tracking_id || '',
-          //   client: order.client || null,
-          //   orderItems: order.orderItems || [],
-          //   vendor: order.vendor || null,
-          // }
-
-          // Add full order object with relations to payload if available
-          // let fullOrder = null
-          // if (order) {
-          // fullOrder = {
-          //   ...order,
-          //   client: order.client || null,
-          //   orderItems: order.orderitems || [],
-          //   vendor: order.vendor || null
-          // }
-          // }
-
           const personalizedMessage = this.parseTemplate(this.selectedTemplate?.content || this.messageText, placeholders)
-
           const payload = {
             user_id: userId,
             contacts: [{
@@ -976,7 +929,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         this.loadTemplates(),
         this.loadRiders(),
         this.loadAgents(),
-        
+
       ])
     }
   }

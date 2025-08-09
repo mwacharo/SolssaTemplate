@@ -36,7 +36,7 @@ export const useOrderStore = defineStore('order', {
     // Data - CRITICAL: These must be properly initialized
     orders: [],
     filteredOrders: [],
-    selectedOrders: [], // This was missing in your component
+    selectedOrders: [], 
     
     // Dialog states
     dialog: false,

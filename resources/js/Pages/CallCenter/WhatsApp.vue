@@ -13,29 +13,89 @@ import { storeToRefs } from 'pinia'
 
 import OrderDialogs from './Dialogs/OrderDialogs.vue';
 
-
 import { notify } from '@/utils/toast';
 
-
-
-// Initialize the store
+// Initialize the stores
 const store = useWhatsAppStore()
 const conversationStore = useConversationStore()
 const orderStore = useOrderStore()
-const { tableItems } = storeToRefs(orderStore) // <-- ADD THIS LINE
+const { tableItems } = storeToRefs(orderStore)
 
 const dialogMode = ref(null);
 const showDialog = ref(false);
 
-const openDialog = (mode, selectedOrders = []) => {
-  dialogMode.value = mode;
-  showDialog.value = true;
-  // Set selectedOrders in the store or local ref if needed
-  if (selectedOrders && selectedOrders.length) {
-    console.log('openDialog selectedOrders:', JSON.stringify(selectedOrders));
-    store.selectedOrders = selectedOrders;
+// FIXED: Selection management - make it reactive and properly initialized
+const selectedOrderIds = ref([])
+
+// FIXED: Computed property to get selected order objects
+const getSelectedOrders = computed(() => {
+  if (!selectedOrderIds.value?.length || !tableItems.value?.length) return []
+  return tableItems.value.filter(order => selectedOrderIds.value.includes(order.id))
+})
+
+// FIXED: Clear selection method
+const clearSelection = () => {
+  selectedOrderIds.value = []
+  console.log('🧹 Selection cleared')
+}
+
+// FIXED: Watch for selection changes with proper logging
+watch(selectedOrderIds, (newSelection, oldSelection) => {
+  console.log('🔵 Selection changed from:', oldSelection, 'to:', newSelection)
+  console.log('🔵 Selected orders count:', newSelection?.length || 0)
+  
+  // Update the order store's selectedOrders for consistency
+  if (newSelection?.length > 0) {
+    const selectedOrders = getSelectedOrders.value
+    orderStore.selectedOrders = selectedOrders
+    console.log('🔵 Updated orderStore.selectedOrders:', selectedOrders)
+  } else {
+    orderStore.selectedOrders = []
   }
-};
+}, { deep: true, immediate: true })
+
+// FIXED: Update your openDialog function
+const openDialog = (mode, selectedOrders = []) => {
+  console.log('🚀 openDialog called with mode:', mode)
+  
+  dialogMode.value = mode
+  showDialog.value = true
+  
+  // Use current selection if no specific orders provided
+  const ordersToUse = selectedOrders.length > 0 ? selectedOrders : getSelectedOrders.value
+  
+  if (ordersToUse && ordersToUse.length > 0) {
+    console.log('✅ Using orders for dialog:', ordersToUse.length, 'orders')
+    orderStore.selectedOrders = ordersToUse
+  } else {
+    console.log('⚠️ No orders selected for dialog')
+  }
+}
+
+// FIXED: Update your openNewMessageDialog function
+const openNewMessageDialog = (selectedOrders = []) => {
+  console.log('📨 openNewMessageDialog called')
+  
+  const ordersToUse = selectedOrders.length > 0 ? selectedOrders : getSelectedOrders.value
+  
+  if (ordersToUse.length === 0) {
+    console.warn('⚠️ No orders selected for messaging')
+    // Optionally show a notification
+    notify.warning('Please select at least one order to send messages.')
+    return
+  }
+  
+  console.log('📨 Opening message dialog for', ordersToUse.length, 'orders')
+  store.openNewMessageDialog(ordersToUse)
+}
+
+// OPTIONAL: Add a debug computed property to track selection state
+const selectionDebug = computed(() => ({
+  selectedIds: selectedOrderIds.value,
+  selectedCount: selectedOrderIds.value?.length || 0,
+  selectedOrders: getSelectedOrders.value,
+  tableItemsCount: tableItems.value?.length || 0
+}))
 
 const handleConfirm = ({ mode, selected, orders }) => {
   console.log('handleConfirm called with:', JSON.stringify({ mode, selected, orders }));
@@ -59,7 +119,6 @@ const assignRider = async (riderId, orders) => {
   } catch (error) {
     // notify.error(error.response?.data?.message || 'Failed to assign rider');
     notify.error('Failed to assign rider');
-
   }
 };
 
@@ -90,10 +149,9 @@ const updateStatus = async (status, orders) => {
 };
 
 const viewOrderDetails = (order) => {
-
   orderStore.openDialog(order)
-
 }
+
 // Local UI state (not managed by store)
 const selectedPhone = ref(null);
 const dialog = ref(false);
@@ -105,10 +163,7 @@ const user = computed(() => auth.user)
 const userId = computed(() => user.value?.id)
 
 console.log('User:', JSON.stringify(user.value))
-
 console.log('User ID:', userId.value)
-
-
 
 const orderHeaders = [
   { title: 'Order #', key: 'order_no' },
@@ -149,8 +204,6 @@ const orderStatusOptions = [
 ];
 
 // Computed properties from store
-
-
 const orderDateRangeText = computed(() => {
   if (!orderStore.orderDateRange || orderStore.orderDateRange.length === 0) {
     return ''
@@ -175,9 +228,9 @@ const hasActiveFilters = computed(() => {
   console.log('🔍 hasActiveFilters:', hasFilters);
   return hasFilters;
 })
+
 const {
   // Data
-
   // conversation 
   attachment,
   replyMessage,
@@ -255,17 +308,11 @@ const sendMessage = () => store.sendMessage(userId.value)
 const sendOrderMessage = () => store.sendOrderMessage({ userId: userId.value })
 const importContacts = () => store.importContacts({ userId: userId.value })
 const importOrders = () => store.importOrders({ userId: userId.value })
-// const openNewMessageDialog = () => store.openNewMessageDialog()
-
-const openNewMessageDialog = (selectedOrders) => {
-  store.openNewMessageDialog(selectedOrders)
-}
 
 const openOrderMessageDialog = () => store.openOrderMessageDialog()
 const deleteMessage = (messageId) => store.deleteMessage(messageId)
 
 // Local methods (not in store)
-
 const getTotalQuantity = (items) => {
   return items.reduce((total, item) => total + (item.quantity || 0), 0)
 }
@@ -273,6 +320,7 @@ const getTotalQuantity = (items) => {
 const openOrderPrint = (orderId) => {
   window.open(`/api/v1/orders/${orderId}/print-waybill`, '_blank');
 }
+
 const formatDate = (dateString) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
@@ -284,6 +332,7 @@ const formatDate = (dateString) => {
     minute: '2-digit'
   });
 }
+
 const openSendMessage = (isBulk = false, contact = null) => {
   store.errorMessage = ''
   store.messageText = ''
@@ -302,7 +351,6 @@ const openSendMessage = (isBulk = false, contact = null) => {
 
   store.showNewMessageDialog = true
 }
-
 
 // In your <script setup>
 const viewMessageDetails = (message) => {
@@ -330,7 +378,6 @@ Company: ${contact.company_name || 'N/A'}
 Country: ${contact.country_name || 'N/A'}`)
 }
 
-
 const statusColor = (status) => ({
   active: 'success',
   inactive: 'grey',
@@ -346,9 +393,6 @@ const deliveryStatusColor = (status) => ({
   pending: 'primary',
   shipped: 'info'
 }[status?.toLowerCase()] || 'grey')
-
-
-
 
 // Watch for search changes
 watch(() => store.search, (newValue) => {
@@ -383,7 +427,6 @@ function getConnectionStatus() {
   // You can adjust this logic based on your actual status variable
   return whatsappStatus.value || 'Unknown';
 }
-
 
 const handleFilterChange = () => {
   // Apply filters immediately for select dropdowns
@@ -470,6 +513,8 @@ const refreshData = async () => {
   }
 }
 
+
+
 // Show filter dialog
 const showFilterDialog = ref(false);
 
@@ -477,19 +522,46 @@ function openFilterDialog() {
   showFilterDialog.value = true;
 }
 
-// const formatDate = (date) => {
-//   if (!date) return ''
-//   return new Date(date).toLocaleDateString()
-// }
 
-// Component mount
+
+
+async function loadItems({ page, itemsPerPage, sortBy, search }) {
+    // Keep page position when changing itemsPerPage
+    if (itemsPerPage !== orderStore.pagination.itemsPerPage) {
+      const firstItemIndex = (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1;
+      orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage);
+    } else {
+      orderStore.pagination.page = page;
+    }
+
+    orderStore.pagination.itemsPerPage = itemsPerPage;
+    orderStore.search = search;
+
+    if (sortBy && sortBy.length > 0) {
+      orderStore.sort = sortBy[0];
+    }
+
+    // Merge any existing filters with pagination & search
+    const filters = {
+      ...orderStore.activeFilters, // existing filters from your UI
+      search: orderStore.search
+    };
+
+    // Fetch data from API
+    await orderStore.loadOrdersWithFilters(filters);
+  }
+
+// Component mount - UPDATED with debug info
 onMounted(async () => {
   try {
-    await store.initialize();
-    await orderStore.initialize();
-    console.log('✅ All stores initialized successfully');
+    await store.initialize()
+    await orderStore.initialize()
+    console.log('✅ All stores initialized successfully')
+    
+    // Debug: Log initial state
+    console.log('🔍 Initial selection state:', selectionDebug.value)
   } catch (error) {
-    console.error('❌ Error during initialization:', error);
+    console.error('❌ Error during initialization:', error)
   }
 })
 </script>
@@ -759,112 +831,119 @@ onMounted(async () => {
                 <!-- Orders Table -->
                 <v-card-text>
                   <v-progress-linear v-if="orderStore.loading.orders" indeterminate color="primary"></v-progress-linear>
-
-
-                
-                  <v-data-table-server
-                    v-model:items-per-page="orderStore.pagination.itemsPerPage"
-                    v-model:page="orderStore.pagination.page"
-                    v-model:sort-by="orderStore.pagination.sortBy"
-                    :headers="orderHeaders"
+                  <!-- <v-data-table
+loadItems                    :headers="orderHeaders"
                     :items="tableItems"
-                    :items-length="orderStore.pagination.totalItems"
+                    :items-per-page="orderStore.pagination.itemsPerPage"
+                    :page="orderStore.pagination.page"
+                    :server-items-length="orderStore.pagination.totalItems"
                     :loading="orderStore.loading.orders"
-                    :search="orderStore.orderSearch"
                     show-select
                     item-value="id"
                     class="elevation-1"
-                    density="comfortable"
-                    v-model:selected="orderStore.selectedOrders"
-                    @update:options="applyFilters"
-                  >
+                    @update:page="page => { orderStore.pagination.page = page; applyFilters(); }"
+                    @update:items-per-page="ipp => { orderStore.pagination.itemsPerPage = ipp; orderStore.pagination.page = 1; applyFilters(); }"
+                  > -->
 
 
 
+                  <v-data-table-server
+                                      v-model="orderStore.selectedOrders"
 
-                    <!-- Custom Columns -->
-                    <template #item.order_no="{ item }">
-                      <strong>{{ item.order_no }}</strong>
-                      <div v-if="item.reference" class="text-caption text-grey">
-                        Ref: {{ item.reference }}
-                      </div>
-                    </template>
+  v-model:items-per-page="orderStore.pagination.itemsPerPage"
+  :headers="orderHeaders"
+  :items="tableItems"
+  :items-length="orderStore.pagination.totalItems"
+  :loading="orderStore.loading.orders"
+  :search="orderStore.search" 
+  show-select
+  item-value="id"
+  class="elevation-1"
+  @update:options="loadItems"
+>
+                  <!-- Custom Columns -->
+                  <template #item.order_no="{ item }">
+                    <strong>{{ item.order_no }}</strong>
+                    <div v-if="item.reference" class="text-caption text-grey">
+                    Ref: {{ item.reference }}
+                    </div>
+                  </template>
 
-                    <template #item.client="{ item }">
-                      <div>{{ item.client?.name || 'N/A' }}</div>
-                      <div class="text-caption text-grey">
-                        {{ formatPhoneNumber(item.client?.phone_number) }}
-                      </div>
-                      <div v-if="item.client?.city" class="text-caption text-grey">
-                        {{ item.client.city }}
-                      </div>
-                    </template>
+                  <template #item.client="{ item }">
+                    <div>{{ item.client?.name || 'N/A' }}</div>
+                    <div class="text-caption text-grey">
+                    {{ formatPhoneNumber(item.client?.phone_number) }}
+                    </div>
+                    <div v-if="item.client?.city" class="text-caption text-grey">
+                    {{ item.client.city }}
+                    </div>
+                  </template>
 
-                    <template #item.vendor="{ item }">
-                      <div>{{ item.vendor?.name || 'N/A' }}</div>
-                      <div v-if="item.vendor?.company_name" class="text-caption text-grey">
-                        {{ item.vendor.company_name }}
-                      </div>
-                    </template>
+                  <template #item.vendor="{ item }">
+                    <div>{{ item.vendor?.name || 'N/A' }}</div>
+                    <div v-if="item.vendor?.company_name" class="text-caption text-grey">
+                    {{ item.vendor.company_name }}
+                    </div>
+                  </template>
 
-                    <template #item.status="{ item }">
-                      <v-chip :color="statusColor(item.status)" small>
-                        {{ item.status || 'Unknown' }}
-                      </v-chip>
-                    </template>
+                  <template #item.status="{ item }">
+                    <v-chip :color="statusColor(item.status)" small>
+                    {{ item.status || 'Unknown' }}
+                    </v-chip>
+                  </template>
 
-                    <template #item.delivery_status="{ item }">
-                      <v-chip :color="deliveryStatusColor(item.delivery_status)" small>
-                        {{ item.delivery_status || 'Unknown' }}
-                      </v-chip>
-                    </template>
+                  <template #item.delivery_status="{ item }">
+                    <v-chip :color="deliveryStatusColor(item.delivery_status)" small>
+                    {{ item.delivery_status || 'Unknown' }}
+                    </v-chip>
+                  </template>
 
-                    <template #item.order_items="{ item }">
-                      <div v-if="item.orderItems?.length">
-                        {{ item.orderItems.length }} item(s)
-                        <div class="text-caption text-grey">
-                          Qty: {{ getTotalQuantity(item.orderItems) }}
-                        </div>
-                        <div v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-caption text-grey">
-                          {{ orderItem.product?.product_name || 'Product' }} (x{{ orderItem.quantity }})
-                        </div>
-                      </div>
-                      <div v-else class="text-grey">No items</div>
-                    </template>
+                  <template #item.order_items="{ item }">
+                    <div v-if="item.orderItems?.length">
+                    {{ item.orderItems.length }} item(s)
+                    <div class="text-caption text-grey">
+                      Qty: {{ getTotalQuantity(item.orderItems) }}
+                    </div>
+                    <div v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-caption text-grey">
+                      {{ orderItem.product?.product_name || 'Product' }} (x{{ orderItem.quantity }})
+                    </div>
+                    </div>
+                    <div v-else class="text-grey">No items</div>
+                  </template>
 
-                    <template #item.total_price="{ item }">
-                      <div>
-                        KSH{{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
-                      </div>
-                      <div v-if="item.shipping_charges && item.shipping_charges !== '0.00'"
-                        class="text-caption text-grey">
-                        Shipping: KSH{{ parseFloat(item.shipping_charges).toFixed(2) }}
-                      </div>
-                    </template>
+                  <template #item.total_price="{ item }">
+                    <div>
+                    KSH{{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
+                    </div>
+                    <div v-if="item.shipping_charges && item.shipping_charges !== '0.00'"
+                    class="text-caption text-grey">
+                    Shipping: KSH{{ parseFloat(item.shipping_charges).toFixed(2) }}
+                    </div>
+                  </template>
 
-                    <template #item.created_at="{ item }">
-                      {{ formatDate(item.created_at) }}
-                      <div v-if="item.delivery_date" class="text-caption text-grey">
-                        Delivery: {{ formatDate(item.delivery_date) }}
-                      </div>
-                    </template>
+                  <template #item.created_at="{ item }">
+                    {{ formatDate(item.created_at) }}
+                    <div v-if="item.delivery_date" class="text-caption text-grey">
+                    Delivery: {{ formatDate(item.delivery_date) }}
+                    </div>
+                  </template>
 
-                    <template #item.actions="{ item }">
-                      <v-btn icon size="small" @click="viewOrderDetails(item)">
-                        <v-icon>mdi-eye</v-icon>
-                      </v-btn>
-                      <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
-                        <v-icon>mdi-whatsapp</v-icon>
-                      </v-btn>
-                      <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
-                        <v-icon>mdi-printer</v-icon>
-                      </v-btn>
-                    </template>
-
-                  </v-data-table-server>
+                  <template #item.actions="{ item }">
+                    <v-btn icon size="small" @click="viewOrderDetails(item)">
+                    <v-icon>mdi-eye</v-icon>
+                    </v-btn>
+                    <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
+                    <v-icon>mdi-whatsapp</v-icon>
+                    </v-btn>
+                    <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
+                    <v-icon>mdi-printer</v-icon>
+                    </v-btn>
+                  </template>
+                  <!-- </v-data-table> -->
+                   </v-data-table-server>
 
                 </v-card-text>
-              </v-window-item>
+                </v-window-item>
 
               <!-- Contacts Tab -->
               <v-window-item value="contacts">
