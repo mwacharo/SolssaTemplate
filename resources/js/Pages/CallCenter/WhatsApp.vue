@@ -759,19 +759,24 @@ onMounted(async () => {
                 <!-- Orders Table -->
                 <v-card-text>
                   <v-progress-linear v-if="orderStore.loading.orders" indeterminate color="primary"></v-progress-linear>
-                  <v-data-table
-                    v-model:selected="orderStore.selectedOrders"
+
+
+                
+                  <v-data-table-server
+                    v-model:items-per-page="orderStore.pagination.itemsPerPage"
+                    v-model:page="orderStore.pagination.page"
+                    v-model:sort-by="orderStore.pagination.sortBy"
                     :headers="orderHeaders"
                     :items="tableItems"
-                    :items-per-page="orderStore.pagination.itemsPerPage"
-                    :page="orderStore.pagination.page"
-                    :server-items-length="orderStore.pagination.totalItems"
+                    :items-length="orderStore.pagination.totalItems"
                     :loading="orderStore.loading.orders"
+                    :search="orderStore.orderSearch"
                     show-select
                     item-value="id"
                     class="elevation-1"
-                    @update:page="page => { orderStore.pagination.page = page; applyFilters(); }"
-                    @update:items-per-page="ipp => { orderStore.pagination.itemsPerPage = ipp; orderStore.pagination.page = 1; applyFilters(); }"
+                    density="comfortable"
+                    v-model:selected="orderStore.selectedOrders"
+                    @update:options="applyFilters"
                   >
 
 
@@ -855,7 +860,9 @@ onMounted(async () => {
                         <v-icon>mdi-printer</v-icon>
                       </v-btn>
                     </template>
-                  </v-data-table>
+
+                  </v-data-table-server>
+
                 </v-card-text>
               </v-window-item>
 
