@@ -254,6 +254,11 @@ class GoogleSheetController extends Controller
         }
     }
 
+
+    // track empty
+    // ingnoring the last order 
+    // 
+
     //  the puporse of this function is to upload orders from a Google Sheet to the database
     /**
      * Upload orders from Google Sheets to the database
@@ -280,6 +285,8 @@ class GoogleSheetController extends Controller
             $this->googleSheetService->setSpreadsheetId($sheet->post_spreadsheet_id);
 
             // Read all data from the sheet
+
+            // skip 
             $sheetData = $this->googleSheetService->readAllSheetData($sheet->sheet_name);
 
             Log::info("syncOrders: Orders fetched", ['count' => count($sheetData)]);

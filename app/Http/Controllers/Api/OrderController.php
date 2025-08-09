@@ -216,7 +216,7 @@ class OrderController extends Controller
             $this->applySorting($query, $request);
 
             // Get pagination parameters
-            $perPage = min($request->get('per_page', 20), 100); // Max 100 items per page
+            $perPage = min($request->get('per_page', 10), 100); // Max 100 items per page
             
             // Paginate results
             $orders = $query->paginate($perPage);

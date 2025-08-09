@@ -565,76 +565,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       }
     },
 
-    // Message sending
-    // async sendMessage(userId) {
-
-    //   console.log('Sending message with userId:', userId); // Debug log
-
-    //   if (!this.messageText.trim()) {
-    //     return this.showError('Please enter a message')
-    //   }
-
-    //   if (!Array.isArray(this.selectedContacts) || this.selectedContacts.length === 0) {
-    //     return this.showError('Please select at least one recipient')
-    //   }
-
-    //   try {
-    //     this.loading.sending = true
-
-    //     // Deep clone the payload to avoid circular references
-    //     const contacts = this.selectedContacts.map(c => ({
-    //       id: c.id,
-    //       name: c.name,
-    //       chatId: c.whatsapp || c.alt_phone || c.phone,
-    //     }))
-
-    //     const templateId = this.selectedTemplate ? this.selectedTemplate.id : null
-
-    //     const payload = {
-    //       user_id: userId,
-    //       contacts: JSON.parse(JSON.stringify(contacts)),
-    //       message: this.messageText,
-    //       template_id: templateId,
-    //     }
-
-    //     const response = await axios.post('/api/v1/whatsapp/send-message', payload)
-
-    //     const now = new Date()
-
-    //     this.messages.unshift({
-    //       id: response.data?.id || Date.now(),
-    //       content: this.messageText,
-    //       recipients: this.selectedContacts.length,
-    //       status: 'sent',
-    //       message_status: 'sent',
-    //       sent_at: now.toISOString().split('T')[0],
-    //       created_at: now.toISOString(),
-    //       recipient_name: this.selectedContacts.map(c => c.name).join(', '),
-    //       recipient_phone: this.selectedContacts.map(c => c.whatsapp || c.alt_phone || c.phone).join(', '),
-    //       results: response.data?.results || []
-    //     })
-
-    //     this.stats.sent += this.selectedContacts.length
-    //     this.showSuccess(`Message successfully sent to ${this.selectedContacts.length} recipients`)
-
-    //     this.messageText = ''
-    //     this.selectedContacts = []
-    //     this.selectedTemplate = null
-    //     this.showNewMessageDialog = false
-
-    //     setTimeout(() => {
-    //       this.loadMessages(1)
-    //     }, 1000)
-
-    //   } catch (error) {
-    //     console.error('Error sending message:', error)
-    //     this.showError(`Failed to send message: ${error.response?.data?.message || error.message}`)
-    //   } finally {
-    //     this.loading.sending = false
-    //   }
-    // },
-
-
+    
     async sendMessage(userId) {
       console.log('Sending message with userId:', userId)
 

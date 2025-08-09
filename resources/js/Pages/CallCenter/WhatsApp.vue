@@ -9,6 +9,7 @@ import { useConversationStore } from '@/stores/useConversationStore'
 import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
 import AssignDialog from './AssignDialog.vue';
 import { useOrderStore } from '@/stores/orderStore' // Adjust path as needed
+import { storeToRefs } from 'pinia'
 
 import OrderDialogs from './Dialogs/OrderDialogs.vue';
 
@@ -21,7 +22,7 @@ import { notify } from '@/utils/toast';
 const store = useWhatsAppStore()
 const conversationStore = useConversationStore()
 const orderStore = useOrderStore()
-
+const { tableItems } = storeToRefs(orderStore) // <-- ADD THIS LINE
 
 const dialogMode = ref(null);
 const showDialog = ref(false);
@@ -57,7 +58,7 @@ const assignRider = async (riderId, orders) => {
     notify.success(response.data.message || 'Rider assigned successfully');
   } catch (error) {
     // notify.error(error.response?.data?.message || 'Failed to assign rider');
-       notify.error('Failed to assign rider');
+    notify.error('Failed to assign rider');
 
   }
 };
@@ -90,7 +91,7 @@ const updateStatus = async (status, orders) => {
 
 const viewOrderDetails = (order) => {
 
-      orderStore.openDialog(order)
+  orderStore.openDialog(order)
 
 }
 // Local UI state (not managed by store)
@@ -161,7 +162,7 @@ const orderDateRangeText = computed(() => {
 })
 
 const hasActiveFilters = computed(() => {
-  return !!(
+  const hasFilters = !!(
     orderStore.orderFilterStatus ||
     orderStore.orderFilterProduct ||
     orderStore.orderFilterZone ||
@@ -170,7 +171,9 @@ const hasActiveFilters = computed(() => {
     orderStore.orderFilterVendor ||
     (orderStore.orderDateRange && orderStore.orderDateRange.length > 0) ||
     orderStore.orderSearch
-  )
+  );
+  console.log('🔍 hasActiveFilters:', hasFilters);
+  return hasFilters;
 })
 const {
   // Data
@@ -409,9 +412,9 @@ const clearAllFilters = () => {
 
 const applyFilters = async () => {
   try {
-    orderStore.loading.orders = true
+    console.log('🔍 Applying filters...');
+    orderStore.loading.orders = true;
 
-    // Build filter object
     const filters = {
       status: orderStore.orderFilterStatus,
       product: orderStore.orderFilterProduct,
@@ -421,26 +424,28 @@ const applyFilters = async () => {
       vendor: orderStore.orderFilterVendor,
       dateRange: orderStore.orderDateRange,
       search: orderStore.orderSearch
-    }
+    };
 
-    // Remove null/empty values
     const cleanFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) =>
-        value !== null && value !== '' &&
+        value !== null &&
+        value !== undefined &&
+        value !== '' &&
         !(Array.isArray(value) && value.length === 0)
       )
-    )
+    );
 
-    // Apply filters using store action
-    await orderStore.loadOrdersWithFilters(cleanFilters)
+    console.log('🧹 Clean filters:', cleanFilters);
 
+    await orderStore.loadOrdersWithFilters(cleanFilters);
+
+    console.log('✅ Filters applied successfully. Orders loaded:', orderStore.orders.length);
   } catch (error) {
-    console.error('Error applying filters:', error)
-    // Handle error appropriately
+    handleError(error, 'applyFilters');
   } finally {
-    orderStore.loading.orders = false
+    orderStore.loading.orders = false;
   }
-}
+};
 
 const refreshData = async () => {
   try {
@@ -479,10 +484,13 @@ function openFilterDialog() {
 
 // Component mount
 onMounted(async () => {
-  // Initialize the store which will load all data
-  await store.initialize()
-    // notify.success('🎉 Toastify is working!')
-
+  try {
+    await store.initialize();
+    await orderStore.initialize();
+    console.log('✅ All stores initialized successfully');
+  } catch (error) {
+    console.error('❌ Error during initialization:', error);
+  }
 })
 </script>
 <template>
@@ -619,7 +627,9 @@ onMounted(async () => {
                 <v-card-title class="d-flex flex-wrap justify-space-between align-center">
                   <div class="text-h6">Recent Messages</div>
                   <v-text-field v-model="search" append-icon="mdi-magnify" label="Search messages" single-line
-                    hide-details density="compact" class="max-w-xs mt-2 mt-sm-0"></v-text-field>
+                    hide-details density="compact" class="max-w-xs mt-2 mt-sm-0" :loading="loading.messages"
+                    @keyup.enter="loadMessages(1)" @click:clear="() => { search = ''; loadMessages(1) }"
+                    clearable></v-text-field>
                 </v-card-title>
 
                 <v-card-text>
@@ -631,75 +641,70 @@ onMounted(async () => {
                     <p class="text-body-1 mt-2">No messages found. Try sending one!</p>
                   </div>
 
-                  <v-table v-else>
-                    <thead>
-                      <tr>
-                        <th class="text-left">Content</th>
-                        <th class="text-left">Recipient</th>
-                        <th class="text-left">Order #</th>
-                        <th class="text-left">Status</th>
-                        <th class="text-left">Date</th>
-                        <th class="text-center">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="message in filteredMessages" :key="message.id">
-                        <td>
-                          <span>{{ message.content }}</span>
-                        </td>
-                        <td>
-                          <div>{{ message.recipient_name || 'N/A' }}</div>
-                          <div class="text-caption text-grey">
-                            {{ formatPhoneNumber(message.to) }}
-                          </div>
-                        </td>
-                        <td>
-                          {{ message.order_number || '-' }}
-                        </td>
-                        <td>
-                          <v-chip :color="{
-                            sent: 'primary',
-                            delivered: 'success',
-                            read: 'info',
-                            failed: 'error',
-                            pending: 'warning'
-                          }[message.status?.toLowerCase()] || 'grey'" small>
-                            {{ message.status || 'Unknown' }}
-                          </v-chip>
-                        </td>
-                        <td>
-                          {{ message.sent_at || message.created_at?.split('T')[0] || '-' }}
-                        </td>
-                        <td class="text-center">
-                          <v-btn icon size="small" @click="viewMessageDetails(message)">
-                            <v-icon>mdi-eye</v-icon>
-                          </v-btn>
-                          <v-btn icon size="small" color="error" @click="deleteMessage(message.id)">
-                            <v-icon>mdi-delete</v-icon>
-                          </v-btn>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-
-                  <!-- Pagination -->
-                  <div class="d-flex justify-end mt-4">
-                    <v-pagination v-model="currentPage" :length="totalPages" @input="loadMessages"></v-pagination>
-                  </div>
+                  <v-data-table v-else :headers="[
+                    { title: 'Content', value: 'content', sortable: false },
+                    { title: 'Recipient', value: 'recipient_name', sortable: false },
+                    { title: 'Order #', value: 'order_number', sortable: false },
+                    { title: 'Status', value: 'status', sortable: true },
+                    { title: 'Date', value: 'sent_at', sortable: true },
+                    { title: 'Actions', value: 'actions', sortable: false }
+                  ]" :items="filteredMessages" :options.sync="messageTableOptions" :server-items-length="totalMessages"
+                    :loading="loading.messages" item-key="id" class="elevation-1"
+                    @update:options="onMessageTableOptionsChange">
+                    <template #item.content="{ item }">
+                      <span>{{ item.content }}</span>
+                    </template>
+                    <template #item.recipient_name="{ item }">
+                      <div>{{ item.recipient_name || 'N/A' }}</div>
+                      <div class="text-caption text-grey">
+                        {{ formatPhoneNumber(item.to) }}
+                      </div>
+                    </template>
+                    <template #item.order_number="{ item }">
+                      {{ item.order_number || '-' }}
+                    </template>
+                    <template #item.status="{ item }">
+                      <v-chip :color="{
+                        sent: 'primary',
+                        delivered: 'success',
+                        read: 'info',
+                        failed: 'error',
+                        pending: 'warning'
+                      }[item.status?.toLowerCase()] || 'grey'" small>
+                        {{ item.status || 'Unknown' }}
+                      </v-chip>
+                    </template>
+                    <template #item.sent_at="{ item }">
+                      {{ item.sent_at || item.created_at?.split('T')[0] || '-' }}
+                    </template>
+                    <template #item.actions="{ item }">
+                      <v-btn icon size="small" @click="viewMessageDetails(item)">
+                        <v-icon>mdi-eye</v-icon>
+                      </v-btn>
+                      <v-btn icon size="small" color="error" @click="deleteMessage(item.id)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-data-table>
                 </v-card-text>
               </v-window-item>
+
+
+
+
               <!-- Orders Tab -->
               <v-window-item value="orders">
                 <!-- Header -->
                 <v-card-title class="d-flex flex-wrap justify-space-between align-center">
                   <div class="text-h6">Orders</div>
 
-                  <v-text-field v-model="search" append-icon="mdi-magnify" label="Search orders"
+                  <v-text-field v-model="orderStore.orderSearch" append-icon="mdi-magnify" label="Search orders"
                     placeholder="Client, Order #, Phone" single-line hide-details density="compact" clearable
-                    class="max-w-xs" @keyup.enter="loadOrders" />
+                    class="max-w-xs" :loading="orderStore.loading.orders" @keyup.enter="applyFilters"
+                    @click:clear="() => { orderStore.orderSearch = ''; applyFilters() }" />
 
                   <div class="d-flex align-center gap-2 flex-wrap">
-                    <v-btn icon @click="openFilterDialog" :loading="loading.orders" color="primary"
+                    <v-btn icon @click="openFilterDialog" :loading="orderStore.loading.orders" color="primary"
                       title="Apply Filters">
                       <v-icon>mdi-filter</v-icon>
                     </v-btn>
@@ -707,13 +712,13 @@ onMounted(async () => {
                 </v-card-title>
 
                 <!-- Bulk Actions Bar -->
-                <v-card-text v-if="selectedOrders.length > 0" class="py-2">
+                <v-card-text v-if="orderStore.selectedOrders && orderStore.selectedOrders.length > 0" class="py-2">
                   <v-alert type="info" variant="tonal" class="mb-0">
                     <div class="d-flex align-center justify-space-between flex-wrap gap-2">
                       <div class="d-flex align-center gap-2">
                         <v-icon>mdi-checkbox-marked</v-icon>
-                        <span>{{ selectedOrders.length }} order(s) selected</span>
-                        <v-btn variant="text" size="small" @click="selectedOrders = []">
+                        <span>{{ orderStore.selectedOrders.length }} order(s) selected</span>
+                        <v-btn variant="text" size="small" @click="orderStore.selectedOrders = []">
                           Clear Selection
                         </v-btn>
                       </div>
@@ -724,39 +729,28 @@ onMounted(async () => {
                           Delete Selected
                         </v-btn>
                         <v-btn color="primary" variant="outlined" size="small"
-                          @click="openDialog('rider', selectedOrders)">
+                          @click="openDialog('rider', orderStore.selectedOrders)">
                           <v-icon start>mdi-motorbike</v-icon>
                           Assign Rider
                         </v-btn>
 
                         <v-btn color="secondary" variant="outlined" size="small"
-                          @click="openDialog('agent', selectedOrders)">
+                          @click="openDialog('agent', orderStore.selectedOrders)">
                           <v-icon start>mdi-account-tie</v-icon>
                           Assign Agent
                         </v-btn>
 
-
                         <v-btn color="success" variant="outlined" size="small"
-                          @click="openNewMessageDialog(selectedOrders)">
+                          @click="openNewMessageDialog(orderStore.selectedOrders)">
                           <v-icon start>mdi-whatsapp</v-icon>
                           Send Messages
                         </v-btn>
 
                         <v-btn color="warning" variant="outlined" size="small"
-                          @click="openDialog('status', selectedOrders)">
+                          @click="openDialog('status', orderStore.selectedOrders)">
                           <v-icon start>mdi-update</v-icon>
                           Update Status
                         </v-btn>
-
-
-                        <!-- <v-btn color="success" variant="outlined" size="small" @click="openNewMessageDialog ">
-                          <v-icon start>mdi-whatsapp</v-icon>
-                          Send Messages
-                        </v-btn> -->
-
-
-
-
                       </div>
                     </div>
                   </v-alert>
@@ -764,11 +758,25 @@ onMounted(async () => {
 
                 <!-- Orders Table -->
                 <v-card-text>
-                  <v-progress-linear v-if="loading.orders" indeterminate color="primary"></v-progress-linear>
+                  <v-progress-linear v-if="orderStore.loading.orders" indeterminate color="primary"></v-progress-linear>
+                  <v-data-table
+                    v-model:selected="orderStore.selectedOrders"
+                    :headers="orderHeaders"
+                    :items="tableItems"
+                    :items-per-page="orderStore.pagination.itemsPerPage"
+                    :page="orderStore.pagination.page"
+                    :server-items-length="orderStore.pagination.totalItems"
+                    :loading="orderStore.loading.orders"
+                    show-select
+                    item-value="id"
+                    class="elevation-1"
+                    @update:page="page => { orderStore.pagination.page = page; applyFilters(); }"
+                    @update:items-per-page="ipp => { orderStore.pagination.itemsPerPage = ipp; orderStore.pagination.page = 1; applyFilters(); }"
+                  >
 
-                  <v-data-table v-else v-model="selectedOrders" v-model:page="currentOrderPage" :headers="orderHeaders"
-                    :items="orders" :items-per-page="perPage" :server-items-length="totalOrderCount"
-                    :loading="loading.orders" :search="search" show-select item-value="id" class="elevation-1">
+
+
+
                     <!-- Custom Columns -->
                     <template #item.order_no="{ item }">
                       <strong>{{ item.order_no }}</strong>
@@ -807,10 +815,13 @@ onMounted(async () => {
                     </template>
 
                     <template #item.order_items="{ item }">
-                      <div v-if="item.order_items?.length">
-                        {{ item.order_items.length }} item(s)
+                      <div v-if="item.orderItems?.length">
+                        {{ item.orderItems.length }} item(s)
                         <div class="text-caption text-grey">
-                          Qty: {{ getTotalQuantity(item.order_items) }}
+                          Qty: {{ getTotalQuantity(item.orderItems) }}
+                        </div>
+                        <div v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-caption text-grey">
+                          {{ orderItem.product?.product_name || 'Product' }} (x{{ orderItem.quantity }})
                         </div>
                       </div>
                       <div v-else class="text-grey">No items</div>
@@ -839,11 +850,10 @@ onMounted(async () => {
                       </v-btn>
                       <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
                         <v-icon>mdi-whatsapp</v-icon>
-
                       </v-btn>
-                        <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
+                      <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
                         <v-icon>mdi-printer</v-icon>
-                        </v-btn>
+                      </v-btn>
                     </template>
                   </v-data-table>
                 </v-card-text>
@@ -1327,7 +1337,7 @@ onMounted(async () => {
         @confirmed="handleConfirm" />
 
       <WhatsAppConversation />
-      <OrderDialogs/>
+      <OrderDialogs />
 
     </v-container>
 

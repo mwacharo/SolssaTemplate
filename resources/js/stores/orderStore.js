@@ -14,7 +14,16 @@ export const useOrderStore = defineStore('order', {
     orderSearch: '',
     
     // Options for dropdowns
-    orderStatusOptions: [],
+    orderStatusOptions: [
+      { title: 'All Status', value: null },
+      { title: 'Active', value: 'active' },
+      { title: 'Inactive', value: 'inactive' },
+      { title: 'Pending', value: 'pending' },
+      { title: 'Processing', value: 'processing' },
+      { title: 'Completed', value: 'completed' },
+      { title: 'Cancelled', value: 'cancelled' },
+      { title: 'Inprogress', value: 'Inprogress' }
+    ],
     productOptions: [],
     zoneOptions: [],
     agentOptions: [],
@@ -24,9 +33,10 @@ export const useOrderStore = defineStore('order', {
     warehouseOptions: [],
     countryOptions: [],
     
-    // Data
+    // Data - CRITICAL: These must be properly initialized
     orders: [],
     filteredOrders: [],
+    selectedOrders: [], // This was missing in your component
     
     // Dialog states
     dialog: false,
@@ -64,7 +74,10 @@ export const useOrderStore = defineStore('order', {
     
     // Error handling
     lastError: null,
-    notifications: []
+    notifications: [],
+
+    // Initialization flag
+    initialized: false
   }),
 
   getters: {
@@ -107,10 +120,51 @@ export const useOrderStore = defineStore('order', {
     // Get order by ID
     getOrderById: (state) => (orderId) => {
       return state.orders.find(order => order.id === orderId) || null
+    },
+
+    // Get table items (this is what the component should use)
+    tableItems: (state) => {
+      const items = state.activeFilterCount > 0 ? state.filteredOrders : state.orders
+      console.log('[OrderStore] tableItems getter called, returning:', items?.length || 0, 'items')
+      return items || []
     }
   },
 
   actions: {
+    // INITIALIZATION - This is crucial
+    async initialize() {
+      if (this.initialized) {
+        console.log('[OrderStore] Already initialized, skipping...')
+        return
+      }
+
+      console.log('[OrderStore] Initializing store...')
+      
+      try {
+        // Initialize options in parallel
+        await Promise.allSettled([
+          this.loadOrderStatusOptions(),
+          this.loadProductOptions(),
+          this.loadZoneOptions(),
+          this.loadAgentOptions(),
+          this.loadRiderOptions(),
+          this.loadVendorOptions(),
+          this.loadClientOptions(),
+          this.loadWarehouseOptions(),
+          this.loadCountryOptions()
+        ])
+
+        // Load initial orders
+        await this.loadOrdersWithFilters({})
+        
+        this.initialized = true
+        console.log('[OrderStore] Initialization complete')
+      } catch (error) {
+        console.error('[OrderStore] Initialization error:', error)
+        this.setError(error)
+      }
+    },
+
     // Error handling
     setError(error) {
       this.lastError = error
@@ -148,54 +202,55 @@ export const useOrderStore = defineStore('order', {
     // Generic API call helper with error handling
     async apiCall(url, options = {}) {
       try {
-      // Use axios for API calls (assumes axios is imported)
-      const config = {
-        url,
-        method: options.method ? options.method.toLowerCase() : 'get',
-        headers: {
-        'Accept': 'application/json',
-        ...(options.headers || {})
-        },
-        withCredentials: true
-      }
+        // Use axios for API calls (assumes axios is imported)
+        const config = {
+          url,
+          method: options.method ? options.method.toLowerCase() : 'get',
+          headers: {
+            'Accept': 'application/json',
+            ...(options.headers || {})
+          },
+          withCredentials: true
+        }
 
-      if (options.body) {
-        config.data = typeof options.body === 'string'
-        ? JSON.parse(options.body)
-        : options.body
-      }
+        if (options.body) {
+          config.data = typeof options.body === 'string'
+            ? JSON.parse(options.body)
+            : options.body
+        }
 
-      if (config.method === 'get' && config.data) {
-        config.params = config.data
-        delete config.data
-      }
+        if (config.method === 'get' && config.data) {
+          config.params = config.data
+          delete config.data
+        }
 
-      const response = await axios(config)
-      return response.data
+        const response = await axios(config)
+        return response.data
       } catch (error) {
-      let message = 'Unknown error'
-      if (error.response && error.response.data) {
-        message = error.response.data.message || JSON.stringify(error.response.data)
-      } else if (error.message) {
-        message = error.message
-      }
-      this.setError(new Error(message))
-      throw new Error(message)
+        let message = 'Unknown error'
+        if (error.response && error.response.data) {
+          message = error.response.data.message || JSON.stringify(error.response.data)
+        } else if (error.message) {
+          message = error.message
+        }
+        this.setError(new Error(message))
+        throw new Error(message)
       }
     },
 
     // Load order status options
     async loadOrderStatusOptions() {
-      if (this.orderStatusOptions.length > 0) return // Already loaded
-
       try {
         this.loading.statusOptions = true
-        const data = await this.apiCall('/api/v1/order-statuses')
-        this.orderStatusOptions = Array.isArray(data) ? data : data.statuses || []
+        // Try to load from API, fallback to defaults
+        try {
+          const data = await this.apiCall('/api/v1/order-statuses')
+          this.orderStatusOptions = Array.isArray(data) ? data : data.statuses || this.orderStatusOptions
+        } catch (error) {
+          console.warn('Could not load status options from API, using defaults')
+        }
       } catch (error) {
         console.error('Error loading status options:', error)
-        // Fallback to default statuses
-        this.orderStatusOptions = ['Inprogress', 'active', 'inactive', 'confirmed', 'processing', 'completed', 'cancelled']
       } finally {
         this.loading.statusOptions = false
       }
@@ -314,124 +369,104 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
-    // Load vendor products with caching - KEY FUNCTIONALITY FOR EDITING
-    async loadVendorProducts(vendorId, forceRefresh = false) {
-      if (!vendorId) {
-        this.productOptions = []
-        return []
-      }
-
-      // Check cache first
-      if (!forceRefresh && this.vendorProductsCache.has(vendorId)) {
-        const cachedProducts = this.vendorProductsCache.get(vendorId)
-        this.productOptions = cachedProducts
-        return cachedProducts
-      }
-
-      try {
-        this.loading.productOptions = true
-        const data = await this.apiCall(`/api/v1/products/vendor/${vendorId}`)
-        
-        const products = Array.isArray(data) ? data : data.products || []
-        const formattedProducts = products.map(product => ({
-          id: product.id,
-          product_name: product.product_name,
-          sku: product.sku,
-          price: product.price || 0,
-          vendor_id: product.vendor_id,
-          image_url: product.image_url,
-          description: product.description,
-          category: product.category,
-          stock_quantity: product.stock_quantity || 0
-        }))
-
-        // Cache the results
-        this.vendorProductsCache.set(vendorId, formattedProducts)
-        this.productOptions = formattedProducts
-        
-        return formattedProducts
-      } catch (error) {
-        console.error('Error loading vendor products:', error)
-        this.productOptions = []
-        return []
-      } finally {
-        this.loading.productOptions = false
-      }
-    },
-
-    // Clear vendor products cache
-    clearVendorProductsCache(vendorId = null) {
-      if (vendorId) {
-        this.vendorProductsCache.delete(vendorId)
-      } else {
-        this.vendorProductsCache.clear()
-      }
-    },
-
-    // Initialize all options at once
-    async initializeOptions() {
-      try {
-        await Promise.allSettled([
-          this.loadOrderStatusOptions(),
-          this.loadZoneOptions(),
-          this.loadAgentOptions(),
-          this.loadRiderOptions(),
-          this.loadVendorOptions(),
-          this.loadClientOptions(),
-          this.loadWarehouseOptions(),
-          this.loadCountryOptions()
-        ])
-      } catch (error) {
-        console.error('Error initializing options:', error)
-      }
-    },
-
-    // Load orders with filters and enhanced error handling
+    // CORE METHOD: Load orders with filters - FIXED VERSION
     async loadOrdersWithFilters(filters = {}) {
       try {
+        console.log('[OrderStore] loadOrdersWithFilters called with filters:', filters)
         this.loading.orders = true
         this.clearError()
-        
-        // Build query parameters
+
+        // Build URL with filters
+        let url = '/api/v1/orders'
         const queryParams = new URLSearchParams()
-        
-        // Add filters to query params
+
+        // Add filters to query params if they have values
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== null && value !== undefined && value !== '') {
             if (Array.isArray(value)) {
               if (value.length > 0) {
+                console.log(`[OrderStore] Adding array filter: ${key} =`, value)
                 queryParams.append(key, JSON.stringify(value))
               }
             } else {
+              console.log(`[OrderStore] Adding filter: ${key} =`, value)
               queryParams.append(key, value)
             }
           }
         })
-        
-        // Add pagination
-        queryParams.append('page', this.pagination.page)
-        queryParams.append('limit', this.pagination.itemsPerPage)
-        
+
+        // Always add pagination
+        queryParams.append('page', this.pagination.page.toString())
+        queryParams.append('per_page', this.pagination.itemsPerPage.toString())
+
+        if (queryParams.toString()) {
+          url += `?${queryParams.toString()}`
+        }
+
+        console.log('[OrderStore] Final orders API URL:', url)
+
         // Make API call
-        const data = await this.apiCall(`/api/v1/orders?${queryParams.toString()}`)
-        
-        // Update state
-        this.orders = data.orders || data.data || []
-        this.filteredOrders = this.orders
-        this.pagination.totalItems = data.total || data.totalItems || 0
-        
+        const response = await this.apiCall(url)
+        console.log('[OrderStore] Raw API Response:', response)
+
+        // CRITICAL: Handle Laravel pagination structure correctly
+        if (response && typeof response === 'object') {
+          if (response.data && Array.isArray(response.data)) {
+            // Laravel pagination format
+            this.orders = response.data
+            this.filteredOrders = response.data
+            
+            // Handle Laravel pagination meta
+            if (response.meta) {
+              this.pagination.totalItems = response.meta.total || 0
+            }
+            
+            console.log('[OrderStore] Successfully loaded orders:', this.orders.length)
+            console.log('[OrderStore] Sample order:', this.orders[0])
+            
+            // Ensure orderItems are properly formatted for your templates
+            this.orders.forEach(order => {
+              if (!order.orderItems && order.order_items) {
+                order.orderItems = order.order_items
+              }
+              if (!order.orderItems) {
+                order.orderItems = []
+              }
+            })
+          } else if (Array.isArray(response)) {
+            // Direct array response
+            this.orders = response
+            this.filteredOrders = response
+            this.pagination.totalItems = response.length
+            
+            console.log('[OrderStore] Loaded direct array orders:', this.orders.length)
+          } else {
+            console.warn('[OrderStore] Unexpected response format:', response)
+            this.orders = []
+            this.filteredOrders = []
+            this.pagination.totalItems = 0
+          }
+        } else {
+          console.warn('[OrderStore] Invalid response:', response)
+          this.orders = []
+          this.filteredOrders = []
+          this.pagination.totalItems = 0
+        }
+
         return this.orders
       } catch (error) {
-        console.error('Error loading orders:', error)
+        console.error('[OrderStore] Error loading orders:', error)
         this.orders = []
         this.filteredOrders = []
+        this.pagination.totalItems = 0
         throw error
       } finally {
         this.loading.orders = false
+        console.log('[OrderStore] loadOrdersWithFilters finished. Orders count:', this.orders.length)
       }
     },
 
-    // Load specific order details with enhanced data structure
+    // Load specific order details
     async loadOrder(orderId) {
       try {
         this.loading.orders = true
@@ -458,7 +493,92 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
-    // CREATE - Create new order with validation
+    // Dialog management
+    async openDialog(orderId) {
+      console.log('[OrderStore] openDialog called with:', orderId)
+
+      // Handle object parameter
+      const id = typeof orderId === 'object' && orderId !== null && 'id' in orderId
+        ? orderId.id
+        : orderId
+
+      this.selectedOrderId = id
+      this.dialog = true
+
+      // Load order details
+      try {
+        const order = await this.loadOrder(id)
+        this.selectedOrder = order
+        console.log('[OrderStore] Order loaded and stored:', order)
+      } catch (error) {
+        console.error('[OrderStore] Error loading order:', error)
+        this.selectedOrder = null
+        this.addNotification({
+          type: 'error',
+          message: 'Failed to load order details',
+          details: error.message
+        })
+      }
+    },
+
+    openCreateDialog() {
+      this.createDialog = true
+      this.dialog = true
+      this.selectedOrderId = null
+      this.selectedOrder = null
+    },
+
+    closeDialog() {
+      this.dialog = false
+      this.createDialog = false
+      this.selectedOrderId = null
+      this.selectedOrder = null
+    },
+
+    // UPDATE - Update order
+    async updateOrder(orderId, orderData) {
+      try {
+        this.loading.updating = true
+        this.clearError()
+
+        const data = await this.apiCall(`/api/v1/orders/${orderId}`, {
+          method: 'PUT',
+          body: JSON.stringify(orderData)
+        })
+
+        const updatedOrder = data.data || data
+
+        // Update selectedOrder if it matches
+        if (this.selectedOrder && this.selectedOrder.id === orderId) {
+          this.selectedOrder = updatedOrder
+        }
+
+        // Update in orders array
+        const orderIndex = this.orders.findIndex(order => order.id === orderId)
+        if (orderIndex !== -1) {
+          this.orders[orderIndex] = updatedOrder
+          this.filteredOrders[orderIndex] = updatedOrder
+        }
+
+        this.addNotification({
+          type: 'success',
+          message: 'Order updated successfully'
+        })
+
+        return updatedOrder
+      } catch (error) {
+        this.addNotification({
+          type: 'error',
+          message: 'Failed to update order',
+          details: error.message
+        })
+        throw error
+      } finally {
+        this.loading.updating = false
+      }
+    },
+
+    // CREATE - Create new order
     async createOrder(orderData) {
       try {
         this.loading.creating = true
@@ -471,22 +591,6 @@ export const useOrderStore = defineStore('order', {
         if (!orderData.vendor_id) {
           throw new Error('Vendor is required')
         }
-        if (!orderData.items || orderData.items.length === 0) {
-          throw new Error('At least one item is required')
-        }
-
-        // Validate items
-        orderData.items.forEach((item, index) => {
-          if (!item.product_id) {
-            throw new Error(`Product is required for item ${index + 1}`)
-          }
-          if (!item.quantity || item.quantity <= 0) {
-            throw new Error(`Valid quantity is required for item ${index + 1}`)
-          }
-          if (item.price < 0) {
-            throw new Error(`Price cannot be negative for item ${index + 1}`)
-          }
-        })
 
         const data = await this.apiCall('/api/v1/orders', {
           method: 'POST',
@@ -519,227 +623,7 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
-    // Dialog management
-    async openDialog(orderId) {
-      console.log('=== openDialog called ===')
-      console.log('orderId:', orderId)
-
-      // Handle object parameter
-      const id = typeof orderId === 'object' && orderId !== null && 'id' in orderId
-        ? orderId.id
-        : orderId
-
-      this.selectedOrderId = id
-      this.dialog = true
-
-      // Load order details
-      try {
-        const order = await this.loadOrder(id)
-        this.selectedOrder = order
-        console.log('Order loaded and stored:', order)
-      } catch (error) {
-        console.error('Error loading order:', error)
-        this.selectedOrder = null
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to load order details',
-          details: error.message
-        })
-      }
-    },
-
-    openCreateDialog() {
-      this.createDialog = true
-      this.dialog = true
-      this.selectedOrderId = null
-      this.selectedOrder = null
-    },
-
-    closeDialog() {
-      this.dialog = false
-      this.createDialog = false
-      this.selectedOrderId = null
-      this.selectedOrder = null
-    },
-
-    // UPDATE - Update order with optimistic updates
-    async updateOrder(orderId, orderData) {
-      try {
-        this.loading.updating = true
-        this.clearError()
-
-        // Store original order for rollback
-        const originalOrder = this.selectedOrder ? { ...this.selectedOrder } : null
-        const orderIndex = this.orders.findIndex(order => order.id === orderId)
-        const originalOrderInList = orderIndex !== -1 ? { ...this.orders[orderIndex] } : null
-
-        // Optimistic update
-        if (this.selectedOrder && this.selectedOrder.id === orderId) {
-          Object.assign(this.selectedOrder, orderData)
-        }
-        if (orderIndex !== -1) {
-          Object.assign(this.orders[orderIndex], orderData)
-          Object.assign(this.filteredOrders[orderIndex], orderData)
-        }
-
-        try {
-          const data = await this.apiCall(`/api/v1/orders/${orderId}`, {
-            method: 'PUT',
-            body: JSON.stringify(orderData)
-          })
-
-          const updatedOrder = data.data || data
-
-          // Update with server response
-          if (this.selectedOrder && this.selectedOrder.id === orderId) {
-            this.selectedOrder = updatedOrder
-          }
-          if (orderIndex !== -1) {
-            this.orders[orderIndex] = updatedOrder
-            this.filteredOrders[orderIndex] = updatedOrder
-          }
-
-          this.addNotification({
-            type: 'success',
-            message: 'Order updated successfully'
-          })
-
-          return updatedOrder
-        } catch (error) {
-          // Rollback optimistic update
-          if (originalOrder && this.selectedOrder && this.selectedOrder.id === orderId) {
-            this.selectedOrder = originalOrder
-          }
-          if (originalOrderInList && orderIndex !== -1) {
-            this.orders[orderIndex] = originalOrderInList
-            this.filteredOrders[orderIndex] = originalOrderInList
-          }
-          throw error
-        }
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to update order',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.updating = false
-      }
-    },
-
-    // UPDATE - Update order items with validation
-    async updateOrderItems(orderId, items) {
-      try {
-        this.loading.updating = true
-        this.clearError()
-
-        // Validate items
-        const validItems = items.filter(item => {
-          if (!item.product_id) return false
-          if (!item.quantity || item.quantity <= 0) return false
-          if (item.price < 0) return false
-          return true
-        })
-
-        if (validItems.length !== items.length) {
-          const invalidCount = items.length - validItems.length
-          throw new Error(`${invalidCount} item(s) have invalid data. Please check all fields.`)
-        }
-
-        const data = await this.apiCall(`/api/v1/orders/${orderId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ items: validItems })
-        })
-
-        const updatedOrder = data.data || data
-
-        // Update selectedOrder if it matches
-        if (this.selectedOrder && this.selectedOrder.id === orderId) {
-          this.selectedOrder = updatedOrder
-        }
-
-        // Update in orders array
-        const orderIndex = this.orders.findIndex(order => order.id === orderId)
-        if (orderIndex !== -1) {
-          this.orders[orderIndex] = updatedOrder
-          this.filteredOrders[orderIndex] = updatedOrder
-        }
-
-        this.addNotification({
-          type: 'success',
-          message: 'Order items updated successfully'
-        })
-
-        return updatedOrder
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to update order items',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.updating = false
-      }
-    },
-
-    // UPDATE - Update client information
-    async updateClient(clientId, clientData) {
-      try {
-        this.loading.updating = true
-        this.clearError()
-
-        const data = await this.apiCall(`/api/v1/clients/${clientId}`, {
-          method: 'PUT',
-          body: JSON.stringify(clientData)
-        })
-        
-        const updatedClient = data.data || data
-        
-        // Update the client in selected order
-        if (this.selectedOrder && this.selectedOrder.client && this.selectedOrder.client.id === clientId) {
-          this.selectedOrder.client = updatedClient
-        }
-        
-        // Update client in orders array
-        this.orders.forEach(order => {
-          if (order.client && order.client.id === clientId) {
-            order.client = updatedClient
-          }
-        })
-        
-        this.filteredOrders.forEach(order => {
-          if (order.client && order.client.id === clientId) {
-            order.client = updatedClient
-          }
-        })
-        
-        // Update client options if it exists there
-        const clientOptionIndex = this.clientOptions.findIndex(c => c.id === clientId)
-        if (clientOptionIndex !== -1) {
-          this.clientOptions[clientOptionIndex] = { ...this.clientOptions[clientOptionIndex], ...updatedClient }
-        }
-
-        this.addNotification({
-          type: 'success',
-          message: 'Client updated successfully'
-        })
-        
-        return updatedClient
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to update client',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.updating = false
-      }
-    },
-
-    // DELETE - Delete order with confirmation
+    // DELETE - Delete order
     async deleteOrder(orderId) {
       try {
         this.loading.deleting = true
@@ -779,167 +663,9 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
-    // Bulk operations with progress tracking
-    async bulkUpdateOrders(orderIds, updateData) {
-      try {
-        this.loading.updating = true
-        this.clearError()
-
-        const data = await this.apiCall('/api/v1/orders/bulk-update', {
-          method: 'PUT',
-          body: JSON.stringify({
-            order_ids: orderIds,
-            update_data: updateData
-          })
-        })
-        
-        const updatedOrders = data.data || data
-        
-        // Update orders in arrays
-        updatedOrders.forEach(updatedOrder => {
-          const orderIndex = this.orders.findIndex(order => order.id === updatedOrder.id)
-          if (orderIndex !== -1) {
-            this.orders[orderIndex] = updatedOrder
-            this.filteredOrders[orderIndex] = updatedOrder
-          }
-          
-          // Update selected order if it matches
-          if (this.selectedOrder && this.selectedOrder.id === updatedOrder.id) {
-            this.selectedOrder = updatedOrder
-          }
-        })
-
-        this.addNotification({
-          type: 'success',
-          message: `${updatedOrders.length} orders updated successfully`
-        })
-        
-        return updatedOrders
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to bulk update orders',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.updating = false
-      }
-    },
-
-    async bulkDeleteOrders(orderIds) {
-      try {
-        this.loading.deleting = true
-        this.clearError()
-
-        await this.apiCall('/api/v1/orders/bulk-delete', {
-          method: 'DELETE',
-          body: JSON.stringify({ order_ids: orderIds })
-        })
-        
-        // Remove deleted orders from arrays
-        this.orders = this.orders.filter(order => !orderIds.includes(order.id))
-        this.filteredOrders = this.filteredOrders.filter(order => !orderIds.includes(order.id))
-        this.pagination.totalItems = Math.max(0, this.pagination.totalItems - orderIds.length)
-        
-        // Clear selected order if it was deleted
-        if (this.selectedOrder && orderIds.includes(this.selectedOrder.id)) {
-          this.selectedOrder = null
-          this.selectedOrderId = null
-          this.dialog = false
-        }
-
-        this.addNotification({
-          type: 'success',
-          message: `${orderIds.length} orders deleted successfully`
-        })
-        
-        return true
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to bulk delete orders',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.deleting = false
-      }
-    },
-
-    // Search and filter utilities
-    async searchOrders(query) {
-      this.orderSearch = query
-      await this.loadOrdersWithFilters(this.currentFilters)
-    },
-
-    async applyFilters(filters) {
-      // Update filter state
-      Object.keys(filters).forEach(key => {
-        if (key.startsWith('order')) {
-          this[key] = filters[key]
-        }
-      })
-      
-      // Reset pagination when applying new filters
-      this.pagination.page = 1
-      
-      await this.loadOrdersWithFilters(this.currentFilters)
-    },
-
     // Set pagination
     setPagination(pagination) {
       this.pagination = { ...this.pagination, ...pagination }
-    },
-
-    // Export orders with progress tracking
-    async exportOrders(format = 'csv', filters = {}) {
-      try {
-        this.clearError()
-        
-        const queryParams = new URLSearchParams()
-        
-        // Add filters
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== '') {
-            queryParams.append(key, value)
-          }
-        })
-        
-        queryParams.append('format', format)
-        
-        const response = await fetch(`/api/v1/orders/export?${queryParams.toString()}`)
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        
-        // Handle file download
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.style.display = 'none'
-        a.href = url
-        a.download = `orders-export-${new Date().toISOString().split('T')[0]}.${format}`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-
-        this.addNotification({
-          type: 'success',
-          message: 'Orders exported successfully'
-        })
-        
-        return true
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to export orders',
-          details: error.message
-        })
-        throw error
-      }
     },
 
     // Refresh data
@@ -968,6 +694,7 @@ export const useOrderStore = defineStore('order', {
       this.clearAllFilters()
       this.orders = []
       this.filteredOrders = []
+      this.selectedOrders = []
       this.dialog = false
       this.createDialog = false
       this.selectedOrderId = null
@@ -978,26 +705,15 @@ export const useOrderStore = defineStore('order', {
         totalItems: 0
       }
       
-      // Reset all options
-      this.orderStatusOptions = []
-      this.productOptions = []
-      this.zoneOptions = []
-      this.agentOptions = []
-      this.riderOptions = []
-      this.vendorOptions = []
-      this.clientOptions = []
-      this.warehouseOptions = []
-      this.countryOptions = []
-      
-      // Clear cache and notifications
-      this.vendorProductsCache.clear()
-      this.notifications = []
-      this.lastError = null
-      
       // Reset loading states
       Object.keys(this.loading).forEach(key => {
         this.loading[key] = false
       })
+
+      this.initialized = false
+      this.vendorProductsCache.clear()
+      this.notifications = []
+      this.lastError = null
     }
   }
 })
