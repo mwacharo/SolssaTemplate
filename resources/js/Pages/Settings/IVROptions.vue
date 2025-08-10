@@ -186,16 +186,12 @@
                                 <v-col cols="12" md="6">
                                     <v-text-field v-model="editedItem.phone_number" label="Virtual Number"
                                         variant="outlined"
-                                        :rules="[v => !!v || 'Virtual number is required']"
-                                        
-                                        
-                                        ></v-text-field>
+                                    ></v-text-field>
                                 </v-col>
 
                                 <v-col cols="12" md="6">
                                     <v-text-field v-model="editedItem.forward_number" label="Forward Number"
                                         variant="outlined"
-                                        :rules="[v => !!v || 'Forward number is required', validatePhoneNumber]"
                                         hint="Number to forward to when selected" persistent-hint required
                                         v-mask="phoneNumberMask"></v-text-field>
                                 </v-col>
@@ -490,26 +486,26 @@ export default {
 
             return phone; // Return original if not 10 digits
         },
-       validatePhoneNumber(value) {
-    // Allow standard 10-digit numbers or BoxleoKenya.Mwacharo format
-    if (!value) return 'Phone number is required';
+    validatePhoneNumber(value) {
+        // Allow empty values (nullable)
+        if (!value) return true;
 
-    // Check for BoxleoKenya.Mwacharo format
-    // Accept any format like "Word.Word" (letters only, dot in between)
-    const boxleoPattern = /^[A-Za-z]+\.[A-Za-z]+$/;
-    if (boxleoPattern.test(value)) {
-        return null; // Valid
-    }
+        // Check for BoxleoKenya.Mwacharo format
+        // Accept any format like "Word.Word" (letters only, dot in between)
+        const boxleoPattern = /^[A-Za-z]+\.[A-Za-z]+$/;
+        if (boxleoPattern.test(value)) {
+            return true; // Valid
+        }
 
-    // For regular phone numbers, check if we have at least 10 digits
-    // This allows letters, spaces, dashes, parentheses, etc.
-    const numericOnly = value.replace(/\D/g, '');
-    if (numericOnly.length < 10) {
-        return 'Phone number must have at least 10 digits or be in Username.Name format';
+        // For regular phone numbers, check if we have at least 10 digits
+        // This allows letters, spaces, dashes, parentheses, etc.
+        const numericOnly = value.replace(/\D/g, '');
+        if (numericOnly.length < 10) {
+            return 'Phone number must have at least 10 digits or be in Username.Name format';
+        }
+        
+        return true; // Valid
     }
-    
-    return null; // Valid
-}
     },
 };
 </script>

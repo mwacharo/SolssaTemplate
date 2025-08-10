@@ -541,6 +541,9 @@ class AfricasTalkingService
         // Route to specific number
         return $this->createVoiceResponse(
             "You selected {$ivrOption->description}. Connecting your call.",
+            // route to soft phone if no real phone number is set
+            $ivrOption->phone_number ?? $ivrOption->forward_number ??
+            config('voice.default_forward_number') ??
             $ivrOption->forward_number ?? config('voice.default_forward_number')
         );
     }
