@@ -13,7 +13,35 @@ return new class extends Migration
     {
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
+            
+            // Foreign key relationships
+            $table->foreignId('client_id')->nullable()->constrained('clients')->onDelete('set null');
+            $table->foreignId('contact_id')->nullable()->constrained('contacts')->onDelete('set null');
+            $table->foreignId('vendor_id')->nullable()->constrained('vendors')->onDelete('set null');
+            $table->foreignId('assigned_user_id')->nullable()->constrained('users')->onDelete('set null');
+            
+            // Client information (can be stored directly or come from related models)
+            $table->string('client_name');
+            $table->string('client_phone')->nullable();
+            $table->string('client_email')->nullable();
+            
+            // Ticket details
+            $table->string('subject');
+            $table->text('description');
+            $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
+            $table->string('category')->default('general');
+            $table->enum('status', ['open', 'in_progress', 'pending', 'resolved', 'closed'])->default('open');
+            
+            // Call information
+            $table->integer('call_duration')->nullable()->comment('Duration in minutes');
+            
             $table->timestamps();
+            
+            // Indexes for better query performance
+            $table->index(['status', 'priority']);
+            $table->index(['assigned_user_id', 'status']);
+            $table->index(['category', 'created_at']);
+            $table->index('client_email');
         });
     }
 

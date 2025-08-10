@@ -12,6 +12,6 @@ class CitySeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        \App\Models\City::factory()->count(2)->create(); // Creating 10 random contacts
     }
 }

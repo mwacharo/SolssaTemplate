@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCityRequest;
 use App\Http\Requests\UpdateCityRequest;
+use App\Http\Resources\CityResource;
 use App\Models\City;
+use Illuminate\Http\Response;
 
 class CityController extends Controller
 {
@@ -13,15 +16,7 @@ class CityController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return CityResource::collection(City::paginate(15));
     }
 
     /**
@@ -29,7 +24,8 @@ class CityController extends Controller
      */
     public function store(StoreCityRequest $request)
     {
-        //
+        $city = City::create($request->validated());
+        return new CityResource($city);
     }
 
     /**
@@ -37,15 +33,7 @@ class CityController extends Controller
      */
     public function show(City $city)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(City $city)
-    {
-        //
+        return new CityResource($city);
     }
 
     /**
@@ -53,7 +41,8 @@ class CityController extends Controller
      */
     public function update(UpdateCityRequest $request, City $city)
     {
-        //
+        $city->update($request->validated());
+        return new CityResource($city);
     }
 
     /**
@@ -61,6 +50,7 @@ class CityController extends Controller
      */
     public function destroy(City $city)
     {
-        //
+        $city->delete();
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

@@ -18,11 +18,17 @@ class UpdateZoneRequest extends FormRequest
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    */
     public function rules(): array
     {
-        return [
-            //
-        ];
+       return [
+          'name' => 'required|string|max:255',
+          'country_id' => 'required|integer|exists:countries,id',
+          // 'state_id' => 'nullable|integer|exists:states,id',
+          'city_id' => 'nullable|integer|exists:cities,id',
+          'latitude' => 'nullable|numeric|between:-90,90',
+          'longitude' => 'nullable|numeric|between:-180,180',
+          'population' => 'nullable|integer|min:0',
+       ];
     }
 }

@@ -17,7 +17,10 @@ class StatusFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => $this->faker->word,
+            'description' => $this->faker->sentence,
+            'color' => $this->faker->safeColorName,
+            'country_id' => \App\Models\Country::factory(),
         ];
     }
 }

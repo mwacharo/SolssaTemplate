@@ -11,7 +11,7 @@ class UpdateCityRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateCityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'country_id' => 'required|integer|exists:countries,id',
+            // 'state_id' => 'nullable|integer|exists:states,id',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'population' => 'nullable|integer',
         ];
     }
 }

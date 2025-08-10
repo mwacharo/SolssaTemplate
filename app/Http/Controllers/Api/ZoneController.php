@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreZoneRequest;
 use App\Http\Requests\UpdateZoneRequest;
+use App\Http\Resources\ZoneResource;
 use App\Models\Zone;
+use Illuminate\Http\Response;
 
 class ZoneController extends Controller
 {
@@ -13,15 +16,8 @@ class ZoneController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $zones = Zone::paginate(15);
+        return ZoneResource::collection($zones);
     }
 
     /**
@@ -29,7 +25,8 @@ class ZoneController extends Controller
      */
     public function store(StoreZoneRequest $request)
     {
-        //
+        $zone = Zone::create($request->validated());
+        return new ZoneResource($zone);
     }
 
     /**
@@ -37,15 +34,7 @@ class ZoneController extends Controller
      */
     public function show(Zone $zone)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Zone $zone)
-    {
-        //
+        return new ZoneResource($zone);
     }
 
     /**
@@ -53,7 +42,8 @@ class ZoneController extends Controller
      */
     public function update(UpdateZoneRequest $request, Zone $zone)
     {
-        //
+        $zone->update($request->validated());
+        return new ZoneResource($zone);
     }
 
     /**
@@ -61,6 +51,7 @@ class ZoneController extends Controller
      */
     public function destroy(Zone $zone)
     {
-        //
+        $zone->delete();
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

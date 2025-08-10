@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCourierRequest;
 use App\Http\Requests\UpdateCourierRequest;
+use App\Http\Resources\CourierResource;
 use App\Models\Courier;
+use Illuminate\Http\Response;
 
 class CourierController extends Controller
 {
@@ -13,15 +16,8 @@ class CourierController extends Controller
      */
     public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $couriers = Courier::paginate(15);
+        return CourierResource::collection($couriers);
     }
 
     /**
@@ -29,7 +25,8 @@ class CourierController extends Controller
      */
     public function store(StoreCourierRequest $request)
     {
-        //
+        $courier = Courier::create($request->validated());
+        return new CourierResource($courier);
     }
 
     /**
@@ -37,15 +34,7 @@ class CourierController extends Controller
      */
     public function show(Courier $courier)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Courier $courier)
-    {
-        //
+        return new CourierResource($courier);
     }
 
     /**
@@ -53,7 +42,8 @@ class CourierController extends Controller
      */
     public function update(UpdateCourierRequest $request, Courier $courier)
     {
-        //
+        $courier->update($request->validated());
+        return new CourierResource($courier);
     }
 
     /**
@@ -61,6 +51,7 @@ class CourierController extends Controller
      */
     public function destroy(Courier $courier)
     {
-        //
+        $courier->delete();
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

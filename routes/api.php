@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\CallCenterSettingController;
 use App\Http\Controllers\Api\CallCentreController;
+use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CredentialController;
 use App\Http\Controllers\Api\Integrations\GoogleSheetController;
@@ -18,11 +19,14 @@ use App\Http\Controllers\Api\WhatsAppController;
 use App\Http\Controllers\Api\WhatsAppWebhookController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CountryController;
+use App\Http\Controllers\Api\CourierController;
 // use App\Http\Controllers\Api\VendorController;
 // Make sure only one VendorController exists and is imported. If you have multiple, remove or rename the duplicate.
 use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\IvrOptionController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ZoneController;
+use App\Http\Controllers\StatusController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
@@ -251,6 +255,42 @@ Route::prefix('v1')->group(function () {
     Route::get('/ivr-options/{id}', [IvrOptionController::class, 'show']);
     Route::put('/ivr-options/{id}', [IvrOptionController::class, 'update']);
     Route::delete('/ivr-options/{id}', [IvrOptionController::class, 'destroy']);
+
+
+    // status 
+    Route::get('/statuses', [StatusController::class, 'index']);  // List all statuses
+    Route::post('/statuses', [StatusController::class, 'store']); // Create a new status
+    Route::get('/statuses/{id}', [StatusController::class, 'show']); // Show a specific status
+    Route::put('/statuses/{id}', [StatusController::class, 'update']); // Update a specific status
+    Route::delete('/statuses/{id}', [StatusController::class, 'destroy']); // Delete a specific status
+
+
+    // cities 
+    Route::get('/cities', [CityController::class, 'index']);
+    Route::post('/cities', [CityController::class, 'store']);
+    Route::get('/cities/{id}', [CityController::class, 'show']);
+    Route::put('/cities/{id}', [CityController::class, 'update']);
+    Route::delete('/cities/{id}', [CityController::class, 'destroy']);  
+    
+    
+
+    // zones 
+    Route::get('/zones', [ZoneController::class, 'index']);
+    Route::post('/zones', [ZoneController::class, 'store']);
+    Route::get('/zones/{id}', [ZoneController::class, 'show']);
+    Route::put('/zones/{id}', [ZoneController::class, 'update']);
+    Route::delete('/zones/{id}', [ZoneController::class, 'destroy']);  
+    
+    // courier
+    Route::get('/couriers', [CourierController::class, 'index']);
+    Route::post('/couriers', [CourierController::class, 'store']);
+    Route::get('/couriers/{id}', [CourierController::class, 'show']);
+    Route::put('/couriers/{ id}', [CourierController::class, 'update']);  
+    
+    
+
+
+
 
 
     // // callcentre 

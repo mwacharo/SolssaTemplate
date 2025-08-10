@@ -12,6 +12,6 @@ class CourierSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        \App\Models\Courier::factory()->count(10)->create();
     }
 }
