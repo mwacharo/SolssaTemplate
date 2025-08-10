@@ -462,7 +462,9 @@ class AfricasTalkingService
         ]);
 
         // Always return a string (never null)
-        return (string) ($agent->username ?? $agent->phone_number ?? '');
+        // return (string) ($agent->username ?? $agent->phone_number ?? '');
+                return (string) ($agent->client_name ?? $agent->phone_number ?? '');
+
     } catch (Exception $e) {
         Log::error("Error assigning agent", [
             'error' => $e->getMessage(),
