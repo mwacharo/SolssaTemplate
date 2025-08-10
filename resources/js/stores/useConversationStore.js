@@ -64,14 +64,7 @@ export const useConversationStore = defineStore('conversation', () => {
         return conversation.value[conversation.value.length - 1] || null
     })
 
-    // Actions
-    // const openDialog = (contactId) => {
-    //     console.log('Opening dialog for contactId:', contactId)
-    //     selectedContactId.value = contactId
-    //     dialog.value = true
-    //     loadConversation(contactId)
-    //     // markMessagesAsRead(contactId)
-    // }
+
 
 
     // Alternative version that ensures dialog stays open:

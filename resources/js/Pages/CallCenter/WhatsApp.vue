@@ -7,8 +7,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useConversationStore } from '@/stores/useConversationStore'
 
 import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
+import Sms from '@/Pages/CallCenter/Sms.vue'
 import AssignDialog from './AssignDialog.vue';
 import { useOrderStore } from '@/stores/orderStore' // Adjust path as needed
+import {useSmsStore} from '@/stores/smsStore' // Adjust path as needed
 import { storeToRefs } from 'pinia'
 
 import OrderDialogs from './Dialogs/OrderDialogs.vue';
@@ -18,6 +20,7 @@ import { notify } from '@/utils/toast';
 // Initialize the stores
 const store = useWhatsAppStore()
 const conversationStore = useConversationStore()
+const smsStore = useSmsStore()
 const orderStore = useOrderStore()
 const { tableItems } = storeToRefs(orderStore)
 
@@ -43,7 +46,7 @@ const clearSelection = () => {
 watch(selectedOrderIds, (newSelection, oldSelection) => {
   console.log('🔵 Selection changed from:', oldSelection, 'to:', newSelection)
   console.log('🔵 Selected orders count:', newSelection?.length || 0)
-  
+
   // Update the order store's selectedOrders for consistency
   if (newSelection?.length > 0) {
     const selectedOrders = getSelectedOrders.value
@@ -57,13 +60,13 @@ watch(selectedOrderIds, (newSelection, oldSelection) => {
 // FIXED: Update your openDialog function
 const openDialog = (mode, selectedOrders = []) => {
   console.log('🚀 openDialog called with mode:', mode)
-  
+
   dialogMode.value = mode
   showDialog.value = true
-  
+
   // Use current selection if no specific orders provided
   const ordersToUse = selectedOrders.length > 0 ? selectedOrders : getSelectedOrders.value
-  
+
   if (ordersToUse && ordersToUse.length > 0) {
     console.log('✅ Using orders for dialog:', ordersToUse.length, 'orders')
     orderStore.selectedOrders = ordersToUse
@@ -75,16 +78,16 @@ const openDialog = (mode, selectedOrders = []) => {
 // FIXED: Update your openNewMessageDialog function
 const openNewMessageDialog = (selectedOrders = []) => {
   console.log('📨 openNewMessageDialog called')
-  
+
   const ordersToUse = selectedOrders.length > 0 ? selectedOrders : getSelectedOrders.value
-  
+
   if (ordersToUse.length === 0) {
     console.warn('⚠️ No orders selected for messaging')
     // Optionally show a notification
     notify.warning('Please select at least one order to send messages.')
     return
   }
-  
+
   console.log('📨 Opening message dialog for', ordersToUse.length, 'orders')
   store.openNewMessageDialog(ordersToUse)
 }
@@ -352,6 +355,20 @@ const openSendMessage = (isBulk = false, contact = null) => {
   store.showNewMessageDialog = true
 }
 
+
+const sendSms = (item) => {
+  console.log('sendSms called with:', JSON.stringify(item))
+  console.log('store methods:', Object.keys(store)) // Debug: check available methods
+  
+  if (item && item.client?.phone_number) {
+    console.log('Calling openDialog with:', item.client.phone_number)
+    // Call the store's openDialog method
+    smsStore.openDialog(item.client.phone_number)
+  } else {
+    console.log("Missing recipient phone number in item", item)
+    store.errorMessage = 'Recipient phone number is required.'
+  }
+}
 // In your <script setup>
 const viewMessageDetails = (message) => {
   console.log('viewMessageDetails called with:', message) // Debug log
@@ -526,30 +543,30 @@ function openFilterDialog() {
 
 
 async function loadItems({ page, itemsPerPage, sortBy, search }) {
-    // Keep page position when changing itemsPerPage
-    if (itemsPerPage !== orderStore.pagination.itemsPerPage) {
-      const firstItemIndex = (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1;
-      orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage);
-    } else {
-      orderStore.pagination.page = page;
-    }
-
-    orderStore.pagination.itemsPerPage = itemsPerPage;
-    orderStore.search = search;
-
-    if (sortBy && sortBy.length > 0) {
-      orderStore.sort = sortBy[0];
-    }
-
-    // Merge any existing filters with pagination & search
-    const filters = {
-      ...orderStore.activeFilters, // existing filters from your UI
-      search: orderStore.search
-    };
-
-    // Fetch data from API
-    await orderStore.loadOrdersWithFilters(filters);
+  // Keep page position when changing itemsPerPage
+  if (itemsPerPage !== orderStore.pagination.itemsPerPage) {
+    const firstItemIndex = (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1;
+    orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage);
+  } else {
+    orderStore.pagination.page = page;
   }
+
+  orderStore.pagination.itemsPerPage = itemsPerPage;
+  orderStore.search = search;
+
+  if (sortBy && sortBy.length > 0) {
+    orderStore.sort = sortBy[0];
+  }
+
+  // Merge any existing filters with pagination & search
+  const filters = {
+    ...orderStore.activeFilters, // existing filters from your UI
+    search: orderStore.search
+  };
+
+  // Fetch data from API
+  await orderStore.loadOrdersWithFilters(filters);
+}
 
 // Component mount - UPDATED with debug info
 onMounted(async () => {
@@ -557,7 +574,7 @@ onMounted(async () => {
     await store.initialize()
     await orderStore.initialize()
     console.log('✅ All stores initialized successfully')
-    
+
     // Debug: Log initial state
     console.log('🔍 Initial selection state:', selectionDebug.value)
   } catch (error) {
@@ -831,119 +848,100 @@ onMounted(async () => {
                 <!-- Orders Table -->
                 <v-card-text>
                   <v-progress-linear v-if="orderStore.loading.orders" indeterminate color="primary"></v-progress-linear>
-                  <!-- <v-data-table
-loadItems                    :headers="orderHeaders"
-                    :items="tableItems"
-                    :items-per-page="orderStore.pagination.itemsPerPage"
-                    :page="orderStore.pagination.page"
-                    :server-items-length="orderStore.pagination.totalItems"
-                    :loading="orderStore.loading.orders"
-                    show-select
-                    item-value="id"
-                    class="elevation-1"
-                    @update:page="page => { orderStore.pagination.page = page; applyFilters(); }"
-                    @update:items-per-page="ipp => { orderStore.pagination.itemsPerPage = ipp; orderStore.pagination.page = 1; applyFilters(); }"
-                  > -->
+            
+                  <v-data-table-server v-model="orderStore.selectedOrders"
+                    v-model:items-per-page="orderStore.pagination.itemsPerPage" :headers="orderHeaders"
+                    :items="tableItems" :items-length="orderStore.pagination.totalItems"
+                    :loading="orderStore.loading.orders" :search="orderStore.search" show-select item-value="id"
+                    class="elevation-1" @update:options="loadItems">
+                    <!-- Custom Columns -->
+                    <template #item.order_no="{ item }">
+                      <strong>{{ item.order_no }}</strong>
+                      <div v-if="item.reference" class="text-caption text-grey">
+                        Ref: {{ item.reference }}
+                      </div>
+                    </template>
 
+                    <template #item.client="{ item }">
+                      <div>{{ item.client?.name || 'N/A' }}</div>
+                      <div class="text-caption text-grey">
+                        {{ formatPhoneNumber(item.client?.phone_number) }}
+                      </div>
+                      <div v-if="item.client?.city" class="text-caption text-grey">
+                        {{ item.client.city }}
+                      </div>
+                    </template>
 
+                    <template #item.vendor="{ item }">
+                      <div>{{ item.vendor?.name || 'N/A' }}</div>
+                      <div v-if="item.vendor?.company_name" class="text-caption text-grey">
+                        {{ item.vendor.company_name }}
+                      </div>
+                    </template>
 
-                  <v-data-table-server
-                                      v-model="orderStore.selectedOrders"
+                    <template #item.status="{ item }">
+                      <v-chip :color="statusColor(item.status)" small>
+                        {{ item.status || 'Unknown' }}
+                      </v-chip>
+                    </template>
 
-  v-model:items-per-page="orderStore.pagination.itemsPerPage"
-  :headers="orderHeaders"
-  :items="tableItems"
-  :items-length="orderStore.pagination.totalItems"
-  :loading="orderStore.loading.orders"
-  :search="orderStore.search" 
-  show-select
-  item-value="id"
-  class="elevation-1"
-  @update:options="loadItems"
->
-                  <!-- Custom Columns -->
-                  <template #item.order_no="{ item }">
-                    <strong>{{ item.order_no }}</strong>
-                    <div v-if="item.reference" class="text-caption text-grey">
-                    Ref: {{ item.reference }}
-                    </div>
-                  </template>
+                    <template #item.delivery_status="{ item }">
+                      <v-chip :color="deliveryStatusColor(item.delivery_status)" small>
+                        {{ item.delivery_status || 'Unknown' }}
+                      </v-chip>
+                    </template>
 
-                  <template #item.client="{ item }">
-                    <div>{{ item.client?.name || 'N/A' }}</div>
-                    <div class="text-caption text-grey">
-                    {{ formatPhoneNumber(item.client?.phone_number) }}
-                    </div>
-                    <div v-if="item.client?.city" class="text-caption text-grey">
-                    {{ item.client.city }}
-                    </div>
-                  </template>
+                    <template #item.order_items="{ item }">
+                      <div v-if="item.orderItems?.length">
+                        {{ item.orderItems.length }} item(s)
+                        <div class="text-caption text-grey">
+                          Qty: {{ getTotalQuantity(item.orderItems) }}
+                        </div>
+                        <div v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-caption text-grey">
+                          {{ orderItem.product?.product_name || 'Product' }} (x{{ orderItem.quantity }})
+                        </div>
+                      </div>
+                      <div v-else class="text-grey">No items</div>
+                    </template>
 
-                  <template #item.vendor="{ item }">
-                    <div>{{ item.vendor?.name || 'N/A' }}</div>
-                    <div v-if="item.vendor?.company_name" class="text-caption text-grey">
-                    {{ item.vendor.company_name }}
-                    </div>
-                  </template>
+                    <template #item.total_price="{ item }">
+                      <div>
+                        KSH{{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
+                      </div>
+                      <div v-if="item.shipping_charges && item.shipping_charges !== '0.00'"
+                        class="text-caption text-grey">
+                        Shipping: KSH{{ parseFloat(item.shipping_charges).toFixed(2) }}
+                      </div>
+                    </template>
 
-                  <template #item.status="{ item }">
-                    <v-chip :color="statusColor(item.status)" small>
-                    {{ item.status || 'Unknown' }}
-                    </v-chip>
-                  </template>
+                    <template #item.created_at="{ item }">
+                      {{ formatDate(item.created_at) }}
+                      <div v-if="item.delivery_date" class="text-caption text-grey">
+                        Delivery: {{ formatDate(item.delivery_date) }}
+                      </div>
+                    </template>
 
-                  <template #item.delivery_status="{ item }">
-                    <v-chip :color="deliveryStatusColor(item.delivery_status)" small>
-                    {{ item.delivery_status || 'Unknown' }}
-                    </v-chip>
-                  </template>
+                    <template #item.actions="{ item }">
+                      <v-btn icon size="small" @click="viewOrderDetails(item)">
+                        <v-icon>mdi-eye</v-icon>
+                      </v-btn>
+                      <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
+                        <v-icon>mdi-whatsapp</v-icon>
+                      </v-btn>
+                      <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
+                        <v-icon>mdi-printer</v-icon>
+                      </v-btn>
 
-                  <template #item.order_items="{ item }">
-                    <div v-if="item.orderItems?.length">
-                    {{ item.orderItems.length }} item(s)
-                    <div class="text-caption text-grey">
-                      Qty: {{ getTotalQuantity(item.orderItems) }}
-                    </div>
-                    <div v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-caption text-grey">
-                      {{ orderItem.product?.product_name || 'Product' }} (x{{ orderItem.quantity }})
-                    </div>
-                    </div>
-                    <div v-else class="text-grey">No items</div>
-                  </template>
-
-                  <template #item.total_price="{ item }">
-                    <div>
-                    KSH{{ parseFloat(item.total_price || item.invoice_value || 0).toFixed(2) }}
-                    </div>
-                    <div v-if="item.shipping_charges && item.shipping_charges !== '0.00'"
-                    class="text-caption text-grey">
-                    Shipping: KSH{{ parseFloat(item.shipping_charges).toFixed(2) }}
-                    </div>
-                  </template>
-
-                  <template #item.created_at="{ item }">
-                    {{ formatDate(item.created_at) }}
-                    <div v-if="item.delivery_date" class="text-caption text-grey">
-                    Delivery: {{ formatDate(item.delivery_date) }}
-                    </div>
-                  </template>
-
-                  <template #item.actions="{ item }">
-                    <v-btn icon size="small" @click="viewOrderDetails(item)">
-                    <v-icon>mdi-eye</v-icon>
-                    </v-btn>
-                    <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
-                    <v-icon>mdi-whatsapp</v-icon>
-                    </v-btn>
-                    <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
-                    <v-icon>mdi-printer</v-icon>
-                    </v-btn>
-                  </template>
-                  <!-- </v-data-table> -->
-                   </v-data-table-server>
+                      <!-- add sms  -->
+                      <v-btn icon size="small" @click="sendSms(item)">
+                        <v-icon>mdi-message-text</v-icon>
+                      </v-btn>
+                    </template>
+                    <!-- </v-data-table> -->
+                  </v-data-table-server>
 
                 </v-card-text>
-                </v-window-item>
+              </v-window-item>
 
               <!-- Contacts Tab -->
               <v-window-item value="contacts">
@@ -1016,12 +1014,8 @@ loadItems                    :headers="orderHeaders"
           </v-card>
         </v-col>
       </v-row>
-
       <!-- Dialogs and Modals -->
-
-
       <!-- filter dialog -->
-
       <v-dialog v-model="showFilterDialog" max-width="400" content-class="custom-filter-dialog" persistent scrollable>
         <!-- filter dialog -->
         <v-card>
@@ -1073,8 +1067,6 @@ loadItems                    :headers="orderHeaders"
           </v-card-actions>
         </v-card>
       </v-dialog>
-
-
 
       <v-dialog v-model="store.showNewMessageDialog" max-width="600">
         <v-card>
@@ -1423,6 +1415,7 @@ loadItems                    :headers="orderHeaders"
         @confirmed="handleConfirm" />
 
       <WhatsAppConversation />
+      <Sms/>
       <OrderDialogs />
 
     </v-container>

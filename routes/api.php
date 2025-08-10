@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\IvrOptionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ZoneController;
+use App\Http\Controllers\SmsController;
 use App\Http\Controllers\StatusController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
@@ -247,6 +248,14 @@ Route::prefix('v1')->group(function () {
     Route::get('/conversation/{chatId}', [WhatsAppController::class, 'getConversation']);
     Route::post('/whatsapp/retry-message/{id}', [WhatsAppController::class, 'retryMessage']);
 
+
+
+    // sms 
+
+    Route::post('/sms/send', [SmsController::class, 'sendSms']);
+    Route::get('/sms/history', [SmsController::class, 'getSmsHistory']);
+    Route::get('/sms/history/{id}', [SmsController::class, 'getSmsDetails']);
+    Route::delete('/sms/history/{id}', [SmsController::class, 'deleteSms']);
 
     // ivr 
     Route::get('/ivr-options', [IvrOptionController::class, 'index']);
