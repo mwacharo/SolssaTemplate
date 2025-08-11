@@ -17,27 +17,16 @@ use Carbon\Carbon;
 
 use Illuminate\Support\Facades\Bus;
 
-
-
-
-
-
 class WhatsAppController extends Controller
 {
 
 
     protected $greenApi;
 
-
-
-
-
     public function __construct(GreenApiService $greenApi)
     {
         $this->greenApi = $greenApi;
     }
-
-
 
     public function getState()
     {
@@ -54,7 +43,6 @@ class WhatsAppController extends Controller
     }
 
 
-
     // public function sendMessage(Request $request)
     // {
 
@@ -63,8 +51,6 @@ class WhatsAppController extends Controller
     //     $index = 0; // Start counting from zero
 
     //     Log::debug('sendMessage called', ['request' => $request->all()]);
-
-
 
 
     //     $request->validate([

@@ -37,21 +37,21 @@ Route::any('/register', function () {
 
 
 
-Route::get('/test-whatsapp-job', function () {
-    $delayMinutes = 2; // Delay interval between messages
-    $counter = 0;      // Progressive delay counter
-    $userId = 1;       // Replace with a valid user_id from your DB
+// Route::get('/test-whatsapp-job', function () {
+//     $delayMinutes = 2; // Delay interval between messages
+//     $counter = 0;      // Progressive delay counter
+//     $userId = 1;       // Replace with a valid user_id from your DB
 
-    $recipients = [
-        '254741821113@c.us', // Your number
-        '254701148928@c.us', // Example second number
-        '254700000000@c.us', // Example third number
-    ];
+//     $recipients = [
+//         '254741821113@c.us', // Your number
+//         '254701148928@c.us', // Example second number
+//         '254700000000@c.us', // Example third number
+//     ];
 
 
 
-    return "Dispatched " . count($recipients) . " jobs with {$delayMinutes} minute intervals";
-});
+//     return "Dispatched " . count($recipients) . " jobs with {$delayMinutes} minute intervals";
+// });
 
 // Route::get('/login', function () {
 //     return Inertia::render('Login', [
