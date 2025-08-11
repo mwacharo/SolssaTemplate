@@ -8,7 +8,10 @@ use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+
+
 
 class CredentialController extends Controller
 {
@@ -166,16 +169,14 @@ class CredentialController extends Controller
 
     public function store(Request $request)
     {
-
-                Log::info('Update Credential Request Data:', $request->all());
+        Log::info('Store Credential Request Data:', $request->all());
 
         $validator = Validator::make($request->all(), [
             'credentialable_type' => 'required|string',
             'credentialable_id' => 'required|integer',
-            'credentials' => 'required|array',
-            'credentials.*.channel' => 'required|string',
-            'credentials.*.provider' => 'nullable|string',
-            'credentials.*.status' => 'required|in:active,inactive',
+            'channel' => 'required|string',
+            'provider' => 'nullable|string',
+            'status' => 'required|in:active,inactive',
         ]);
 
         if ($validator->fails()) {
@@ -185,74 +186,69 @@ class CredentialController extends Controller
             ], 422);
         }
 
+        $credentialableType = $request->credentialable_type;
+        $credentialableId = $request->credentialable_id;
+
+        // Check if owner exists
+        $owner = $this->getOwnerModel($credentialableType, $credentialableId);
+        if (!$owner) {
+            return response()->json([
+                'message' => 'Owner not found'
+            ], 404);
+        }
+
         try {
-            $savedCredentials = [];
-            $credentialableType = $request->credentialable_type;
-            $credentialableId = $request->credentialable_id;
-
-            // Get the owner model to check if it exists
-            $owner = $this->getOwnerModel($credentialableType, $credentialableId);
-            if (!$owner) {
-                return response()->json([
-                    'message' => 'Owner not found'
-                ], 404);
-            }
-
-            foreach ($request->credentials as $credentialData) {
-                // Find existing credential or create new one
-                $credential = ChannelCredential::firstOrNew([
+            $credential = ChannelCredential::updateOrCreate(
+                [
                     'credentialable_type' => $credentialableType,
                     'credentialable_id' => $credentialableId,
-                    'channel' => $credentialData['channel']
-                ]);
-
-                // Update credential fields
-                $credential->provider = $credentialData['provider'] ?? null;
-                $credential->from_name = $credentialData['from_name'] ?? null;
-                $credential->from_address = $credentialData['from_address'] ?? null;
-                $credential->smtp_host = $credentialData['smtp_host'] ?? null;
-                $credential->smtp_port = $credentialData['smtp_port'] ?? null;
-                $credential->encryption = $credentialData['encryption'] ?? null;
-                $credential->api_key = $credentialData['api_key'] ?? null;
-                $credential->api_secret = $credentialData['api_secret'] ?? null;
-                $credential->access_token = $credentialData['access_token'] ?? null;
-                $credential->access_token_secret = $credentialData['access_token_secret'] ?? null;
-                $credential->auth_token = $credentialData['auth_token'] ?? null;
-                $credential->client_id = $credentialData['client_id'] ?? null;
-                $credential->client_secret = $credentialData['client_secret'] ?? null;
-                $credential->user_name = $credentialData['user_name'] ?? null;
-                $credential->password = $credentialData['password'] ?? null;
-                $credential->account_sid = $credentialData['account_sid'] ?? null;
-                $credential->account_id = $credentialData['account_id'] ?? null;
-                $credential->app_id = $credentialData['app_id'] ?? null;
-                $credential->app_secret = $credentialData['app_secret'] ?? null;
-                $credential->page_access_token = $credentialData['page_access_token'] ?? null;
-                $credential->page_id = $credentialData['page_id'] ?? null;
-                $credential->phone_number = $credentialData['phone_number'] ?? null;
-                $credential->instance_id = $credentialData['instance_id'] ?? null;
-                $credential->api_token = $credentialData['api_token'] ?? null;
-                $credential->api_url = $credentialData['api_url'] ?? null;
-                $credential->email_address = $credentialData['email_address'] ?? null;
-                $credential->webhook = $credentialData['webhook'] ?? null;
-                $credential->status = $credentialData['status'];
-                $credential->value = $credentialData['value'] ?? null;
-                $credential->description = $credentialData['description'] ?? null;
-                $credential->meta = $credentialData['meta'] ?? null;
-                $credential->mail_mailer = $credentialData['mail_mailer'] ?? null;
-
-                $credential->save();
-                $savedCredentials[] = $credential;
-            }
+                    'channel' => $request->channel
+                ],
+                [
+                    'provider' => $request->provider,
+                    'from_name' => $request->from_name,
+                    'from_address' => $request->from_address,
+                    'smtp_host' => $request->smtp_host,
+                    'smtp_port' => $request->smtp_port,
+                    'encryption' => $request->encryption,
+                    'api_key' => $request->api_key,
+                    'api_secret' => $request->api_secret,
+                    'access_token' => $request->access_token,
+                    'access_token_secret' => $request->access_token_secret,
+                    'auth_token' => $request->auth_token,
+                    'client_id' => $request->client_id,
+                    'client_secret' => $request->client_secret,
+                    'user_name' => $request->user_name,
+                    'password' => $request->password,
+                    'account_sid' => $request->account_sid,
+                    'account_id' => $request->account_id,
+                    'app_id' => $request->app_id,
+                    'app_secret' => $request->app_secret,
+                    'page_access_token' => $request->page_access_token,
+                    'page_id' => $request->page_id,
+                    'phone_number' => $request->phone_number,
+                    'instance_id' => $request->instance_id,
+                    'api_token' => $request->api_token,
+                    'api_url' => $request->api_url,
+                    'email_address' => $request->email_address,
+                    'webhook' => $request->webhook,
+                    'status' => $request->status,
+                    'value' => $request->value,
+                    'description' => $request->description,
+                    'meta' => $request->meta,
+                    'mail_mailer' => $request->mail_mailer
+                ]
+            );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Credentials saved successfully',
-                'credentials' => $savedCredentials
+                'message' => 'Credential saved successfully',
+                'credential' => $credential
             ]);
         } catch (\Exception $e) {
-            Log::error('Error saving credentials: ' . $e->getMessage());
+            Log::error('Error saving credential: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Failed to save credentials',
+                'message' => 'Failed to save credential',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -263,7 +259,18 @@ class CredentialController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $credential = ChannelCredential::findOrFail($id);
+            return response()->json([
+                'success' => true,
+                'credential' => $credential
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Credential not found',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
     /**

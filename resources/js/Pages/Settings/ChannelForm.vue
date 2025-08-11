@@ -158,6 +158,27 @@
             variant="outlined"
           />
         </v-col>
+
+
+            <v-col cols="12" md="6">
+          <v-text-field
+            v-model="formData.api_url"
+            label="API URL"
+            variant="outlined"
+            :rules="[rules.url]"
+          />
+        </v-col>
+
+
+
+
+          <v-col cols="12" md="6">
+          <v-text-field
+            v-model="formData.instance_id"
+            label="Instance ID"
+            variant="outlined"
+          />
+        </v-col>
       </template>
 
       <template v-else-if="channel === 'whatsapp'">

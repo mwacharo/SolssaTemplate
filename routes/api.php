@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\VendorController;
 use App\Http\Controllers\Api\IvrOptionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ZoneController;
-use App\Http\Controllers\SmsController;
+use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\StatusController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
