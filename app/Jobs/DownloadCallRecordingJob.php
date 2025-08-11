@@ -47,7 +47,9 @@ class DownloadCallRecordingJob implements ShouldQueue
             $fileName = "call_{$this->callId}_" . now()->timestamp . ".mp3";
             $filePath = "call_recordings/{$fileName}";
 
-            $publicUrl = $filePath;
+            // $publicUrl = $filePath;
+
+            $publicUrl = asset("storage/{$filePath}");
             Log::debug("Generated file name: {$fileName}, file path: {$filePath}");
 
             // Fetch the audio file from Africa's Talking
