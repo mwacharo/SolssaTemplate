@@ -13,6 +13,15 @@ class DynamicChannelCredentialService
 
     public function __construct(Model $credentialable, string $channel, ?string $provider = null)
     {
+
+
+    //log variables  passed to the constructor
+
+        // Log::debug('DynamicChannelCredentialService initialized', [
+        //     'credentialable' => $credentialable,
+        //     'channel' => $channel,
+        //     'provider' => $provider,
+        // ]);
         // Debug: Log entry into constructor
         Log::debug('Entered DynamicChannelCredentialService::__construct', [
             'channel' => $channel,
@@ -104,13 +113,29 @@ class DynamicChannelCredentialService
 
     public function getApiUrl(): ?string
     {
-        Log::debug('getApiUrl called');
-        return $this->credential->api_url;
+        $apiUrl = $this->credential->api_url;
+        Log::debug('getApiUrl called', ['api_url' => $apiUrl]);
+        return $apiUrl;
     }
 
     public function getApiToken(): ?string
     {
-        Log::debug('getApiToken called');
-        return $this->credential->api_token;
+        $apiToken = $this->credential->api_token;
+        Log::debug('getApiToken called', ['api_token' => $apiToken]);
+        return $apiToken;
+    }
+
+    public function getApiKey(): ?string
+    {
+        $apiKey = $this->credential->api_key;
+        Log::debug('getApiKey called', ['api_key' => $apiKey]);
+        return $apiKey;
+    }
+
+    public function getPartnerId(): ?string
+    {
+        $partnerId = $this->credential->account_sid;
+        Log::debug('getPartnerId called', ['account_sid' => $partnerId]);
+        return $partnerId;
     }
 }

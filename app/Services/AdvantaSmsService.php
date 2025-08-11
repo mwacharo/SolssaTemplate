@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Validator;
 
 class AdvantaSmsService
 {
-    protected int $delayMinutes = 5;
+    protected int $delayMinutes = 0;
 
     /**
-     * Send a single WhatsApp message immediately.
+     * Send a single sms message immediately.
      */
     public function sendSingleMessage(array $data): array
     {
@@ -36,19 +36,19 @@ class AdvantaSmsService
 
      AdvantaSmsJob:dispatch($data['chat_id'], $data['message'], $data['user_id']);
 
-        Log::info('Single WhatsApp message dispatched', [
+        Log::info('Single sms dispatched', [
             'chat_id' => $data['chat_id'],
             'user_id' => $data['user_id'],
         ]);
 
         return [
             'status'  => 'success',
-            'message' => 'Single WhatsApp message queued.',
+            'message' => 'Single sms message queued.',
         ];
     }
 
     /**
-     * Send bulk WhatsApp messages with progressive delay.
+     * Send bulk sms messages with progressive delay.
      */
     public function sendBulkMessages(array $data)
     {
@@ -152,7 +152,7 @@ class AdvantaSmsService
             }
         }
 
-        Log::info('Preparing to dispatch WhatsApp bulk messages', [
+        Log::info('Preparing to dispatch sms bulk messages', [
             'total_recipients' => count($recipients),
             'user_id' => $userId,
             'delay_minutes' => $delayMinutes,
@@ -161,14 +161,14 @@ class AdvantaSmsService
         foreach ($recipients as $recipient) {
             $totalDelayMinutes = $delayMinutes * $counter;
 
-            Log::debug('Dispatching WhatsApp message', [
+            Log::debug('Dispatching sms message', [
                 'recipient' => $recipient,
                 'user_id' => $userId,
                 'delay_minutes' => $totalDelayMinutes,
                 'counter' => $counter,
             ]);
 
-            Log::info('Dispatching WhatsApp message job', [
+            Log::info('Dispatching sms message job', [
                 'recipient_chat_id' => $recipient['chat_id'],
                 'message' => $recipient['message'],
                 'user_id' => $userId,
@@ -189,7 +189,7 @@ class AdvantaSmsService
                 ]);
             }
 
-            Log::info('WhatsApp message dispatched', [
+            Log::info('sms message dispatched', [
                 'recipient_phone' => $recipient['meta']['phone'],
                 'chat_id' => $recipient['chat_id'],
                 'delay_minutes' => $totalDelayMinutes,
@@ -211,7 +211,7 @@ class AdvantaSmsService
         return response()->json([
             'status'        => 'success',
             'queued_count'  => $queued,
-            'message'       => "Queued $queued WhatsApp messages with {$delayMinutes} min gap.",
+            'message'       => "Queued $queued sms messages with {$delayMinutes} min gap.",
             'delay_info'    => [
                 'delay_minutes' => $delayMinutes,
                 'total_recipients' => $queued,
@@ -221,7 +221,7 @@ class AdvantaSmsService
     }
 
     /**
-     * Format phone number to WhatsApp chatId.
+     * Format phone number to sms chatId.
      */
     // protected function formatChatId($phone): string
     // {

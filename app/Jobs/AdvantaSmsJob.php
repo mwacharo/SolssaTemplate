@@ -40,15 +40,14 @@ class AdvantaSmsJob implements ShouldQueue
         $this->messageContent = $messageContent;
         $this->userId         = $userId;
 
-        // $this->baseUrl         = config('services.advanta_sms.base_url', 'https://sms.advantasms.com/api');
-        // $this->defaultSenderId = config('services.advanta_sms.sender_id', 'MyCompany');
     }
 
     public function handle()
     {
-        Log::info('AvantaSmsJob started', [
+        Log::info('AdvantaSmsJob started', [
             'recipients' => $this->recipients,
             'userId'     => $this->userId,
+            'messageContent' => $this->messageContent,
         ]);
 
         $user = User::find($this->userId);
@@ -59,12 +58,20 @@ class AdvantaSmsJob implements ShouldQueue
         }
 
         try {
-            // Keep DynamicChannelCredentialService
-            $credentialService = new DynamicChannelCredentialService($user, 'Advanta');
+            $credentialService = new DynamicChannelCredentialService($user, 'sms', 'Advanta');
 
-            $apiKey   = $credentialService->getApiToken();  // Advanta API key
+
+            $partnerId = $credentialService->getPartnerId(); // Advanta Partner ID
+            $apiKey   = $credentialService->getApiKey();  // Advanta API key
             $senderId = $credentialService->getInstanceId() ?? $this->defaultSenderId;
             $apiUrl   = rtrim($credentialService->getApiUrl() ?? $this->baseUrl, '/');
+
+            Log::info('AdvantaSmsJob: Credentials loaded', [
+                'partnerId' => $partnerId,
+                'apiKey' => $apiKey ? '***' : null,
+                'senderId' => $senderId,
+                'apiUrl' => $apiUrl,
+            ]);
 
             if (!$apiKey) {
                 Log::error('AvantaSmsJob: Missing Advanta API key', [
@@ -75,29 +82,45 @@ class AdvantaSmsJob implements ShouldQueue
 
             // Decide endpoint: single or bulk
             if (count($this->recipients) === 1) {
-                $endpoint = "{$apiUrl}/send-sms";
-                $payload  = [
-                    'to'       => $this->recipients[0],
-                    'message'  => $this->messageContent,
-                    'senderId' => $senderId,
+                $endpoint = "{$apiUrl}/sendsms";
+                $payload = [
+                    'partnerID'   => $partnerId,
+                    'apikey'      => $apiKey,
+                    'pass_type'   => 'plain',
+                    'mobile'      => $this->recipients[0],
+                    'message'     => $this->messageContent,
+                    'shortcode'   => $senderId,
+                    'clientsmsid' => uniqid("msg_"),
                 ];
             } else {
-                $endpoint = "{$apiUrl}/bulk-sms";
+                $endpoint = "{$apiUrl}/sendbulk";
                 $payload  = [
                     'messages' => collect($this->recipients)->map(function ($number) use ($senderId) {
                         return [
                             'to'       => $number,
                             'message'  => $this->messageContent,
                             'senderId' => $senderId,
+                            // 'partnerId' => $partnerId, // Include partner ID if needed
                         ];
                     })->toArray(),
                 ];
             }
 
+            // Log the endpoint and payload before sending
+            Log::info('AdvantaSmsJob: Sending SMS', [
+                'endpoint' => $endpoint,
+                'payload' => $payload,
+            ]);
+
             $response = Http::withHeaders([
                 'apiKey'       => $apiKey,
                 'Content-Type' => 'application/json',
             ])->post($endpoint, $payload);
+
+            Log::info('AdvantaSmsJob: HTTP response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
 
             $status       = $response->successful() ? 'sent' : 'failed';
             $responseData = $response->json();
@@ -145,28 +168,29 @@ class AdvantaSmsJob implements ShouldQueue
 
         } catch (\Exception $e) {
             Log::error('AvantaSmsJob: Exception during send', [
-                'error' => $e->getMessage(),
-                'file'  => $e->getFile(),
-                'line'  => $e->getLine(),
+            'error' => $e->getMessage(),
+            'file'  => $e->getFile(),
+            'line'  => $e->getLine(),
             ]);
 
             foreach ($this->recipients as $number) {
-                Message::create([
-                    'chat_id'         => $number,
-                    'from'            => $this->defaultSenderId,
-                    'to'              => $number,
-                    'content'         => $this->messageContent,
-                    'message_type'    => 'sms',
-                    'direction'       => 'outgoing',
-                    'message_status'  => 'failed',
-                    'error_message'   => $e->getMessage(),
-                    'messageable_id'  => $user->id,
-                    'messageable_type'=> get_class($user),
-                    'timestamp'       => now(),
-                ]);
+            Message::create([
+                'chat_id'             => $number,
+                // 'from'                => $this->defaultSenderId ?? null,
+               'from'                => $this->SenderId ?? null,
+                'to'                  => $number,
+                'content'             => $this->messageContent,
+                'message_type'        => 'sms',
+                'direction'           => 'outgoing',
+                'message_status'      => 'failed',
+                'error_message'       => $e->getMessage(),
+                'messageable_id'      => $user->id ?? null,
+                'messageable_type'    => isset($user) ? get_class($user) : null,
+                'timestamp'           => now(),
+            ]);
             }
         }
 
         Log::info('AvantaSmsJob finished');
-    }
+        }
 }

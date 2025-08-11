@@ -12,7 +12,7 @@ class WhatsAppService
 
     public function sendMessage(Request $request)
     {
-        $delayMinutes = 5; // delay between each message
+        $delayMinutes = 0; // delay between each message
         $counter = 0;      // progressive delay counter (shared across all loops)
         $queued = 0;
 
