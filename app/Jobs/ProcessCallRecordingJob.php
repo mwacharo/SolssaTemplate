@@ -64,6 +64,17 @@ class ProcessCallRecordingJob implements ShouldQueue
             'processed_at' => now(),
         ]);
 
+
+        Log::info('Call recording processed', [
+            'call_id' => $this->callId,
+            'user_id' => $this->userId,
+            'transcript_length' => strlen($transcriptText),
+            'fulltranscript' => $transcriptText,
+            'sentiment' => $analysis['sentiment'] ?? 'N/A',
+            'fulfillment_score' => $analysis['fulfillment_score'] ?? 'N/A',
+            'cs_rating' => $analysis['cs_rating'] ?? 'N/A',
+        ]);
+
         // Optionally: event dispatch or webhook call to notify CRM/UI
         Log::info('Processing complete', ['id' => $transcriptRow->id]);
     }
