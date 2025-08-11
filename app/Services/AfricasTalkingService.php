@@ -876,10 +876,17 @@ class AfricasTalkingService
 
              // ✅ Dispatch download job if recording exists
         if (!empty($payload['recordingUrl'])) {
+            Log::info('Dispatching DownloadCallRecordingJob', [
+            'call_history_id' => $callHistory->id,
+            'recordingUrl' => $payload['recordingUrl']
+            ]);
             DownloadCallRecordingJob::dispatch(
-                $callHistory->id,
-                $payload['recordingUrl']
+            $callHistory->id,
+            $payload['recordingUrl']
             )->onQueue('recordings'); // Optional: use a dedicated queue
+            Log::info('DownloadCallRecordingJob dispatched successfully', [
+            'call_history_id' => $callHistory->id
+            ]);
         }
 
 
