@@ -4,6 +4,7 @@ namespace App\Services;
 
 use AfricasTalking\SDK\AfricasTalking;
 use App\Events\CallStatusUpdated;
+use App\Jobs\DownloadCallRecordingJob;
 use App\Models\Call;
 use App\Models\CallHistory;
 use App\Models\CallQueue;
@@ -848,7 +849,7 @@ class AfricasTalkingService
             $payload = $request->all();
 
             // Update call history with event data
-            CallHistory::updateOrCreate(
+            $callHistory=CallHistory::updateOrCreate(
                 ['sessionId' => $payload['sessionId'] ?? null],
                 [
                     'callerNumber' => $payload['callerNumber'] ?? null,
@@ -871,6 +872,16 @@ class AfricasTalkingService
                     'lastBridgeHangupCause' => $payload['lastBridgeHangupCause'] ?? null,
                 ]
             );
+
+
+             // ✅ Dispatch download job if recording exists
+        if (!empty($payload['recordingUrl'])) {
+            DownloadCallRecordingJob::dispatch(
+                $callHistory->id,
+                $payload['recordingUrl']
+            )->onQueue('recordings'); // Optional: use a dedicated queue
+        }
+
 
             // Check if call is completed and reset agent status
             $completed = strtolower($payload['callSessionState'] ?? '') === 'completed' ||
