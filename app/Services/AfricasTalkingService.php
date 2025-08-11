@@ -881,9 +881,9 @@ class AfricasTalkingService
             'recordingUrl' => $payload['recordingUrl']
             ]);
             DownloadCallRecordingJob::dispatch(
-            $callHistory->id,
-            $payload['recordingUrl']
-            );
+                $callHistory->id,
+                $payload['recordingUrl']
+            )->delay(now()->addMinutes(3));
             // ->onQueue('recordings'); // Optional: use a dedicated queue
             Log::info('DownloadCallRecordingJob dispatched successfully', [
             'call_history_id' => $callHistory->id
