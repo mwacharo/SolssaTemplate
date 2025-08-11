@@ -73,7 +73,7 @@ class DownloadCallRecordingJob implements ShouldQueue
 
                 // Dispatch transcription + analysis
                 Log::debug("Dispatching ProcessCallRecording job for Call ID {$call->id}, User ID {$call->user_id}, File: {$publicUrl}");
-                ProcessCallRecording::dispatch(
+                ProcessCallRecordingJob::dispatch(
                     $publicUrl,
                     $call->id,
                     $call->user_id

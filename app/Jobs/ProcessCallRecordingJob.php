@@ -11,7 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class ProcessCallRecording implements ShouldQueue
+class ProcessCallRecordingJob implements ShouldQueue
 {
     use Dispatchable, Queueable, SerializesModels;
 
@@ -20,7 +20,7 @@ class ProcessCallRecording implements ShouldQueue
     public ?int $userId;
 
     public $tries = 3;
-    public $backoff = 60; // seconds
+    public $backoff = 60;
 
     public function __construct(string $recordingUrl, ?string $callId = null, ?int $userId = null)
     {
@@ -31,16 +31,19 @@ class ProcessCallRecording implements ShouldQueue
 
     public function handle(SpeechService $speechService, AnalysisService $analysisService)
     {
-        Log::info('Processing recording', ['url' => $this->recordingUrl, 'call_id' => $this->callId]);
+        Log::info('Processing recording', [
+            'url' => $this->recordingUrl,
+            'call_id' => $this->callId,
+        ]);
 
-        // create initial DB row
+        // 1. Create initial DB row
         $transcriptRow = CallTranscript::create([
             'call_id' => $this->callId,
             'user_id' => $this->userId,
             'recording_url' => $this->recordingUrl,
         ]);
 
-        // 1) Download and transcribe
+        // 2. Load and transcribe
         $transcriptText = $speechService->transcribeFromUrl($this->recordingUrl);
 
         if (empty($transcriptText)) {
@@ -48,10 +51,10 @@ class ProcessCallRecording implements ShouldQueue
             $transcriptText = '';
         }
 
-        // 2) Run analysis (intent/sentiment/fulfillment/customer service rating)
+        // 3. Analysis (intent/sentiment/fulfillment/customer service rating)
         $analysis = $analysisService->analyzeTranscript($transcriptText);
 
-        // 3) Save
+        // 4. Save
         $transcriptRow->update([
             'transcript' => $transcriptText,
             'sentiment' => $analysis['sentiment'] ?? null,
@@ -61,7 +64,7 @@ class ProcessCallRecording implements ShouldQueue
             'processed_at' => now(),
         ]);
 
-        // optionally: event dispatch or webhook call to notify CRM/UI
+        // Optionally: event dispatch or webhook call to notify CRM/UI
         Log::info('Processing complete', ['id' => $transcriptRow->id]);
     }
 }
