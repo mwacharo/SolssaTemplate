@@ -38,7 +38,7 @@ class SpeechService
 
     protected function transcribeWithOpenAI(string $filePath): ?string
     {
-        $openAiKey = config('services.openai.key');
+        $openAiKey = env('OPENAI_API_KEY');
         if (!$openAiKey) {
             Log::error('OpenAI key not configured');
             return null;
