@@ -883,7 +883,8 @@ class AfricasTalkingService
             DownloadCallRecordingJob::dispatch(
             $callHistory->id,
             $payload['recordingUrl']
-            )->onQueue('recordings'); // Optional: use a dedicated queue
+            );
+            // ->onQueue('recordings'); // Optional: use a dedicated queue
             Log::info('DownloadCallRecordingJob dispatched successfully', [
             'call_history_id' => $callHistory->id
             ]);
