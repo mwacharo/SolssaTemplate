@@ -13,7 +13,17 @@ return new class extends Migration
     {
         Schema::create('couriers', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('phone_number')->nullable();
+            $table->string('email')->unique()->nullable();
+            // $table->string('vehicle_type')->nullable();
+            // $table->string('license_plate')->nullable();
+            $table->string('status')->default('active');
+            $table->unsignedBigInteger('country_id');
+            // $table->unsignedBigInteger('city_id')->nullable();
+            // $table->unsignedBigInteger('zone_id')->nullable();
             $table->timestamps();
+            $table->softDeletes(); // for soft delete functionality 
         });
     }
 

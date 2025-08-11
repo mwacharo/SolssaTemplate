@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->unsignedBigInteger('country_id')->nullable();
             $table->timestamps();
+            $table->softDeletes(); // for soft delete functionality
         });
     }
 

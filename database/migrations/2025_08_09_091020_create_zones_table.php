@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('longitude', 10, 7)->nullable();
             $table->integer('population')->nullable();
             $table->timestamps();
+            $table->softDeletes(); // for soft delete functionality
         });
     }
 

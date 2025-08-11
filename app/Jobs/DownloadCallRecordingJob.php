@@ -46,6 +46,8 @@ class DownloadCallRecordingJob implements ShouldQueue
             // Generate a unique filename
             $fileName = "call_{$this->callId}_" . now()->timestamp . ".mp3";
             $filePath = "call_recordings/{$fileName}";
+
+            $publicUrl = $filePath;
             Log::debug("Generated file name: {$fileName}, file path: {$filePath}");
 
             // Fetch the audio file from Africa's Talking
@@ -65,6 +67,15 @@ class DownloadCallRecordingJob implements ShouldQueue
                 ]);
 
                 Log::info("✅ Downloaded & saved call recording for Call ID {$this->callId}");
+
+
+                // Dispatch transcription + analysis
+                Log::debug("Dispatching ProcessCallRecording job for Call ID {$call->id}, User ID {$call->user_id}, File: {$publicUrl}");
+                ProcessCallRecording::dispatch(
+                    $publicUrl,
+                    $call->id,
+                    $call->user_id
+                );
             } else {
                 Log::error("❌ Failed to fetch recording for Call ID {$this->callId} (HTTP {$response->status()})");
             }

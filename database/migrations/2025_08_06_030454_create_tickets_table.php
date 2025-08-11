@@ -36,6 +36,7 @@ return new class extends Migration
             $table->integer('call_duration')->nullable()->comment('Duration in minutes');
             
             $table->timestamps();
+            $table->softDeletes(); // for soft delete functionality
             
             // Indexes for better query performance
             $table->index(['status', 'priority']);
