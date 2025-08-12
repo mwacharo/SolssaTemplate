@@ -72,6 +72,7 @@ class User extends Authenticatable
         'two_factor_enabled',
         'timezone',
         'country_id',
+        'status'
     ];
 
     /**
