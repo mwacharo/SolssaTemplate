@@ -127,7 +127,7 @@ class CallCentreController extends Controller
                 'request_data' => $request->all()
             ]);
 
-            $agent = User::where('user_id', auth()->id())->firstOrFail();
+            $agent = User::where('id', auth()->id())->firstOrFail();
 
             Log::debug('Agent found', [
                 'agent_id' => $agent->id,
