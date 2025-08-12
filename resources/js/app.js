@@ -20,6 +20,22 @@ import * as directives from 'vuetify/directives';
 import { aliases, mdi } from 'vuetify/iconsets/mdi';
 import '@mdi/font/css/materialdesignicons.css';
 
+
+// echo 
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'pusher',
+    key: import.meta.env.VITE_PUSHER_APP_KEY,
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    forceTLS: true,
+    authEndpoint: '/broadcasting/auth',
+});
+
 // Create Vuetify instance with proper theming
 const vuetify = createVuetify({
   components,

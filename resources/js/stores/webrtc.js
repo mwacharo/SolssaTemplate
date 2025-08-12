@@ -60,6 +60,26 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     }
 
 
+    function startHeartbeat() {
+    setInterval(() => {
+        if (agentStatus.value === 'ready' || agentStatus.value === 'busy') {
+            axios.post('/api/v1/agent/ping').catch(() => {});
+        }
+    }, 15000);
+}
+
+function listenForStatusUpdates() {
+    Echo.private('agent.status')
+        .listen('.status.updated', (e) => {
+            console.log(`🔄 Agent ${e.agentId} is now ${e.status}`);
+            if (e.agentId === userId.value) {
+                agentStatus.value = e.status;
+            }
+        });
+}
+
+
+
     async function waitForToken() {
         return new Promise((resolve) => {
             const check = setInterval(() => {
@@ -86,14 +106,18 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     }
 
 
-    // When the browser tab is closed or refreshed
-    window.addEventListener('beforeunload', () => {
-        if (agentStatus.value === 'ready' || agentStatus.value === 'busy') {
-            navigator.sendBeacon('/agent/status', JSON.stringify({ status: 'offline' }));
-        }
-    });
+    // // When the browser tab is closed or refreshed
+    // window.addEventListener('beforeunload', () => {
+    //     if (agentStatus.value === 'ready' || agentStatus.value === 'busy') {
+    //         navigator.sendBeacon('/agent/status', JSON.stringify({ status: 'offline' }));
+    //     }
+    // });
 
     async function initializeAfricastalking() {
+
+
+            startHeartbeat();
+    listenForStatusUpdates();
         if (!userToken.value) {
             console.warn("Waiting for token...");
             await waitForToken();
