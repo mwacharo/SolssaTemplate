@@ -75,7 +75,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     async function updateAgentStatus(status) {
     try {
         agentStatus.value = status;
-        await axios.post('/agent/status', { status });
+       await axios.post('/api/v1/agent/status', { status });
         console.log(`✅ Agent status updated to ${status}`);
     } catch (error) {
         console.error("❌ Failed to update agent status:", error);
