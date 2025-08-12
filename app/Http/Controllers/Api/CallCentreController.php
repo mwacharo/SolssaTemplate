@@ -9,8 +9,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCallCentreRequest;
 use App\Http\Requests\UpdateCallCentreRequest;
 use App\Models\CallCentre;
+use App\Models\User;
 use App\Services\AfricasTalkingService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CallCentreController extends Controller
 {
@@ -43,7 +46,7 @@ class CallCentreController extends Controller
     }
 
 
-    public function handleVoiceCallback ()
+    public function handleVoiceCallback()
     {
         try {
             // Assuming you have injected AfricasTalkingService via the constructor or use app() helper
@@ -64,9 +67,9 @@ class CallCentreController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }  
-    
-    
+    }
+
+
 
     public function handleEventCallback()
     {
@@ -89,9 +92,9 @@ class CallCentreController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }  
-    
-    
+    }
+
+
     public function fetchCallHistory()
     {
         try {
@@ -110,6 +113,47 @@ class CallCentreController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Fetch call history failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function updateAgentStatus(Request $request)
+    {
+        try {
+            Log::debug('updateAgentStatus called', [
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+
+            $agent = User::where('user_id', auth()->id())->firstOrFail();
+
+            Log::debug('Agent found', [
+                'agent_id' => $agent->id,
+                'current_status' => $agent->status
+            ]);
+
+            $agent->update(['status' => $request->status]);
+
+            Log::debug('Agent status updated', [
+                'agent_id' => $agent->id,
+                'new_status' => $request->status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Agent status updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Update agent status failed: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Update agent status failed',
                 'error' => $e->getMessage()
             ], 500);
         }

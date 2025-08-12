@@ -6,6 +6,11 @@ import { usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 export const useWebRTCStore = defineStore('webrtc', () => {
+
+
+
+    const agentStatus = ref('offline');
+
     const page = usePage();
 
     // Debug: Log the page props to inspect user values
@@ -66,6 +71,17 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         });
     }
 
+
+    async function updateAgentStatus(status) {
+    try {
+        agentStatus.value = status;
+        await axios.post('/agent/status', { status });
+        console.log(`✅ Agent status updated to ${status}`);
+    } catch (error) {
+        console.error("❌ Failed to update agent status:", error);
+    }
+}
+
     async function initializeAfricastalking() {
         if (!userToken.value) {
             console.warn("Waiting for token...");
@@ -102,12 +118,16 @@ export const useWebRTCStore = defineStore('webrtc', () => {
             client.on('closed', () => {
                 connection_active.value = false;
                 console.warn("🔌 WebRTC connection closed.");
+                    updateAgentStatus('closed');
+
             });
 
             client.on('incomingcall', (event) => {
                 console.log("📞 Incoming call from", event.from);
 
                 console.log("you clicked me");
+                    updateAgentStatus('busy');
+
                 setIncomingCall({
                     from: event.from,
                     duration: 'Connecting...',
@@ -117,6 +137,8 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
             client.on('hangup', (event) => {
                 console.log("☎️ Call hung up:", event.reason);
+                    updateAgentStatus('ready');
+
                 incomingCallDialog.value = false;
                 connection_active.value = false;
             });
@@ -140,5 +162,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         setIncomingCall,
         closeIncomingCallDialog,
         initializeAfricastalking,
+        updateAgentStatus,
+
     };
 });

@@ -308,6 +308,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
     // Route::get('v1/voice-token', [ApiCallCentreController::class, 'generateToken']);
     Route::get('/call-history', [CallCentreController::class, 'fetchCallHistory']);
+    // update agent status 
+    Route::post('/agent/status', [CallCentreController::class, 'updateAgentStatus']);
 
     // // Route::post('/africastalking-handle-selection', [ApiCallCentreController::class, 'handleSelection']);
     // // make a new call
