@@ -73,14 +73,25 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
 
     async function updateAgentStatus(status) {
-    try {
-        agentStatus.value = status;
-       await axios.post('/api/v1/agent/status', { status });
-        console.log(`✅ Agent status updated to ${status}`);
-    } catch (error) {
-        console.error("❌ Failed to update agent status:", error);
+        try {
+            agentStatus.value = status;
+            await axios.post('/api/v1/agent/status', { status });
+            console.log(`✅ Agent status updated to ${status}`);
+        } catch (error) {
+            console.error("❌ Failed to update agent status:", error);
+        }
+
+
+
     }
-}
+
+
+    // When the browser tab is closed or refreshed
+    window.addEventListener('beforeunload', () => {
+        if (agentStatus.value === 'ready' || agentStatus.value === 'busy') {
+            navigator.sendBeacon('/agent/status', JSON.stringify({ status: 'offline' }));
+        }
+    });
 
     async function initializeAfricastalking() {
         if (!userToken.value) {
@@ -109,7 +120,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
             client.on('ready', () => {
                 connection_active.value = true;
                 console.log("🎧 WebRTC client ready.");
-                    updateAgentStatus('ready');
+                updateAgentStatus('ready');
             });
 
             client.on('error', (err) => {
@@ -119,7 +130,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
             client.on('closed', () => {
                 connection_active.value = false;
                 console.warn("🔌 WebRTC connection closed.");
-                    updateAgentStatus('closed');
+                updateAgentStatus('closed');
 
             });
 
@@ -127,18 +138,18 @@ export const useWebRTCStore = defineStore('webrtc', () => {
                 console.log("📞 Incoming call from", event.from);
 
                 console.log("you clicked me");
-                    updateAgentStatus('busy');
+                updateAgentStatus('busy');
 
                 setIncomingCall({
                     from: event.from,
                     duration: 'Connecting...',
                 });
-            
+
             });
 
             client.on('hangup', (event) => {
                 console.log("☎️ Call hung up:", event.reason);
-                    updateAgentStatus('ready');
+                updateAgentStatus('ready');
 
                 incomingCallDialog.value = false;
                 connection_active.value = false;
