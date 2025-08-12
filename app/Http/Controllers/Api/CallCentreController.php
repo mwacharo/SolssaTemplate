@@ -119,48 +119,57 @@ class CallCentreController extends Controller
     }
 
 
+  
+
+
+
+
     public function updateAgentStatus(Request $request)
-    {
-        try {
-            Log::debug('updateAgentStatus called', [
-                'user_id' => auth()->id(),
-                'request_data' => $request->all()
-            ]);
+{
+    try {
+        $validated = $request->validate([
+            'status' => 'required|string|max:50'
+        ]);
 
-            $agent = User::where('id', auth()->id())->firstOrFail();
+        Log::debug('updateAgentStatus called', [
+            'user_id' => auth()->id(),
+            'request_data' => $validated
+        ]);
 
-            Log::debug('Agent found', [
-                'agent_id' => $agent->id,
-                'current_status' => $agent->status
-            ]);
+        $agent = auth()->user();
 
-            $agent->update(['status' => $request->status]);
+        Log::debug('Agent found', [
+            'agent_id' => $agent->id,
+            'current_status' => $agent->status
+        ]);
 
-            Log::debug('Agent status updated', [
-                'agent_id' => $agent->id,
-                'new_status' => $request->status
-            ]);
+        $agent->update([
+            'status' => trim($validated['status'])
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Agent status updated successfully'
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Update agent status failed: ' . $e->getMessage(), [
-                'user_id' => auth()->id(),
-                'request_data' => $request->all()
-            ]);
+        Log::debug('Agent status updated', [
+            'agent_id' => $agent->id,
+            'new_status' => $agent->status
+        ]);
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Update agent status failed',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Agent status updated successfully'
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Update agent status failed: ' . $e->getMessage(), [
+            'user_id' => auth()->id(),
+            'request_data' => $request->all()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Update agent status failed',
+            'error' => $e->getMessage()
+        ], 500);
     }
-    /**
-     * Display a listing of the resource.
-     */
+}
+
     public function index()
     {
         //
