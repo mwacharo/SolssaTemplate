@@ -109,6 +109,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
             client.on('ready', () => {
                 connection_active.value = true;
                 console.log("🎧 WebRTC client ready.");
+                    updateAgentStatus('ready');
             });
 
             client.on('error', (err) => {
