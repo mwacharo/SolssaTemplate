@@ -69,6 +69,7 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'last_login_ip',
+        'last_seen_at',
         'two_factor_enabled',
         'timezone',
         'country_id',
