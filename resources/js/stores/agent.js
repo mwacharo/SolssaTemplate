@@ -8,6 +8,11 @@ export const useAgentStore = defineStore('agent', {
         error: null,
     }),
     actions: {
+
+
+
+
+
         async fetchCallHistory(options = {}) {
             this.loading = true
             this.error = null

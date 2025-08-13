@@ -385,6 +385,17 @@ import { notify } from '@/utils/toast';
 import { useWebRTCStore } from '@/stores/webrtc'
 
 import CallDialogs from './Dialogs/CallDialogs.vue';
+import { usePage } from '@inertiajs/vue3';
+
+
+    const page = usePage();
+
+        const userId = computed(() => {
+            const id = page.props.auth?.user?.id;
+            // console.debug("✅ Computed userId:", id);
+            return id;
+        });
+    
 
 const webrtc = useWebRTCStore()
 const props = defineProps({
@@ -415,6 +426,23 @@ const sortBy = ref([])
 const totalItems = ref(0)
 
 const itemsPerPageOptions = [10, 15, 25, 50, 100]
+
+
+
+
+  const fetchAgentStats = () => {
+      axios.get(`/api/v1/agent-stats/${userId.value}`)
+
+        .then(response => {
+          stats.value = response.data;
+          console.log('Agent stats:', stats.value);
+
+        })
+        .catch(error => {
+          console.error('Error fetching agent stats:', error);
+        });
+    };
+
 
 // Table headers
 const headers = [
@@ -451,6 +479,7 @@ const loadItems = async (options) => {
     notify.error('Failed to load call history', 'error')
   }
 }
+
 
 const refreshData = () => {
   loadItems({
@@ -712,6 +741,7 @@ onMounted(() => {
     sortBy: sortBy.value,
     search: props.search
   })
+  fetchAgentStats()
 })
 </script>
 
