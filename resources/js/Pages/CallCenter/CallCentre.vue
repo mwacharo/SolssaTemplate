@@ -341,6 +341,8 @@
                     </template>
                     <v-list-item-title>Send SMS</v-list-item-title>
                   </v-list-item>
+
+                  
                 </v-list>
               </v-menu>
             </div>
@@ -446,13 +448,13 @@ const itemsPerPageOptions = [10, 15, 25, 50, 100]
 
 // Table headers
 const headers = [
-  { title: 'Date', value: 'created_at', width: '140px' },
+  // { title: 'Date', value: 'created_at', width: '140px' },
   { title: 'Call Start', value: 'callStartTime', width: '140px' },
   // { title: 'Direction', value: 'direction', width: '100px' },
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           { title: 'Caller', value: 'callerNumber', width: '130px' },
   { title: 'Caller Carrier', value: 'callerCarrierName', width: '120px' },
   { title: 'Caller Country', value: 'callerCountryCode', width: '100px' },
-  { title: 'Destination', value: 'destinationNumber', width: '130px' },
+  // { title: 'Destination', value: 'destinationNumber', width: '130px' },
   { title: 'Client Dialed', value: 'clientDialedNumber', width: '130px' },
   { title: 'Duration', value: 'durationInSeconds', width: '100px' },
   { title: 'Currency', value: 'currencyCode', width: '80px' },
@@ -463,7 +465,7 @@ const headers = [
   { title: 'Bridge Hangup', value: 'lastBridgeHangupCause', width: '120px' },
   // { title: 'Session State', value: 'callSessionState', width: '120px' },
   // { title: 'Order No', value: 'orderNo', width: '100px' },
-  { title: 'Notes', value: 'notes', width: '150px' },
+  // { title: 'Notes', value: 'notes', width: '150px' },
   // { title: 'Conference', value: 'conference', width: '100px' },
   // { title: 'Recording', value: 'recordingUrl', width: '100px' },
   { title: 'Actions', value: 'actions', sortable: false, width: '200px' }
