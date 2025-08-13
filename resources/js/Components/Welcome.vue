@@ -227,12 +227,6 @@ import PeakHoursChart from "@/Components/Charts/PeakHoursChart.vue";
 import { usePage } from '@inertiajs/vue3';
 
 
-const userId = computed(() => usePage().props.user?.id);
-
-onMounted(() => {
-
-  console.log("User Id:", userId.value); // Logs the token
-});
 
 export default defineComponent({
   components: {
@@ -251,6 +245,16 @@ export default defineComponent({
   //   }
   // },
   setup(props) {
+
+
+    const page = usePage()
+    const userId = computed(() => {
+        const id = page.props.auth?.user?.id;
+        // console.debug("✅ Computed userId:", id);
+        return id;
+    });
+
+
     const agentStats = ref({
       id: 1,
       phone_number: "BoxleoKenya.Developer",

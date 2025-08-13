@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\IvrOptionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ZoneController;
 use App\Http\Controllers\Api\SmsController;
+use App\Http\Controllers\Api\CallCentreStatistics;
 use App\Http\Controllers\StatusController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
@@ -333,10 +334,10 @@ Route::prefix('v1')->group(function () {
     // Route::get('v1/call-waiting-history', [ApiCallCentreController::class, 'getCallWaitingHistory']);
     // Route::get('v1/call-agent-history/{id}', [ApiCallCentreController::class, 'getAgentCallHistory']);
 
-    // // statistics and reports
-    // // /v1/agent-stats
+    // statistics and reports
+    // /v1/agent-stats
 
-    // Route::get('v1/agent-stats/{id}', [ApiCallCentreController::class, 'AgentCallStats']);
+    Route::get('/agent-stats/{id}', [CallCentreStatistics::class, 'AgentCallStats']);
     // Route::post('v1/reports/call-summary', [ApiCallCentreController::class, 'callSummaryReport']);
 
 
