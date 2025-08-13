@@ -17,9 +17,10 @@ return new class extends Migration
         // });
 
 
-                Schema::create('call_transcripts', function (Blueprint $table) {
+        Schema::create('call_transcripts', function (Blueprint $table) {
             $table->id();
-            $table->string('call_id')->nullable()->index(); // Africa's Talking call id
+            // $table->string('call_id')->nullable()->index(); // Africa's Talking call id
+            $table->foreignId('call_history_id')->nullable()->constrained('call_histories')->nullOnDelete()->index(); // Africa's Talking call id
             $table->unsignedBigInteger('user_id')->nullable()->index(); // optional: agent or merchant id
             $table->string('recording_url')->nullable();
             $table->text('transcript')->nullable();
@@ -31,7 +32,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes(); // for soft delete functionality
         });
-
     }
 
     /**
