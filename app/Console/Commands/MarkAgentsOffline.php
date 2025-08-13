@@ -6,6 +6,7 @@ use App\Events\AgentStatusUpdated;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class MarkAgentsOffline extends Command
 {
@@ -17,10 +18,11 @@ class MarkAgentsOffline extends Command
     protected $signature = 'app:mark-agents-offline';
     protected $description = 'Mark agents offline if inactive';
 
-   
     public function handle()
     {
-        $inactiveAgents = User::whereIn('status', ['ready', 'busy'])
+        Log::info('MarkAgentsOffline job started.');
+
+        $inactiveAgents = User::whereIn('status', ['ready', 'busy', ''])
             ->where('last_seen_at', '<', Carbon::now()->subMinutes(1))
             ->get();
 
@@ -28,5 +30,7 @@ class MarkAgentsOffline extends Command
             $agent->update(['status' => 'offline']);
             broadcast(new AgentStatusUpdated($agent))->toOthers();
         }
+
+        Log::info('MarkAgentsOffline job finished. Inactive agents processed: ' . $inactiveAgents->count());
     }
 }
