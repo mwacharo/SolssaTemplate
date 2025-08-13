@@ -311,6 +311,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/call-history', [CallCentreController::class, 'fetchCallHistory']);
     // update agent status 
     Route::post('/agent/status', [CallCentreController::class, 'updateAgentStatus']);
+    Route::post('/agent/ping', [CallCentreController::class, 'ping']);
+
 
     // // Route::post('/africastalking-handle-selection', [ApiCallCentreController::class, 'handleSelection']);
     // // make a new call
@@ -338,6 +340,7 @@ Route::prefix('v1')->group(function () {
     // /v1/agent-stats
 
     Route::get('/agent-stats/{id}', [CallCentreStatistics::class, 'AgentCallStats']);
+
     // Route::post('v1/reports/call-summary', [ApiCallCentreController::class, 'callSummaryReport']);
 
 

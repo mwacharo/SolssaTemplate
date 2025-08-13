@@ -15,12 +15,9 @@ use Illuminate\Support\Facades\Log;
 class CallStatsService
 {
 
-
-   
-
     public function getAgentStats(User $user, ?array $dateRange = null): array
     {
-        // Log::info('Fetching agent stats', ['user_id' => $user->id, 'date_range' => $dateRange]);
+        Log::info('Fetching agent stats', ['user_id' => $user->id, 'date_range' => $dateRange]);
 
         $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('SuperAdmin');
         $ivrOptions = IvrOption::all();
