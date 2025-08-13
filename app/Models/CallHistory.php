@@ -58,4 +58,9 @@ class CallHistory extends Model
     {
         return $this->belongsTo(IvrOption::class, 'ivr_option_id');
     }
+
+    public function calltranscripts()
+    {
+        return $this->hasMany(CallTranscript::class, 'call_id');
+    }
 }

@@ -21,10 +21,30 @@ class MarkAgentsOffline extends Command
     public function handle()
     {
         Log::info('MarkAgentsOffline job started.');
+        // fetch all users 
 
-        $inactiveAgents = User::whereIn('status', ['ready', 'busy', ''])
-            ->where('last_seen_at', '<', Carbon::now()->subMinutes(1))
+        // who are ready, busy or have no status set and have not been seen in the last minute
+        // and update their status to offline
+
+        $allusers = User::all();
+        Log::info('Total users fetched: ' . $allusers->count());
+        // Log::info('Users:', $allusers->toArray());
+
+        // $inactiveAgents = User::whereIn('status', ['ready', 'busy', ''])
+        //     ->where('last_seen_at', '<', Carbon::now()->subMinutes(1))
+        //     ->get();
+
+
+        $inactiveAgents = User::where(function ($query) {
+            $query->whereIn('status', ['ready', 'busy', ''])
+                ->orWhereNull('status');
+        })
+            ->where(function ($query) {
+                $query->whereNull('last_seen_at')
+                    ->orWhere('last_seen_at', '<', Carbon::now()->subMinutes(1));
+            })
             ->get();
+
 
         foreach ($inactiveAgents as $agent) {
             $agent->update(['status' => 'offline']);
