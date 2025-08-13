@@ -15,7 +15,7 @@ class CallTranscript extends Model
 
 
      protected $fillable = [
-        'call_id','user_id','recording_url','transcript',
+        'call_history_id','user_id','recording_url','transcript',
         'sentiment','fulfillment_score','cs_rating','analysis','processed_at'
     ];
 

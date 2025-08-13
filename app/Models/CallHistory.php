@@ -61,6 +61,6 @@ class CallHistory extends Model
 
     public function calltranscripts()
     {
-        return $this->hasMany(CallTranscript::class, 'call_id');
+        return $this->hasMany(CallTranscript::class, 'call_history_id');
     }
 }
