@@ -1277,7 +1277,7 @@ class AfricasTalkingService
             $sortBy = $filters['sort_by'] ?? 'created_at';
             $sortDesc = $filters['sort_desc'] ?? true;
 
-            $query = CallHistory::with('agent', 'ivrOption');
+            $query = CallHistory::with('agent', 'ivrOption','calltranscripts');
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
