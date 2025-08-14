@@ -368,6 +368,59 @@
       </div>
     </div>
 
+
+    <!-- call analysis  -->
+
+
+      <div 
+      v-if="showDialog" 
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg overflow-hidden">
+        <!-- Header -->
+        <div class="flex justify-between items-center bg-gray-100 px-4 py-2">
+          <h2 class="text-lg font-semibold">Call Statistics</h2>
+          <button @click="closeDialog" class="text-gray-500 hover:text-black">✖</button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-4 space-y-3">
+          <p><strong>Direction:</strong> {{ selectedCall.direction }}</p>
+          <p><strong>Caller:</strong> {{ selectedCall.callerNumber }}</p>
+          <p><strong>Destination:</strong> {{ selectedCall.destinationNumber }}</p>
+          <p><strong>Duration:</strong> {{ selectedCall.durationInSeconds }} seconds</p>
+          <p><strong>Status:</strong> {{ selectedCall.status }}</p>
+          <p><strong>Start Time:</strong> {{ selectedCall.callStartTime }}</p>
+
+          <!-- Recording -->
+          <div v-if="selectedCall.recordingUrl">
+            <p class="font-semibold">Recording:</p>
+            <audio controls :src="selectedCall.recordingUrl" class="w-full"></audio>
+          </div>
+
+          <!-- Transcript -->
+          <div v-if="selectedCall.calltranscripts?.length">
+            <h3 class="font-semibold mt-4">Transcript</h3>
+            <p>{{ selectedCall.calltranscripts[0].transcript }}</p>
+
+            <div class="mt-2 p-2 border rounded bg-gray-50">
+              <p><strong>Sentiment:</strong> {{ selectedCall.calltranscripts[0].sentiment }}</p>
+              <p><strong>Fulfillment Score:</strong> {{ selectedCall.calltranscripts[0].fulfillment_score }}%</p>
+              <p><strong>Customer Service Rating:</strong> {{ selectedCall.calltranscripts[0].cs_rating }}/5</p>
+              <p><strong>Intent:</strong> {{ selectedCall.calltranscripts[0].analysis.intent }}</p>
+              <p><strong>Keywords:</strong> {{ selectedCall.calltranscripts[0].analysis.keywords.join(", ") }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex justify-end bg-gray-100 px-4 py-2">
+          <button @click="closeViewDetailsDialog" class="bg-blue-600 text-white px-3 py-1 rounded">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
   <CallDialogs v-model="callStore.dialogType" />
 
     <!-- Call Dialogs -->
@@ -428,6 +481,11 @@ const sortBy = ref([])
 const totalItems = ref(0)
 
 const itemsPerPageOptions = [10, 15, 25, 50, 100]
+
+
+const showDialog = ref(false)
+const selectedCall = ref({})
+
 
 
 
@@ -646,7 +704,15 @@ const callBack = (item) => {
 
 const viewDetails = (item) => {
   console.log('View details for:', item)
+
+    selectedCall.value = item
+  showDialog.value = true
   // Open details modal or navigate to details page
+}
+
+// Close dialog
+const closeViewDetailsDialog = () => {
+  showDialog.value = false
 }
 
 const addToContacts = (item) => {
