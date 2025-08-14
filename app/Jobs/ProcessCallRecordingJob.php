@@ -16,7 +16,7 @@ class ProcessCallRecordingJob implements ShouldQueue
     use Dispatchable, Queueable, SerializesModels;
 
     public string $recordingUrl;
-    public ?int $callId; // change type to int because we cast it anyway
+    public ?int $callId;
     public ?int $userId;
 
     public $tries = 3;
@@ -24,37 +24,66 @@ class ProcessCallRecordingJob implements ShouldQueue
 
     public function __construct(string $recordingUrl, ?string $callId = null, ?int $userId = null)
     {
+        Log::debug('[JOB:CONSTRUCT] Received params', [
+            'recordingUrl' => $recordingUrl,
+            'callId_raw' => $callId,
+            'callId_type' => gettype($callId),
+            'userId' => $userId,
+        ]);
+
         $this->recordingUrl = $recordingUrl;
-        $this->callId = !empty($callId) ? (int) $callId : null; // cast in constructor
+        $this->callId = !empty($callId) ? (int) $callId : null;
         $this->userId = $userId;
+
+        Log::debug('[JOB:CONSTRUCT] Parsed values', [
+            'callId_final' => $this->callId,
+            'userId_final' => $this->userId,
+        ]);
     }
 
     public function handle(SpeechService $speechService, AnalysisService $analysisService)
     {
-        Log::info('Processing recording', [
-            'url' => $this->recordingUrl,
-            'call_id' => $this->callId,
+        Log::info('[JOB:HANDLE] Start processing', [
+            'recordingUrl' => $this->recordingUrl,
+            'callId' => $this->callId,
+            'userId' => $this->userId,
         ]);
 
-        // 1. Create initial DB row
-        $transcriptRow = CallTranscript::create([
-            'call_history_id' => $this->callId,
-            'user_id' => $this->userId,
-            'recording_url' => $this->recordingUrl,
-        ]);
+        if (is_null($this->callId)) {
+            Log::error('[JOB:HANDLE] callId is NULL - transcript will not be linked correctly!');
+        }
 
-        // 2. Load and transcribe
+        // Step 1: Insert DB row
+        try {
+            $transcriptRow = CallTranscript::create([
+                'call_history_id' => $this->callId,
+                'user_id' => $this->userId,
+                'recording_url' => $this->recordingUrl,
+            ]);
+
+            Log::debug('[JOB:HANDLE] Transcript row created', [
+                'db_id' => $transcriptRow->id,
+                'db_call_history_id' => $transcriptRow->call_history_id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('[JOB:HANDLE] Failed to insert transcript row', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return;
+        }
+
+        // Step 2: Transcription
         $transcriptText = $speechService->transcribeFromUrl($this->recordingUrl);
-
         if (empty($transcriptText)) {
-            Log::warning('Transcription returned empty', ['recording' => $this->recordingUrl]);
+            Log::warning('[JOB:HANDLE] Transcription empty', ['url' => $this->recordingUrl]);
             $transcriptText = '';
         }
 
-        // 3. Analysis (intent/sentiment/fulfillment/customer service rating)
+        // Step 3: Analysis
         $analysis = $analysisService->analyzeTranscript($transcriptText);
 
-        // 4. Save
+        // Step 4: Update DB row
         $transcriptRow->update([
             'transcript' => $transcriptText,
             'sentiment' => $analysis['sentiment'] ?? null,
@@ -64,16 +93,9 @@ class ProcessCallRecordingJob implements ShouldQueue
             'processed_at' => now(),
         ]);
 
-        Log::info('Call recording processed', [
-            'call_id' => $this->callId,
-            'user_id' => $this->userId,
-            'transcript_length' => strlen($transcriptText),
-            'fulltranscript' => $transcriptText,
-            'sentiment' => $analysis['sentiment'] ?? 'N/A',
-            'fulfillment_score' => $analysis['fulfillment_score'] ?? 'N/A',
-            'cs_rating' => $analysis['cs_rating'] ?? 'N/A',
+        Log::info('[JOB:HANDLE] Processing complete', [
+            'transcript_id' => $transcriptRow->id,
+            'final_callId' => $transcriptRow->call_history_id,
         ]);
-
-        Log::info('Processing complete', ['id' => $transcriptRow->id]);
     }
 }
