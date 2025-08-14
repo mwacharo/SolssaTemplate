@@ -38,7 +38,7 @@ class ProcessCallRecordingJob implements ShouldQueue
 
         // 1. Create initial DB row
         $transcriptRow = CallTranscript::create([
-            'call_id' => $this->callId,
+            'call_history_id' => $this->callId,
             'user_id' => $this->userId,
             'recording_url' => $this->recordingUrl,
         ]);
