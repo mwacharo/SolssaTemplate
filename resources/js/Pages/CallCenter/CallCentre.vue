@@ -379,7 +379,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center bg-gray-100 px-4 py-2">
           <h2 class="text-lg font-semibold">Call Statistics</h2>
-          <button @click="closeDialog" class="text-gray-500 hover:text-black">✖</button>
+          <button @click="closeViewDetailsDialog" class="text-gray-500 hover:text-black">✖</button>
         </div>
 
         <!-- Content -->
