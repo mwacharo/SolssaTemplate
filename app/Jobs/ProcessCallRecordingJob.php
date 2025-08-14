@@ -16,7 +16,7 @@ class ProcessCallRecordingJob implements ShouldQueue
     use Dispatchable, Queueable, SerializesModels;
 
     public string $recordingUrl;
-    public ?string $callId;
+    public ?int $callId; // change type to int because we cast it anyway
     public ?int $userId;
 
     public $tries = 3;
@@ -25,7 +25,7 @@ class ProcessCallRecordingJob implements ShouldQueue
     public function __construct(string $recordingUrl, ?string $callId = null, ?int $userId = null)
     {
         $this->recordingUrl = $recordingUrl;
-        $this->callId = $callId;
+        $this->callId = !empty($callId) ? (int) $callId : null; // cast in constructor
         $this->userId = $userId;
     }
 
@@ -64,7 +64,6 @@ class ProcessCallRecordingJob implements ShouldQueue
             'processed_at' => now(),
         ]);
 
-
         Log::info('Call recording processed', [
             'call_id' => $this->callId,
             'user_id' => $this->userId,
@@ -75,7 +74,6 @@ class ProcessCallRecordingJob implements ShouldQueue
             'cs_rating' => $analysis['cs_rating'] ?? 'N/A',
         ]);
 
-        // Optionally: event dispatch or webhook call to notify CRM/UI
         Log::info('Processing complete', ['id' => $transcriptRow->id]);
     }
 }
