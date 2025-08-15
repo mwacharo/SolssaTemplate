@@ -15,6 +15,8 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('app:mark-agents-offline')->everyMinute();
+Schedule::command('app:process-failed-calls-command')->everyMinute();
+
 // Artisan::command('app:mark-agents-offline', function () {
 //     $this->call('app:mark-agents-offline');
 // })->describe('Mark agents as offline if they have been inactive for more than 1 minute');
