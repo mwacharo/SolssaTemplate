@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::table('call_histories', function (Blueprint $table) {
             //
+                 $table->timestamp('whatsapp_sent_at')->nullable();
+            $table->timestamp('sms_sent_at')->nullable();
         });
     }
 
