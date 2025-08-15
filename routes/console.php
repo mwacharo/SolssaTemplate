@@ -15,7 +15,7 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('app:mark-agents-offline')->everyMinute();
-Schedule::command('app:process-failed-calls-command')->everyMinute();
+// Schedule::command('app:process-failed-calls-command')->every60Minute();
 
 // Artisan::command('app:mark-agents-offline', function () {
 //     $this->call('app:mark-agents-offline');
