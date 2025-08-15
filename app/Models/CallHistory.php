@@ -42,6 +42,8 @@ class CallHistory extends Model
         'created_at',
         'updated_at',
         'deleted_at',
+       'whatsapp_sent_at',
+        'sms_sent_at',
     ];
 
 

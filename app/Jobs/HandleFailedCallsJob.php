@@ -35,7 +35,9 @@ class HandleFailedCallsJob
         $calls = CallHistory::where('created_at', '>=', now()->subMinutes(10))
             ->where(function ($q) use ($failedStatuses) {
                 $q->whereNull('lastBridgeHangupCause')
-                  ->orWhereIn('lastBridgeHangupCause', $failedStatuses);
+                  ->orWhereIn('lastBridgeHangupCause', $failedStatuses)
+                  ->whereNull('whatsapp_sent_at'); // Prevent re-sending WA
+
             })
             ->get();
 
@@ -48,6 +50,9 @@ class HandleFailedCallsJob
                 'lastBridgeHangupCause' => $call->lastBridgeHangupCause,
                 'userId' => $call->userId ?? 35
             ]);
+
+            $call->update(['whatsapp_sent_at' => now()]);
+
 
             $phone = $this->normalizeNumber($call->clientDialedNumber);
             Log::debug('Normalized phone number', ['original' => $call->clientDialedNumber, 'normalized' => $phone]);
