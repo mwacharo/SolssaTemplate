@@ -38,15 +38,35 @@
             <!-- Email Form -->
             <form @submit.prevent="sendEmail" class="space-y-4">
               <!-- Recipients and Subject -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">To</label>
                   <input
-                    v-model="composeForm.to"
-                    type="email"
-                    multiple
-                    placeholder="recipient@example.com"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  v-model="composeForm.to"
+                  type="email"
+                  multiple
+                  placeholder="recipient@example.com"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">CC</label>
+                  <input
+                  v-model="composeForm.cc"
+                  type="email"
+                  multiple
+                  placeholder="cc@example.com"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">BCC</label>
+                  <input
+                  v-model="composeForm.bcc"
+                  type="email"
+                  multiple
+                  placeholder="bcc@example.com"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -55,10 +75,15 @@
                     v-model="composeForm.client"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select Client</option>
-                    <option v-for="client in emailStore.clients" :key="client.id" :value="client.id">
-                      {{ client.name }}
-                    </option>
+                    <vue-autocomplete
+                      v-model="composeForm.client"
+                      :items="emailStore.clients"
+                      item-text="name"
+                      item-value="id"
+                      multiple
+                      placeholder="Select Client(s)"
+                      class="w-full"
+                    ></vue-autocomplete>
                   </select>
                 </div>
               </div>
@@ -395,10 +420,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useEmailStore } from '@/stores/emailStore'
+import { useUsersStore } from '@/stores/users'
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { notify } from '@/utils/toast'
 
 // Store
+const usersStore = useUsersStore()
+
 const emailStore = useEmailStore()
 
 // Active tab
@@ -446,7 +475,7 @@ const formatFileSize = (bytes) => {
 // Email actions
 const sendEmail = () => {
   if (!composeForm.value.to || !composeForm.value.subject) {
-    notify('Please fill in required fields', 'error')
+    notify.failed('Please fill in required fields', 'error')
     return
   }
 
@@ -457,13 +486,13 @@ const sendEmail = () => {
     status: 'sent'
   })
 
-  notify('Email sent successfully!', 'success')
+  notify.success('Email sent successfully!', 'success')
   clearForm()
 }
 
 const saveDraft = () => {
   if (!composeForm.value.to && !composeForm.value.subject && !composeForm.value.body) {
-    notify('Cannot save empty draft', 'error')
+    notify.failed('Cannot save empty draft', 'error')
     return
   }
 
@@ -473,7 +502,7 @@ const saveDraft = () => {
     createdAt: new Date()
   })
 
-  notify('Draft saved successfully!', 'success')
+  notify.sucess('Draft saved successfully!', 'success')
   clearForm()
 }
 
@@ -508,17 +537,28 @@ const newTemplate = ref({
 
 const saveTemplate = () => {
   if (!newTemplate.value.name || !newTemplate.value.subject || !newTemplate.value.body) {
-    notify('Please fill in all template fields', 'error')
+    notify.error('Please fill in all template fields')
     return
   }
 
-  emailStore.saveTemplate({
-    ...newTemplate.value,
-    id: Date.now(),
-    createdAt: new Date()
-  })
-
-  notify('Template saved successfully!', 'success')
+  if (newTemplate.value.id) {
+    // Edit existing template
+    emailStore.updateTemplate(newTemplate.value.id, {
+      name: newTemplate.value.name,
+      subject: newTemplate.value.subject,
+      body: newTemplate.value.body,
+      updatedAt: new Date()
+    })
+    notify.success('Template updated successfully!')
+  } else {
+    // Create new template
+    emailStore.saveTemplate({
+      ...newTemplate.value,
+      id: Date.now(),
+      createdAt: new Date()
+    })
+    notify.success('Template saved successfully!')
+  }
   cancelNewTemplate()
 }
 
@@ -535,7 +575,7 @@ const useTemplate = (template) => {
   selectedTemplate.value = template.id.toString()
   loadTemplate()
   activeTab.value = 'compose'
-  notify('Template loaded in compose tab', 'success')
+  notify.success('Template loaded in compose tab', 'success')
 }
 
 const editTemplate = (template) => {
@@ -546,7 +586,7 @@ const editTemplate = (template) => {
 const deleteTemplate = (id) => {
   if (confirm('Are you sure you want to delete this template?')) {
     emailStore.deleteTemplate(id)
-    notify('Template deleted successfully!', 'success')
+    notify.success('Template deleted successfully!', 'success')
   }
 }
 
@@ -555,13 +595,13 @@ const editDraft = (draft) => {
   composeForm.value = { ...draft }
   activeTab.value = 'compose'
   emailStore.deleteDraft(draft.id)
-  notify('Draft loaded for editing', 'success')
+  notify.success('Draft loaded for editing', 'success')
 }
 
 const deleteDraft = (id) => {
   if (confirm('Are you sure you want to delete this draft?')) {
     emailStore.deleteDraft(id)
-    notify('Draft deleted successfully!', 'success')
+    notify.success('Draft deleted successfully!', 'success')
   }
 }
 
@@ -621,12 +661,12 @@ const loadBulkTemplate = () => {
 
 const sendBulkEmail = () => {
   if (!bulkForm.value.selectedClients.length) {
-    notify('Please select at least one client', 'error')
+    notify.error('Please select at least one client', 'error')
     return
   }
 
   if (!bulkForm.value.templateId) {
-    notify('Please select a template', 'error')
+    notify.error('Please select a template', 'error')
     return
   }
 
@@ -644,13 +684,13 @@ const sendBulkEmail = () => {
     })
   })
 
-  notify(`Bulk email sent to ${bulkForm.value.selectedClients.length} clients!`, 'success')
+  notify.success(`Bulk email sent to ${bulkForm.value.selectedClients.length} clients!`, 'success')
   bulkForm.value.selectedClients = []
 }
 
 const previewBulkEmail = () => {
   // This would open a modal or new view to preview emails for each client
-  notify('Preview functionality would open detailed preview', 'info')
+  notify.success('Preview functionality would open detailed preview', 'info')
 }
 
 // Utility functions

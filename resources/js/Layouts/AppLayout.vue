@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import { Head, Link, router } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Banner from '@/Components/Banner.vue';
-import { useNavStore } from '@/stores/nav' ;
+import { useNavStore } from '@/stores/nav';
 import { onMounted } from 'vue';
 import { useWebRTCStore } from '@/stores/webrtc';
 import IncomingCallDialog from '@/Pages/CallCenter/Dialogs/IncomingCallDialog.vue'
@@ -12,7 +12,7 @@ import IncomingCallDialog from '@/Pages/CallCenter/Dialogs/IncomingCallDialog.vu
 
 
 defineProps({
-    title: String,
+  title: String,
 });
 
 const navStore = useNavStore()
@@ -26,7 +26,7 @@ const userRole = 'admin'
 const userPlan = 'Enterprise' // Use Enterprise to see all plan-restricted features
 const enabledFeatures = [
   'call-center',
-  'team-management', 
+  'team-management',
   'reports',
   'branch-management',
   'integrations',
@@ -87,16 +87,16 @@ const markAllAsRead = () => {
 
 // Team management
 const switchToTeam = (team) => {
-    router.put(route('current-team.update'), {
-        team_id: team.id,
-    }, {
-        preserveState: false,
-    });
+  router.put(route('current-team.update'), {
+    team_id: team.id,
+  }, {
+    preserveState: false,
+  });
 };
 
 // Logout function
 const logout = () => {
-    router.post(route('logout'));
+  router.post(route('logout'));
 };
 
 // Expanded groups for navigation
@@ -115,12 +115,12 @@ const isGroupExpanded = (groupName) => {
   return expandedGroups.value.includes(groupName);
 };
 
-  console.log("Initializing Africastalking...");
+console.log("Initializing Africastalking...");
 
 onMounted(async () => {
   await webrtc.initializeAfricastalking();
 
-    console.log("Initialization complete");
+  console.log("Initialization complete");
 
 });
 
@@ -137,74 +137,60 @@ onMounted(async () => {
             <ApplicationMark height="32" />
           </template>
           <v-list-item-title class="text-h6">
-              CRM
+            CRM
           </v-list-item-title>
           <v-list-item-subtitle>
-
-Lets your business better           </v-list-item-subtitle>
+            Lets your business better
+          </v-list-item-subtitle>
         </v-list-item>
 
         <v-divider class="my-2"></v-divider>
-        
+
         <!-- Main Navigation with Expandable Groups -->
         <template v-for="item in navItems" :key="item.title">
           <!-- Parent Item -->
           <v-list-group v-if="item.children && item.children.length > 0">
             <template v-slot:activator="{ props }">
-              <v-list-item 
-                v-bind="props"
-                :active="route().current(item.route + '*')"
-                class="mb-1"
-              >
+              <v-list-item v-bind="props" :active="route().current(item.route + '*')" class="mb-1">
                 <template v-slot:prepend>
                   <v-icon>{{ item.icon }}</v-icon>
                 </template>
                 <v-list-item-title>{{ item.title }}</v-list-item-title>
               </v-list-item>
             </template>
-            
+
             <!-- Child Items -->
-            <v-list-item 
-              v-for="child in item.children"
-              :key="child.title"
-              :href="route(child.route)"
-              :active="route().current(child.route)"
-              link
-              class="ml-4"
-            >
+            <Link v-for="child in item.children" :key="child.title" :href="route(child.route)"
+              class="text-decoration-none" preserve-scroll>
+            <v-list-item :active="route().current(child.route)" link class="ml-4">
               <template v-slot:prepend>
                 <v-icon size="small">{{ child.icon }}</v-icon>
               </template>
               <v-list-item-title>{{ child.title }}</v-list-item-title>
             </v-list-item>
+            </Link>
           </v-list-group>
-          
+
           <!-- Single Item (no children) -->
-          <v-list-item 
-            v-else
-            :href="route(item.route)"
-            :active="route().current(item.route)"
-            link
-            class="mb-1"
-          >
+          <Link v-else :href="route(item.route)" class="text-decoration-none" preserve-scroll>
+          <v-list-item :active="route().current(item.route)" link class="mb-1">
             <template v-slot:prepend>
               <v-icon>{{ item.icon }}</v-icon>
             </template>
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </v-list-item>
+          </Link>
         </template>
       </v-list>
-      
+
       <template v-slot:append>
         <!-- User Profile at Bottom -->
         <div class="pa-2">
           <v-list-item>
             <template v-slot:prepend>
               <v-avatar size="40">
-                <v-img 
-                  :src="$page.props.auth.user?.profile_photo_url || 'https://cdn.vuetifyjs.com/images/lists/1.jpg'" 
-                  :alt="$page.props.auth.user?.name || 'User'"
-                ></v-img>
+                <v-img :src="$page.props.auth.user?.profile_photo_url || 'https://cdn.vuetifyjs.com/images/lists/1.jpg'"
+                  :alt="$page.props.auth.user?.name || 'User'"></v-img>
               </v-avatar>
             </template>
             <v-list-item-title>{{ $page.props.auth.user?.name || 'User' }}</v-list-item-title>
@@ -213,36 +199,36 @@ Lets your business better           </v-list-item-subtitle>
         </div>
       </template>
     </v-navigation-drawer>
-    
+
     <Head :title="title" />
-    
+
     <Banner />
-    
+
     <!-- App Bar -->
     <v-app-bar app flat>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      
+
 
       <!-- href   -->
       <v-app-bar-title>
         <Link :href="route('dashboard')" class="text-decoration-none text-primary">
-          <ApplicationMark class="mr-2" height="32" />
-          {{ title }}
+        <ApplicationMark class="mr-2" height="32" />
+        {{ title }}
         </Link>
       </v-app-bar-title>
-      
+
       <v-spacer></v-spacer>
-      
+
       <!-- Development Mode Indicator -->
       <v-chip color="warning" variant="outlined" size="small" class="mr-2">
         DEV MODE
       </v-chip>
-      
+
       <!-- Dark Mode Toggle -->
       <v-btn icon @click="toggleDarkMode">
         <v-icon>{{ darkMode ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
       </v-btn>
-      
+
       <!-- Notifications -->
       <v-menu v-model="notificationMenu" :close-on-content-click="false" offset-y>
         <template v-slot:activator="{ props }">
@@ -262,7 +248,8 @@ Lets your business better           </v-list-item-subtitle>
           </v-card-title>
           <v-divider></v-divider>
           <v-list>
-            <v-list-item v-for="notification in notifications" :key="notification.id" @click="markAsRead(notification.id)">
+            <v-list-item v-for="notification in notifications" :key="notification.id"
+              @click="markAsRead(notification.id)">
               <v-list-item-title :class="{ 'font-weight-bold': !notification.read }">
                 {{ notification.text }}
               </v-list-item-title>
@@ -276,7 +263,7 @@ Lets your business better           </v-list-item-subtitle>
           </v-list>
         </v-card>
       </v-menu>
-      
+
       <!-- Teams Dropdown -->
       <v-menu v-if="$page.props.jetstream.hasTeamFeatures" offset-y>
         <template v-slot:activator="{ props }">
@@ -287,27 +274,22 @@ Lets your business better           </v-list-item-subtitle>
         </template>
         <v-list>
           <v-list-subheader>Manage Team</v-list-subheader>
-          
+
           <v-list-item :href="route('teams.show', $page.props.auth.user.current_team)" link>
             <v-list-item-title>Team Settings</v-list-item-title>
           </v-list-item>
-          
+
           <v-list-item v-if="$page.props.jetstream.canCreateTeams" :href="route('teams.create')" link>
             <v-list-item-title>Create New Team</v-list-item-title>
           </v-list-item>
-          
+
           <v-divider v-if="$page.props.auth.user.all_teams.length > 1"></v-divider>
-          
+
           <v-list-subheader v-if="$page.props.auth.user.all_teams.length > 1">
             Switch Teams
           </v-list-subheader>
-          
-          <v-list-item 
-            v-for="team in $page.props.auth.user.all_teams" 
-            :key="team.id" 
-            @click="switchToTeam(team)"
-            link
-          >
+
+          <v-list-item v-for="team in $page.props.auth.user.all_teams" :key="team.id" @click="switchToTeam(team)" link>
             <template v-slot:prepend>
               <v-icon v-if="team.id == $page.props.auth.user.current_team_id" color="success">
                 mdi-check-circle
@@ -317,7 +299,7 @@ Lets your business better           </v-list-item-subtitle>
           </v-list-item>
         </v-list>
       </v-menu>
-      
+
       <!-- User Menu -->
       <v-menu offset-y>
         <template v-slot:activator="{ props }">
@@ -331,37 +313,37 @@ Lets your business better           </v-list-item-subtitle>
         </template>
         <v-list>
           <v-list-subheader>Manage Account</v-list-subheader>
-          
+
           <v-list-item :href="route('profile.show')" link>
             <v-list-item-title>Profile</v-list-item-title>
           </v-list-item>
-          
+
           <v-list-item v-if="$page.props.jetstream.hasApiFeatures" :href="route('api-tokens.index')" link>
             <v-list-item-title>API Tokens</v-list-item-title>
           </v-list-item>
-          
+
           <v-divider></v-divider>
-          
+
           <v-list-item @click="logout" link>
             <v-list-item-title>Log Out</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
-    
+
     <!-- Page Content -->
     <v-main>
       <!-- Page Heading -->
       <v-container v-if="$slots.header" class="py-6">
         <slot name="header" />
       </v-container>
-      
+
       <!-- Main Content -->
       <v-container fluid>
         <slot />
       </v-container>
     </v-main>
-    
+
     <!-- Footer -->
     <v-footer app>
       <div class="text-center w-100">

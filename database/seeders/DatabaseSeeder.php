@@ -35,10 +35,13 @@ class DatabaseSeeder extends Seeder
             // CallCenterSettingSeeder::class,
             // IvrOptionSeeder::class,
 
-            StatusSeeder::class,
-            CitySeeder::class,
-            ZoneSeeder::class,
-            CourierSeeder::class,
+            // StatusSeeder::class,
+            // CitySeeder::class,
+            // ZoneSeeder::class,
+            // CourierSeeder::class,
+
+            EmailTemplateSeeder::class,
+            EmailSeeder::class,
         ]);
 
         // User::factory(1)->withPersonalTeam()->create();

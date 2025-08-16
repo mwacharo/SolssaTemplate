@@ -84,6 +84,10 @@ class DynamicChannelCredentialService
     public function getCredential(): ChannelCredential
     {
         Log::debug('getCredential called');
+        // log the credential being returned
+        Log::debug('Returning credential', [
+            'credential' => $this->credential?->toArray()
+        ]);
         return $this->credential;
     }
 
@@ -138,4 +142,7 @@ class DynamicChannelCredentialService
         Log::debug('getPartnerId called', ['account_sid' => $partnerId]);
         return $partnerId;
     }
+
+
+    
 }

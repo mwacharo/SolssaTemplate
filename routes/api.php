@@ -28,7 +28,9 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ZoneController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\CallCentreStatistics;
-use App\Http\Controllers\StatusController;
+use App\Http\Controllers\Api\EmailController;
+use App\Http\Controllers\Api\EmailTemplateController;
+use App\Http\Controllers\Api\StatusController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
@@ -280,24 +282,24 @@ Route::prefix('v1')->group(function () {
     Route::post('/cities', [CityController::class, 'store']);
     Route::get('/cities/{id}', [CityController::class, 'show']);
     Route::put('/cities/{id}', [CityController::class, 'update']);
-    Route::delete('/cities/{id}', [CityController::class, 'destroy']);  
-    
-    
+    Route::delete('/cities/{id}', [CityController::class, 'destroy']);
+
+
 
     // zones 
     Route::get('/zones', [ZoneController::class, 'index']);
     Route::post('/zones', [ZoneController::class, 'store']);
     Route::get('/zones/{id}', [ZoneController::class, 'show']);
     Route::put('/zones/{id}', [ZoneController::class, 'update']);
-    Route::delete('/zones/{id}', [ZoneController::class, 'destroy']);  
-    
+    Route::delete('/zones/{id}', [ZoneController::class, 'destroy']);
+
     // courier
     Route::get('/couriers', [CourierController::class, 'index']);
     Route::post('/couriers', [CourierController::class, 'store']);
     Route::get('/couriers/{id}', [CourierController::class, 'show']);
-    Route::put('/couriers/{ id}', [CourierController::class, 'update']);  
-    
-    
+    Route::put('/couriers/{ id}', [CourierController::class, 'update']);
+
+
 
 
 
@@ -372,6 +374,25 @@ Route::prefix('v1')->group(function () {
     Route::get('/call-center-settings/{id}', [CallCenterSettingController::class, 'show']);
     Route::put('/call-center-settings/{id}', [CallCenterSettingController::class, 'update']);
     Route::delete('/call-center-settings/{id}', [CallCenterSettingController::class, 'destroy']);
+
+
+
+
+// email routes
+
+Route::get('email-templates', [EmailTemplateController::class, 'index']);
+Route::post('email-templates', [EmailTemplateController::class, 'store']);
+Route::put('email-templates/{id}', [EmailTemplateController::class, 'update']);
+Route::delete('email-templates/{id}', [EmailTemplateController::class, 'delete']);
+
+Route::get('drafts', [EmailController::class, 'getDrafts']);
+Route::post('drafts', [EmailController::class, 'storeDraft']);
+Route::delete('drafts/{id}', [EmailController::class, 'deleteDraft']);
+
+Route::get('sent', [EmailController::class, 'getSentEmails']);
+Route::post('send', [EmailController::class, 'sendEmail']);
+Route::post('bulk-send', [EmailController::class, 'sendBulkEmails']);
+
 });
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {

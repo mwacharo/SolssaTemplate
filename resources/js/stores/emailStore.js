@@ -1,5 +1,33 @@
 // stores/emailStore.js
 import { defineStore } from 'pinia'
+import axios from 'axios'
+
+// Configure axios base URL
+const API_BASE_URL = '/api/v1'
+
+// Create axios instance with base configuration
+const apiClient = axios.create({
+  baseURL: API_BASE_URL
+})
+
+// Add request interceptor for authentication if needed
+// apiClient.interceptors.request.use((config) => {
+//   // Add auth token if available
+//   const token = localStorage.getItem('auth_token')
+//   if (token) {
+//     config.headers.Authorization = `Bearer ${token}`
+//   }
+//   return config
+// })
+
+// Add response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message)
+    return Promise.reject(error)
+  }
+)
 
 export const useEmailStore = defineStore('email', {
   state: () => ({
@@ -8,12 +36,29 @@ export const useEmailStore = defineStore('email', {
     drafts: [],
     templates: [],
     
-    // Clients data
+    // Pagination data for templates
+    templatesPagination: {
+      current_page: 1,
+      last_page: 1,
+      per_page: 15,
+      total: 0
+    },
+    
+    // Clients data (if you have clients endpoint)
     clients: [],
     
     // Loading states
     isLoading: false,
-    isSending: false
+    isSending: false,
+    isLoadingTemplates: false,
+    isLoadingDrafts: false,
+    isLoadingSentEmails: false,
+    
+    // Error states
+    error: null,
+    templateError: null,
+    draftError: null,
+    sentEmailError: null
   }),
 
   getters: {
@@ -26,15 +71,15 @@ export const useEmailStore = defineStore('email', {
     // Get templates count
     templatesCount: (state) => state.templates.length,
     
-    // Get emails by client
+    // Get emails by client (if clientId is available)
     getEmailsByClient: (state) => (clientId) => {
-      return state.sentEmails.filter(email => email.clientId === clientId)
+      return state.sentEmails.filter(email => email.client_id === clientId)
     },
     
     // Get emails by date range
     getEmailsByDateRange: (state) => (startDate, endDate) => {
       return state.sentEmails.filter(email => {
-        const emailDate = new Date(email.sentAt)
+        const emailDate = new Date(email.sent_at || email.created_at)
         const start = new Date(startDate)
         const end = new Date(endDate)
         return emailDate >= start && emailDate <= end
@@ -47,357 +92,326 @@ export const useEmailStore = defineStore('email', {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
       
       return state.sentEmails.filter(email => 
-        new Date(email.sentAt) >= sevenDaysAgo
-      ).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt))
+        new Date(email.sent_at || email.created_at) >= sevenDaysAgo
+      ).sort((a, b) => new Date(b.sent_at || b.created_at) - new Date(a.sent_at || a.created_at))
     },
     
     // Get template by ID
     getTemplateById: (state) => (id) => {
-      return state.templates.find(template => template.id === id)
+      return state.templates.find(template => template.id === parseInt(id))
     },
     
-    // Get client by ID
-    getClientById: (state) => (id) => {
-      return state.clients.find(client => client.id === id)
+    // Get draft by ID
+    getDraftById: (state) => (id) => {
+      return state.drafts.find(draft => draft.id === parseInt(id))
+    },
+    
+    // Get sent email by ID
+    getSentEmailById: (state) => (id) => {
+      return state.sentEmails.find(email => email.id === parseInt(id))
+    },
+
+    // Check if there are more templates to load
+    hasMoreTemplates: (state) => {
+      return state.templatesPagination.current_page < state.templatesPagination.last_page
     }
   },
 
   actions: {
-    // Initialize store with sample data
-    initializeData() {
-      // Sample clients
-      this.clients = [
-        { id: 1, name: 'John Doe', email: 'john@example.com', company: 'Doe Enterprises' },
-        { id: 2, name: 'Jane Smith', email: 'jane@example.com', company: 'Smith Corp' },
-        { id: 3, name: 'Bob Johnson', email: 'bob@example.com', company: 'Johnson LLC' },
-        { id: 4, name: 'Alice Brown', email: 'alice@example.com', company: 'Brown Industries' },
-        { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', company: 'Wilson Co' }
-      ]
-
-      // Sample email templates
-      this.templates = [
-        {
-          id: 1,
-          name: 'Welcome Email',
-          subject: 'Welcome to Our Service, {{client_name}}!',
-          body: `Dear {{client_name}},
-
-Welcome to our service! We're excited to have you on board.
-
-We'll be in touch soon with next steps.
-
-Best regards,
-The Team`,
-          createdAt: new Date('2024-01-15')
-        },
-        {
-          id: 2,
-          name: 'Follow-up Email',
-          subject: 'Following up on our conversation',
-          body: `Hi {{client_name}},
-
-I wanted to follow up on our recent conversation and see if you have any questions.
-
-Please don't hesitate to reach out if you need anything.
-
-Best regards,
-Sales Team`,
-          createdAt: new Date('2024-01-20')
-        },
-        {
-          id: 3,
-          name: 'Invoice Reminder',
-          subject: 'Invoice Reminder - {{client_name}}',
-          body: `Dear {{client_name}},
-
-This is a friendly reminder that your invoice is due on {{date}}.
-
-Please let us know if you have any questions.
-
-Thank you,
-Billing Department`,
-          createdAt: new Date('2024-02-01')
-        },
-        {
-          id: 4,
-          name: 'Project Update',
-          subject: 'Project Update - {{date}}',
-          body: `Hi {{client_name}},
-
-Here's your weekly project update for {{date}}:
-
-- Task 1: Completed
-- Task 2: In Progress
-- Task 3: Scheduled
-
-We'll continue to keep you updated on our progress.
-
-Best regards,
-Project Team`,
-          createdAt: new Date('2024-02-10')
-        }
-      ]
-
-      // Sample sent emails
-      this.sentEmails = [
-        {
-          id: 1,
-          to: 'john@example.com',
-          subject: 'Welcome to Our Service, John Doe!',
-          body: 'Dear John Doe,\n\nWelcome to our service! We\'re excited to have you on board...',
-          clientId: 1,
-          sentAt: new Date('2024-02-15T10:30:00'),
-          status: 'delivered',
-          attachments: []
-        },
-        {
-          id: 2,
-          to: 'jane@example.com',
-          subject: 'Following up on our conversation',
-          body: 'Hi Jane Smith,\n\nI wanted to follow up on our recent conversation...',
-          clientId: 2,
-          sentAt: new Date('2024-02-14T14:15:00'),
-          status: 'delivered',
-          attachments: [{ name: 'proposal.pdf', size: 245000 }]
-        },
-        {
-          id: 3,
-          to: 'bob@example.com',
-          subject: 'Invoice Reminder - Bob Johnson',
-          body: 'Dear Bob Johnson,\n\nThis is a friendly reminder that your invoice is due...',
-          clientId: 3,
-          sentAt: new Date('2024-02-13T09:45:00'),
-          status: 'delivered',
-          attachments: [{ name: 'invoice_001.pdf', size: 156000 }]
-        },
-        {
-          id: 4,
-          to: 'alice@example.com',
-          subject: 'Project Update - February 12, 2024',
-          body: 'Hi Alice Brown,\n\nHere\'s your weekly project update...',
-          clientId: 4,
-          sentAt: new Date('2024-02-12T16:20:00'),
-          status: 'sent',
-          attachments: []
-        }
-      ]
-
-      // Sample drafts
-      this.drafts = [
-        {
-          id: 1,
-          to: 'charlie@example.com',
-          subject: 'Meeting Request',
-          body: 'Hi Charlie,\n\nI would like to schedule a meeting to discuss...',
-          client: '5',
-          attachments: [],
-          createdAt: new Date('2024-02-16T11:30:00')
-        },
-        {
-          id: 2,
-          to: 'multiple@recipients.com',
-          subject: 'Newsletter Draft',
-          body: 'Dear Subscribers,\n\nWe have some exciting updates to share...',
-          client: '',
-          attachments: [{ name: 'newsletter_images.zip', size: 1250000 }],
-          createdAt: new Date('2024-02-15T15:45:00')
-        }
-      ]
+    // Error handling helper
+    handleError(error, errorStateKey) {
+      const errorMessage = error.response?.data?.message || error.message || 'An error occurred'
+      if (errorStateKey) {
+        this[errorStateKey] = errorMessage
+      }
+      this.error = errorMessage
+      console.error('Store Error:', errorMessage)
+      return errorMessage
     },
 
-    // Email actions
+    // Clear errors
+    clearErrors() {
+      this.error = null
+      this.templateError = null
+      this.draftError = null
+      this.sentEmailError = null
+    },
+
+    // TEMPLATE ACTIONS
+    async fetchTemplates(page = 1) {
+      this.isLoadingTemplates = true
+      this.templateError = null
+      
+      try {
+        const response = await apiClient.get(`/email-templates?page=${page}`)
+        
+        if (page === 1) {
+          this.templates = response.data.data
+        } else {
+          this.templates.push(...response.data.data)
+        }
+        
+        // Update pagination info
+        this.templatesPagination = {
+          current_page: response.data.meta.current_page,
+          last_page: response.data.meta.last_page,
+          per_page: response.data.meta.per_page,
+          total: response.data.meta.total
+        }
+        
+        return response.data
+      } catch (error) {
+        this.handleError(error, 'templateError')
+        throw error
+      } finally {
+        this.isLoadingTemplates = false
+      }
+    },
+
+    async saveTemplate(templateData) {
+      this.isLoading = true
+      this.templateError = null
+      
+      try {
+        const response = await apiClient.post('/email-templates', templateData)
+        this.templates.unshift(response.data)
+        return response.data
+      } catch (error) {
+        this.handleError(error, 'templateError')
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async updateTemplate(templateId, templateData) {
+      this.isLoading = true
+      this.templateError = null
+      
+      try {
+        const response = await apiClient.put(`/email-templates/${templateId}`, templateData)
+        
+        // Update template in local state
+        const index = this.templates.findIndex(t => t.id === parseInt(templateId))
+        if (index !== -1) {
+          this.templates[index] = response.data
+        }
+        
+        return response.data
+      } catch (error) {
+        this.handleError(error, 'templateError')
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async deleteTemplate(templateId) {
+      this.isLoading = true
+      this.templateError = null
+      
+      try {
+        await apiClient.delete(`/email-templates/${templateId}`)
+        
+        // Remove template from local state
+        const index = this.templates.findIndex(t => t.id === parseInt(templateId))
+        if (index !== -1) {
+          this.templates.splice(index, 1)
+          this.templatesPagination.total--
+        }
+        
+        return true
+      } catch (error) {
+        this.handleError(error, 'templateError')
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // DRAFT ACTIONS
+    async fetchDrafts() {
+      this.isLoadingDrafts = true
+      this.draftError = null
+      
+      try {
+        const response = await apiClient.get('/drafts')
+        this.drafts = response.data.data || response.data
+        return response.data
+      } catch (error) {
+        this.handleError(error, 'draftError')
+        throw error
+      } finally {
+        this.isLoadingDrafts = false
+      }
+    },
+
+    async saveDraft(draftData) {
+      this.isLoading = true
+      this.draftError = null
+      
+      try {
+        const response = await apiClient.post('/drafts', draftData)
+        
+        // Add or update draft in local state
+        const existingIndex = this.drafts.findIndex(d => d.id === response.data.id)
+        if (existingIndex !== -1) {
+          this.drafts[existingIndex] = response.data
+        } else {
+          this.drafts.unshift(response.data)
+        }
+        
+        return response.data
+      } catch (error) {
+        this.handleError(error, 'draftError')
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async deleteDraft(draftId) {
+      this.isLoading = true
+      this.draftError = null
+      
+      try {
+        await apiClient.delete(`/drafts/${draftId}`)
+        
+        // Remove draft from local state
+        const index = this.drafts.findIndex(d => d.id === parseInt(draftId))
+        if (index !== -1) {
+          this.drafts.splice(index, 1)
+        }
+        
+        return true
+      } catch (error) {
+        this.handleError(error, 'draftError')
+        throw error
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // SENT EMAIL ACTIONS
+    async fetchSentEmails() {
+      this.isLoadingSentEmails = true
+      this.sentEmailError = null
+      
+      try {
+        const response = await apiClient.get('/sent')
+        this.sentEmails = response.data.data || response.data
+        return response.data
+      } catch (error) {
+        this.handleError(error, 'sentEmailError')
+        throw error
+      } finally {
+        this.isLoadingSentEmails = false
+      }
+    },
+
     async sendEmail(emailData) {
       this.isSending = true
+      this.error = null
       
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const response = await apiClient.post('/send', emailData)
         
-        // Add to sent emails
-        const newEmail = {
-          ...emailData,
-          id: Date.now() + Math.random(),
-          sentAt: new Date(),
-          status: 'sent'
-        }
+        // Add sent email to local state
+        this.sentEmails.unshift(response.data)
         
-        this.sentEmails.unshift(newEmail)
-        
-        // Update status after a delay (simulate delivery)
-        setTimeout(() => {
-          const email = this.sentEmails.find(e => e.id === newEmail.id)
-          if (email) {
-            email.status = 'delivered'
-          }
-        }, 3000)
-        
-        return newEmail
+        return response.data
       } catch (error) {
-        throw new Error('Failed to send email: ' + error.message)
+        this.handleError(error)
+        throw error
       } finally {
         this.isSending = false
       }
     },
 
-    // Draft actions
-    saveDraft(draftData) {
-      const existingDraftIndex = this.drafts.findIndex(d => d.id === draftData.id)
-      
-      if (existingDraftIndex !== -1) {
-        // Update existing draft
-        this.drafts[existingDraftIndex] = {
-          ...draftData,
-          updatedAt: new Date()
-        }
-      } else {
-        // Create new draft
-        const newDraft = {
-          ...draftData,
-          id: Date.now() + Math.random(),
-          createdAt: new Date()
-        }
-        this.drafts.unshift(newDraft)
-      }
-    },
-
-    deleteDraft(draftId) {
-      const index = this.drafts.findIndex(d => d.id === draftId)
-      if (index !== -1) {
-        this.drafts.splice(index, 1)
-      }
-    },
-
-    getDraftById(draftId) {
-      return this.drafts.find(d => d.id === draftId)
-    },
-
-    // Template actions
-    saveTemplate(templateData) {
-      const existingTemplateIndex = this.templates.findIndex(t => t.id === templateData.id)
-      
-      if (existingTemplateIndex !== -1) {
-        // Update existing template
-        this.templates[existingTemplateIndex] = {
-          ...templateData,
-          updatedAt: new Date()
-        }
-      } else {
-        // Create new template
-        const newTemplate = {
-          ...templateData,
-          id: Date.now() + Math.random(),
-          createdAt: new Date()
-        }
-        this.templates.push(newTemplate)
-      }
-    },
-
-    deleteTemplate(templateId) {
-      const index = this.templates.findIndex(t => t.id === templateId)
-      if (index !== -1) {
-        this.templates.splice(index, 1)
-      }
-    },
-
-    duplicateTemplate(templateId) {
-      const template = this.templates.find(t => t.id === templateId)
-      if (template) {
-        const duplicatedTemplate = {
-          ...template,
-          id: Date.now() + Math.random(),
-          name: `${template.name} (Copy)`,
-          createdAt: new Date()
-        }
-        this.templates.push(duplicatedTemplate)
-        return duplicatedTemplate
-      }
-    },
-
-    // Client actions
-    addClient(clientData) {
-      const newClient = {
-        ...clientData,
-        id: Date.now() + Math.random(),
-        createdAt: new Date()
-      }
-      this.clients.push(newClient)
-      return newClient
-    },
-
-    updateClient(clientId, clientData) {
-      const index = this.clients.findIndex(c => c.id === clientId)
-      if (index !== -1) {
-        this.clients[index] = {
-          ...this.clients[index],
-          ...clientData,
-          updatedAt: new Date()
-        }
-      }
-    },
-
-    deleteClient(clientId) {
-      const index = this.clients.findIndex(c => c.id === clientId)
-      if (index !== -1) {
-        this.clients.splice(index, 1)
-        
-        // Also remove related emails and drafts
-        this.sentEmails = this.sentEmails.filter(e => e.clientId !== clientId)
-        this.drafts = this.drafts.filter(d => d.client !== clientId.toString())
-      }
-    },
-
-    // Bulk email actions
-    async sendBulkEmails(emailData, clientIds) {
+    async sendBulkEmails(emailData) {
       this.isSending = true
-      const results = []
+      this.error = null
       
       try {
-        for (const clientId of clientIds) {
-          const client = this.clients.find(c => c.id === clientId)
-          if (client) {
-            const personalizedEmail = {
-              ...emailData,
-              to: client.email,
-              clientId: clientId,
-              subject: this.personalizeMail(emailData.subject, client),
-              body: this.personalizeMail(emailData.body, client)
-            }
-            
-            const sentEmail = await this.sendEmail(personalizedEmail)
-            results.push(sentEmail)
-          }
+        const response = await apiClient.post('/bulk-send', emailData)
+        
+        // Add sent emails to local state if they're returned
+        if (response.data.sent_emails && Array.isArray(response.data.sent_emails)) {
+          this.sentEmails.unshift(...response.data.sent_emails)
         }
         
-        return results
+        return response.data
       } catch (error) {
-        throw new Error('Failed to send bulk emails: ' + error.message)
+        this.handleError(error)
+        throw error
       } finally {
         this.isSending = false
       }
     },
 
-    // Utility functions
-    personalizeMail(content, client) {
-      return content
-        .replace(/\{\{client_name\}\}/g, client.name)
-        .replace(/\{\{company_name\}\}/g, client.company || '')
-        .replace(/\{\{email\}\}/g, client.email)
-        .replace(/\{\{date\}\}/g, new Date().toLocaleDateString())
+    // INITIALIZATION
+    async initializeData() {
+      this.isLoading = true
+      
+      try {
+        // Load all data concurrently
+        await Promise.allSettled([
+          this.fetchTemplates(),
+          this.fetchDrafts(),
+          this.fetchSentEmails()
+        ])
+      } catch (error) {
+        this.handleError(error)
+      } finally {
+        this.isLoading = false
+      }
     },
 
-    // Search and filter
+    // UTILITY FUNCTIONS
+    personalizeMail(content, replacements = {}) {
+      let personalizedContent = content
+      
+      Object.keys(replacements).forEach(key => {
+        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
+        personalizedContent = personalizedContent.replace(regex, replacements[key] || '')
+      })
+      
+      // Default replacements
+      personalizedContent = personalizedContent
+        .replace(/\{\{date\}\}/g, new Date().toLocaleDateString())
+        .replace(/\{\{time\}\}/g, new Date().toLocaleTimeString())
+      
+      return personalizedContent
+    },
+
+    // SEARCH AND FILTER
     searchEmails(query, type = 'sent') {
       const emails = type === 'sent' ? this.sentEmails : this.drafts
+      if (!query || query.trim() === '') return emails
+      
       const lowerQuery = query.toLowerCase()
       
       return emails.filter(email => 
-        email.subject.toLowerCase().includes(lowerQuery) ||
-        email.body.toLowerCase().includes(lowerQuery) ||
-        email.to.toLowerCase().includes(lowerQuery)
+        (email.subject && email.subject.toLowerCase().includes(lowerQuery)) ||
+        (email.body && email.body.toLowerCase().includes(lowerQuery)) ||
+        (email.to && email.to.toLowerCase().includes(lowerQuery)) ||
+        (email.from && email.from.toLowerCase().includes(lowerQuery))
       )
     },
 
-    // Statistics
+    searchTemplates(query) {
+      if (!query || query.trim() === '') return this.templates
+      
+      const lowerQuery = query.toLowerCase()
+      
+      return this.templates.filter(template =>
+        (template.name && template.name.toLowerCase().includes(lowerQuery)) ||
+        (template.subject && template.subject.toLowerCase().includes(lowerQuery)) ||
+        (template.body && template.body.toLowerCase().includes(lowerQuery))
+      )
+    },
+
+    // STATISTICS
     getEmailStats() {
       const today = new Date()
       const thisWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -405,28 +419,33 @@ Project Team`,
 
       return {
         total: this.sentEmails.length,
-        thisWeek: this.sentEmails.filter(e => new Date(e.sentAt) >= thisWeek).length,
-        thisMonth: this.sentEmails.filter(e => new Date(e.sentAt) >= thisMonth).length,
-        delivered: this.sentEmails.filter(e => e.status === 'delivered').length,
-        pending: this.sentEmails.filter(e => e.status === 'sent').length,
+        thisWeek: this.sentEmails.filter(e => 
+          new Date(e.sent_at || e.created_at) >= thisWeek
+        ).length,
+        thisMonth: this.sentEmails.filter(e => 
+          new Date(e.sent_at || e.created_at) >= thisMonth
+        ).length,
+        delivered: this.sentEmails.filter(e => e.status === 'sent').length,
+        failed: this.sentEmails.filter(e => e.status === 'failed').length,
+        scheduled: this.sentEmails.filter(e => e.status === 'scheduled').length,
         drafts: this.drafts.length,
         templates: this.templates.length
       }
     },
 
-    // Export data
+    // EXPORT DATA
     exportEmails(type = 'sent', format = 'json') {
       const data = type === 'sent' ? this.sentEmails : this.drafts
       
       if (format === 'csv') {
         // Convert to CSV format
-        const headers = ['Date', 'To', 'Subject', 'Status', 'Client']
+        const headers = ['Date', 'From', 'To', 'Subject', 'Status']
         const rows = data.map(email => [
-          new Date(email.sentAt || email.createdAt).toLocaleDateString(),
-          email.to,
-          email.subject,
-          email.status || 'draft',
-          this.getClientById(email.clientId)?.name || 'Unknown'
+          new Date(email.sent_at || email.created_at).toLocaleDateString(),
+          email.from || '',
+          email.to || '',
+          email.subject || '',
+          email.status || 'draft'
         ])
         
         return [headers, ...rows]
@@ -435,27 +454,93 @@ Project Team`,
       return data
     },
 
-    // Clear data
-    clearAllDrafts() {
-      this.drafts = []
-    },
-
-    clearSentEmails() {
-      this.sentEmails = []
-    },
-
-    // Import/Export templates
-    importTemplates(templates) {
-      templates.forEach(template => {
-        this.saveTemplate({
-          ...template,
-          id: undefined // Let saveTemplate generate new ID
-        })
-      })
-    },
-
-    exportTemplates() {
+    exportTemplates(format = 'json') {
+      if (format === 'csv') {
+        const headers = ['Name', 'Subject', 'Placeholders', 'Created Date']
+        const rows = this.templates.map(template => [
+          template.name,
+          template.subject,
+          template.placeholders ? template.placeholders.join(', ') : '',
+          new Date(template.created_at).toLocaleDateString()
+        ])
+        
+        return [headers, ...rows]
+      }
+      
       return this.templates
+    },
+
+    // BULK OPERATIONS
+    async deleteBulkDrafts(draftIds) {
+      this.isLoading = true
+      const results = []
+      
+      try {
+        for (const draftId of draftIds) {
+          try {
+            await this.deleteDraft(draftId)
+            results.push({ id: draftId, success: true })
+          } catch (error) {
+            results.push({ id: draftId, success: false, error: error.message })
+          }
+        }
+        
+        return results
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    async deleteBulkTemplates(templateIds) {
+      this.isLoading = true
+      const results = []
+      
+      try {
+        for (const templateId of templateIds) {
+          try {
+            await this.deleteTemplate(templateId)
+            results.push({ id: templateId, success: true })
+          } catch (error) {
+            results.push({ id: templateId, success: false, error: error.message })
+          }
+        }
+        
+        return results
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // REFRESH DATA
+    async refreshTemplates() {
+      this.templatesPagination.current_page = 1
+      await this.fetchTemplates(1)
+    },
+
+    async refreshDrafts() {
+      await this.fetchDrafts()
+    },
+
+    async refreshSentEmails() {
+      await this.fetchSentEmails()
+    },
+
+    async refreshAll() {
+      await this.initializeData()
+    },
+
+    // CACHE MANAGEMENT
+    clearCache() {
+      this.templates = []
+      this.drafts = []
+      this.sentEmails = []
+      this.templatesPagination = {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0
+      }
+      this.clearErrors()
     }
   }
 })
