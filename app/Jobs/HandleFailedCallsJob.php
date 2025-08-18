@@ -37,7 +37,13 @@ class HandleFailedCallsJob
         Log::info('Found ' . $calls->count() . ' failed calls in the last 10 minutes.');
 
         foreach ($calls as $call) {
-            $phone = $this->normalizeNumber($call->clientDialedNumber);
+
+            // if client dialed number is empty check call->callerNumber
+            $phone = $call->clientDialedNumber
+                ? $this->normalizeNumber($call->clientDialedNumber)
+                : $this->normalizeNumber($call->callerNumber);
+
+        
             if (!$phone) {
                 Log::warning('Skipping call due to invalid phone number', ['call_id' => $call->id]);
                 continue;
