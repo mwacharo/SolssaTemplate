@@ -34,7 +34,7 @@ class HandleFailedCallsJob
             ->whereNull('whatsapp_sent_at')
             ->get();
 
-        Log::info('Found ' . $calls->count() . ' failed calls in the last 10 minutes.');
+        // Log::info('Found ' . $calls->count() . ' failed calls in the last 10 minutes.');
 
         foreach ($calls as $call) {
 
@@ -71,16 +71,16 @@ class HandleFailedCallsJob
             );
 
             // Schedule conditional SMS fallback (job will check WA status before sending)
-            Log::info('Dispatching SendSmsIfWhatsAppFailedJob with delay', [
-                'phone' => $phone, 'userId' => $userId, 'delay_minutes' => 5
-            ]);
+            // Log::info('Dispatching SendSmsIfWhatsAppFailedJob with delay', [
+            //     'phone' => $phone, 'userId' => $userId, 'delay_minutes' => 5
+            // ]);
             SendSmsIfWhatsAppFailedJob::dispatch(
                 phone: $phone,
                 userId: $userId
             )->delay(now()->addMinutes(5));
         }
 
-        Log::info('HandleFailedCallsJob finished processing.');
+        // Log::info('HandleFailedCallsJob finished processing.');
     }
 
     private function normalizeNumber($number)
