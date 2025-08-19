@@ -39,8 +39,8 @@ class IntelligentSupportService
      * @param array $attachments [ ['type'=>'image|link|file', 'url'=>...], ... ]
      */
     // public function handleCustomerMessage($customerId, string $text, array $attachments = []): array
-        public function handleCustomerMessage(string $text, array $recentOrders = []): array
-
+        public function handleCustomerMessage(string $text, array $recentOrders = [], array $attachments = []): array
+    
     {
         $orderDetails = '';
 
@@ -88,8 +88,12 @@ class IntelligentSupportService
             }
             $orderDetails .= "\n";
 
-            // getr customer from orderDeatisl 
+            // get customer from orderDetails 
             $customer = $recentOrders[0]['client'] ?? null; 
+            // If $customer is array, convert to User model
+            if (is_array($customer) && isset($customer['id'])) {
+                $customer = User::find($customer['id']);
+            }
 
         // 1) Fetch base context
         // $customer     = $this->findCustomer($customerId);
