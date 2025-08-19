@@ -207,8 +207,10 @@ class IntelligentSupportService
                 $reply = is_array($reply) ? json_encode($reply, JSON_UNESCAPED_UNICODE) : strval($reply);
             }
             $this->storeOutboundMessage($customer, $reply, $actions);
-
-            return compact('reply', 'actions');
+            return [
+                'reply' => $reply,
+                'actions' => $actions,
+            ];
         }
 
         Log::info('IntelligentSupportService: No recent orders found');
