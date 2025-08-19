@@ -203,8 +203,8 @@ class IntelligentSupportService
             ]);
 
             // Ensure $reply is a string to avoid array to string conversion error
-            if (is_array($reply)) {
-                $reply = json_encode($reply, JSON_UNESCAPED_UNICODE);
+            if (!is_string($reply)) {
+                $reply = is_array($reply) ? json_encode($reply, JSON_UNESCAPED_UNICODE) : strval($reply);
             }
             $this->storeOutboundMessage($customer, $reply, $actions);
 
