@@ -100,13 +100,15 @@ class IntelligentSupportService
             Log::info('IntelligentSupportService: Extracted customer from recentOrders', [
                 'customer' => $customer,
             ]);
-            if (is_array($customer) && isset($customer['id'])) {
-                $customer = User::find($customer['id']);
-                Log::info('IntelligentSupportService: Loaded User model for customer', [
-                    'customer_id' => $customer?->id,
-                    'customer_name' => $customer?->name,
-                ]);
-            }
+            // if (is_array($customer) && isset($customer['id'])) {
+            //     $customer = User::where('id', $customer['id'])
+            //         ->orWhere('phone', $customer['phone_number'] ?? null)
+            //         ->first();
+            //     Log::info('IntelligentSupportService: Loaded User model for customer', [
+            //         'customer_id' => $customer?->id,
+            //         'customer_name' => $customer?->name,
+            //     ]);
+            // }
 
             $company = Country::with('waybillSettings')->first();
             Log::info('IntelligentSupportService: Loaded company info', [
@@ -564,7 +566,14 @@ SYS;
     protected function getRecentMessageHistory($customer, int $limit)
     {
         if (!$customer) return [];
-        return Message::where('customer_id', $customer->id)
+        $phone = $customer->phone_number ?? $customer->phone ?? null;
+        return Message::where(function ($q) use ($customer, $phone) {
+                $q->where('customer_id', $customer->id);
+                if ($phone) {
+                    $q->orWhere('to', $phone)
+                      ->orWhere('from', $phone);
+                }
+            })
             ->latest('created_at')
             ->limit($limit)
             ->get(['type', 'direction', 'content', 'created_at'])
