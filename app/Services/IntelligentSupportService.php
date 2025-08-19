@@ -681,11 +681,20 @@ SYS;
         if (!$customer) return;
         try {
             Message::create([
-                'customer_id' => $customer->id,
-                'type'        => 'text',
-                'direction'   => 'outbound',
-                'content'     => $reply,
-                'meta'        => json_encode($actions),
+            'messageable_type'   => get_class($customer),
+            'messageable_id'     => $customer->id,
+            'channel'            => 'support',
+            'recipient_name'     => $customer->name ?? null,
+            'recipient_phone'    => $customer->phone ?? $customer->phone_number ?? null,
+            'content'            => $reply,
+            'status'             => 'sent',
+            'sent_at'            => now(),
+            'response_payload'   => json_encode($actions),
+            'created_at'         => now(),
+            'updated_at'         => now(),
+            'direction'          => 'outgoing',
+            'message_type'       => 'text',
+            'message_status'     => 'pending',
             ]);
         } catch (\Throwable $e) {
             Log::warning('Failed to store outbound message', ['e' => $e->getMessage()]);
