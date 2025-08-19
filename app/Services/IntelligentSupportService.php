@@ -588,7 +588,36 @@ SYS;
             })
             ->latest('created_at')
             ->limit($limit)
-            ->get(['type', 'direction', 'content', 'created_at'])
+            ->get([
+                'id',
+                'messageable_type',
+                'messageable_id',
+                'channel',
+                'recipient_name',
+                'recipient_phone',
+                'content',
+                'status',
+                'sent_at',
+                'response_payload',
+                'created_at',
+                'updated_at',
+                'deleted_at',
+                'from',
+                'to',
+                'body',
+                'message_type',
+                'media_url',
+                'media_mime_type',
+                'message_status',
+                'external_message_id',
+                'reply_to_message_id',
+                'error_message',
+                'timestamp',
+                'direction',
+                'delivered_at',
+                'read_at',
+                'failed_at'
+            ])
             ->toArray();
         Log::info('getRecentMessageHistory: Messages fetched', [
             'count' => count($messages),
