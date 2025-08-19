@@ -14,7 +14,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Country;
 use App\Models\Message;      // stored inbound/outbound messages
-use App\Models\PaymentLink;  // optional model to track links
+// use App\Models\PaymentLink;  // optional model to track links
 
 class IntelligentSupportService
 {
@@ -430,7 +430,7 @@ SYS;
         $lines = [];
         $lines[] = "Order **#{$orderNo}** total: **" . $this->formatMoney($totalPrice) . "**.";
         if ($policy['prepay_required']) {
-            $pay = $this->issuePaymentLink($order);
+            // $pay = $this->issuePaymentLink($order);
             $lines[] = "Because of previous uncollected orders, we'll need **prepayment** before dispatch. You can pay securely here: {$pay['url']}.";
             $actions = [
                 ['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url'], 'expires_at' => $pay['expires_at']]
@@ -441,27 +441,27 @@ SYS;
         return [implode(' ', $lines), []];
     }
 
-    protected function handleOrderStatus(array $entities, $recentOrders, array $policy): array
-    {
-        $order = $this->findOrderByEntityOrRecent($entities, $recentOrders);
-        if (!$order) {
-            return ["Please share your order number so I can check the latest status and confirm delivery details.", []];
-        }
+    // protected function handleOrderStatus(array $entities, $recentOrders, array $policy): array
+    // {
+    //     $order = $this->findOrderByEntityOrRecent($entities, $recentOrders);
+    //     if (!$order) {
+    //         return ["Please share your order number so I can check the latest status and confirm delivery details.", []];
+    //     }
 
-        $orderNo = $this->getOrderProp($order, 'order_no');
-        $status = $this->getOrderProp($order, 'status');
-        $deliveryDate = $this->getOrderProp($order, 'delivery_date');
-        $eta = $deliveryDate ? Carbon::parse($deliveryDate)->toFormattedDateString() : 'TBD';
+    //     $orderNo = $this->getOrderProp($order, 'order_no');
+    //     $status = $this->getOrderProp($order, 'status');
+    //     $deliveryDate = $this->getOrderProp($order, 'delivery_date');
+    //     $eta = $deliveryDate ? Carbon::parse($deliveryDate)->toFormattedDateString() : 'TBD';
 
-        $reply = "Order **#{$orderNo}** is currently **{$status}**. Estimated delivery: **{$eta}**.";
-        if ($policy['prepay_required'] && !in_array($status, ['Delivered', 'Cancelled'])) {
-            $pay = $this->issuePaymentLink($order);
-            $reply .= " Due to prior uncollected orders, **prepayment** is required. Pay here: {$pay['url']}.";
-            return [$reply, [['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url']]]];
-        }
-        $reply .= " Would you like me to confirm your delivery address now?";
-        return [$reply, []];
-    }
+    //     $reply = "Order **#{$orderNo}** is currently **{$status}**. Estimated delivery: **{$eta}**.";
+    //     if ($policy['prepay_required'] && !in_array($status, ['Delivered', 'Cancelled'])) {
+    //         $pay = $this->issuePaymentLink($order);
+    //         $reply .= " Due to prior uncollected orders, **prepayment** is required. Pay here: {$pay['url']}.";
+    //         return [$reply, [['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url']]]];
+    //     }
+    //     $reply .= " Would you like me to confirm your delivery address now?";
+    //     return [$reply, []];
+    // }
 
     protected function handlePreviousCall(array $history, $recentOrders, array $policy): array
     {
@@ -562,16 +562,16 @@ SYS;
         return ["Attachment received. How would you like me to proceed?", []];
     }
 
-    protected function handlePaymentRequired($customer, array $policy, $recentOrders): array
-    {
-        $order = collect($recentOrders)->first();
-        if (!$order) {
-            return ["You have several uncollected orders. Before we dispatch new items, we require **prepayment**. Would you like me to create a payment link now?", []];
-        }
-        $pay = $this->issuePaymentLink($order);
-        $reply = "Due to previous uncollected orders (**{$policy['uncollected_count']}**), **prepayment** is required. Pay for order **#{$this->getOrderProp($order, 'order_no')}** here: {$pay['url']}.";
-        return [$reply, [['type' => 'payment_link', 'order_no' => $this->getOrderProp($order, 'order_no'), 'url' => $pay['url']]]];
-    }
+    // protected function handlePaymentRequired($customer, array $policy, $recentOrders): array
+    // {
+    //     $order = collect($recentOrders)->first();
+    //     if (!$order) {
+    //         return ["You have several uncollected orders. Before we dispatch new items, we require **prepayment**. Would you like me to create a payment link now?", []];
+    //     }
+    //     $pay = $this->issuePaymentLink($order);
+    //     $reply = "Due to previous uncollected orders (**{$policy['uncollected_count']}**), **prepayment** is required. Pay for order **#{$this->getOrderProp($order, 'order_no')}** here: {$pay['url']}.";
+    //     return [$reply, [['type' => 'payment_link', 'order_no' => $this->getOrderProp($order, 'order_no'), 'url' => $pay['url']]]];
+    // }
 
     protected function handleBusySmallTalk($customer): array
     {
@@ -736,29 +736,29 @@ SYS;
         return $q->limit(self::MAX_PRODUCTS_RETURNED)->get();
     }
 
-    protected function issuePaymentLink($order): array
-    {
-        // TODO: integrate real PG (M-Pesa STK, Flutterwave, Stripe, PayPal, etc.)
-        $orderId = is_array($order) ? ($order['id'] ?? null) : ($order->id ?? null);
-        $totalPrice = $this->getOrderProp($order, 'total_price');
+    // protected function issuePaymentLink($order): array
+    // {
+    //     // TODO: integrate real PG (M-Pesa STK, Flutterwave, Stripe, PayPal, etc.)
+    //     $orderId = is_array($order) ? ($order['id'] ?? null) : ($order->id ?? null);
+    //     $totalPrice = $this->getOrderProp($order, 'total_price');
         
-        $fakeId = 'PAY' . now()->format('YmdHis') . $orderId;
-        $url    = url("/pay/{$fakeId}");
-        $expiresAt = now()->addHours(12)->toDateTimeString();
+    //     $fakeId = 'PAY' . now()->format('YmdHis') . $orderId;
+    //     $url    = url("/pay/{$fakeId}");
+    //     $expiresAt = now()->addHours(12)->toDateTimeString();
 
-        if ($orderId) {
-            PaymentLink::create([
-                'order_id'   => $orderId,
-                'code'       => $fakeId,
-                'url'        => $url,
-                'amount'     => $totalPrice,
-                'expires_at' => $expiresAt,
-                'status'     => 'pending',
-            ]);
-        }
+    //     if ($orderId) {
+    //         PaymentLink::create([
+    //             'order_id'   => $orderId,
+    //             'code'       => $fakeId,
+    //             'url'        => $url,
+    //             'amount'     => $totalPrice,
+    //             'expires_at' => $expiresAt,
+    //             'status'     => 'pending',
+    //         ]);
+    //     }
 
-        return ['id' => $fakeId, 'url' => $url, 'expires_at' => $expiresAt];
-    }
+    //     return ['id' => $fakeId, 'url' => $url, 'expires_at' => $expiresAt];
+    // }
 
     protected function createCallbackTask($customer, ?string $when): array
     {
