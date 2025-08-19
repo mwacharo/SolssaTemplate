@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Client;
 use Illuminate\Support\Facades\Log;
 use App\Services\AIResponderService;
+use App\Services\IntelligentSupportService;
 use App\Services\WhatsAppService;
 
 class WhatsAppWebhookController extends Controller
@@ -92,9 +93,12 @@ class WhatsAppWebhookController extends Controller
         }
 
         try {
-            $ai = new AIResponderService();
-            Log::info("🤖 Interpreting customer query: {$text}");
-            $reply = $ai->interpretCustomerQuery($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
+            // $ai = new AIResponderService();
+            // Log::info("🤖 Interpreting customer query: {$text}");
+            // $reply = $ai->interpretCustomerQuery($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
+            $ai =  new IntelligentSupportService();
+            $reply = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
+
         } catch (\Throwable $e) {
             Log::error("❌ AIResponderService error: " . $e->getMessage());
             $reply = null;

@@ -8,9 +8,6 @@ use Illuminate\Support\Facades\Log;
 class AIResponderService
 {
 
-
- 
-
     /**
      * Interpret a customer query using OpenAI's API.
      *
@@ -109,11 +106,6 @@ class AIResponderService
             return null;
         }
     }
-
-
-
-
-
 
 
 

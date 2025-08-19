@@ -27,8 +27,11 @@ class EmailController extends Controller
             'to' => 'nullable|email',
             'subject' => 'nullable|string|max:255',
             'body' => 'nullable|string',
-            'client_id' => 'nullable|exists:clients,id'
+            // 'client_id' => 'nullable|exists:clients,id'
         ]);
+
+        $user = User::findOrFail($request->user()->id);
+
 
         $draft = Email::create($validated);
 
@@ -65,11 +68,12 @@ class EmailController extends Controller
             config([
                 'mail.mailers.dynamic' => [
                     'transport'  => 'smtp',
-                    'host'       => $credentials-> 	smtp_host,
-                    'port'       => $credentials->port,
+                    'host'       => $credentials->smtp_host,
+                    'port'       => $credentials->smtp_port,     // not ->port
                     'encryption' => $credentials->encryption,
-                    'username'   => $credentials->username,
+                    'username'   => $credentials->user_name,     // not ->username
                     'password'   => $credentials->password,
+
                 ],
                 'mail.from.address' => $credentials->from_address,
                 'mail.from.name'    => $credentials->from_name,
@@ -139,7 +143,9 @@ class EmailController extends Controller
             'mail.mailers.dynamic' => [
                 'transport'  => 'smtp',
                 'host'       => $credentials->host,
-                'port'       => $credentials->port,
+                // 'port'       => $credentials->port,
+                'username'   => $credentials->user_name,     
+                'port'       => $credentials->smtp_port,
                 'encryption' => $credentials->encryption,
                 'username'   => $credentials->username,
                 'password'   => $credentials->password,

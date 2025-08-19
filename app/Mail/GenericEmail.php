@@ -31,7 +31,7 @@ class GenericEmail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Generic Email',
+            subject: $this->subjectText,
         );
     }
 
