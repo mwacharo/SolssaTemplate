@@ -580,7 +580,10 @@ SYS;
             'limit' => $limit,
         ]);
         $messages = Message::where(function ($q) use ($customer, $phone) {
-                $q->where('customer_id', $customer->id);
+                $q->where(function ($sub) use ($customer) {
+                    $sub->where('messageable_id', $customer->id)
+                        ->where('messageable_type', get_class($customer));
+                });
                 if ($phone) {
                     $q->orWhere('to', $phone)
                       ->orWhere('from', $phone);
