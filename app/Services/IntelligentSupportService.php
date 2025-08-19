@@ -569,6 +569,10 @@ SYS;
             Log::info('getRecentMessageHistory: No customer provided');
             return [];
         }
+        // Convert array to object if necessary
+        if (is_array($customer)) {
+            $customer = (object) $customer;
+        }
         $phone = $customer->phone_number ?? $customer->phone ?? null;
         Log::info('getRecentMessageHistory: Fetching messages', [
             'customer_id' => $customer->id,
