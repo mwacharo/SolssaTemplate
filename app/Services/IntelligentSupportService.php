@@ -397,8 +397,8 @@ SYS;
         }
 
         // Safely get order properties
-        $orderNo    = is_array($order) ? ($order['order_no'] ?? null) : ($order?->order_no ?? null);
-        $totalPrice = is_array($order) ? ($order['total_price'] ?? null) : ($order?->total_price ?? null);
+        $orderNo    = $this->getOrderProp($order, 'order_no');
+        $totalPrice = $this->getOrderProp($order, 'total_price');
 
         $lines = [];
         $lines[] = "Order **#{$orderNo}** total: **" . $this->formatMoney($totalPrice) . "**.";
@@ -421,12 +421,16 @@ SYS;
             return ["Please share your order number so I can check the latest status and confirm delivery details.", []];
         }
 
-        $eta = $order->delivery_date ? Carbon::parse($order->delivery_date)->toFormattedDateString() : 'TBD';
-        $reply = "Order **#{$order->order_no}** is currently **{$order->status}**. Estimated delivery: **{$eta}**.";
-        if ($policy['prepay_required'] && !in_array($order->status, ['Delivered', 'Cancelled'])) {
+        $orderNo = $this->getOrderProp($order, 'order_no');
+        $status = $this->getOrderProp($order, 'status');
+        $deliveryDate = $this->getOrderProp($order, 'delivery_date');
+        $eta = $deliveryDate ? Carbon::parse($deliveryDate)->toFormattedDateString() : 'TBD';
+
+        $reply = "Order **#{$orderNo}** is currently **{$status}**. Estimated delivery: **{$eta}**.";
+        if ($policy['prepay_required'] && !in_array($status, ['Delivered', 'Cancelled'])) {
             $pay = $this->issuePaymentLink($order);
             $reply .= " Due to prior uncollected orders, **prepayment** is required. Pay here: {$pay['url']}.";
-            return [$reply, [['type' => 'payment_link', 'order_no' => $order->order_no, 'url' => $pay['url']]]];
+            return [$reply, [['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url']]]];
         }
         $reply .= " Would you like me to confirm your delivery address now?";
         return [$reply, []];
@@ -446,7 +450,7 @@ SYS;
         }
 
         if ($order) {
-            $reply .= " Regarding order **#{$order->order_no}** (status: **{$order->status}**). Can I confirm your delivery address to proceed?";
+            $reply .= " Regarding order **#{$this->getOrderProp($order, 'order_no')}** (status: **{$this->getOrderProp($order, 'status')}**). Can I confirm your delivery address to proceed?";
         } else {
             $reply .= " Could you share the order number so I can confirm details and the delivery address?";
         }
@@ -461,14 +465,14 @@ SYS;
             return ["Please share the order number to confirm the delivery address.", []];
         }
 
-        $currentAddress = $order->delivery_address ?? $customer->address ?? null;
+        $currentAddress = $this->getOrderProp($order, 'delivery_address') ?? $customer->address ?? null;
         if ($currentAddress) {
             $reply = "I have the address as: **{$currentAddress}**. Is this correct? Reply **YES** to confirm or share the new address.";
         } else {
             $reply = "I don’t have a delivery address on file. Please share the exact location (estate/road/building/floor/landmark).";
         }
 
-        return [$reply, [['type' => 'await_confirmation', 'order_no' => $order->order_no]]];
+        return [$reply, [['type' => 'await_confirmation', 'order_no' => $this->getOrderProp($order, 'order_no')]]];
     }
 
     protected function handleCallbackRequest($customer, array $entities): array
@@ -504,7 +508,7 @@ SYS;
         }
         $change = $entities['change_request'] ?? 'your requested update';
         // TODO: validate if order is still editable per your business rules
-        return ["Noted for order **#{$order->order_no}**: {$change}. I’ll update it and confirm shortly. If there’s a price change, I’ll share the new total.", [['type' => 'order_change_request', 'order_no' => $order->order_no, 'change' => $change]]];
+        return ["Noted for order **#{$this->getOrderProp($order, 'order_no')}**: {$change}. I’ll update it and confirm shortly. If there’s a price change, I’ll share the new total.", [['type' => 'order_change_request', 'order_no' => $this->getOrderProp($order, 'order_no'), 'change' => $change]]];
     }
 
     protected function handleMediaOrLink(array $attachments, array $entities, $recentOrders): array
@@ -532,8 +536,8 @@ SYS;
             return ["You have several uncollected orders. Before we dispatch new items, we require **prepayment**. Would you like me to create a payment link now?", []];
         }
         $pay = $this->issuePaymentLink($order);
-        $reply = "Due to previous uncollected orders (**{$policy['uncollected_count']}**), **prepayment** is required. Pay for order **#{$order->order_no}** here: {$pay['url']}.";
-        return [$reply, [['type' => 'payment_link', 'order_no' => $order->order_no, 'url' => $pay['url']]]];
+        $reply = "Due to previous uncollected orders (**{$policy['uncollected_count']}**), **prepayment** is required. Pay for order **#{$this->getOrderProp($order, 'order_no')}** here: {$pay['url']}.";
+        return [$reply, [['type' => 'payment_link', 'order_no' => $this->getOrderProp($order, 'order_no'), 'url' => $pay['url']]]];
     }
 
     protected function handleBusySmallTalk($customer): array
@@ -550,6 +554,11 @@ SYS;
     }
 
     // ======================= Helpers =======================
+
+    protected function getOrderProp($order, $key)
+    {
+        return is_array($order) ? ($order[$key] ?? null) : ($order?->$key ?? null);
+    }
 
     protected function findCustomer($customerId)
     {
