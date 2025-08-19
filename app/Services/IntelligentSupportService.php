@@ -202,6 +202,10 @@ class IntelligentSupportService
                 'actions' => $actions,
             ]);
 
+            // Ensure $reply is a string to avoid array to string conversion error
+            if (is_array($reply)) {
+                $reply = json_encode($reply, JSON_UNESCAPED_UNICODE);
+            }
             $this->storeOutboundMessage($customer, $reply, $actions);
 
             return compact('reply', 'actions');
