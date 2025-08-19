@@ -441,27 +441,27 @@ SYS;
         return [implode(' ', $lines), []];
     }
 
-    // protected function handleOrderStatus(array $entities, $recentOrders, array $policy): array
-    // {
-    //     $order = $this->findOrderByEntityOrRecent($entities, $recentOrders);
-    //     if (!$order) {
-    //         return ["Please share your order number so I can check the latest status and confirm delivery details.", []];
-    //     }
+    protected function handleOrderStatus(array $entities, $recentOrders, array $policy): array
+    {
+        $order = $this->findOrderByEntityOrRecent($entities, $recentOrders);
+        if (!$order) {
+            return ["Please share your order number so I can check the latest status and confirm delivery details.", []];
+        }
 
-    //     $orderNo = $this->getOrderProp($order, 'order_no');
-    //     $status = $this->getOrderProp($order, 'status');
-    //     $deliveryDate = $this->getOrderProp($order, 'delivery_date');
-    //     $eta = $deliveryDate ? Carbon::parse($deliveryDate)->toFormattedDateString() : 'TBD';
+        $orderNo = $this->getOrderProp($order, 'order_no');
+        $status = $this->getOrderProp($order, 'status');
+        $deliveryDate = $this->getOrderProp($order, 'delivery_date');
+        $eta = $deliveryDate ? Carbon::parse($deliveryDate)->toFormattedDateString() : 'TBD';
 
-    //     $reply = "Order **#{$orderNo}** is currently **{$status}**. Estimated delivery: **{$eta}**.";
-    //     if ($policy['prepay_required'] && !in_array($status, ['Delivered', 'Cancelled'])) {
-    //         $pay = $this->issuePaymentLink($order);
-    //         $reply .= " Due to prior uncollected orders, **prepayment** is required. Pay here: {$pay['url']}.";
-    //         return [$reply, [['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url']]]];
-    //     }
-    //     $reply .= " Would you like me to confirm your delivery address now?";
-    //     return [$reply, []];
-    // }
+        $reply = "Order **#{$orderNo}** is currently **{$status}**. Estimated delivery: **{$eta}**.";
+        if ($policy['prepay_required'] && !in_array($status, ['Delivered', 'Cancelled'])) {
+            // $pay = $this->issuePaymentLink($order);
+            $reply .= " Due to prior uncollected orders, **prepayment** is required. Pay here: {$pay['url']}.";
+            return [$reply, [['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url']]]];
+        }
+        $reply .= " Would you like me to confirm your delivery address now?";
+        return [$reply, []];
+    }
 
     protected function handlePreviousCall(array $history, $recentOrders, array $policy): array
     {
