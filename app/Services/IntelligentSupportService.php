@@ -565,9 +565,17 @@ SYS;
 
     protected function getRecentMessageHistory($customer, int $limit)
     {
-        if (!$customer) return [];
+        if (!$customer) {
+            Log::info('getRecentMessageHistory: No customer provided');
+            return [];
+        }
         $phone = $customer->phone_number ?? $customer->phone ?? null;
-        return Message::where(function ($q) use ($customer, $phone) {
+        Log::info('getRecentMessageHistory: Fetching messages', [
+            'customer_id' => $customer->id,
+            'phone' => $phone,
+            'limit' => $limit,
+        ]);
+        $messages = Message::where(function ($q) use ($customer, $phone) {
                 $q->where('customer_id', $customer->id);
                 if ($phone) {
                     $q->orWhere('to', $phone)
@@ -578,6 +586,11 @@ SYS;
             ->limit($limit)
             ->get(['type', 'direction', 'content', 'created_at'])
             ->toArray();
+        Log::info('getRecentMessageHistory: Messages fetched', [
+            'count' => count($messages),
+            'sample' => $messages[0] ?? null,
+        ]);
+        return $messages;
     }
 
     protected function findOrderByEntityOrRecent(array $entities, $recentOrders)
