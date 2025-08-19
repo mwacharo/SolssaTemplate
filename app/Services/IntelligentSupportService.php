@@ -385,7 +385,9 @@ SYS;
         }
 
         // Example: count past "uncollected" orders
-        $uncollectedCount = Order::where('customer_id', $customerId)
+        $uncollectedCount = Order::whereHas('client', function ($q) use ($customerId) {
+            $q->where('id', $customerId);
+            })
             ->whereIn('status', ['Uncollected', 'Returned', 'Delivery Failed'])
             ->count();
 
