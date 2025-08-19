@@ -20,14 +20,14 @@ class MarkAgentsOffline extends Command
 
     public function handle()
     {
-        Log::info('MarkAgentsOffline job started.');
+        // Log::info('MarkAgentsOffline job started.');
         // fetch all users 
 
         // who are ready, busy or have no status set and have not been seen in the last minute
         // and update their status to offline
 
         $allusers = User::all();
-        Log::info('Total users fetched: ' . $allusers->count());
+        // Log::info('Total users fetched: ' . $allusers->count());
         // Log::info('Users:', $allusers->toArray());
 
         // $inactiveAgents = User::whereIn('status', ['ready', 'busy', ''])
@@ -51,6 +51,6 @@ class MarkAgentsOffline extends Command
             broadcast(new AgentStatusUpdated($agent))->toOthers();
         }
 
-        Log::info('MarkAgentsOffline job finished. Inactive agents processed: ' . $inactiveAgents->count());
+        // Log::info('MarkAgentsOffline job finished. Inactive agents processed: ' . $inactiveAgents->count());
     }
 }
