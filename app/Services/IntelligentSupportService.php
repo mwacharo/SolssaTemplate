@@ -569,28 +569,54 @@ SYS;
             Log::info('getRecentMessageHistory: No customer provided');
             return [];
         }
+
         // Convert array to object if necessary
         if (is_array($customer)) {
             $customer = (object) $customer;
         }
-        // Accommodate WhatsApp format like 254751458911@c.us
-        $phone = $customer->phone_number ?? $customer->phone ?? null;
-        if ($phone && preg_match('/^\d{12}@c\.us$/', $phone)) {
-            $phone = substr($phone, 0, 12);
+
+        // Extract phone numbers in all possible formats
+        $phoneRaw = $customer->phone_number ?? $customer->phone ?? null;
+        $phoneFormats = [];
+
+        if ($phoneRaw) {
+            // E.g. 254751458911
+            $phoneFormats[] = $phoneRaw;
+            // E.g. 254751458911@c.us
+            if (!str_ends_with($phoneRaw, '@c.us')) {
+                $phoneFormats[] = $phoneRaw . '@c.us';
+            }
+            // E.g. +254751458911
+            if (!str_starts_with($phoneRaw, '+')) {
+                $phoneFormats[] = '+' . $phoneRaw;
+            }
+            // Remove @c.us if present for plain number
+            if (str_ends_with($phoneRaw, '@c.us')) {
+                $plain = substr($phoneRaw, 0, -5);
+                $phoneFormats[] = $plain;
+                $phoneFormats[] = '+' . $plain;
+            }
         }
+
+        // Remove duplicates
+        $phoneFormats = array_unique($phoneFormats);
+
         Log::info('getRecentMessageHistory: Fetching messages', [
-            'customer_id' => $customer->id,
-            'phone' => $phone,
+            'customer_id' => $customer->id ?? null,
+            'phone_formats' => $phoneFormats,
             'limit' => $limit,
         ]);
-        $messages = Message::where(function ($q) use ($customer, $phone) {
+
+        $messages = Message::where(function ($q) use ($customer, $phoneFormats) {
                 $q->where(function ($sub) use ($customer) {
-                    $sub->where('messageable_id', $customer->id)
+                    $sub->where('messageable_id', $customer->id ?? null)
                         ->where('messageable_type', get_class($customer));
                 });
-                if ($phone) {
-                    $q->orWhere('to', $phone)
-                      ->orWhere('from', $phone);
+                if (!empty($phoneFormats)) {
+                    foreach ($phoneFormats as $phone) {
+                        $q->orWhere('to', $phone)
+                          ->orWhere('from', $phone);
+                    }
                 }
             })
             ->latest('created_at')
@@ -626,6 +652,7 @@ SYS;
                 'failed_at'
             ])
             ->toArray();
+
         Log::info('getRecentMessageHistory: Messages fetched', [
             'count' => count($messages),
             'sample' => $messages[0] ?? null,
