@@ -396,13 +396,17 @@ SYS;
             return ["Could you share the order number so I can confirm the exact amount?", []];
         }
 
+        // Safely get order properties
+        $orderNo    = is_array($order) ? ($order['order_no'] ?? null) : ($order?->order_no ?? null);
+        $totalPrice = is_array($order) ? ($order['total_price'] ?? null) : ($order?->total_price ?? null);
+
         $lines = [];
-        $lines[] = "Order **#{$order->order_no}** total: **" . $this->formatMoney($order->total_price) . "**.";
+        $lines[] = "Order **#{$orderNo}** total: **" . $this->formatMoney($totalPrice) . "**.";
         if ($policy['prepay_required']) {
             $pay = $this->issuePaymentLink($order);
             $lines[] = "Because of previous uncollected orders, we’ll need **prepayment** before dispatch. You can pay securely here: {$pay['url']}.";
             $actions = [
-                ['type' => 'payment_link', 'order_no' => $order->order_no, 'url' => $pay['url'], 'expires_at' => $pay['expires_at']]
+                ['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url'], 'expires_at' => $pay['expires_at']]
             ];
             return [implode(' ', $lines), $actions];
         }
