@@ -55,30 +55,30 @@ class IntelligentSupportService
             $orderDetails .= "Here are the customer's recent orders:\n";
             foreach ($recentOrders as $order) {
                 Log::debug('Order details', ['order' => $order]);
-                $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
+                $orderDetails .= "- Order #{$this->getOrderProp($order, 'order_no')}: {$this->getOrderProp($order, 'status')} (Delivery: {$this->getOrderProp($order, 'delivery_date')})\n";
                 // Vendor
-                if (!empty($order['vendor']['name'])) {
-                    $orderDetails .= "  Vendor: {$order['vendor']['name']}\n";
+                if (!empty($this->getOrderProp($order, 'vendor')['name'])) {
+                    $orderDetails .= "  Vendor: {$this->getOrderProp($order, 'vendor')['name']}\n";
                 } else {
                     $orderDetails .= "  Vendor: N/A\n";
                 }
                 // Rider
-                if (!empty($order['rider']['name'])) {
-                    $orderDetails .= "  Rider: {$order['rider']['name']}\n";
+                if (!empty($this->getOrderProp($order, 'rider')['name'])) {
+                    $orderDetails .= "  Rider: {$this->getOrderProp($order, 'rider')['name']}\n";
                 } else {
                     $orderDetails .= "  Rider: N/A\n";
                 }
                 // Agent
-                if (!empty($order['agent']['name'])) {
-                    $orderDetails .= "  Agent: {$order['agent']['name']}\n";
+                if (!empty($this->getOrderProp($order, 'agent')['name'])) {
+                    $orderDetails .= "  Agent: {$this->getOrderProp($order, 'agent')['name']}\n";
                 } else {
                     $orderDetails .= "  Agent: N/A\n";
                 }
                 // Client
-                if (!empty($order['client']['name'])) {
-                    $orderDetails .= "  Client: {$order['client']['name']}";
-                    if (!empty($order['client']['phone_number'])) {
-                        $orderDetails .= " (Phone: {$order['client']['phone_number']})";
+                if (!empty($this->getOrderProp($order, 'client')['name'])) {
+                    $orderDetails .= "  Client: {$this->getOrderProp($order, 'client')['name']}";
+                    if (!empty($this->getOrderProp($order, 'client')['phone_number'])) {
+                        $orderDetails .= " (Phone: {$this->getOrderProp($order, 'client')['phone_number']})";
                     }
                     $orderDetails .= "\n";
                 } else {
@@ -86,9 +86,12 @@ class IntelligentSupportService
                 }
                 // Items
                 $orderDetails .= "  Items:\n";
-                if (!empty($order['order_items'])) {
-                    foreach ($order['order_items'] as $item) {
-                        $orderDetails .= "    - " . (isset($item['name']) ? $item['name'] : 'Item') . " x{$item['quantity']}\n";
+                $orderItems = $this->getOrderProp($order, 'order_items');
+                if (!empty($orderItems)) {
+                    foreach ($orderItems as $item) {
+                        $itemName = is_array($item) ? ($item['name'] ?? 'Item') : ($item->name ?? 'Item');
+                        $itemQty = is_array($item) ? ($item['quantity'] ?? 1) : ($item->quantity ?? 1);
+                        $orderDetails .= "    - {$itemName} x{$itemQty}\n";
                     }
                 } else {
                     $orderDetails .= "    - No items found\n";
@@ -96,19 +99,10 @@ class IntelligentSupportService
             }
             $orderDetails .= "\n";
 
-            $customer = $recentOrders[0]['client'] ?? null; 
+            $customer = $this->getOrderProp($recentOrders[0], 'client') ?? null; 
             Log::info('IntelligentSupportService: Extracted customer from recentOrders', [
                 'customer' => $customer,
             ]);
-            // if (is_array($customer) && isset($customer['id'])) {
-            //     $customer = User::where('id', $customer['id'])
-            //         ->orWhere('phone', $customer['phone_number'] ?? null)
-            //         ->first();
-            //     Log::info('IntelligentSupportService: Loaded User model for customer', [
-            //         'customer_id' => $customer?->id,
-            //         'customer_name' => $customer?->name,
-            //     ]);
-            // }
 
             $company = Country::with('waybillSettings')->first();
             Log::info('IntelligentSupportService: Loaded company info', [
@@ -237,10 +231,10 @@ class IntelligentSupportService
 
         $ordersBlock = collect($recentOrders)->take(3)->map(function ($o) {
             return [
-                'order_no'      => $o->order_no,
-                'status'        => $o->status,
-                'delivery_date' => optional($o->delivery_date)->toDateString(),
-                'total_price'   => $o->total_price,
+                'order_no'      => $this->getOrderProp($o, 'order_no'),
+                'status'        => $this->getOrderProp($o, 'status'),
+                'delivery_date' => $this->getOrderProp($o, 'delivery_date') ? Carbon::parse($this->getOrderProp($o, 'delivery_date'))->toDateString() : null,
+                'total_price'   => $this->getOrderProp($o, 'total_price'),
             ];
         })->values()->all();
 
@@ -271,16 +265,27 @@ ENTITIES can include:
 Return JSON only.
 SYS;
 
+        $customerData = null;
+        if (is_array($customer)) {
+            $customerData = [
+                'id'    => $customer['id'] ?? null,
+                'name'  => $customer['name'] ?? null,
+                'phone' => $customer['phone'] ?? $customer['phone_number'] ?? null,
+            ];
+        } elseif (is_object($customer)) {
+            $customerData = [
+                'id'    => $customer->id ?? null,
+                'name'  => $customer->name ?? null,
+                'phone' => $customer->phone ?? $customer->phone_number ?? null,
+            ];
+        }
+
         $usr = [
             'message' => $text,
             'attachments' => $attachments,
             'company' => $companyBlock,
             'recent_orders_preview' => $ordersBlock,
-            'customer' => [
-                'id'    => $customer?->id,
-                'name'  => $customer?->name,
-                'phone' => $customer?->phone ?? null,
-            ],
+            'customer' => $customerData,
         ];
 
         try {
@@ -365,8 +370,22 @@ SYS;
     // ======================= Policy evaluation =======================
     protected function evaluatePolicy($customer): array
     {
+        $customerId = null;
+        if (is_array($customer)) {
+            $customerId = $customer['id'] ?? null;
+        } elseif (is_object($customer)) {
+            $customerId = $customer->id ?? null;
+        }
+
+        if (!$customerId) {
+            return [
+                'uncollected_count' => 0,
+                'prepay_required'   => false,
+            ];
+        }
+
         // Example: count past "uncollected" orders
-        $uncollectedCount = Order::where('customer_id', $customer->id ?? null)
+        $uncollectedCount = Order::where('customer_id', $customerId)
             ->whereIn('status', ['Uncollected', 'Returned', 'Delivery Failed'])
             ->count();
 
@@ -383,7 +402,7 @@ SYS;
     protected function handleCountryLocation(?Country $company): array
     {
         if (!$company) {
-            return ["I'm missing our company profile at the moment. Could you share the area you’re in so I can guide you to the nearest branch?", []];
+            return ["I'm missing our company profile at the moment. Could you share the area you're in so I can guide you to the nearest branch?", []];
         }
         $reply = "Our company is **{$company->name}**. Main office: **{$company->location}**. You can reach us at **{$company->phone}** or **{$company->email}**. How can I help with your delivery today?";
         return [$reply, []];
@@ -404,7 +423,7 @@ SYS;
         $lines[] = "Order **#{$orderNo}** total: **" . $this->formatMoney($totalPrice) . "**.";
         if ($policy['prepay_required']) {
             $pay = $this->issuePaymentLink($order);
-            $lines[] = "Because of previous uncollected orders, we’ll need **prepayment** before dispatch. You can pay securely here: {$pay['url']}.";
+            $lines[] = "Because of previous uncollected orders, we'll need **prepayment** before dispatch. You can pay securely here: {$pay['url']}.";
             $actions = [
                 ['type' => 'payment_link', 'order_no' => $orderNo, 'url' => $pay['url'], 'expires_at' => $pay['expires_at']]
             ];
@@ -465,11 +484,17 @@ SYS;
             return ["Please share the order number to confirm the delivery address.", []];
         }
 
-        $currentAddress = $this->getOrderProp($order, 'delivery_address') ?? $customer->address ?? null;
+        $currentAddress = $this->getOrderProp($order, 'delivery_address');
+        if (!$currentAddress && $customer) {
+            $currentAddress = is_array($customer) ? 
+                ($customer['address'] ?? null) : 
+                ($customer->address ?? null);
+        }
+
         if ($currentAddress) {
             $reply = "I have the address as: **{$currentAddress}**. Is this correct? Reply **YES** to confirm or share the new address.";
         } else {
-            $reply = "I don’t have a delivery address on file. Please share the exact location (estate/road/building/floor/landmark).";
+            $reply = "I don't have a delivery address on file. Please share the exact location (estate/road/building/floor/landmark).";
         }
 
         return [$reply, [['type' => 'await_confirmation', 'order_no' => $this->getOrderProp($order, 'order_no')]]];
@@ -480,8 +505,8 @@ SYS;
         $time = $entities['scheduled_time'] ?? null;
         $task = $this->createCallbackTask($customer, $time);
         $reply = $time
-            ? "Got it. I’ve scheduled a callback **{$time}**. You’ll receive a call from our team."
-            : "Sure — I’ve requested a callback. Our team will reach out shortly. If you prefer a specific time, let me know.";
+            ? "Got it. I've scheduled a callback **{$time}**. You'll receive a call from our team."
+            : "Sure — I've requested a callback. Our team will reach out shortly. If you prefer a specific time, let me know.";
         return [$reply, [['type' => 'schedule_callback', 'task_id' => $task['id'], 'scheduled_time' => $task['scheduled_time']]]];
     }
 
@@ -490,10 +515,10 @@ SYS;
         $nameQ = $entities['product_name'] ?? null;
         $products = $this->searchProducts($nameQ);
         if ($products->isEmpty()) {
-            return ["I couldn’t find that product. Could you share the exact product name or a photo/link?", []];
+            return ["I couldn't find that product. Could you share the exact product name or a photo/link?", []];
         }
 
-        $lines = ["Here’s what I found:"];
+        $lines = ["Here's what I found:"];
         foreach ($products as $p) {
             $lines[] = "• **{$p->name}** — {$this->truncate($p->description)} Source: " . ($p->source ?? 'N/A') . ". Usage: " . ($p->usage ?? 'N/A') . ". Price: " . $this->formatMoney($p->price) . ".";
         }
@@ -504,11 +529,11 @@ SYS;
     {
         $order = $this->findOrderByEntityOrRecent($entities, $recentOrders);
         if (!$order) {
-            return ["Please share the order number and the exact change you’d like (add/remove item, change quantity/address).", []];
+            return ["Please share the order number and the exact change you'd like (add/remove item, change quantity/address).", []];
         }
         $change = $entities['change_request'] ?? 'your requested update';
         // TODO: validate if order is still editable per your business rules
-        return ["Noted for order **#{$this->getOrderProp($order, 'order_no')}**: {$change}. I’ll update it and confirm shortly. If there’s a price change, I’ll share the new total.", [['type' => 'order_change_request', 'order_no' => $this->getOrderProp($order, 'order_no'), 'change' => $change]]];
+        return ["Noted for order **#{$this->getOrderProp($order, 'order_no')}**: {$change}. I'll update it and confirm shortly. If there's a price change, I'll share the new total.", [['type' => 'order_change_request', 'order_no' => $this->getOrderProp($order, 'order_no'), 'change' => $change]]];
     }
 
     protected function handleMediaOrLink(array $attachments, array $entities, $recentOrders): array
@@ -542,14 +567,14 @@ SYS;
 
     protected function handleBusySmallTalk($customer): array
     {
-        $reply = "No worries — I’ll hold. When you’re ready, just send **order number** or say **deliver** and I’ll handle it. If you prefer, I can **schedule a callback** at your best time.";
+        $reply = "No worries — I'll hold. When you're ready, just send **order number** or say **deliver** and I'll handle it. If you prefer, I can **schedule a callback** at your best time.";
         return [$reply, []];
     }
 
     protected function handleFallback($customer, $company, $recentOrders): array
     {
         $intro = $company ? "You're chatting with **{$company->name}** support." : "You're chatting with our support assistant.";
-        $reply = "{$intro} I can help with **delivery status**, **address confirmation**, **pricing**, **product details**, and **payments**. Please share your **order number** or tell me what you’d like to do.";
+        $reply = "{$intro} I can help with **delivery status**, **address confirmation**, **pricing**, **product details**, and **payments**. Please share your **order number** or tell me what you'd like to do.";
         return [$reply, []];
     }
 
@@ -557,7 +582,12 @@ SYS;
 
     protected function getOrderProp($order, $key)
     {
-        return is_array($order) ? ($order[$key] ?? null) : ($order?->$key ?? null);
+        if (is_array($order)) {
+            return $order[$key] ?? null;
+        } elseif (is_object($order)) {
+            return $order->$key ?? null;
+        }
+        return null;
     }
 
     protected function findCustomer($customerId)
@@ -570,7 +600,10 @@ SYS;
     protected function getRecentOrdersForCustomer($customer, int $limit)
     {
         if (!$customer) return collect();
-        return Order::where('customer_id', $customer->id)
+        $customerId = is_array($customer) ? ($customer['id'] ?? null) : ($customer->id ?? null);
+        if (!$customerId) return collect();
+        
+        return Order::where('customer_id', $customerId)
             ->latest('created_at')
             ->limit($limit)
             ->get();
@@ -623,7 +656,7 @@ SYS;
         $messages = Message::where(function ($q) use ($customer, $phoneFormats) {
                 $q->where(function ($sub) use ($customer) {
                     $sub->where('messageable_id', $customer->id ?? null)
-                        ->where('messageable_type', get_class($customer));
+                        ->where('messageable_type', User::class);
                 });
                 if (!empty($phoneFormats)) {
                     foreach ($phoneFormats as $phone) {
@@ -698,18 +731,23 @@ SYS;
     protected function issuePaymentLink($order): array
     {
         // TODO: integrate real PG (M-Pesa STK, Flutterwave, Stripe, PayPal, etc.)
-        $fakeId = 'PAY' . now()->format('YmdHis') . $order->id;
+        $orderId = is_array($order) ? ($order['id'] ?? null) : ($order->id ?? null);
+        $totalPrice = $this->getOrderProp($order, 'total_price');
+        
+        $fakeId = 'PAY' . now()->format('YmdHis') . $orderId;
         $url    = url("/pay/{$fakeId}");
         $expiresAt = now()->addHours(12)->toDateTimeString();
 
-        PaymentLink::create([
-            'order_id'   => $order->id,
-            'code'       => $fakeId,
-            'url'        => $url,
-            'amount'     => $order->total_price,
-            'expires_at' => $expiresAt,
-            'status'     => 'pending',
-        ]);
+        if ($orderId) {
+            PaymentLink::create([
+                'order_id'   => $orderId,
+                'code'       => $fakeId,
+                'url'        => $url,
+                'amount'     => $totalPrice,
+                'expires_at' => $expiresAt,
+                'status'     => 'pending',
+            ]);
+        }
 
         return ['id' => $fakeId, 'url' => $url, 'expires_at' => $expiresAt];
     }
@@ -726,22 +764,31 @@ SYS;
     protected function storeOutboundMessage($customer, string $reply, array $actions = []): void
     {
         if (!$customer) return;
+        
+        $customerId = is_array($customer) ? ($customer['id'] ?? null) : ($customer->id ?? null);
+        $customerName = is_array($customer) ? ($customer['name'] ?? null) : ($customer->name ?? null);
+        $customerPhone = is_array($customer) ? 
+            ($customer['phone'] ?? $customer['phone_number'] ?? null) : 
+            ($customer->phone ?? $customer->phone_number ?? null);
+        
+        if (!$customerId) return;
+        
         try {
             Message::create([
-            'messageable_type'   => get_class($customer),
-            'messageable_id'     => $customer->id,
-            'channel'            => 'support',
-            'recipient_name'     => $customer->name ?? null,
-            'recipient_phone'    => $customer->phone ?? $customer->phone_number ?? null,
-            'content'            => $reply,
-            'status'             => 'sent',
-            'sent_at'            => now(),
-            'response_payload'   => json_encode($actions),
-            'created_at'         => now(),
-            'updated_at'         => now(),
-            'direction'          => 'outgoing',
-            'message_type'       => 'text',
-            'message_status'     => 'pending',
+                'messageable_type'   => User::class,
+                'messageable_id'     => $customerId,
+                'channel'            => 'support',
+                'recipient_name'     => $customerName,
+                'recipient_phone'    => $customerPhone,
+                'content'            => $reply,
+                'status'             => 'sent',
+                'sent_at'            => now(),
+                'response_payload'   => json_encode($actions),
+                'created_at'         => now(),
+                'updated_at'         => now(),
+                'direction'          => 'outgoing',
+                'message_type'       => 'text',
+                'message_status'     => 'pending',
             ]);
         } catch (\Throwable $e) {
             Log::warning('Failed to store outbound message', ['e' => $e->getMessage()]);
