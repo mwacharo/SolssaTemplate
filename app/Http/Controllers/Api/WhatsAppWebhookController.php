@@ -105,7 +105,7 @@ class WhatsAppWebhookController extends Controller
             Log::info("🤖 IntelligentSupportService reply: " . ($reply ?? '[no reply]'));
 
         } catch (\Throwable $e) {
-            Log::error("❌ AIResponderService error: " . $e->getMessage());
+            Log::error("❌ AIResponderService error: " . json_encode($e->getMessage()));
             $reply = null;
         }
 
