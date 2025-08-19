@@ -573,7 +573,11 @@ SYS;
         if (is_array($customer)) {
             $customer = (object) $customer;
         }
+        // Accommodate WhatsApp format like 254751458911@c.us
         $phone = $customer->phone_number ?? $customer->phone ?? null;
+        if ($phone && preg_match('/^\d{12}@c\.us$/', $phone)) {
+            $phone = substr($phone, 0, 12);
+        }
         Log::info('getRecentMessageHistory: Fetching messages', [
             'customer_id' => $customer->id,
             'phone' => $phone,
