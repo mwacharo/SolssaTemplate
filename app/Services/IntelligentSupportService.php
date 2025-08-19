@@ -38,151 +38,185 @@ class IntelligentSupportService
      * @param string $text
      * @param array $attachments [ ['type'=>'image|link|file', 'url'=>...], ... ]
      */
-    // public function handleCustomerMessage($customerId, string $text, array $attachments = []): array
-        public function handleCustomerMessage(string $text, array $recentOrders = [], array $attachments = []): array
-    
+    public function handleCustomerMessage(string $text, array $recentOrders = [], array $attachments = []): array
     {
+        Log::info('IntelligentSupportService: handleCustomerMessage called', [
+            'text' => $text,
+            'recentOrders_count' => count($recentOrders),
+            'attachments' => $attachments,
+        ]);
+
         $orderDetails = '';
 
         if (!empty($recentOrders)) {
+            Log::info('IntelligentSupportService: Processing recent orders', [
+                'orders' => $recentOrders,
+            ]);
             $orderDetails .= "Here are the customer's recent orders:\n";
             foreach ($recentOrders as $order) {
-            $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
-            // Vendor
-            if (!empty($order['vendor']['name'])) {
-                $orderDetails .= "  Vendor: {$order['vendor']['name']}\n";
-            } else {
-                $orderDetails .= "  Vendor: N/A\n";
-            }
-            // Rider
-            if (!empty($order['rider']['name'])) {
-                $orderDetails .= "  Rider: {$order['rider']['name']}\n";
-            } else {
-                $orderDetails .= "  Rider: N/A\n";
-            }
-            // Agent
-            if (!empty($order['agent']['name'])) {
-                $orderDetails .= "  Agent: {$order['agent']['name']}\n";
-            } else {
-                $orderDetails .= "  Agent: N/A\n";
-            }
-            // Client
-            if (!empty($order['client']['name'])) {
-                $orderDetails .= "  Client: {$order['client']['name']}";
-                if (!empty($order['client']['phone_number'])) {
-                $orderDetails .= " (Phone: {$order['client']['phone_number']})";
+                Log::debug('Order details', ['order' => $order]);
+                $orderDetails .= "- Order #{$order['order_no']}: {$order['status']} (Delivery: {$order['delivery_date']})\n";
+                // Vendor
+                if (!empty($order['vendor']['name'])) {
+                    $orderDetails .= "  Vendor: {$order['vendor']['name']}\n";
+                } else {
+                    $orderDetails .= "  Vendor: N/A\n";
                 }
-                $orderDetails .= "\n";
-            } else {
-                $orderDetails .= "  Client: N/A\n";
-            }
-            // Items
-            $orderDetails .= "  Items:\n";
-            if (!empty($order['order_items'])) {
-                foreach ($order['order_items'] as $item) {
-                $orderDetails .= "    - " . (isset($item['name']) ? $item['name'] : 'Item') . " x{$item['quantity']}\n";
+                // Rider
+                if (!empty($order['rider']['name'])) {
+                    $orderDetails .= "  Rider: {$order['rider']['name']}\n";
+                } else {
+                    $orderDetails .= "  Rider: N/A\n";
                 }
-            } else {
-                $orderDetails .= "    - No items found\n";
-            }
+                // Agent
+                if (!empty($order['agent']['name'])) {
+                    $orderDetails .= "  Agent: {$order['agent']['name']}\n";
+                } else {
+                    $orderDetails .= "  Agent: N/A\n";
+                }
+                // Client
+                if (!empty($order['client']['name'])) {
+                    $orderDetails .= "  Client: {$order['client']['name']}";
+                    if (!empty($order['client']['phone_number'])) {
+                        $orderDetails .= " (Phone: {$order['client']['phone_number']})";
+                    }
+                    $orderDetails .= "\n";
+                } else {
+                    $orderDetails .= "  Client: N/A\n";
+                }
+                // Items
+                $orderDetails .= "  Items:\n";
+                if (!empty($order['order_items'])) {
+                    foreach ($order['order_items'] as $item) {
+                        $orderDetails .= "    - " . (isset($item['name']) ? $item['name'] : 'Item') . " x{$item['quantity']}\n";
+                    }
+                } else {
+                    $orderDetails .= "    - No items found\n";
+                }
             }
             $orderDetails .= "\n";
 
-            // get customer from orderDetails 
             $customer = $recentOrders[0]['client'] ?? null; 
-            // If $customer is array, convert to User model
+            Log::info('IntelligentSupportService: Extracted customer from recentOrders', [
+                'customer' => $customer,
+            ]);
             if (is_array($customer) && isset($customer['id'])) {
                 $customer = User::find($customer['id']);
+                Log::info('IntelligentSupportService: Loaded User model for customer', [
+                    'customer_id' => $customer?->id,
+                    'customer_name' => $customer?->name,
+                ]);
             }
 
-        // 1) Fetch base context
-        // $customer     = $this->findCustomer($customerId);
-        $company      = Country::with('waybillSettings')->first();
-        // $recentOrders = $this->getRecentOrdersForCustomer($customer, self::MAX_ORDERS_RETURNED);
-        $history      = $this->getRecentMessageHistory($customer, 20); // for "you called me earlier"
+            $company = Country::with('waybillSettings')->first();
+            Log::info('IntelligentSupportService: Loaded company info', [
+                'company' => $company,
+            ]);
+            $history = $this->getRecentMessageHistory($customer, 20);
+            Log::info('IntelligentSupportService: Loaded message history', [
+                'history_count' => count($history),
+            ]);
 
-        // 2) Detect intent(s) + entities
-        $nlu = $this->extractIntentEntities($text, $attachments, $customer, $recentOrders, $company);
+            $nlu = $this->extractIntentEntities($text, $attachments, $customer, $recentOrders, $company);
+            Log::info('IntelligentSupportService: NLU result', [
+                'nlu' => $nlu,
+            ]);
 
-        // 3) Decide policy flags (e.g., prepay requirement)
-        $policy = $this->evaluatePolicy($customer);
+            $policy = $this->evaluatePolicy($customer);
+            Log::info('IntelligentSupportService: Policy evaluation', [
+                'policy' => $policy,
+            ]);
 
-        // 4) Route to handlers (can handle multiple intents; we stop at first high-confidence intent)
-        $reply   = null;
-        $actions = [];
+            $reply   = null;
+            $actions = [];
 
-        foreach ($nlu['intents'] as $intent) {
-            $name        = $intent['name'] ?? 'unknown';
-            $confidence  = (float) ($intent['confidence'] ?? 0);
-            $entities    = $nlu['entities'] ?? [];
+            foreach ($nlu['intents'] as $intent) {
+                $name        = $intent['name'] ?? 'unknown';
+                $confidence  = (float) ($intent['confidence'] ?? 0);
+                $entities    = $nlu['entities'] ?? [];
 
-            if ($confidence < 0.35) { // ignore very low confidence
-                continue;
+                Log::info('IntelligentSupportService: Processing intent', [
+                    'intent' => $name,
+                    'confidence' => $confidence,
+                    'entities' => $entities,
+                ]);
+
+                if ($confidence < 0.35) {
+                    Log::info('IntelligentSupportService: Skipping low confidence intent', [
+                        'intent' => $name,
+                        'confidence' => $confidence,
+                    ]);
+                    continue;
+                }
+
+                switch ($name) {
+                    case 'ask_company_location':
+                        Log::info('IntelligentSupportService: Handling ask_company_location');
+                        [$reply, $actions] = $this->handleCountryLocation($company);
+                        break 2;
+                    case 'ask_order_price':
+                        Log::info('IntelligentSupportService: Handling ask_order_price');
+                        [$reply, $actions] = $this->handleOrderPrice($entities, $recentOrders, $policy);
+                        break 2;
+                    case 'ask_order_status_or_delivery':
+                        Log::info('IntelligentSupportService: Handling ask_order_status_or_delivery');
+                        [$reply, $actions] = $this->handleOrderStatus($entities, $recentOrders, $policy);
+                        break 2;
+                    case 'reference_previous_call':
+                        Log::info('IntelligentSupportService: Handling reference_previous_call');
+                        [$reply, $actions] = $this->handlePreviousCall($history, $recentOrders, $policy);
+                        break 2;
+                    case 'confirm_address_flow':
+                        Log::info('IntelligentSupportService: Handling confirm_address_flow');
+                        [$reply, $actions] = $this->handleAddressConfirmation($entities, $customer, $recentOrders, $policy);
+                        break 2;
+                    case 'request_callback':
+                        Log::info('IntelligentSupportService: Handling request_callback');
+                        [$reply, $actions] = $this->handleCallbackRequest($customer, $entities);
+                        break 2;
+                    case 'product_info':
+                        Log::info('IntelligentSupportService: Handling product_info');
+                        [$reply, $actions] = $this->handleProductInfo($entities);
+                        break 2;
+                    case 'change_order':
+                        Log::info('IntelligentSupportService: Handling change_order');
+                        [$reply, $actions] = $this->handleOrderChange($entities, $recentOrders);
+                        break 2;
+                    case 'share_media_or_link':
+                        Log::info('IntelligentSupportService: Handling share_media_or_link');
+                        [$reply, $actions] = $this->handleMediaOrLink($attachments, $entities, $recentOrders);
+                        break 2;
+                    case 'payment_required':
+                        Log::info('IntelligentSupportService: Handling payment_required');
+                        [$reply, $actions] = $this->handlePaymentRequired($customer, $policy, $recentOrders);
+                        break 2;
+                    case 'small_talk_busy':
+                        Log::info('IntelligentSupportService: Handling small_talk_busy');
+                        [$reply, $actions] = $this->handleBusySmallTalk($customer);
+                        break 2;
+                    default:
+                        Log::info('IntelligentSupportService: Handling fallback');
+                        [$reply, $actions] = $this->handleFallback($customer, $company, $recentOrders);
+                        break 2;
+                }
             }
 
-            switch ($name) {
-                case 'ask_company_location':
-                    [$reply, $actions] = $this->handleCountryLocation($company);
-                    break 2;
+            Log::info('IntelligentSupportService: Final reply and actions', [
+                'reply' => $reply,
+                'actions' => $actions,
+            ]);
 
-                case 'ask_order_price':
-                    [$reply, $actions] = $this->handleOrderPrice($entities, $recentOrders, $policy);
-                    break 2;
+            $this->storeOutboundMessage($customer, $reply, $actions);
 
-                case 'ask_order_status_or_delivery':
-                    [$reply, $actions] = $this->handleOrderStatus($entities, $recentOrders, $policy);
-                    break 2;
-
-                case 'reference_previous_call':
-                    [$reply, $actions] = $this->handlePreviousCall($history, $recentOrders, $policy);
-                    break 2;
-
-                case 'confirm_address_flow':
-                    [$reply, $actions] = $this->handleAddressConfirmation($entities, $customer, $recentOrders, $policy);
-                    break 2;
-
-                case 'request_callback':
-                    [$reply, $actions] = $this->handleCallbackRequest($customer, $entities);
-                    break 2;
-
-                case 'product_info':
-                    [$reply, $actions] = $this->handleProductInfo($entities);
-                    break 2;
-
-                case 'change_order':
-                    [$reply, $actions] = $this->handleOrderChange($entities, $recentOrders);
-                    break 2;
-
-                case 'share_media_or_link':
-                    [$reply, $actions] = $this->handleMediaOrLink($attachments, $entities, $recentOrders);
-                    break 2;
-
-                case 'payment_required':
-                    [$reply, $actions] = $this->handlePaymentRequired($customer, $policy, $recentOrders);
-                    break 2;
-
-                case 'small_talk_busy':
-                    [$reply, $actions] = $this->handleBusySmallTalk($customer);
-                    break 2;
-
-                default:
-                    // Try a helpful default: summarize what we can do + ask one crisp question
-                    [$reply, $actions] = $this->handleFallback($customer, $company, $recentOrders);
-                    break 2;
-            }
+            return compact('reply', 'actions');
         }
 
-        // 5) Log and persist outbound message if you store bot replies
-        $this->storeOutboundMessage($customer, $reply, $actions);
-
-        return compact('reply', 'actions');
-    }
-        // If recentOrders is empty, return a default response
+        Log::info('IntelligentSupportService: No recent orders found');
         return [
             'reply' => "No recent orders found. Please share your order number or let us know how we can assist you.",
             'actions' => [],
         ];
-}
+    }
 
     // ======================= NLU (LLM + fallback) =======================
 
