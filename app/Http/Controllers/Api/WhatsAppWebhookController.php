@@ -114,6 +114,10 @@ class WhatsAppWebhookController extends Controller
             ]);
 
             // FIX: handleCustomerMessage returns an array, not a string
+            // Validate $text before passing to AI service
+            if (!is_string($text) || trim($text) === '') {
+                throw new \Exception('Incoming message text is empty or invalid');
+            }
             $result = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
 
             // Extract the reply string from the result array
