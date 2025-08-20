@@ -120,8 +120,7 @@ class WhatsAppWebhookController extends Controller
             }
             // $result = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
 
-            $reply = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
-
+            $result = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
 
             // Extract the reply string from the result array
             $reply = $result['reply'] ?? '[no reply]';
