@@ -52,8 +52,7 @@ class WhatsAppWebhookController extends Controller
 
             // return response()->json(['status' => 'received']);
 
-                return response()->json(['status' => 'ok'], 200);
-
+            return response()->json(['status' => 'ok'], 200);
         } catch (\Throwable $e) {
             Log::error('❌ Webhook error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -96,17 +95,45 @@ class WhatsAppWebhookController extends Controller
             // $ai = new AIResponderService();
             // Log::info("🤖 Interpreting customer query: {$text}");
             // $reply = $ai->interpretCustomerQuery($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
+            // Log::info("🧠 Initializing IntelligentSupportService for chatId: {$chatId}");
+            // $ai = new IntelligentSupportService();
+            // Log::info("📝 Handling customer message: {$text}", [
+            //     'recentOrders' => is_array($recentOrders) ? $recentOrders : $recentOrders->toArray()
+            // ]);
+
+
+            // $reply = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
+            // Log::info("🤖 IntelligentSupportService reply: " . ($reply ?? '[no reply]'));
+
+
+
             Log::info("🧠 Initializing IntelligentSupportService for chatId: {$chatId}");
             $ai = new IntelligentSupportService();
-            Log::info("📝 Handling customer message: {$text}. Recent orders: " . json_encode(is_array($recentOrders) ? $recentOrders : $recentOrders->toArray()));
+            Log::info("📝 Handling customer message: {$text}", [
+                'recentOrders' => is_array($recentOrders) ? $recentOrders : $recentOrders->toArray()
+            ]);
 
-            
-            $reply = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
-            Log::info("🤖 IntelligentSupportService reply: " . ($reply ?? '[no reply]'));
+            // FIX: handleCustomerMessage returns an array, not a string
+            $result = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
 
+            // Extract the reply string from the result array
+            $reply = $result['reply'] ?? '[no reply]';
+            $actions = $result['actions'] ?? [];
+
+            Log::info("🤖 IntelligentSupportService reply: " . $reply, [
+                'actions' => $actions
+            ]);
         } catch (\Throwable $e) {
-            Log::error("❌ AIResponderService error: " . json_encode($e->getMessage()));
-            $reply = null;
+            // Log::error("❌ AIResponderService error: " . $e->getMessage());
+            // $reply = null;
+
+
+            Log::error("IntelligentSupportService error: " . $e->getMessage());
+            // Handle the error appropriately
+            return [
+                'reply' => 'Sorry, I encountered an error processing your request. Please try again.',
+                'actions' => []
+            ];
         }
 
         if ($reply) {
@@ -178,7 +205,7 @@ class WhatsAppWebhookController extends Controller
             Log::error("❌ Failed to store outgoing message: " . $e->getMessage());
             // return response()->json(['error' => 'Failed to store outgoing'], 500);
 
-                return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
+            return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
 
         }
     }
@@ -225,46 +252,46 @@ class WhatsAppWebhookController extends Controller
 
 
     protected function handleStatusUpdate(array $payload)
-{
-    $idMessage = data_get($payload, 'idMessage');
-    $status = data_get($payload, 'status');
+    {
+        $idMessage = data_get($payload, 'idMessage');
+        $status = data_get($payload, 'status');
 
-    if (!$idMessage || !$status) {
-        Log::warning("❌ Missing status update data: ", $payload);
-        return response()->json(['error' => 'Missing status data'], 200); // Return 200 anyway to satisfy Green API
-    }
-
-    $msg = Message::where('external_message_id', $idMessage)
-        ->first();
-
-    if ($msg) {
-        $msg->status = $status;
-        $msg->timestamp = now();
-
-        if ($status === 'delivered') {
-            $msg->delivered_at = now();
+        if (!$idMessage || !$status) {
+            Log::warning("❌ Missing status update data: ", $payload);
+            return response()->json(['error' => 'Missing status data'], 200); // Return 200 anyway to satisfy Green API
         }
 
-        if ($status === 'read') {
-            $msg->read_at = now();
+        $msg = Message::where('external_message_id', $idMessage)
+            ->first();
+
+        if ($msg) {
+            $msg->status = $status;
+            $msg->timestamp = now();
+
+            if ($status === 'delivered') {
+                $msg->delivered_at = now();
+            }
+
+            if ($status === 'read') {
+                $msg->read_at = now();
+            }
+
+            if ($status === 'failed') {
+                $msg->failed_at = now();
+            }
+
+            $msg->save();
+
+            return response()->json(['status' => 'updated', 'id' => $msg->id], 200);
         }
 
-        if ($status === 'failed') {
-            $msg->failed_at = now();
-        }
+        Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
 
-        $msg->save();
-
-        return response()->json(['status' => 'updated', 'id' => $msg->id], 200);
-    }
-
-    Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
-
-    // return response()->json(['warning' => 'Message not found'], 200); // Green API expects 200 regardless
+        // return response()->json(['warning' => 'Message not found'], 200); // Green API expects 200 regardless
 
         return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
 
-}
+    }
 
 
     private function identifyClient($chatId)
