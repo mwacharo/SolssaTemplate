@@ -579,74 +579,74 @@ class IntelligentSupportService
      * @param array $attachments
      * @return array
      */
-    // public function handleCustomerMessage(string $text, array $recentOrders = [], array $attachments = []): array
-    // {
-    //     Log::info('IntelligentSupportService: handleCustomerMessage called', [
-    //         'text' => $text,
-    //         'recentOrders_count' => count($recentOrders),
-    //         'attachments' => $attachments,
-    //     ]);
+    public function handleCustomerMessage(string $text, array $recentOrders = [], array $attachments = []): array
+    {
+        Log::info('IntelligentSupportService: handleCustomerMessage called', [
+            'text' => $text,
+            'recentOrders_count' => count($recentOrders),
+            'attachments' => $attachments,
+        ]);
 
-    //     if (empty($recentOrders)) {
-    //         Log::info('IntelligentSupportService: No recent orders found');
-    //         return [
-    //             'reply' => "No recent orders found. Please share your order number or let us know how we can assist you.",
-    //             'actions' => [],
-    //         ];
-    //     }
+        if (empty($recentOrders)) {
+            Log::info('IntelligentSupportService: No recent orders found');
+            return [
+                'reply' => "No recent orders found. Please share your order number or let us know how we can assist you.",
+                'actions' => [],
+            ];
+        }
 
-    //     $customer = $this->getOrderProp($recentOrders[0], 'client') ?? null; 
-    //     Log::info('IntelligentSupportService: Extracted customer from recentOrders', [
-    //         'customer' => $customer,
-    //     ]);
+        $customer = $this->getOrderProp($recentOrders[0], 'client') ?? null; 
+        Log::info('IntelligentSupportService: Extracted customer from recentOrders', [
+            'customer' => $customer,
+        ]);
 
-    //     $company = Country::with('waybillSettings')->first();
-    //     Log::info('IntelligentSupportService: Loaded company info', [
-    //         'company' => $company,
-    //     ]);
+        $company = Country::with('waybillSettings')->first();
+        Log::info('IntelligentSupportService: Loaded company info', [
+            'company' => $company,
+        ]);
 
-    //     $history = $this->getRecentMessageHistory($customer, 20);
-    //     Log::info('IntelligentSupportService: Loaded message history', [
-    //         'history_count' => count($history),
-    //     ]);
+        $history = $this->getRecentMessageHistory($customer, 20);
+        Log::info('IntelligentSupportService: Loaded message history', [
+            'history_count' => count($history),
+        ]);
 
-    //     $policy = $this->evaluatePolicy($customer);
-    //     Log::info('IntelligentSupportService: Policy evaluation', [
-    //         'policy' => $policy,
-    //     ]);
+        $policy = $this->evaluatePolicy($customer);
+        Log::info('IntelligentSupportService: Policy evaluation', [
+            'policy' => $policy,
+        ]);
 
-    //     // Use hybrid approach: Quick rule-based check first, then AI reasoning
-    //     $quickIntent = $this->quickRuleBasedIntent($text, $attachments);
+        // Use hybrid approach: Quick rule-based check first, then AI reasoning
+        $quickIntent = $this->quickRuleBasedIntent($text, $attachments);
 
-    //     if ($quickIntent && $quickIntent['confidence'] > 0.85) {
-    //         // High confidence rule-based match, process directly
-    //         Log::info('IntelligentSupportService: High confidence rule match', $quickIntent);
-    //         return $this->processIntent($quickIntent, $text, $customer, $recentOrders, $company, $history, $policy, $attachments);
-    //     }
+        if ($quickIntent && $quickIntent['confidence'] > 0.85) {
+            // High confidence rule-based match, process directly
+            Log::info('IntelligentSupportService: High confidence rule match', $quickIntent);
+            return $this->processIntent($quickIntent, $text, $customer, $recentOrders, $company, $history, $policy, $attachments);
+        }
 
-    //     // Use AI for complex reasoning with full context
-    //     $aiResponse = $this->getHybridAiResponse($text, $customer, $recentOrders, $company, $history, $policy, $attachments);
+        // Use AI for complex reasoning with full context
+        $aiResponse = $this->getHybridAiResponse($text, $customer, $recentOrders, $company, $history, $policy, $attachments);
 
-    //     if ($aiResponse) {
-    //         Log::info('IntelligentSupportService: AI response generated', [
-    //             'response_length' => strlen($aiResponse['reply']),
-    //             'actions_count' => count($aiResponse['actions']),
-    //         ]);
+        if ($aiResponse) {
+            Log::info('IntelligentSupportService: AI response generated', [
+                'response_length' => strlen($aiResponse['reply']),
+                'actions_count' => count($aiResponse['actions']),
+            ]);
 
-    //         $this->storeOutboundMessage($customer, $aiResponse['reply'], $aiResponse['actions']);
-    //         return $aiResponse;
-    //     }
+            $this->storeOutboundMessage($customer, $aiResponse['reply'], $aiResponse['actions']);
+            return $aiResponse;
+        }
 
-    //     // Fallback to rule-based processing
-    //     $fallbackIntent = $this->ruleBasedIntent($text, $attachments) ?? [
-    //         'name' => 'ask_order_status_or_delivery',
-    //         'confidence' => 0.4,
-    //         'entities' => [],
-    //     ];
+        // Fallback to rule-based processing
+        $fallbackIntent = $this->ruleBasedIntent($text, $attachments) ?? [
+            'name' => 'ask_order_status_or_delivery',
+            'confidence' => 0.4,
+            'entities' => [],
+        ];
 
-    //     Log::info('IntelligentSupportService: Using fallback intent', $fallbackIntent);
-    //     return $this->processIntent($fallbackIntent, $text, $customer, $recentOrders, $company, $history, $policy, $attachments);
-    // }
+        Log::info('IntelligentSupportService: Using fallback intent', $fallbackIntent);
+        return $this->processIntent($fallbackIntent, $text, $customer, $recentOrders, $company, $history, $policy, $attachments);
+    }
 
     /**
      * Enhanced hybrid AI response with comprehensive context and reasoning
