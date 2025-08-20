@@ -30,29 +30,7 @@ class IntelligentSupportService
         $this->llmApiKey = $this->llmApiKey ?? env('OPENAI_API_KEY');
     }
 
-    /**
-     * Main entry point. Pass customerId (or phone), raw message text, and optional attachments.
-     * Returns a structured array: ['reply' => string, 'actions' => [...]].
-     *
-     * @param int|string $customerId
-     * @param string $text
-     * @param array $attachments [ ['type'=>'image|link|file', 'url'=>...], ... ]
-     */
-    // public function handleCustomerMessage(string $text, array $recentOrders = [], array $attachments = []): array
-    // {
-    //     Log::info('IntelligentSupportService: handleCustomerMessage called', [
-    //         'text' => $text,
-    //         'recentOrders_count' => count($recentOrders),
-    //         'attachments' => $attachments,
-    //     ]);
-
-    //     if (preg_match('/busy|will call|hold on|later/i', $t)) {
-    //         return ['intents' => [['name' => 'small_talk_busy', 'confidence' => 0.8]], 'entities' => []];
-    //     }
-
-    //     return null;
-    // }
-
+   
     // ======================= Policy evaluation =======================
     protected function evaluatePolicy($customer): array
     {
@@ -259,17 +237,53 @@ class IntelligentSupportService
         return [$reply, [['type' => 'schedule_callback', 'task_id' => $task['id'], 'scheduled_time' => $task['scheduled_time']]]];
     }
 
-    protected function handleProductInfo(array $entities): array
+    protected function handleProductInfo(array $entities, $recentOrders = []): array
     {
         $nameQ = $entities['product_name'] ?? null;
-        $products = $this->searchProducts($nameQ);
+        $skuQ = $entities['sku'] ?? null;
+
+        // Try to find products in recent orders first
+        $products = collect();
+        foreach ($recentOrders as $order) {
+            $orderItems = $this->getOrderProp($order, 'order_items', []);
+            foreach ($orderItems as $item) {
+                $product = is_array($item) ? ($item['product'] ?? null) : ($item->product ?? null);
+                if ($product) {
+                    // Match by name or SKU if provided
+                    if (
+                        ($nameQ && isset($product['product_name']) && stripos($product['product_name'], $nameQ) !== false) ||
+                        ($skuQ && isset($product['sku_no']) && stripos($product['sku_no'], $skuQ) !== false) ||
+                        (!$nameQ && !$skuQ)
+                    ) {
+                        $products->push((object)$product);
+                    }
+                }
+            }
+        }
+
+        // If not found in recent orders, query products table
+        if ($products->isEmpty()) {
+            $query = Product::query();
+            if ($nameQ) {
+                $query->where('product_name', 'like', "%{$nameQ}%");
+            }
+            if ($skuQ) {
+                $query->where('sku_no', 'like', "%{$skuQ}%");
+            }
+            $products = $query->limit(self::MAX_PRODUCTS_RETURNED)->get();
+        }
+
         if ($products->isEmpty()) {
             return ["I couldn't find that product. Could you share the exact product name, SKU, or a photo/link?", []];
         }
 
         $lines = ["Here's what I found:"];
         foreach ($products as $p) {
-            $lines[] = "• **{$p->name}** — {$this->truncate($p->description)} Source: " . ($p->source ?? 'N/A') . ". Usage: " . ($p->usage ?? 'N/A') . ". Price: " . $this->formatMoney($p->price) . ".";
+            $desc = isset($p->description) ? $this->truncate($p->description) : 'No description';
+            $source = isset($p->source) ? $p->source : 'N/A';
+            $usage = isset($p->usage) ? $p->usage : 'N/A';
+            $price = isset($p->price) ? $this->formatMoney($p->price) : 'N/A';
+            $lines[] = "• **{$p->product_name}** — {$desc} Source: {$source}. Usage: {$usage}. Price: {$price}.";
         }
         $lines[] = "Would you like to place an order or need more details about any of these products?";
         return [implode("\n", $lines), []];
