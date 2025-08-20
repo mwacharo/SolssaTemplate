@@ -14,7 +14,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Country;
 use App\Models\Message;      // stored inbound/outbound messages
-use App\Models\PaymentLink;  // optional model to track links
+// use App\Models\PaymentLink;  // optional model to track links
 
 class IntelligentSupportService
 {
@@ -747,14 +747,14 @@ SYS;
         $expiresAt = now()->addHours(12)->toDateTimeString();
 
         if ($orderId) {
-            PaymentLink::create([
-                'order_id'   => $orderId,
-                'code'       => $fakeId,
-                'url'        => $url,
-                'amount'     => $totalPrice,
-                'expires_at' => $expiresAt,
-                'status'     => 'pending',
-            ]);
+            // PaymentLink::create([
+            //     'order_id'   => $orderId,
+            //     'code'       => $fakeId,
+            //     'url'        => $url,
+            //     'amount'     => $totalPrice,
+            //     'expires_at' => $expiresAt,
+            //     'status'     => 'pending',
+            // ]);
         }
 
         return ['id' => $fakeId, 'url' => $url, 'expires_at' => $expiresAt];
