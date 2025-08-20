@@ -98,9 +98,9 @@ class WhatsAppWebhookController extends Controller
             // $reply = $ai->interpretCustomerQuery($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
             Log::info("🧠 Initializing IntelligentSupportService for chatId: {$chatId}");
             $ai = new IntelligentSupportService();
-            Log::info("📝 Handling customer message: {$text}", [
-                'recentOrders' => is_array($recentOrders) ? $recentOrders : $recentOrders->toArray()
-            ]);
+            Log::info("📝 Handling customer message: {$text}. Recent orders: " . json_encode(is_array($recentOrders) ? $recentOrders : $recentOrders->toArray()));
+
+            
             $reply = $ai->handleCustomerMessage($text, is_array($recentOrders) ? $recentOrders : $recentOrders->toArray());
             Log::info("🤖 IntelligentSupportService reply: " . ($reply ?? '[no reply]'));
 
