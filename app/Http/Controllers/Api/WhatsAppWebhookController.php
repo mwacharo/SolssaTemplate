@@ -81,7 +81,7 @@ class WhatsAppWebhookController extends Controller
         if ($user) {
             Log::info("✅ Client found: {$user->id}");
             $recentOrders = $user->orders()
-                ->with(['orderItems', 'vendor', 'rider', 'agent', 'client'])
+                ->with(['orderItems.product', 'vendor', 'rider', 'agent', 'client'])
                 ->latest()
                 ->take(5)
                 ->get();
