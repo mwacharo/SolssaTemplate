@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\CallCentreStatistics;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\StatusController;
+use App\Http\Controllers\Api\WarehouseController;
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
@@ -293,6 +294,15 @@ Route::prefix('v1')->group(function () {
     Route::put('/zones/{id}', [ZoneController::class, 'update']);
     Route::delete('/zones/{id}', [ZoneController::class, 'destroy']);
 
+    
+    // warehouses
+
+
+    Route::get('/warehouses', [WarehouseController::class, 'index']);
+    Route::post('/warehouses', [WarehouseController::class, 'store']);
+    Route::get('/warehouses/{id}', [WarehouseController::class, 'show']);
+    Route::put('/warehouses/{id}', [WarehouseController::class, 'update']);
+    Route::delete('/warehouses/{id}', [WarehouseController::class, 'destroy']);
     // courier
     Route::get('/couriers', [CourierController::class, 'index']);
     Route::post('/couriers', [CourierController::class, 'store']);

@@ -603,8 +603,28 @@ class IntelligentSupportService
 
         if (empty($recentOrders)) {
             Log::info('IntelligentSupportService: No recent orders found');
+            // Let AI handle the message for new clients or general queries
+            $customer = null; // No customer context from orders
+            $company = Country::with('waybillSettings')->first();
+            $history = []; // No message history
+            $policy = [
+                'uncollected_count' => 0,
+                'prepay_required' => false,
+            ];
+            $aiResponse = $this->getHybridAiResponse($text, $customer, [], $company, $history, $policy, $attachments);
+
+            if ($aiResponse) {
+                Log::info('IntelligentSupportService: AI response for no recent orders', [
+                    'response_length' => strlen($aiResponse['reply']),
+                    'actions_count' => count($aiResponse['actions']),
+                ]);
+                $this->storeOutboundMessage($customer, $aiResponse['reply'], $aiResponse['actions']);
+                return $aiResponse;
+            }
+
+            // Fallback if AI fails
             return [
-                'reply' => "No recent orders found. Please share your order number or let us know how we can assist you.",
+                'reply' => "Hello! Welcome to our service. You can place your first order or ask any question.",
                 'actions' => [],
             ];
         }
@@ -1778,4 +1798,3 @@ PROMPT;
     }   
 }
 
-   

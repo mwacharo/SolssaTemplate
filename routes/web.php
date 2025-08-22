@@ -195,6 +195,20 @@ Route::middleware([
         Route::get('/ticket', fn() => Inertia::render('Support/Ticket'))->name('ticket');
     });
 
+    // warehousing 
+
+
+        Route::prefix('warehouse')->name('warehouse.')->group(function () {
+        Route::get('/', fn() => Inertia::render('Warehouse/Index'))->name('index');
+        Route::get('/products', fn() => Inertia::render('Products/Index'))->name('products');
+        Route::get('/inventory', fn() => Inertia::render('Stock/Index'))->name('inventory');
+        Route::get('/statistics', fn() => Inertia::render('Statistics/Index'))->name('statistics');
+        Route::get('/category', fn() => Inertia::render('Products/ProductCategory'))->name('category');
+        // Route::get('/suppliers', fn() => Inertia::render('Warehouse/Suppliers'))->name('suppliers');
+        // Route::get('/shipments', fn() => Inertia::render('Warehouse/Shipments'))->name('shipments');
+        // Route::get('/reports', fn() => Inertia::render('Warehouse/Reports'))->name('reports');
+    });
+
     // vendor routes 
     // Vendor
     Route::get('/vendors', fn() => Inertia::render('Vendor/index'))->name('vendor.index');

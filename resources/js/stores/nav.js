@@ -39,6 +39,15 @@ export const ROUTES = {
     // CREATE: 'branches.create',
     // LOCATIONS: 'branches.locations',
   },
+  WAREHOUSE: {
+    INDEX: 'warehouse.index', // 👈 This should match Laravel's ->name('warehouse.index')
+    PRODUCTS: 'warehouse.products', // Route::get('/products', ...)->name('products')
+    INVENTORY: 'warehouse.inventory', // Route::get('/inventory', ...)->name('inventory')
+    STATISTICS: 'warehouse.statistics', // Route::get('/statistics', ...)->name('statistics')
+    CATEGORY: 'warehouse.category', // Route::get('/category', ...)->name('category')
+    // ORDERS: 'warehouse.orders',
+    // SUPPLIERS: 'warehouse.suppliers',
+  },  
   SETTINGS: {
     // PROFILE: 'settings.profile',
     // ORG: 'settings.org',
@@ -192,6 +201,27 @@ export const useNavStore = defineStore('nav', {
         ],
       },
 
+      // warehousing
+      {
+        title: 'Warehousing',
+        icon: 'mdi-warehouse',
+        route: 'warehouse.index', // Laravel route name matches: warehouse.index
+        roles: ['admin', 'staff'],
+        plans: ['Pro', 'Enterprise'],
+        features: ['warehousing'],  
+        children: [
+          { title: 'Warehouse', route: ROUTES.WAREHOUSE.INDEX, icon: 'mdi-warehouse' },
+          // { title: 'Products', route: ROUTES.WAREHOUSING.PRODUCTS, icon: 'mdi-package-variant-closed' },
+          // { title: 'Stock Management', route: ROUTES.WAREHOUSING.STOCK, icon: 'mdi-warehouse' },
+          // { title: 'Orders', route: ROUTES.WAREHOUSING.ORDERS, icon: 'mdi-cart-outline' },
+          //{ title: 'Suppliers', route: ROUTES.WAREHOUSING.SUPPLIERS, icon: 'mdi-account-multiple-outline' },
+          { title: 'Products', route: ROUTES.WAREHOUSE.PRODUCTS, icon: 'mdi-package-variant-closed' },
+          { title: 'Inventory', route: ROUTES.WAREHOUSE.INVENTORY, icon: 'mdi-warehouse' },
+          { title: 'Statistics', route: ROUTES.WAREHOUSE.STATISTICS, icon: 'mdi-chart-bar' },
+          { title: 'Category', route: ROUTES.WAREHOUSE.CATEGORY, icon: 'mdi-tag-multiple' },
+        ],
+      },
+
       {
         title: 'Settings',
         icon: 'mdi-cog',
@@ -318,22 +348,7 @@ export const useNavStore = defineStore('nav', {
         ],
       },
 
-      // warehousing
-      {
-        title: 'Warehousing',
-        icon: 'mdi-warehouse',
-        route: ROUTES.WAREHOUSING.INDEX,
-        roles: ['admin', 'staff'],
-        plans: ['Pro', 'Enterprise'],
-        features: ['warehousing'],  
-        children: [
-          { title: 'Warehouse Dashboard', route: ROUTES.WAREHOUSING.INDEX, icon: 'mdi-warehouse-outline' },
-          { title: 'Products', route: ROUTES.WAREHOUSING.PRODUCTS, icon: 'mdi-package-variant-closed' },
-          { title: 'Stock Management', route: ROUTES.WAREHOUSING.STOCK, icon: 'mdi-warehouse' },
-          // { title: 'Orders', route: ROUTES.WAREHOUSING.ORDERS, icon: 'mdi-cart-outline' },
-          //{ title: 'Suppliers', route: ROUTES.WAREHOUSING.SUPPLIERS, icon: 'mdi-account-multiple-outline' },
-        ],
-      },
+      
     ],
   }),
 

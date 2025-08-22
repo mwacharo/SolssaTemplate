@@ -22,7 +22,8 @@ const store = useWhatsAppStore()
 const conversationStore = useConversationStore()
 const smsStore = useSmsStore()
 const orderStore = useOrderStore()
-const { tableItems } = storeToRefs(orderStore)
+// Use a computed property to safely access tableItems from the store
+const tableItems = computed(() => orderStore.tableItems || [])
 
 const dialogMode = ref(null);
 const showDialog = ref(false);
