@@ -45,6 +45,11 @@ class WhatsAppWebhookController extends Controller
                     ]);
                     break;
 
+
+                case 'incomingCall':
+                    $this->handleIncomingCall($payload);
+                    break;
+
                 default:
                     Log::warning("⚠️ Unhandled or unknown webhook type: {$type}", $payload);
                     break;
@@ -332,5 +337,21 @@ class WhatsAppWebhookController extends Controller
         }
 
         return User::where('phone_number', $cleanSenderId)->first();
+    }
+
+
+
+    protected function handleIncomingCall(array $payload)
+    {
+
+        // log the payload
+        Log::info('📞 Incoming WhatsApp call received', $payload)
+        ;
+        $from = $payload['from'] ?? null;
+
+        if ($from) {
+            // Send auto-reply
+            $this->whatsAppService->sendMessage($from, "👋 Sorry, I am an AI agent and currently I handle all SMS queries only. Please send us a message here.", 35);
+        }
     }
 }
