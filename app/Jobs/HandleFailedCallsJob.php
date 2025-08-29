@@ -26,7 +26,7 @@ class HandleFailedCallsJob
         ];
 
         // ✅ Apply whatsapp_sent_at filter OUTSIDE the grouped OR condition
-        $calls = CallHistory::where('created_at', '>=', now()->subMinutes(10))
+        $calls = CallHistory::where('created_at', '>=', now()->subMinutes(360))
             ->where(function ($q) use ($failedStatuses) {
                 $q->whereNull('lastBridgeHangupCause')
                   ->orWhereIn('lastBridgeHangupCause', $failedStatuses);
@@ -71,13 +71,14 @@ class HandleFailedCallsJob
             );
 
             // Schedule conditional SMS fallback (job will check WA status before sending)
-            // Log::info('Dispatching SendSmsIfWhatsAppFailedJob with delay', [
-            //     'phone' => $phone, 'userId' => $userId, 'delay_minutes' => 5
-            // ]);
+            Log::info('Dispatching SendSmsIfWhatsAppFailedJob with delay', [
+                'phone' => $phone, 'userId' => $userId, 'delay_minutes' => 5
+            ]);
             SendSmsIfWhatsAppFailedJob::dispatch(
                 phone: $phone,
                 userId: $userId
-            )->delay(now()->addMinutes(5));
+            );
+            // ->delay(now()->addMinutes(5));
         }
 
         // Log::info('HandleFailedCallsJob finished processing.');

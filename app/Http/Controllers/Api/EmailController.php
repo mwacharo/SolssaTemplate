@@ -85,9 +85,10 @@ class EmailController extends Controller
 
             Email::create([
                 'to'        => $validated['to'],
+                'from'      => config('mail.from.address'),
                 'subject'   => $validated['subject'],
                 'body'      => $validated['body'],
-                'client_id' => $user->id,
+                'user_id' => $user->id,
                 'status'    => 'sent'
             ]);
 

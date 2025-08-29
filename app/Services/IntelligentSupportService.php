@@ -479,6 +479,7 @@ class IntelligentSupportService
         Log::info('getRecentMessageHistory: Messages fetched', [
             'count' => count($messages),
             'sample' => $messages[0] ?? null,
+            'messages' => $messages, // Log all messages content
         ]);
         return $messages;
     }
