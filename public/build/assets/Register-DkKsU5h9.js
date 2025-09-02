@@ -1,0 +1,1 @@
+import{i as e,W as t,d as r,o}from"./app-D5kpBR_h.js";const s={class:"text-center mt-10 text-gray-600"},_={__name:"Register",setup(a){return e(()=>{t.visit(route("home"),{method:"get",preserveState:!0,preserveScroll:!0})}),(c,n)=>(o(),r("div",s,"Redirecting..."))}};export{_ as default};
