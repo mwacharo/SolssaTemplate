@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
             CourierSeeder::class,
 
             EmailTemplateSeeder::class,
-            EmailSeeder::class,
+            // EmailSeeder::class,
         ]);
 
         // User::factory(1)->withPersonalTeam()->create();
