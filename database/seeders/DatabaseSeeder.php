@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // RolesAndPermissionsSeeder::class,
             // CountrySeeder::class,
-            // VendorSeeder::class,
+            VendorSeeder::class,
             // GoogleSheetSeeder::class,
             // TemplateSeeder::class,
             // ContactSeeder::class,
