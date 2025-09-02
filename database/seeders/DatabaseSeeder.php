@@ -19,17 +19,17 @@ class DatabaseSeeder extends Seeder
     {
         // Call the roles and permissions seeder
         $this->call([
-            RolesAndPermissionsSeeder::class,
-            CountrySeeder::class,
-            VendorSeeder::class,
-            GoogleSheetSeeder::class,
-            TemplateSeeder::class,
-            ContactSeeder::class,
-            MessageSeeder::class,
-            ChannelCredentialSeeder::class,
-             RiderSeeder::class,
-            AgentSeeder::class,
-            WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
+            // RolesAndPermissionsSeeder::class,
+            // CountrySeeder::class,
+            // VendorSeeder::class,
+            // GoogleSheetSeeder::class,
+            // TemplateSeeder::class,
+            // ContactSeeder::class,
+            // MessageSeeder::class,
+            // ChannelCredentialSeeder::class,
+            //  RiderSeeder::class,
+            // AgentSeeder::class,
+            // WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
             
 
             CallCenterSettingSeeder::class,
