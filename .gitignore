@@ -5,7 +5,7 @@
 # Laravel specific
 /public/hot
 /public/storage
-/public/build
+#/public/build
 
 /storage/*
 !/storage/app
