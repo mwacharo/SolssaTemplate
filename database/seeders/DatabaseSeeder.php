@@ -32,11 +32,11 @@ class DatabaseSeeder extends Seeder
             // WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
             
 
-            CallCenterSettingSeeder::class,
-            IvrOptionSeeder::class,
+            // CallCenterSettingSeeder::class,
+            // IvrOptionSeeder::class,
 
-            StatusSeeder::class,
-            CitySeeder::class,
+            // StatusSeeder::class,
+            // CitySeeder::class,
             ZoneSeeder::class,
             CourierSeeder::class,
 

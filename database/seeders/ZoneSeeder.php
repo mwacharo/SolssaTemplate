@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Database\Factories\ZoneFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Zone;
 
 class ZoneSeeder extends Seeder
 {
@@ -13,6 +14,6 @@ class ZoneSeeder extends Seeder
      */
     public function run(): void
     {
-        ZoneFactory::factory()->count(2)->create();
+        Zone::factory()->count(2)->create();
     }
 }
