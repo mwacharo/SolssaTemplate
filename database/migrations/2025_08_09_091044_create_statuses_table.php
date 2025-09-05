@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('status_category')->nullable();
             $table->text('description')->nullable();
             $table->string('color')->nullable();
             $table->unsignedBigInteger('country_id')->nullable();

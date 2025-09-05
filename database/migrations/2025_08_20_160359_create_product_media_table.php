@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('product_media', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('product_id');
+            $table->string('media_type')->nullable(); // image, video, pdf, doc
+            $table->string('url')->nullable();        // storage/public path or external link
+            $table->string('alt_text')->nullable(); // for SEO & accessibility
+            $table->boolean('is_primary')->default(false)->nullable(); // true if main image/video
+            $table->integer('position')->default(0)->nullable(); // order in gallery
             $table->timestamps();
+
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
         });
     }
 

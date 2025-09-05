@@ -11,7 +11,7 @@ class UpdateProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,52 +23,54 @@ class UpdateProductRequest extends FormRequest
     {
         return [
             'product_name' => 'sometimes|string|max:255',
-            'sku_no' => 'sometimes|string|max:100',
-            'country_specific_sku' => 'sometimes|string|max:100|nullable',
-            'bar_code' => 'sometimes|string|max:100|nullable',
+            'sku' => 'sometimes|string|max:100',
             'description' => 'sometimes|string|nullable',
             'category_id' => 'sometimes|integer|exists:categories,id',
             'vendor_id' => 'sometimes|integer|exists:vendors,id',
-            'country_id' => 'sometimes|integer|exists:countries,id',
-            'product_variant_id' => 'sometimes|integer|exists:product_variants,id|nullable',
-            'user_id' => 'sometimes|integer|exists:users,id',
-            'product_type' => 'sometimes|string|max:100|nullable',
-            'weight' => 'sometimes|numeric|min:0|nullable',
-            'length' => 'sometimes|numeric|min:0|nullable',
-            'width' => 'sometimes|numeric|min:0|nullable',
-            'height' => 'sometimes|numeric|min:0|nullable',
-            'value' => 'sometimes|numeric|min:0|nullable',
-            'price' => 'sometimes|numeric|min:0',
-            'discount_price' => 'sometimes|numeric|min:0|nullable',
-            'tax_rate' => 'sometimes|numeric|min:0|max:100|nullable',
-            'brand' => 'sometimes|string|max:100|nullable',
-            'product_link' => 'sometimes|url|nullable',
-            'image_urls' => 'sometimes|array|nullable',
-            'image_urls.*' => 'string|url|nullable',
-            'video_urls' => 'sometimes|array|nullable',
-            'video_urls.*' => 'string|url|nullable',
-            'active' => 'sometimes|boolean',
-            'stock_management' => 'sometimes|boolean',
-            'stock_quantity' => 'sometimes|integer|min:0|nullable',
-            'tracking_required' => 'sometimes|boolean',
-            'fragile' => 'sometimes|boolean',
-            'hazardous' => 'sometimes|boolean',
-            'temperature_sensitive' => 'sometimes|boolean',
-            'returnable' => 'sometimes|boolean',
-            'packaging_type' => 'sometimes|string|max:100|nullable',
-            'handling_instructions' => 'sometimes|string|nullable',
-            'delivery_time_window' => 'sometimes|string|max:100|nullable',
-            'customs_info' => 'sometimes|string|nullable',
-            'insurance_value' => 'sometimes|numeric|min:0|nullable',
-            'ratings' => 'sometimes|numeric|min:0|max:5|nullable',
-            'reviews' => 'sometimes|array|nullable',
-            'reviews.*' => 'string|nullable',
-            'tags' => 'sometimes|array|nullable',
-            'tags.*' => 'string|max:50|nullable',
-            'slug' => 'sometimes|string|max:255|nullable',
-            'meta_title' => 'sometimes|string|max:255|nullable',
-            'meta_description' => 'sometimes|string|nullable',
+            'country_id' => 'sometimes|integer|exists:countries,id|nullable',
             'update_comment' => 'sometimes|string|nullable',
+
+            // Prices
+            'prices' => 'sometimes|array',
+            'prices.*.id' => 'sometimes|integer',
+            'prices.*.product_id' => 'sometimes|integer|exists:products,id',
+            'prices.*.vendor_id' => 'sometimes|integer|exists:vendors,id',
+            'prices.*.base_price' => 'sometimes|numeric|min:0',
+            'prices.*.discount_price' => 'sometimes|numeric|min:0|nullable',
+            'prices.*.cost_price' => 'sometimes|numeric|min:0|nullable',
+            'prices.*.wholesale_price' => 'sometimes|numeric|min:0|nullable',
+            'prices.*.currency' => 'sometimes|string|max:10',
+            'prices.*.valid_from' => 'sometimes|date|nullable',
+            'prices.*.valid_to' => 'sometimes|date|nullable',
+            'prices.*.is_active' => 'sometimes|boolean',
+
+            // Stocks
+            'stocks' => 'sometimes|array',
+            'stocks.*.id' => 'sometimes|integer',
+            'stocks.*.product_id' => 'sometimes|integer|exists:products,id',
+            'stocks.*.warehouse_id' => 'sometimes|integer|exists:warehouses,id',
+            'stocks.*.current_stock' => 'sometimes|integer|min:0',
+            'stocks.*.committed_stock' => 'sometimes|integer|min:0',
+            'stocks.*.defected_stock' => 'sometimes|integer|min:0',
+            'stocks.*.historical_stock' => 'sometimes|integer|min:0',
+            'stocks.*.stock_threshold' => 'sometimes|integer|min:0',
+            'stocks.*.batch_no' => 'sometimes|string|nullable',
+            'stocks.*.expiry_date' => 'sometimes|date|nullable',
+
+            // Media
+            'media' => 'sometimes|array',
+            'media.*.id' => 'sometimes|integer',
+            'media.*.product_id' => 'sometimes|integer|exists:products,id',
+            'media.*.media_type' => 'sometimes|string|nullable',
+            'media.*.url' => 'required_with:media|string|url',
+            'media.*.alt_text' => 'sometimes|string|nullable',
+            'media.*.is_primary' => 'sometimes|boolean',
+            'media.*.position' => 'sometimes|integer|min:0',
+
+            // Variants
+            'variants' => 'sometimes|array',
+
+         
         ];
     }
 }

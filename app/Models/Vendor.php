@@ -11,10 +11,7 @@ class Vendor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'address',
+       
         'website',
         'description',
         'user_id'
@@ -38,5 +35,11 @@ class Vendor extends Model
     public function clients()
     {
         return $this->hasMany(Client::class);
+    }
+
+
+    public function services()
+    {
+        return $this->hasMany(Service::class);
     }
 }

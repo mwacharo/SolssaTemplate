@@ -110,8 +110,12 @@ Route::middleware([
 
     // Users & Teams
     Route::prefix('users')->name('users.')->group(function () {
-        Route::get('/', fn() => Inertia::render('Users/UserManagement'))->name('index');
-        Route::get('/roles', fn() => Inertia::render('Users/UserRoles'))->name('roles');
+        // Route::get('/', fn() => Inertia::render('Users/UserManagement'))->name('index');
+        // Route::get('/roles', fn() => Inertia::render('Users/UserRoles'))->name('roles');
+        Route::get('/', fn() => Inertia::render('Users/Users'))->name('index');
+
+        Route::get('/roles', fn() => Inertia::render('Users/Roles'))->name('roles');
+        
         Route::get('/permissions', fn() => Inertia::render('Users/Permissions'))->name('permissions');
         Route::get('/teams', fn() => Inertia::render('Users/Teams'))->name('teams');
         Route::get('/invitations', fn() => Inertia::render('Users/Invitations'))->name('invitations');

@@ -59,7 +59,7 @@ class UserController extends Controller
     app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
 
     // Load users with their roles and permissions under the correct team context
-    $users = User::with(['roles', 'permissions'])->get();
+    $users = User::with(['roles', 'permissions','country'])->get();
 
     return response()->json([
         'data' => UserResource::collection($users),
@@ -69,16 +69,27 @@ class UserController extends Controller
 
     public function store(UserStoreRequest $request)
     {
-
         // log info
         Log::info('Creating User:', $request->validated());
         $user = $this->userService->create($request->validated());
 
-          $user->ownedTeams()->create([
-        'name' => $user->name . "'s Team",
-        'user_id' => $user->id,
-        'personal_team' => true,
-    ]);
+        $user->ownedTeams()->create([
+            'name' => $user->name . "'s Team",
+            'user_id' => $user->id,
+            'personal_team' => true,
+        ]);
+
+        // Assign roles if provided
+        if ($request->has('roles')) {
+            // Optionally, handle team context if using teams
+            $teamId = Auth::user()?->currentTeam->id ?? null;
+            if ($teamId) {
+                $user->syncRoles($request->input('roles'), $teamId);
+            } else {
+                $user->syncRoles($request->input('roles'));
+            }
+        }
+
         return new UserResource($user);
     }
 
@@ -90,6 +101,18 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request, $id)
     {
         $user = $this->userService->update($id, $request->validated());
+
+        // If roles are provided in the request, update them using Spatie
+        if ($request->has('roles')) {
+            // Optionally, handle team context if using teams
+            $teamId = Auth::user()?->currentTeam->id ?? null;
+            if ($teamId) {
+                $user->syncRoles($request->input('roles'), $teamId);
+            } else {
+                $user->syncRoles($request->input('roles'));
+            }
+        }
+
         return new UserResource($user);
     }
 

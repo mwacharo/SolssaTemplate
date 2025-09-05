@@ -11,6 +11,18 @@ class ProductVariant extends Model
     use HasFactory;
 
 
+    protected $fillable = [
+        'product_id',
+        'sku',
+        'price',
+        'sale_price',
+        'stock_quantity',
+        'is_default',
+        'variant_name',    // e.g., Size, Color
+        'variant_value',   // e.g., Large, Red
+    ];
+
+
     public function product()
     {
         return $this->belongsTo(Product::class);

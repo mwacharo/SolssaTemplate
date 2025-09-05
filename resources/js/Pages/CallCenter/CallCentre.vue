@@ -434,7 +434,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { useAgensudotStore } from '@/stores/agent'
+import { useAgentStore } from '@/stores/agent'
 import { useCallCenterStore } from '@/stores/callCenter';
 import { notify } from '@/utils/toast';
 import { useWebRTCStore } from '@/stores/webrtc'

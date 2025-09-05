@@ -10,6 +10,10 @@ class ProductAttribute extends Model
     /** @use HasFactory<\Database\Factories\ProductAttributeFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+    ];
+
 
     public function values()
 {

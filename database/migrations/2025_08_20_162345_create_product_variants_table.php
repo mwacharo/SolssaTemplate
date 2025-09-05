@@ -16,7 +16,11 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('sku')->unique();
             $table->decimal('price', 10, 2)->nullable();
-            $table->integer('stock')->default(0);
+            $table->decimal('sale_price', 10, 2)->nullable();
+            $table->integer('stock_quantity')->default(0);
+            $table->boolean('is_default')->default(false);
+            $table->string('variant_name')->nullable();   // e.g., Size
+            $table->string('variant_value')->nullable();  // e.g., Large
             $table->timestamps();
         });
     }

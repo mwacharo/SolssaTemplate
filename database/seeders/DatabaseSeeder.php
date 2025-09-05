@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // RolesAndPermissionsSeeder::class,
             // CountrySeeder::class,
-            VendorSeeder::class,
+            // VendorSeeder::class,
             // GoogleSheetSeeder::class,
             // TemplateSeeder::class,
             // ContactSeeder::class,
@@ -37,10 +37,10 @@ class DatabaseSeeder extends Seeder
 
             // StatusSeeder::class,
             // CitySeeder::class,
-            ZoneSeeder::class,
-            CourierSeeder::class,
+            // ZoneSeeder::class,
+            // CourierSeeder::class,
 
-            EmailTemplateSeeder::class,
+            // EmailTemplateSeeder::class,
             // EmailSeeder::class,
         ]);
 

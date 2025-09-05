@@ -13,7 +13,18 @@ return new class extends Migration
     {
         Schema::create('product_stocks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('warehouse_id')->constrained()->cascadeOnDelete();
+            $table->integer('current_stock')->default(0);
+            $table->integer('committed_stock')->default(0);
+            $table->integer('defected_stock')->default(0);
+            $table->integer('historical_stock')->default(0);
+            $table->integer('stock_threshold')->default(0);
+            $table->string('batch_no')->nullable();
+            $table->date('expiry_date')->nullable();
             $table->timestamps();
+
+            $table->unique(['product_id', 'warehouse_id']); // prevent duplicate
         });
     }
 

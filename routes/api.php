@@ -113,6 +113,14 @@ Route::prefix('v1')->group(function () {
 
 
 
+
+   //product category
+   Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']); // List all categories
+   Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']); // Create a new category
+   Route::get('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'show']); // Show a specific category
+   Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'update']); // Update a specific category
+   Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']); // Delete a specific category
+
     // products APIs
     Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']); // List all products
     Route::post('/products', [\App\Http\Controllers\Api\ProductController::class, 'store']); // Create a new product

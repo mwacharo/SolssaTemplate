@@ -10,6 +10,11 @@ class ProductAttributeValue extends Model
     /** @use HasFactory<\Database\Factories\ProductAttributeValueFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'product_attribute_id',
+        'value',
+    ];
+
 
 
     public function attribute()

@@ -135,4 +135,9 @@ class User extends Authenticatable
     {
         return $this->morphMany(ChannelCredential::class, 'credentialable');
     }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
 }
