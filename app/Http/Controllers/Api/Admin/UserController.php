@@ -81,13 +81,9 @@ class UserController extends Controller
 
         // Assign roles if provided
         if ($request->has('roles')) {
-            // Optionally, handle team context if using teams
-            $teamId = Auth::user()?->currentTeam->id ?? null;
-            if ($teamId) {
-                $user->syncRoles($request->input('roles'), $teamId);
-            } else {
-                $user->syncRoles($request->input('roles'));
-            }
+            // Always provide a valid team ID when syncing roles with teams
+            $teamId = Auth::user()?->currentTeam->id ?? 1; // Fallback to default team ID (e.g., 1)
+            $user->syncRoles($request->input('roles'), $teamId);
         }
 
         return new UserResource($user);
@@ -98,23 +94,37 @@ class UserController extends Controller
         return new UserResource($this->userService->find($id));
     }
 
+    // public function update(UserUpdateRequest $request, $id)
+    // {
+    //     $user = $this->userService->update($id, $request->validated());
+
+    //     // If roles are provided in the request, update them using Spatie
+    //     if ($request->has('roles')) {
+    //         // Optionally, handle team context if using teams
+    //         $teamId = Auth::user()?->currentTeam->id ?? null;
+    //         if ($teamId) {
+    //             $user->syncRoles($request->input('roles'), $teamId);
+    //         } else {
+    //             $user->syncRoles($request->input('roles'));
+    //         }
+    //     }
+
+    //     return new UserResource($user);
+    // }
+
+
     public function update(UserUpdateRequest $request, $id)
-    {
-        $user = $this->userService->update($id, $request->validated());
+{
+    $user = $this->userService->update($id, $request->validated());
 
-        // If roles are provided in the request, update them using Spatie
-        if ($request->has('roles')) {
-            // Optionally, handle team context if using teams
-            $teamId = Auth::user()?->currentTeam->id ?? null;
-            if ($teamId) {
-                $user->syncRoles($request->input('roles'), $teamId);
-            } else {
-                $user->syncRoles($request->input('roles'));
-            }
-        }
-
-        return new UserResource($user);
+    if ($request->has('roles')) {
+        // Teams are disabled, so no need for teamId
+        $user->syncRoles($request->input('roles'));
     }
+
+    return new UserResource($user);
+}
+
 
     public function destroy($id)
     {

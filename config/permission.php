@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 return [
 
@@ -140,7 +140,8 @@ return [
      * (view the latest version of this package's migration file)
      */
 
-    'teams' => true,
+    // 'teams' => true,
+    'teams' => false,
 
 
     // Optional fallback to avoid NULL insert errors

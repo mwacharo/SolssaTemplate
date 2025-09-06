@@ -12,30 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order_items', function (Blueprint $table) {
-            $table->id();
-            $table->decimal('price', 8, 2)->nullable();
-            $table->decimal('total_price', 8, 2)->nullable();
-            $table->integer('quantity')->nullable();
-            $table->string('sku_no')->nullable();
-            $table->integer('quantity_sent')->default(0);
-            $table->integer('quantity_delivered')->default(0);
-            $table->integer('quantity_returned')->default(0);
-            $table->integer('quantity_remaining')->default(0);
-            $table->boolean('shipped')->default(0);
-            $table->boolean('sent')->default(0);
-            $table->boolean('delivered')->default(0);
-            $table->boolean('returned')->default(0);
-            $table->decimal('product_rate', 8, 2)->default(0.00);
-            $table->integer('quantity_tobe_delivered')->default(0);
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->decimal('weight', 8, 2)->nullable();
+            $table->bigIncrements('id');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('product_id')->nullable(); // nullable for parcel-only
+            $table->string('sku', 128)->nullable();
+            $table->string('name', 255)->nullable();
+            $table->unsignedInteger('quantity')->default(1);
+            $table->decimal('unit_price', 18, 2)->default(0);
+            $table->decimal('total_price', 18, 2)->default(0);
+            $table->decimal('weight', 10, 2)->nullable();
+        $table->unsignedInteger('delivered_quantity')->default(0);
+            $table->timestamp('created_at')->useCurrent();
 
-            // $table->foreignId('order_id')->constrained('orders')->onDelete('cascade');
+            $table->index('order_id', 'idx_order');
+            $table->index('product_id', 'idx_product');
 
-            $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
-            $table->softDeletes();
-            $table->timestamps();
+            // Foreign key constraints
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('set null');
         });
     }
 

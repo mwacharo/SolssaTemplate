@@ -50,6 +50,9 @@ export const ROUTES = {
     INDEX: 'branches.index',
     // CREATE: 'branches.create',
     // LOCATIONS: 'branches.locations',
+    // add cities and zones
+    CITIES: 'branches.cities',
+    ZONES: 'branches.zones',
   },
   WAREHOUSE: {
     INDEX: 'warehouse.index', // 👈 This should match Laravel's ->name('warehouse.index')
@@ -67,7 +70,9 @@ export const ROUTES = {
     INTEGRATIONS: 'settings.integrations',
     TEMPLATES: 'settings.templates',
     // add call settings 
-    CaLL_SETTINGS: 'settings.call-settings',
+    CALL_SETTINGS: 'settings.call-settings',
+    // add status
+    STATUS: 'settings.status',
     // FEATURES: 'settings.features',
     // NOTIFICATIONS: 'settings.notifications',
     // BRANDING: 'settings.branding',
@@ -167,6 +172,25 @@ export const useNavStore = defineStore('nav', {
         ],
       },
 
+
+      // order
+
+
+      {    title: 'Orders',
+        icon: 'mdi-cart',
+        route: ROUTES.ORDERS.INDEX,
+        roles: ['admin', 'staff', 'user'],
+        plans: ['Free', 'Pro', 'Enterprise'],
+        features: ['order-management'],
+        children: [
+          { title: 'All Orders', route: ROUTES.ORDERS.INDEX, icon: 'mdi-cart-outline' },
+          { title: 'Shipping', route: ROUTES.ORDERS.SHIPPING, icon: 'mdi-truck-outline' },
+          { title: 'Scan & Dispatch', route: ROUTES.ORDERS.SCAN_DISPATCH, icon: 'mdi-barcode-scan' },
+          { title: 'Dispatch List', route: ROUTES.ORDERS.DISPATCH_LIST, icon: 'mdi-format-list-bulleted' },
+          { title: 'Ship Orders', route: ROUTES.ORDERS.SHIP, icon: 'mdi-rocket-launch-outline' },
+        ],
+      },
+
       {
         title: 'Users & Teams',
         icon: 'mdi-account-group',
@@ -210,6 +234,8 @@ export const useNavStore = defineStore('nav', {
           { title: 'View Branches', route: ROUTES.BRANCHES.INDEX, icon: 'mdi-map-marker-radius-outline' },
           // { title: 'Add Branch', route: ROUTES.BRANCHES.CREATE, icon: 'mdi-map-marker-plus' },
           // { title: 'Manage Locations', route: ROUTES.BRANCHES.LOCATIONS, icon: 'mdi-map' },
+          { title: 'Cities', route: ROUTES.BRANCHES.CITIES, icon: 'mdi-city' },
+          { title: 'Zones', route: ROUTES.BRANCHES.ZONES, icon: 'mdi-shape-outline' },  
         ],
       },
 
@@ -247,7 +273,9 @@ export const useNavStore = defineStore('nav', {
           { title: 'IVR Options', route: ROUTES.SETTINGS.IVR, icon: 'mdi-phone-settings' },
           { title: 'Integrations', route: ROUTES.SETTINGS.INTEGRATIONS, icon: 'mdi-puzzle' },
           { title: 'Templates', route: ROUTES.SETTINGS.TEMPLATES, icon: 'mdi-file-outline' },
-          { title: 'Call Settings', route: ROUTES.SETTINGS.CaLL_SETTINGS, icon: 'mdi-phone-outline' },
+          { title: 'Call Settings', route: ROUTES.SETTINGS.CALL_SETTINGS, icon: 'mdi-phone-outline' },
+          // add status
+          { title: 'System Status', route: ROUTES.SETTINGS.STATUS, icon: 'mdi-server' },
           // { title: 'Feature Toggles', route: ROUTES.SETTINGS.FEATURES, icon: 'mdi-toggle-switch' },
           // { title: 'Notifications', route: ROUTES.SETTINGS.NOTIFICATIONS, icon: 'mdi-bell-cog' },
           // { title: 'Branding', route: ROUTES.SETTINGS.BRANDING, icon: 'mdi-palette' },

@@ -258,150 +258,153 @@
     <!-- Create/Edit User Dialog -->
     <v-dialog v-model="userDialog" max-width="500px" persistent>
       <v-card>
-        <v-card-title class="d-flex align-center bg-primary text-white">
-          <span class="text-h6">{{ isEditing ? 'Edit User' : 'Create User' }}</span>
-          <v-spacer></v-spacer>
-          <v-btn 
-            icon="mdi-close" 
-            variant="text" 
-            color="white"
-            @click="closeUserDialog"
-          ></v-btn>
-        </v-card-title>
+      <v-card-title class="d-flex align-center bg-primary text-white">
+        <span class="text-h6">{{ isEditing ? 'Edit User' : 'Create User' }}</span>
+        <v-spacer></v-spacer>
+        <v-btn 
+        icon="mdi-close" 
+        variant="text" 
+        color="white"
+        @click="closeUserDialog"
+        ></v-btn>
+      </v-card-title>
+      
+      <v-divider></v-divider>
+      
+      <v-card-text class="pb-0 pt-4">
+        <v-form ref="userForm" v-model="userFormValid">
+        <v-text-field
+          v-model="userFormData.name"
+          label="Full Name"
+          :rules="[rules.required, rules.minLength]"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"
+        ></v-text-field>
         
-        <v-divider></v-divider>
-        
-        <v-card-text class="pb-0 pt-4">
-          <v-form ref="userForm" v-model="userFormValid">
-            <v-text-field
-              v-model="userFormData.name"
-              label="Full Name"
-              :rules="[rules.required, rules.minLength]"
-              :loading="formLoading"
-              variant="outlined"
-              class="mb-4"
-              color="primary"
-              bg-color="white"
-            ></v-text-field>
-            
-            <v-text-field
-              v-model="userFormData.email"
-              label="Email Address"
-              type="email"
-              :rules="[rules.required, rules.email]"
-              :loading="formLoading"
-              variant="outlined"
-              class="mb-4"
-              color="primary"
-              bg-color="white"
-            ></v-text-field>
+        <v-text-field
+          v-model="userFormData.email"
+          label="Email Address"
+          type="email"
+          :rules="[rules.required, rules.email]"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"
+        ></v-text-field>
 
-          
-              <v-text-field
-                v-model="userFormData.client_name"
-                label="Client Name"
-                :rules="[rules.required]"
-                :loading="formLoading"
-                variant="outlined"
-                class="mb-4"
-                color="primary"
-                bg-color="white"
-              ></v-text-field>
+        <v-text-field
+          v-model="userFormData.client_name"
+          label="Client Name"
+          :rules="[rules.required]"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"
+        ></v-text-field>
 
+        <v-text-field
+          v-model="userFormData.username"
+          label="Username"
+          :rules="[rules.required]"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"    
+        ></v-text-field>
 
-              <!-- input type username -->
+        <!-- <v-text-field
+          v-model="userFormData.password"
+          label="Password"
+          type="password"
+          :rules="isEditing ? [] : [rules.required, rules.minPassword]"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          :hint="isEditing ? 'Leave blank to keep current password' : ''"
+          persistent-hint
+          color="primary"
+          bg-color="white"
+        ></v-text-field> -->
 
+        <v-autocomplete
+          v-model="userFormData.country_id"
+          :items="countries"
+          item-title="name"
+          item-value="id"
+          label="Country"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"
+          clearable
+        ></v-autocomplete>
 
+        <v-autocomplete
+          v-model="userFormData.role_id"
+          :items="availableRoles"
+          label="Roles"
+          :loading="formLoading"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"
+          item-title="name"
+          item-value="id"
+          chips
+          clearable
+        ></v-autocomplete>
 
+        <v-select
+          v-model="userFormData.status"
+          :items="statusOptions"
+          label="Status"
+          :rules="[rules.required]"
+          variant="outlined"
+          class="mb-4"
+          color="primary"
+          bg-color="white"
+        ></v-select>
+        </v-form>
+      </v-card-text>
 
-              <v-text-field
-                v-model="userFormData.username"
-                label="Username"
-                :rules="[rules.required]"
-                :loading="formLoading"
-                variant="outlined"
-                class="mb-4"
-                color="primary"
-                bg-color="white"    
-              ></v-text-field>
-
-            <v-text-field
-              v-model="userFormData.password"
-              label="Password"
-              type="password"
-              :rules="isEditing ? [] : [rules.required, rules.minPassword]"
-              :loading="formLoading"
-              variant="outlined"
-              class="mb-4"
-              :hint="isEditing ? 'Leave blank to keep current password' : ''"
-              persistent-hint
-              color="primary"
-              bg-color="white"
-            ></v-text-field>
-
-            <v-text-field
-              v-model="userFormData.country"
-              label="Country"
-              :loading="formLoading"
-              variant="outlined"
-              class="mb-4"
-              color="primary"
-              bg-color="white"
-            ></v-text-field>
-
-
-            <!-- add roles autocmplte -->
-
-            <v-autocomplete
-              v-model="userFormData.roles"
-              :items="availableRoles"
-              label="Roles"
-              :loading="formLoading"
-              variant="outlined"
-              class="mb-4"
-              color="primary"
-              bg-color="white"
-              item-title="name"
-              item-value="name"
-              multiple
-              chips
-              clearable
-            ></v-autocomplete>
-
-            <v-select
-              v-model="userFormData.status"
-              :items="statusOptions"
-              label="Status"
-              :rules="[rules.required]"
-              variant="outlined"
-              class="mb-4"
-              color="primary"
-              bg-color="white"
-            ></v-select>
-          </v-form>
-        </v-card-text>
-        
-        <v-card-actions class="pa-4">
-          <v-spacer></v-spacer>
-          <v-btn 
-            variant="outlined" 
-            @click="closeUserDialog"
-            color="secondary"
-            size="large"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="primary"
-            :disabled="!userFormValid"
-            :loading="formLoading"
-            @click="saveUser"
-            variant="elevated"
-            size="large"
-          >
-            {{ isEditing ? 'Update' : 'Create' }}
-          </v-btn>
-        </v-card-actions>
+      <!-- boolean active -->
+      <v-card-text class="pt-0 pb-4 px-4">
+        <v-checkbox
+          v-model="userFormData.is_active"
+          label="Active"
+          color="primary"
+          :disabled="formLoading"
+        ></v-checkbox>    
+      </v-card-text>
+      
+      <v-card-actions class="pa-4">
+        <v-spacer></v-spacer>
+        <v-btn 
+        variant="outlined" 
+        @click="closeUserDialog"
+        color="secondary"
+        size="large"
+        >
+        Cancel
+        </v-btn>
+        <v-btn
+        color="primary"
+        :disabled="!userFormValid"
+        :loading="formLoading"
+        @click="saveUser"
+        variant="elevated"
+        size="large"
+        >
+        {{ isEditing ? 'Update' : 'Create' }}
+        </v-btn>
+      </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -745,7 +748,7 @@ import AppLayout from "@/Layouts/AppLayout.vue"
 import { notify } from '@/utils/toast'
 import axios from 'axios'
 import { debounce } from 'lodash'
-// import { useCountriesStore } from '@/stores/countries'
+import { useCountriesStore } from '@/stores/countries'
 
 // Configure Axios for Laravel Sanctum
 axios.defaults.withCredentials = true
@@ -758,7 +761,9 @@ const availableRoles = ref([])
 const availablePermissions = ref([])
 const availableServices = ref([])
 const userServices = ref([])
-// const countries = useCountriesStore()
+const countriesStore = useCountriesStore()
+const countries = ref([])
+const countriesLoading = ref(false)
 const error = ref(null)
 
 // Pagination and filtering
@@ -794,8 +799,12 @@ const userFormData = ref({
   name: '',
   email: '',
   password: '',
-  country: '',
-  status: 'Active'
+  country_id: '',
+  status: '',
+  is_active: true,
+  client_name: '',
+  username: '',
+  role_id: '',
 })
 const serviceFormData = ref({
   service_id: null,
@@ -974,7 +983,25 @@ async function ensureCSRFToken() {
 }
 
 
-
+const loadCountries = async () => {
+  try {
+    countriesLoading.value = true
+    await countriesStore.fetchCountries()
+    countries.value = countriesStore.countries
+      .filter(country => country.status === 1)
+      .map(country => ({
+        id: country.id,
+        name: country.name,
+        code: country.code,
+        phone_code: country.phone_code
+      }))
+  } catch (error) {
+    console.error('Failed to load countries:', error)
+    countries.value = []
+  } finally {
+    countriesLoading.value = false
+  } 
+}
 // fetch countries 
 
   const fetchCountries = async () => {
@@ -1150,7 +1177,7 @@ async function createUser() {
     
     const newUser = response.data.data || response.data
     await fetchUsers()
-    notify('User created successfully', 'success')
+    notify.success('User created successfully', 'success')
     closeUserDialog()
   } catch (error) {
     console.error('Error creating user:', error)
@@ -1298,7 +1325,7 @@ function handleApiError(error, defaultMessage) {
     message = 'Network error. Please check your connection and try again.'
   }
   
-  notify(message, 'error')
+  notify.success(message, 'error')
 }
 
 // Dialog functions
@@ -1447,7 +1474,7 @@ onMounted(async () => {
   await Promise.all([
     fetchUsers(),
     fetchRoles(),
-    fetchCountries(),
+    loadCountries(),
   ])
 })
 </script>

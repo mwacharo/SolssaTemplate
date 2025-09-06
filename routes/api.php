@@ -61,7 +61,7 @@ Route::prefix('v1')->group(function () {
 
     // Order APIs
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
-    // Route::post('v1/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
+    Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
     Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); // Update a specific order
 

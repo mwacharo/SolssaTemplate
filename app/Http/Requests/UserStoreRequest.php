@@ -36,13 +36,20 @@ class UserStoreRequest extends FormRequest
             'phone_number' => 'nullable|string|max:255',
             'alt_number' => 'nullable|string|max:255',
             'country_code' => 'nullable|string|max:5',
-            'language' => 'required|string|max:5',
+            // 'language' => 'required|string|max:5',
             'is_active' => 'required|boolean',
             'status' => 'nullable|string|max:255',
             'timezone' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
             'country_id' => 'required|exists:countries,id',
-            'role'=>'required|exists:roles,name',
+            'role_id' => 'required|exists:roles,id',
+            // 'role' => 'required|exists:roles,name',
+
+            // 'password' => 'required|string|min:8', // Added password validation
+            // 'roles' => 'required|array', // Accept roles as array
+            // 'roles.*' => 'exists:roles,name', // Each role must exist
+            // 'country' => 'required|array', // Accept country as array
+            // 'country.id' => 'required|exists:countries,id', // Validate country id
         ];
     }
 }

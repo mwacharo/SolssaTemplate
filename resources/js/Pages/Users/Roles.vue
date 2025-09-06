@@ -352,6 +352,12 @@ const expandedPanels = ref(['User Management', 'Content Management'])
 // Form refs
 const roleForm = ref(null)
 
+const searchTab = ref('all')
+const filters = ref({
+  search: '',
+  status: ''
+})
+
 // Table headers
 const headers = [
   { title: 'Role Name', value: 'name', sortable: true },

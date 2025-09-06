@@ -88,4 +88,7 @@ class Product extends Model
     {
         return $this->hasMany(\App\Models\ProductAttributeValue::class, 'product_id');
     }
+
+
+// product belongs to a warehouse
 }

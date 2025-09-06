@@ -35,12 +35,12 @@ class UserUpdateRequest extends FormRequest
             'phone_number' => 'nullable|string|max:255',
             'alt_number' => 'nullable|string|max:255',
             'country_code' => 'nullable|string|max:5',
-            'language' => 'required|string|max:5',
-            'is_active' => 'required|boolean',
+            // 'language' => 'required|string|max:5',
+            // 'is_active' => 'required|boolean',
             'status' => 'nullable|string|max:255',
             'timezone' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email,' . $this->user,
-            'country_id' => 'required|exists:countries,id',
+            // 'country_id' => 'required|exists:countries,id',
         ];
     }
 }

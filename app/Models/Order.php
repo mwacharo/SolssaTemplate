@@ -1,235 +1,160 @@
 <?php
 
 namespace App\Models;
-// use App\Traits\BelongsToUserAndCountry;
 
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Faker\Provider\ar_EG\Payment;
 use Illuminate\Database\Eloquent\Model;
-
-
-use App\Models\Scopes\CountryScope;
-use App\Models\OrderCategory;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-
-   
-    use HasFactory;
-        // use BelongsToUserAndCountry;
-
-
-
-     protected static function booted()
-    {
-        static::addGlobalScope(new CountryScope);
-    }
+    use SoftDeletes;
+    
 
     protected $fillable = [
-        'reference',
-        'drawer_id',
-        'client_id',
-        'agent_id',
-        'total_price',
-        'scale',
-        'invoice_value',
-        'amount_paid',
-        'sub_total',
         'order_no',
-        'sku_no',
-        'tracking_no',
-        'waybill_no',
-        'customer_notes',
-        'discount',
-        'shipping_charges',
-        'charges',
-        'delivery_date',
-        'delivery_d',
-        'status',
-        'delivery_status',
+        'reference',
+        'client_id',
+        'customer_id',
         'warehouse_id',
         'country_id',
-        'vendor_id',
-        'paypal',
-        'payment_method',
-        'payment_id',
-        'mpesa_code',
-        'terms',
-        'template_name',
-        'platform',
-        'route',
-        'cancel_notes',
-        'is_return_waiting_for_approval',
-        'is_salesreturn_allowed',
-        'is_test_order',
-        'is_emailed',
-        'is_dropshipped',
-        'is_cancel_item_waiting_for_approval',
-        'track_inventory',
-        'confirmed',
-        'delivered',
-        'returned',
-        'cancelled',
-        'invoiced',
-        'packed',
-        'printed',
-        'print_count',
-        'sticker_printed',
-        'prepaid',
-        'paid',
-        'weight',
-        'return_count',
-        'dispatched_on',
-        'return_date',
-        'delivered_on',
-        'returned_on',
-        'cancelled_on',
-        'printed_at',
-        'print_no',
-        'sticker_at',
-        'recall_date',
-        'history_comment',
-        'return_notes',
-        'ou_id',
-        'pickup_address',
-        'pickup_phone',
-        'pickup_shop',
-        'pickup_city',
+        'agent_id',
         'user_id',
-        'schedule_date',
         'rider_id',
         'zone_id',
-        'checkout_id',
-        'longitude',
+        'status',
+        'delivery_status',
+        'delivery_date',
+        'schedule_date',
+        'paid',
+        'payment_method',
+        'payment_id',
+        'sub_total',
+        'total_price',
+        'discount',
+        'shipping_charges',
+        'currency',
+        'weight',
+        'platform',
+        'source',
+        'pickup_address',
+        'pickup_city',
+        'pickup_phone',
+        'pickup_shop',
         'latitude',
+        'longitude',
         'distance',
-        'geocoded',
-        'loading_no',
-        'boxes',
-        'archived_at',
-        'order_date',
-        'order_category_id',
-        'driver_id',
-        'vehicle_id',
-        // 'cod_amount',
+        'customer_notes',
     ];
 
     protected $casts = [
-        'delivery_date' => 'datetime',
-        'delivery_d' => 'datetime',
-        'dispatched_on' => 'datetime',
-        'delivered_on' => 'datetime',
-        'returned_on' => 'datetime',
-        'cancelled_on' => 'datetime',
-        'printed_at' => 'datetime',
-        'sticker_at' => 'datetime',
-        'schedule_date' => 'datetime',
-        'archived_at' => 'datetime',
-        'return_date' => 'date',
-        'recall_date' => 'date',
-        'geocoded' => 'boolean',
-        'is_return_waiting_for_approval' => 'boolean',
-        'is_salesreturn_allowed' => 'boolean',
-        'is_test_order' => 'boolean',
-        'is_emailed' => 'boolean',
-        'is_dropshipped' => 'boolean',
-        'is_cancel_item_waiting_for_approval' => 'boolean',
-        'track_inventory' => 'boolean',
-        'confirmed' => 'boolean',
-        'delivered' => 'boolean',
-        'returned' => 'boolean',
-        'cancelled' => 'boolean',
-        'invoiced' => 'boolean',
-        'packed' => 'boolean',
-        'printed' => 'boolean',
-        'sticker_printed' => 'boolean',
-        'prepaid' => 'boolean',
         'paid' => 'boolean',
-        'created_at' => 'datetime:Y-m-d H:i:s',
-        'updated_at' => 'datetime:Y-m-d H:i:s',
+        'delivery_date' => 'datetime',
+        'schedule_date' => 'datetime',
+        'sub_total' => 'decimal:2',
+        'total_price' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'shipping_charges' => 'decimal:2',
+        'weight' => 'decimal:2',
     ];
 
-   public function orderCategory(){
-
-    return $this->belongsTo(OrderCategory::class);
-
-   }
-    public function client()
-    {
-        return $this->belongsTo(Client::class);
-    }
+    // Relationships
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    public function vendor()
-    {
-        return $this->belongsTo(Vendor::class);
-    }
-
-    // public function  vendor()
+    // public function customer()
     // {
-    //     return $this->belongsTo(Vendor::class);
+    //     return $this->belongsTo(Customer::class);
     // }
-    public function getCreatedAtAttribute($value)
-    {
-        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-    }
-    public function getUpdatedAtAttribute($value)
-    {
-        return \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-    }
-    public function getStatusAttribute($value)
-    {
-        return $value === 1 ? 'active' : 'inactive';
-    }
-    public function setStatusAttribute($value)
-    {
-        $this->attributes['status'] = $value === 'active' ? 1 : 0;
-    }
-    public function getPriceAttribute($value)
-    {
-        return number_format($value, 2);
-    }
-    public function setPriceAttribute($value)
-    {
-        $this->attributes['price'] = str_replace(',', '', $value);
-    }
-    public function getQuantityAttribute($value)
-    {
-        return number_format($value);
-    }
-    public function setQuantityAttribute($value)
-    {
-        $this->attributes['quantity'] = str_replace(',', '', $value);
-    }
-    public function getOrderNumberAttribute($value)
-    {
-        return strtoupper($value);
-    }
-    public function setOrderNumberAttribute($value)
-    {
-        $this->attributes['order_number'] = strtoupper($value);
-    }
 
-
-    public function rider()
+    public function warehouse()
     {
-        return $this->belongsTo(Rider::class);
+        return $this->belongsTo(Warehouse::class);
     }
-
-    public function agent()
-    {
-        return $this->belongsTo(Agent::class);
-    }
-
 
     public function country()
     {
         return $this->belongsTo(Country::class);
     }
-   
+
+    public function agent()
+    {
+        return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function rider()
+    {
+        return $this->belongsTo(User::class, 'rider_id');
+    }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
+
     
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class);
+    }
+
+    public function events()
+    {
+        return $this->hasMany(OrderEvent::class);
+    }
+
+
+    // public function items() { return $this->hasMany(OrderItem::class); }
+    public function addresses()
+    {
+        return $this->hasMany(OrderAddress::class);
+    }
+    public function shippingAddress()
+    {
+        return $this->hasOne(OrderAddress::class)->where('type', 'shipping');
+    }
+    public function pickupAddress()
+    {
+        return $this->hasOne(OrderAddress::class)->where('type', 'pickup');
+    }
+    public function assignments()
+    {
+        return $this->hasMany(OrderAssignment::class);
+    }
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+
+    public function  replacementOrders()
+    {
+        return $this->hasMany(Order::class, 'replacement_for_order_id');
+    }
+    // public function refunds()
+    // {
+    //     return $this->hasMany(Refund::class);
+    // }
+    // public function events() { return $this->hasMany(OrderEvent::class); }
+    // public function remittances()
+    // {
+    //     return $this->hasMany(Remittance::class);
+    // }
+    // public function client() { return $this->belongsTo(User::class,'client_id'); }
+    public function vendor()
+    {
+        return $this->belongsTo(User::class, 'vendor_id');
+    }
+
+    public function statusTimestamps()
+    {
+        return $this->hasOne(OrderStatusTimestamp::class);
+    }
 }

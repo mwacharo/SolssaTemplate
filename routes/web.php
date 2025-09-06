@@ -108,6 +108,19 @@ Route::middleware([
         Route::get('/notes', fn() => Inertia::render('CallCenter/Notes'))->name('notes');
     });
 
+
+
+    // orders 
+
+
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', fn() => Inertia::render('Orders/Index'))->name('index');
+        Route::get('/shipping', fn() => Inertia::render('Orders/Shipping'))->name('shipping');
+        Route::get('/scan-dispatch', fn() => Inertia::render('Orders/ScanDispatch'))->name('scan-dispatch');
+        Route::get('/dispatch-list', fn() => Inertia::render('Orders/DispatchList'))->name('dispatch-list');
+        Route::get('/ship', fn() => Inertia::render('Orders/Ship'))->name('ship');
+    });
+
     // Users & Teams
     Route::prefix('users')->name('users.')->group(function () {
         // Route::get('/', fn() => Inertia::render('Users/UserManagement'))->name('index');
@@ -134,6 +147,8 @@ Route::middleware([
         Route::get('/', fn() => Inertia::render('Branches/ViewBranches'))->name('index');
         Route::get('/create', fn() => Inertia::render('Branches/AddBranch'))->name('create');
         Route::get('/locations', fn() => Inertia::render('Branches/ManageLocations'))->name('locations');
+        Route::get('/cities', fn() => Inertia::render('Branches/Cities'))->name('cities');
+        Route::get('/zones', fn() => Inertia::render('Branches/Zones'))->name('zones');
     });
 
     // Settings
@@ -143,6 +158,7 @@ Route::middleware([
         Route::get('/ivr', fn() => Inertia::render('Settings/IVROptions'))->name('ivr');
         Route::get('/integrations', fn() => Inertia::render('Settings/Integrations'))->name('integrations');
         Route::get('/templates', fn() => Inertia::render('Settings/Templates'))->name('templates');
+        Route::get('/status', fn() => Inertia::render('Settings/Status'))->name('status');
 
         // add call settings
 
