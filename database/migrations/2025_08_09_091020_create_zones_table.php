@@ -20,6 +20,7 @@ return new class extends Migration
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->integer('population')->nullable();
+            $table->boolean('inbound')->default(false);
             $table->timestamps();
             $table->softDeletes(); // for soft delete functionality
         });

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVendorRequest;
 use App\Http\Requests\UpdateVendorRequest;
 use App\Http\Resources\VendorResource;
+use App\Models\User;
 use App\Models\Vendor;
 
 class VendorController extends Controller
@@ -17,7 +18,8 @@ class VendorController extends Controller
      */
     public function index()
     {
-        $vendors = Vendor::with('clients')
+        $vendors = User::role('Vendor')
+            // ->with('customers')
             ->whereNull('deleted_at')
             ->latest()
             ->paginate(20, ['*'], 'page', request()->get('page', 1));

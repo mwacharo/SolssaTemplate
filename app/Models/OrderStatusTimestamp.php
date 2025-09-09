@@ -7,4 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class OrderStatusTimestamp extends Model
 {
     //
+
+    protected $fillable = [
+        'order_id',
+        'status_id',
+        
+        'timestamp',
+    ];
+
+    public function status ()
+    {
+        return $this->belongsTo(Status::class);
+    }
 }

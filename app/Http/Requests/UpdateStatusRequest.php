@@ -11,7 +11,7 @@ class UpdateStatusRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,11 @@ class UpdateStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            // 'status_category' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'color' => 'nullable|string|max:50',
+            'country_id' => 'required|integer|exists:countries,id',
         ];
     }
 }

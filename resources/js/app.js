@@ -36,7 +36,6 @@ window.Echo = new Echo({
     authEndpoint: '/broadcasting/auth',
 });
 
-// Create Vuetify instance with proper theming
 const vuetify = createVuetify({
   components,
   directives,
@@ -51,86 +50,61 @@ const vuetify = createVuetify({
       light: {
         dark: false,
         colors: {
-          // Main backgrounds - pure white for light theme
           background: '#FFFFFF',
           surface: '#FFFFFF',
-          'surface-variant': '#F8FAFC',
-          'surface-bright': '#FFFFFF',
-          'surface-light': '#FFFFFF',
-          
-          // Primary colors
           primary: '#2563EB',
-          'primary-darken-1': '#1D4ED8',
           secondary: '#64748B',
-          'secondary-darken-1': '#475569',
-          
-          // Accent and status colors
-          accent: '#3B82F6',
           error: '#EF4444',
           info: '#0EA5E9',
           success: '#22C55E',
           warning: '#F59E0B',
-          
-          // Text colors for light theme
           'on-background': '#1E293B',
           'on-surface': '#1E293B',
           'on-primary': '#FFFFFF',
           'on-secondary': '#FFFFFF',
-          
-          // Navigation specific
-          'nav-background': '#FFFFFF',
-          'nav-surface': '#FFFFFF',
         }
       },
       dark: {
         dark: true,
         colors: {
-          // Main backgrounds - dark theme
           background: '#0F172A',
           surface: '#1E293B',
-          'surface-variant': '#334155',
-          'surface-bright': '#475569',
-          'surface-light': '#334155',
-          
-          // Primary colors adjusted for dark theme
           primary: '#3B82F6',
-          'primary-darken-1': '#2563EB',
           secondary: '#94A3B8',
-          'secondary-darken-1': '#64748B',
-          
-          // Accent and status colors for dark theme
-          accent: '#60A5FA',
           error: '#F87171',
           info: '#38BDF8',
           success: '#34D399',
           warning: '#FBBF24',
-          
-          // Text colors for dark theme
           'on-background': '#F1F5F9',
           'on-surface': '#F1F5F9',
           'on-primary': '#FFFFFF',
           'on-secondary': '#000000',
-          
-          // Navigation specific for dark theme
-          'nav-background': '#1E293B',
-          'nav-surface': '#334155',
         }
       }
     },
   },
   defaults: {
-    VNavigationDrawer: {
-      color: 'surface',
+    VNavigationDrawer: { color: 'surface' },
+    VAppBar: { color: 'surface' },
+    VCard: { color: 'surface' },
+    VSheet: { color: 'surface' },
+
+    // 👇 ADD THESE
+    VTextField: {
+      variant: 'outlined',
+      color: 'primary',
+      class: 'text-black',
     },
-    VAppBar: {
-      color: 'surface',
+    VSelect: {
+      variant: 'outlined',
+      color: 'primary',
+      class: 'text-black',
     },
-    VCard: {
-      color: 'surface',
+    VTextarea: {
+      variant: 'outlined',
+      color: 'primary',
+      class: 'text-black',
     },
-    VSheet: {
-      color: 'surface',
-    }
   }
 });
 

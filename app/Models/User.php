@@ -17,7 +17,7 @@ use Spatie\Activitylog\LogOptions;
 use App\Models\ChannelCredential;
 use App\Models\Scopes\CountryScope;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
@@ -33,6 +33,7 @@ class User extends Authenticatable
     use HasTeams;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use SoftDeletes;
 
 
 
@@ -141,4 +142,31 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Country::class);
     }
+
+    // user who is vendor has many customers
+  
+
+    public function products()
+{
+    return $this->hasMany(Product::class, 'vendor_id');
+}
+
+public function customers()
+{
+    return $this->hasMany(Customer::class, 'vendor_id');
+}
+
+public function orders()
+{
+    return $this->hasMany(Order::class, 'vendor_id');
+}
+
+// If you want to fetch all orders directly through customers:
+// public function orders()
+// {
+//     return $this->hasManyThrough(Order::class, Customer::class, 'vendor_id', 'customer_id');
+// }
+
+ 
+
 }

@@ -21,6 +21,7 @@ class City extends Model
         'latitude',
         'longitude',
         'population',
+        'inbound',
     ];
 
 

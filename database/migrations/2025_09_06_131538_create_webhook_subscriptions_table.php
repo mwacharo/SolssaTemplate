@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('secret', 191)->nullable();
             $table->boolean('active')->default(1);
             $table->timestamp('created_at')->useCurrent();
+            $table->softDeletes();
         });
     }
 

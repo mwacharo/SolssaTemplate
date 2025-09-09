@@ -36,6 +36,7 @@ const enabledFeatures = [
   'developer-tools',
   'vendor-management',
   'warehousing',
+  'orders'
 ] // All features enabled for development
 
 // Mock permissions - include all possible permissions for development

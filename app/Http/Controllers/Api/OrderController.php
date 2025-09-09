@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Customer;
+use App\Models\InventoryReservation;
 use App\Models\Order;
 use App\Models\OrderAddress;
 use App\Models\OrderEvent;
@@ -22,11 +23,13 @@ use Illuminate\Auth\Events\Validated;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
 
-    public function __construct(protected OrderBulkActionService $orderService) {
+    public function __construct(protected OrderBulkActionService $orderService)
+    {
 
 
 
@@ -40,86 +43,6 @@ class OrderController extends Controller
     }
 
 
-    
-
-    /**
-     * Display a listing of the resource.
-     */
-    // public function index()
-    // {
-    //     // Eager load relationships and paginate
-    //     $orders = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
-    //         ->whereNull('deleted_at')
-    //         ->latest()
-    //         ->paginate(20);
-
-    //     // Return resource collection with pagination structure
-    //     return OrderResource::collection($orders);
-    // }
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    // public function store(StoreOrderRequest $request)
-    // {
-    //     // Validate and get the data
-    //     $validated = $request->validated();
-
-    //     // Create the order using the service
-    //     $order = $this->orderService->createOrder($validated);
-
-    //     // Return the newly created order as a resource
-    //     return (new OrderResource($order))
-    //         ->response()
-    //         ->setStatusCode(201);
-    // }
-
-    /**
-     * Display the specified resource.
-     */
-    // public function show(string $id)
-    // {
-    //     // Eager load relationships for a single order
-    //     $order = Order::with(['client', 'orderItems.product', 'vendor.products', 'rider', 'agent'])
-    //         ->where('id', $id)
-    //         ->whereNull('deleted_at')
-    //         ->firstOrFail();
-
-    //     // Return single order resource
-    //     return new OrderResource($order);
-    // }
-
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    // public function update(Request $request, string $id)
-    // {
-    //     //
-    // }
-
-
-    // public function update(UpdateOrderRequest $request, $id)
-    // {
-    //     $order = Order::with(['client', 'items', 'agent', 'rider'])->findOrFail($id);
-
-    //     $updatedOrder = $this->orderService->updateOrder($order, $request->validated());
-
-    //     return response()->json([
-    //         'message' => 'Order updated successfully',
-    //         'data' => $updatedOrder
-    //     ]);
-    // }
-
-    // /**
-    //  * Remove the specified resource from storage.
-    //  */
-    // public function destroy(string $id)
-    // {
-    //     //
-    // }
 
     public function assignRider(BulkOrderActionRequest $request)
     {
@@ -208,24 +131,23 @@ class OrderController extends Controller
     public function show($id): JsonResponse
     {
         $order = Order::with([
-                'warehouse',
-                'country',
-                'agent',
-                'createdBy',
-                'rider',
-                'client',
-                'zone',
-                'orderItems.product',
-                'addresses',
-                'shippingAddress',
-                'pickupAddress',
-                'assignments.user',
-                'payments',
-                'events.user',
-                'statusTimestamps',
-                'refunds',
-                'remittances'
-            ])
+            'warehouse',
+            'country',
+            'agent',
+            'createdBy',
+            'rider',
+            'zone',
+            'orderItems.product',
+            'addresses',
+            'shippingAddress',
+            'pickupAddress',
+            'assignments.user',
+            'payments',
+            // 'events.user',
+            'statusTimestamps',
+            // 'refunds',
+            // 'remittances'
+        ])
             ->find($id);
 
         if (!$order) {
@@ -265,7 +187,7 @@ class OrderController extends Controller
             if ($request->has('order_items')) {
                 // Delete existing items
                 OrderItem::where('order_id', $order->id)->delete();
-                
+
                 // Create new items
                 foreach ($request->input('order_items') as $item) {
                     OrderItem::create(array_merge($item, ['order_id' => $order->id]));
@@ -292,7 +214,6 @@ class OrderController extends Controller
                     'statusTimestamps'
                 ])
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -303,326 +224,21 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Remove the specified order.
-     */
-    public function destroy($id): JsonResponse
-    {
-        $order = Order::find($id);
-
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found'
-            ], 404);
-        }
-
-        $order->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order deleted successfully'
-        ]);
-    }
 
 
 
 
-    // /**
-    //  * Display a listing of the resource with advanced filtering and searching
-    //  */
-    // public function index(Request $request)
-    // {
-    //     try {
-    //         $query = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
-    //             ->whereNull('deleted_at');
-
-    //         // Apply filters
-    //         $this->applyFilters($query, $request);
-
-    //         // Apply search
-    //         if ($request->filled('search')) {
-    //             $this->applySearch($query, $request->get('search'));
-    //         }
-
-    //         // Apply sorting
-    //         $this->applySorting($query, $request);
-
-    //         // Get pagination parameters
-    //         $perPage = min($request->get('per_page', 10), 100); // Max 100 items per page
-            
-    //         // Paginate results
-    //         $orders = $query->paginate($perPage);
 
 
-    //         return OrderResource::collection($orders);
-
-    //         // return response()->json([
-    //         //     'success' => true,
-    //         //     'data' => OrderResource::collection($orders)->response()->getData(),
-    //         //     'meta' => [
-    //         //         'total' => $orders->total(),
-    //         //         'per_page' => $orders->perPage(),
-    //         //         'current_page' => $orders->currentPage(),
-    //         //         'last_page' => $orders->lastPage(),
-    //         //         'from' => $orders->firstItem(),
-    //         //         'to' => $orders->lastItem(),
-    //         //     ],
-    //         //     'filters_applied' => $request->only(['status', 'delivery_status', 'agent_id', 'rider_id', 'date_from', 'date_to', 'search'])
-    //         // ]);
-
-    //     } catch (\Exception $e) {
-    //         Log::error('Error fetching orders: ' . $e->getMessage(), [
-    //             'request' => $request->all(),
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to fetch orders',
-    //             'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
-    //         ], 500);
-    //     }
-    // }
-
-    // /**
-    //  * Store a newly created resource in storage
-    //  */
-    // public function store(StoreOrderRequest $request): JsonResponse
-    // {
-    //     try {
 
 
-    //         DB::beginTransaction();
 
 
-    //         // log request
-    //         Log::info('Creating new order', ['data' => $request->all()]);
 
-    //         // Get validated data
-    //         $validated = $request->validated();
-            
-    //         // Generate order number if not provided
-    //         if (!isset($validated['order_no'])) {
-    //             $validated['order_no'] = $this->generateOrderNumber();
-    //         }
 
-    //         // Create the order using the service
-    //         $order = $this->orderService->createOrder($validated);
 
-    //         // Log order creation
-    //         Log::info('Order created successfully', [
-    //             'order_id' => $order->id,
-    //             'order_no' => $order->order_no,
-    //             'user_id' => auth()->id()
-    //         ]);
 
-    //         DB::commit();
 
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Order created successfully',
-    //             'data' => new OrderResource($order)
-    //         ], 201);
-
-    //     } catch (ValidationException $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Validation failed',
-    //             'errors' => $e->errors()
-    //         ], 422);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Error creating order: ' . $e->getMessage(), [
-    //             'request' => $request->all(),
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to create order',
-    //             'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
-    //         ], 500);
-    //     }
-    // }
-
-    // /**
-    //  * Display the specified resource
-    //  */
-    // public function show(string $id): JsonResponse
-    // {
-    //     try {
-    //         // Eager load all necessary relationships
-    //         $order = Order::with([
-    //             'client',
-    //             'orderItems.product',
-    //             'vendor.products',
-    //             'rider',
-    //             'agent',
-    //             // 'deliveryHistory',
-    //             // 'paymentHistory'
-    //         ])
-    //         ->where('id', $id)
-    //         ->whereNull('deleted_at')
-    //         ->firstOrFail();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => new OrderResource($order)
-    //         ]);
-
-    //     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Order not found',
-    //             'error' => 'The requested order does not exist or has been deleted'
-    //         ], 404);
-
-    //     } catch (\Exception $e) {
-    //         Log::error('Error fetching order: ' . $e->getMessage(), [
-    //             'order_id' => $id,
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to fetch order',
-    //             'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
-    //         ], 500);
-    //     }
-    // }
-
-    // /**
-    //  * Update the specified resource in storage
-    //  */
-    // public function update(UpdateOrderRequest $request, string $id): JsonResponse
-    // {
-    //     try {
-    //         DB::beginTransaction();
-
-    //         // Find the order with relationships
-    //         $order = Order::with(['client', 'orderItems', 'agent', 'rider'])
-    //             ->whereNull('deleted_at')
-    //             ->findOrFail($id);
-
-    //         // Get validated data
-    //         $validated = $request->validated();
-
-    //         // Update the order using the service
-    //         $updatedOrder = $this->orderService->updateOrder($order, $validated);
-
-    //         // Log order update
-    //         Log::info('Order updated successfully', [
-    //             'order_id' => $order->id,
-    //             'order_no' => $order->order_no,
-    //             'user_id' => auth()->id(),
-    //             'changes' => $validated
-    //         ]);
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Order updated successfully',
-    //             'data' => new OrderResource($updatedOrder)
-    //         ]);
-
-    //     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Order not found',
-    //             'error' => 'The requested order does not exist or has been deleted'
-    //         ], 404);
-
-    //     } catch (ValidationException $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Validation failed',
-    //             'errors' => $e->errors()
-    //         ], 422);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Error updating order: ' . $e->getMessage(), [
-    //             'order_id' => $id,
-    //             'request' => $request->all(),
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to update order',
-    //             'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
-    //         ], 500);
-    //     }
-    // }
-
-    // /**
-    //  * Remove the specified resource from storage (soft delete)
-    //  */
-    // public function destroy(string $id): JsonResponse
-    // {
-    //     try {
-    //         DB::beginTransaction();
-
-    //         $order = Order::whereNull('deleted_at')->findOrFail($id);
-
-    //         // Check if order can be deleted (business logic)
-    //         if (!$this->canDeleteOrder($order)) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Order cannot be deleted',
-    //                 'error' => 'Orders with status "processing" or "completed" cannot be deleted'
-    //             ], 422);
-    //         }
-
-    //         // Soft delete the order
-    //         $order->update(['deleted_at' => now()]);
-
-    //         // Log order deletion
-    //         Log::info('Order deleted successfully', [
-    //             'order_id' => $order->id,
-    //             'order_no' => $order->order_no,
-    //             'user_id' => auth()->id()
-    //         ]);
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Order deleted successfully'
-    //         ]);
-
-    //     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Order not found',
-    //             'error' => 'The requested order does not exist or has been deleted'
-    //         ], 404);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Error deleting order: ' . $e->getMessage(), [
-    //             'order_id' => $id,
-    //             'trace' => $e->getTraceAsString()
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to delete order',
-    //             'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
-    //         ], 500);
-    //     }
-    // }
-
-    /**
-     * Restore a soft deleted order
-     */
     public function restore(string $id): JsonResponse
     {
         try {
@@ -652,7 +268,6 @@ class OrderController extends Controller
                 'message' => 'Order restored successfully',
                 'data' => new OrderResource($order)
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error restoring order: ' . $e->getMessage());
@@ -720,7 +335,6 @@ class OrderController extends Controller
                 'message' => $message,
                 'affected_orders' => count($orderIds)
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error performing bulk action: ' . $e->getMessage());
@@ -771,7 +385,6 @@ class OrderController extends Controller
                 'success' => true,
                 'data' => $stats
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching order statistics: ' . $e->getMessage());
 
@@ -828,15 +441,15 @@ class OrderController extends Controller
     {
         $query->where(function ($q) use ($search) {
             $q->where('order_no', 'like', "%{$search}%")
-              ->orWhereHas('client', function ($clientQuery) use ($search) {
-                  $clientQuery->where('name', 'like', "%{$search}%")
-                             ->orWhere('phone_number', 'like', "%{$search}%")
-                             ->orWhere('email', 'like', "%{$search}%");
-              })
-              ->orWhereHas('orderItems.product', function ($productQuery) use ($search) {
-                  $productQuery->where('product_name', 'like', "%{$search}%")
-                              ->orWhere('sku', 'like', "%{$search}%");
-              });
+                ->orWhereHas('client', function ($clientQuery) use ($search) {
+                    $clientQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone_number', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })
+                ->orWhereHas('orderItems.product', function ($productQuery) use ($search) {
+                    $productQuery->where('product_name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
         });
     }
 
@@ -855,8 +468,13 @@ class OrderController extends Controller
 
         // Validate sort field
         $allowedSortFields = [
-            'created_at', 'updated_at', 'order_no', 'status', 
-            'delivery_status', 'delivery_date', 'total_amount'
+            'created_at',
+            'updated_at',
+            'order_no',
+            'status',
+            'delivery_status',
+            'delivery_date',
+            'total_amount'
         ];
 
         if (in_array($sortBy, $allowedSortFields)) {
@@ -878,7 +496,7 @@ class OrderController extends Controller
             ->first();
 
         $sequence = $lastOrder ? (int) substr($lastOrder->order_no, -4) + 1 : 1;
-        
+
         return $prefix . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
@@ -904,22 +522,21 @@ class OrderController extends Controller
     {
         $perPage = $request->input('per_page', 15);
         $orders = Order::with([
-                'warehouse',
-                'country',
-                'agent',
-                'createdBy',
-                'rider',
-                'client',
-                'zone',
-                'orderItems',
-                'addresses',
-                'shippingAddress',
-                'pickupAddress',
-                'assignments',
-                'payments',
-                'events',
-                'statusTimestamps'
-            ])
+            'warehouse',
+            'country',
+            'agent',
+            'createdBy',
+            'rider',
+            'zone',
+            'orderItems',
+            'addresses',
+            'shippingAddress',
+            'pickupAddress',
+            'assignments',
+            'payments',
+            // 'events',
+            'statusTimestamps.status'
+        ])
             ->latest()
             ->paginate($perPage);
 
@@ -929,145 +546,197 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created order.
-     */
-   public function store(StoreOrderRequest $request): JsonResponse
-{
-    DB::beginTransaction();
 
-    try {
-        $validated = $request->validated();
-        Log::info('Validated order data', ['validated' => $validated]);
+    public function store(StoreOrderRequest $request): JsonResponse
+    {
+        DB::beginTransaction();
 
-        // Handle customer creation first
-        $customerId = $validated['customer_id'] ?? null;
-        
-        if (!$customerId && !empty($validated['customer']['phone'])) {
-            Log::info('No customer_id provided, checking customer by phone', [
-                'phone' => $validated['customer']['phone']
-            ]);
-            
-            // Check if customer exists by phone
-            $customer = Customer::where('phone', $validated['customer']['phone'])->first();
-            
-            if (!$customer) {
-                Log::info('Customer not found, creating new customer', $validated['customer']);
-                
-                // Create new customer
-                $customer = Customer::create($validated['customer']);
-                Log::info('New customer created', ['customer_id' => $customer->id]);
+        try {
+            $validated = $request->validated();
+            Log::info('Validated order data', ['validated' => $validated]);
+
+
+            // set zero 
+
+            // check if auth hasrole vendor  take vendor id from auth
+
+
+            // log auth user details
+            Log::info('Auth user details', ['user' => Auth::user()]);
+
+            $user = Auth::user();
+            if ($user && $user->hasRole('Vendor')) {
+                $validated['vendor_id'] = $user->id;
             } else {
-                Log::info('Existing customer found', ['customer_id' => $customer->id]);
-            }
-            
-            $customerId = $customer->id;
-        }
-
-        // Add customer_id to order data
-        $validated['customer_id'] = $customerId;
-        
-        // Remove customer object from order data
-        unset($validated['customer']);
-
-        Log::info('Creating order with data', ['order_data' => $validated]);
-        
-        // Check for duplicate order_no
-        $existingOrder = Order::where('order_no', $validated['order_no'])->first();
-        if ($existingOrder) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order number already exists'
-            ], 422);
-        }
-
-        // Validate order items - check if products exist
-        if ($request->has('order_items')) {
-            foreach ($request->input('order_items') as $item) {
-                $productExists = false;
-                
-                // Check by product_id if provided
-                // if (!empty($item['product_id'])) {
-                //     $productExists = Product::where('id', $item['product_id'])->exists();
-                // }
-                
-                // Check by sku if provided and product_id didn't exist
-                if (!$productExists && !empty($item['sku'])) {
-                    $productExists = Product::where('sku', $item['sku'])->exists();
-                }
-                
-                if (!$productExists) {
+                // vendor is required therefore user must provide vendor id
+                if (empty($validated['vendor_id'])) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Product not found for item: ' . ($item['sku'] ?? 'unknown')
+                        'message' => 'Vendor ID is required'
+                    ], 422);
+                }
+                $validated['vendor_id'] = $validated['vendor_id'] ?? null;
+            }
+
+            /**
+             * Step 1: Handle customer
+             */
+            $customerId = $validated['customer_id'] ?? null;
+
+            if (!$customerId && !empty($validated['customer']['phone'])) {
+                $customer = Customer::firstOrCreate(
+                    ['phone' => $validated['customer']['phone']],
+                    $validated['customer']
+                );
+                $customerId = $customer->id;
+            }
+
+            $validated['customer_id'] = $customerId ?? null;
+            unset($validated['customer']);
+
+            /**
+             * Step 2: Check duplicate order number
+             */
+            if (!empty($validated['order_no'])) {
+                $existingOrder = Order::where('order_no', $validated['order_no'])->first();
+                if ($existingOrder) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Order number already exists'
                     ], 422);
                 }
             }
-        }
 
-        // Create the order
-        $order = Order::create($validated);
-        Log::info('Order created', ['order_id' => $order->id]);
+            /**
+             * Step 3: Create Order
+             */
+            $order = Order::create($validated);
+            Log::info('Order created', ['order_id' => $order->id]);
 
-        // Create order items if provided
-        if ($request->has('order_items')) {
-            foreach ($request->input('order_items') as $item) {
-                // If only SKU is provided, find the product_id
-                if (empty($item['product_id']) && !empty($item['sku'])) {
-                    $product = Product::where('sku', $item['sku'])->first();
-                    if ($product) {
+            /**
+             * Step 4: Create Order Items + Inventory Reservation
+             */
+            if (!empty($validated['order_items'])) {
+                foreach ($validated['order_items'] as $item) {
+                    try {
+                        // Find product by SKU instead of product_id
+                        $product = Product::where('sku', $item['sku'])->firstOrFail();
                         $item['product_id'] = $product->id;
+
+                        $orderItem = $order->orderItems()->create($item);
+
+                        // Reserve stock using SKU
+                        InventoryReservation::create([
+                            'sku'        => $item['sku'],
+                            'order_id'   => $order->id,
+                            'quantity'   => $item['quantity'],
+                            'reserved_at' => now(),
+                            'reason'     => 'Order created',
+                        ]);
+                    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                        Log::error('Product not found for order item', [
+                            'sku' => $item['sku'],
+                            'order_id' => $order->id,
+                            'error' => $e->getMessage(),
+                            'item' => $item
+                        ]);
+                        throw $e;
+                    } catch (\Exception $e) {
+                        Log::error('Unexpected error while creating order item', [
+                            'sku' => $item['sku'] ?? null,
+                            'order_id' => $order->id,
+                            'error' => $e->getMessage(),
+                            'item' => $item
+                        ]);
+                        throw $e;
                     }
                 }
-                
-                OrderItem::create(array_merge($item, ['order_id' => $order->id]));
             }
+
+            /**
+             * Step 5: Create Addresses
+             */
+            if (!empty($validated['addresses'])) {
+                foreach ($validated['addresses'] as $address) {
+                    $order->addresses()->create($address);
+                }
+            }
+
+            /**
+             * Step 6: Create Payment Record (if paid)
+             */
+            if (!empty($validated['paid']) && $validated['paid'] === true) {
+                $payment = $order->payments()->create([
+                    'amount'       => $validated['total_price'],
+                    'method'       => $validated['payment_method'] ?? 'unknown',
+                    'status'       => 'completed',
+                    'transaction_reference' => $validated['payment_id'] ?? null,
+                    'currency'     => $validated['currency'] ?? 'USD',
+                    'user_id'      => Auth::id(),
+                ]);
+                Log::info('Payment recorded', ['payment_id' => $payment->id]);
+            }
+
+            /**
+             * Step 7: Log Status Timestamp
+             */
+            OrderStatusTimestamp::create([
+                'order_id'   => $order->id,
+                'status_id'     => $order->status_id ?? 1, // Default to 1 if not set
+                'created_at' => now()
+            ]);
+
+            /**
+             * Step 8: Log Event
+             */
+            $order->events()->create([
+                'event_type' => 'order_created',
+                'event_data' => json_encode($validated),
+                'user_id'    => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order created successfully',
+                'data'    => $order->load([
+                    'orderItems',
+                    'addresses',
+                    'statusTimestamps',
+                    'events',
+                    'customer',
+                    'payments',
+                ])
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to create order', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create order',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($id): JsonResponse
+    {
+        $order = Order::find($id);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 404);
         }
 
-        // Create addresses if provided
-        if ($request->has('addresses')) {
-            foreach ($request->input('addresses') as $address) {
-                OrderAddress::create(array_merge($address, ['order_id' => $order->id]));
-            }
-        }
-
-        // Create initial status timestamp
-        OrderStatusTimestamp::create([
-            'order_id' => $order->id,
-            'status' => $order->status,
-            'created_at' => now()
-        ]);
-
-        // Create initial event
-        OrderEvent::create([
-            'order_id' => $order->id,
-            'event_type' => 'order_created',
-            'description' => 'Order was created',
-            'user_id' => auth()->id() ?? $order->user_id
-        ]);
-
-        DB::commit();
+        $order->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Order created successfully',
-            'data' => $order->load([
-                'orderItems',
-                'addresses',
-                'statusTimestamps',
-                'events',
-                'customer'
-            ])
-        ], 201);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Failed to create order', ['error' => $e->getMessage()]);
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to create order',
-            'error' => $e->getMessage()
-        ], 500);
+            'message' => 'Order deleted successfully'
+        ]);
     }
-}
 }

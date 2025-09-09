@@ -5,19 +5,41 @@ namespace App\Models;
 use Faker\Provider\ar_EG\Payment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\Factories\HasFactory;  
+
+
 
 class Order extends Model
 {
     use SoftDeletes;
-    
+    use HasFactory;
+    use LogsActivity;
+
+    /**
+     * Get the options for activity logging.
+     *
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('order');
+    }
+
 
     protected $fillable = [
         'order_no',
+        
         'reference',
         'client_id',
         'customer_id',
         'warehouse_id',
         'country_id',
+        'vendor_id',
+        'currency',
         'agent_id',
         'user_id',
         'rider_id',
@@ -64,10 +86,10 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    // public function customer()
-    // {
-    //     return $this->belongsTo(Customer::class);
-    // }
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function warehouse()
     {
@@ -94,10 +116,6 @@ class Order extends Model
         return $this->belongsTo(User::class, 'rider_id');
     }
 
-    public function client()
-    {
-        return $this->belongsTo(Client::class);
-    }
 
     
     public function zone()
@@ -130,14 +148,14 @@ class Order extends Model
     }
     public function payments()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(OrderPayment::class);
     }
 
 
-    public function  replacementOrders()
-    {
-        return $this->hasMany(Order::class, 'replacement_for_order_id');
-    }
+    // public function  replacementOrders()
+    // {
+    //     return $this->hasMany(Order::class, 'replacement_for_order_id');
+    // }
     // public function refunds()
     // {
     //     return $this->hasMany(Refund::class);
@@ -157,4 +175,9 @@ class Order extends Model
     {
         return $this->hasOne(OrderStatusTimestamp::class);
     }
+
+    public function callLogs()
+{
+    return $this->hasMany(CallHistory::class);
+}
 }

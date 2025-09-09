@@ -22,6 +22,7 @@ class Zone extends Model
         'latitude',
         'longitude',
         'population',
+        'inbound',
     ];
 
 

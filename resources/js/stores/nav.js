@@ -25,15 +25,13 @@ export const ROUTES = {
     SHIPPING: 'orders.shipping',
     SCAN_DISPATCH: 'orders.scan-dispatch',
     DISPATCH_LIST: 'orders.dispatch-list',
-    SHIP: 'orders.ship',
+    // SHIP: 'orders.ship',
   },
-  // shipping orders 
-  // scan and dispatch 
-  // dispatchlist &ship orders 
+ 
 
   USERS: {
     // INDEX: 'users.index',
-      INDEX: 'admin.users', // 👈 This should match Laravel's ->name('admin.users')
+      INDEX: 'admin.users', 
 
     ROLES: 'users.roles',
     PERMISSIONS: 'users.permissions',
@@ -181,13 +179,13 @@ export const useNavStore = defineStore('nav', {
         route: ROUTES.ORDERS.INDEX,
         roles: ['admin', 'staff', 'user'],
         plans: ['Free', 'Pro', 'Enterprise'],
-        features: ['order-management'],
+        features: ['orders'],
         children: [
           { title: 'All Orders', route: ROUTES.ORDERS.INDEX, icon: 'mdi-cart-outline' },
           { title: 'Shipping', route: ROUTES.ORDERS.SHIPPING, icon: 'mdi-truck-outline' },
           { title: 'Scan & Dispatch', route: ROUTES.ORDERS.SCAN_DISPATCH, icon: 'mdi-barcode-scan' },
           { title: 'Dispatch List', route: ROUTES.ORDERS.DISPATCH_LIST, icon: 'mdi-format-list-bulleted' },
-          { title: 'Ship Orders', route: ROUTES.ORDERS.SHIP, icon: 'mdi-rocket-launch-outline' },
+          // { title: 'Ship Orders', route: ROUTES.ORDERS.SHIP, icon: 'mdi-rocket-launch-outline' },
         ],
       },
 
@@ -201,7 +199,7 @@ export const useNavStore = defineStore('nav', {
         children: [
           { title: 'User Management', route: ROUTES.USERS.INDEX, icon: 'mdi-account-group-outline' },
           { title: 'User Roles', route: ROUTES.USERS.ROLES, icon: 'mdi-account-key-outline' },
-          // { title: 'Permissions', route: ROUTES.USERS.PERMISSIONS, icon: 'mdi-shield-key-outline' },
+          { title: 'Permissions', route: ROUTES.USERS.PERMISSIONS, icon: 'mdi-shield-key-outline' },
           // { title: 'Teams', route: ROUTES.USERS.TEAMS, icon: 'mdi-account-multiple' },
           // { title: 'Invitations', route: ROUTES.USERS.INVITATIONS, icon: 'mdi-email-send' },
         ],
@@ -275,7 +273,7 @@ export const useNavStore = defineStore('nav', {
           { title: 'Templates', route: ROUTES.SETTINGS.TEMPLATES, icon: 'mdi-file-outline' },
           { title: 'Call Settings', route: ROUTES.SETTINGS.CALL_SETTINGS, icon: 'mdi-phone-outline' },
           // add status
-          { title: 'System Status', route: ROUTES.SETTINGS.STATUS, icon: 'mdi-server' },
+          { title: 'System Statuses', route: ROUTES.SETTINGS.STATUS, icon: 'mdi-server' },
           // { title: 'Feature Toggles', route: ROUTES.SETTINGS.FEATURES, icon: 'mdi-toggle-switch' },
           // { title: 'Notifications', route: ROUTES.SETTINGS.NOTIFICATIONS, icon: 'mdi-bell-cog' },
           // { title: 'Branding', route: ROUTES.SETTINGS.BRANDING, icon: 'mdi-palette' },

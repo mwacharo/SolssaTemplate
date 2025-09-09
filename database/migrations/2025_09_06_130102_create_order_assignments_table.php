@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamp('assigned_at')->useCurrent();
             $table->boolean('active')->default(1);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('order_id', 'idx_order');
             $table->index(['user_id', 'role'], 'idx_user_role');

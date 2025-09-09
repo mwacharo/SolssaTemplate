@@ -19,6 +19,8 @@ return new class extends Migration
             $table->json('event_data')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->nullable();
+            $table->softDeletes();
 
             $table->index(['order_id', 'event_type'], 'idx_order_event');
             $table->index('event_type', 'idx_event_type');

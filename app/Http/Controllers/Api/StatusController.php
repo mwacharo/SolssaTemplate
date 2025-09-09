@@ -23,8 +23,10 @@ class StatusController extends Controller
     public function store(StoreStatusRequest $request)
     {
         $status = Status::create($request->only(['name', 'description', 'color', 'country_id']));
+        // Find the status by id or fail if not found
+        $status = Status::findOrFail($status->id);
         return response()->json($status, 201);
-    }
+    }       
 
     /**
      * Display the specified resource.
@@ -37,9 +39,10 @@ class StatusController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateStatusRequest $request, Status $status)
+    public function update(UpdateStatusRequest $request, $id)
     {
-        $status->update($request->only(['name', 'description', 'color', 'country_id']));
+        $status = Status::findOrFail($id);
+        $status->update($request->all());
         return response()->json($status);
     }
 

@@ -6,6 +6,7 @@ use App\Models\CallCenterSetting;
 use App\Models\Contact;
 use App\Models\User;
 use App\Models\Country;
+use App\Models\Status;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
 
             // EmailTemplateSeeder::class,
             // EmailSeeder::class,
+            StatusSeeder::class,
         ]);
 
         // User::factory(1)->withPersonalTeam()->create();
@@ -57,7 +59,7 @@ class DatabaseSeeder extends Seeder
         
         User::factory()->withPersonalTeam()->create([
             'name' => 'Mwacharo',
-            'email' => 'john.boxleo@gmail.com',
+            'email' => 'support@solssa.com',
             'password' => bcrypt('0741821113'),
             'is_active' => true,
             'two_factor_enabled' => false,

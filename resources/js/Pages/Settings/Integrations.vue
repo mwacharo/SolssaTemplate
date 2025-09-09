@@ -108,7 +108,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue"
 import ChannelForm from "./ChannelForm.vue"
 import { useChannelCredentials } from '@/stores/useChannelCredentials'
-import { notify } from '@/utils/toast'
+  import { notify } from '@/utils/toast'
 
 export default {
   name: 'ChannelCredentials',

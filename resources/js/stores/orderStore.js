@@ -1,719 +1,550 @@
-// stores/orderStore.js
+// stores/orderStore.js - Fixed version
 import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import axios from 'axios'
 
-export const useOrderStore = defineStore('order', {
-  state: () => ({
-    // Filter states
-    orderFilterStatus: null,
-    orderFilterProduct: null,
-    orderFilterZone: null,
-    orderFilterAgent: null,
-    orderFilterRider: null,
-    orderFilterVendor: null,
-    orderDateRange: [],
-    orderSearch: '',
-    
-    // Options for dropdowns
-    orderStatusOptions: [
-      { title: 'All Status', value: null },
-      { title: 'Active', value: 'active' },
-      { title: 'Inactive', value: 'inactive' },
-      { title: 'Pending', value: 'pending' },
-      { title: 'Processing', value: 'processing' },
-      { title: 'Completed', value: 'completed' },
-      { title: 'Cancelled', value: 'cancelled' },
-      { title: 'Inprogress', value: 'Inprogress' }
-    ],
-    productOptions: [],
-    zoneOptions: [],
-    agentOptions: [],
-    riderOptions: [],
-    vendorOptions: [],
-    clientOptions: [],
-    warehouseOptions: [],
-    countryOptions: [],
-    
-    // Data - CRITICAL: These must be properly initialized
-    orders: [],
-    filteredOrders: [],
-    selectedOrders: [], 
-    
-    // Dialog states
-    dialog: false,
-    createDialog: false,
-    selectedOrderId: null,
-    selectedOrder: null,
-    
-    // Loading states
-    loading: {
-      orders: false,
-      refresh: false,
-      statusOptions: false,
-      productOptions: false,
-      zoneOptions: false,
-      agentOptions: false,
-      riderOptions: false,
-      vendorOptions: false,
-      clientOptions: false,
-      warehouseOptions: false,
-      countryOptions: false,
-      creating: false,
-      updating: false,
-      deleting: false
-    },
-    
+export const useOrderStore = defineStore('orders', () => {
+  // State
+  const orders = ref([])
+  const loading = ref({
+    orders: false,
+    options: false,
+    creating: false,
+    updating: false,
+    deleting: false
+  })
+  const error = ref(null)
+  const notifications = ref([])
+  const dialog = ref(false)
+  const selectedOrderId = ref(null)
+  const selectedOrder = ref(null)
+  const initialized = ref(false)
+  const isCreateMode = ref(false)
+
+  // Filter states
+  const orderFilterStatus = ref(null)
+  const orderFilterProduct = ref(null)
+  const orderFilterZone = ref(null)
+  const orderFilterAgent = ref(null)
+  const orderFilterRider = ref(null)
+  const orderFilterVendor = ref(null)
+  const orderFilterCity = ref(null)
+  const orderFilterCategory = ref(null)
+  const orderDateRange = ref([])
+  const orderSearch = ref('')
+
+  // Options for dropdowns (populated from API)
+  const orderStatusOptions = ref([])
+  const productOptions = ref([])
+  const categoryOptions = ref([])
+  const cityOptions = ref([])
+  const zoneOptions = ref([])
+  const agentOptions = ref([])
+  const riderOptions = ref([])
+  const vendorOptions = ref([])
+  const clientOptions = ref([])
+  const warehouseOptions = ref([])
+  const countryOptions = ref([])
+  const deliveryStatusOptions = ref([])
+  const userOptions = ref([])
+
+  // Pagination
+  const pagination = ref({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+    from: 0,
+    to: 0
+  })
+
+  // Getters
+  const getOrderById = computed(() => id => orders.value.find(order => order.id === id))
+  const confirmedOrders = computed(() => orders.value.filter(order => order.status === 1))
+  const pendingOrders = computed(() => orders.value.filter(order => order.status === 0))
+  const cancelledOrders = computed(() => orders.value.filter(order => order.status === 2))
+  const totalRevenue = computed(() => orders.value.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0))
+
+  const activeFilterCount = computed(() => {
+    let count = 0
+    if (orderFilterStatus.value) count++
+    if (orderFilterProduct.value) count++
+    if (orderFilterZone.value) count++
+    if (orderFilterAgent.value) count++
+    if (orderFilterRider.value) count++
+    if (orderFilterVendor.value) count++
+    if (orderFilterCity.value) count++
+    if (orderFilterCategory.value) count++
+    if (orderDateRange.value && orderDateRange.value.length > 0) count++
+    if (orderSearch.value) count++
+    return count
+  })
+
+  const currentFilters = computed(() => ({
+    status: orderFilterStatus.value,
+    product: orderFilterProduct.value,
+    zone: orderFilterZone.value,
+    agent: orderFilterAgent.value,
+    rider: orderFilterRider.value,
+    vendor: orderFilterVendor.value,
+    city: orderFilterCity.value,
+    category: orderFilterCategory.value,
+    dateRange: orderDateRange.value,
+    search: orderSearch.value
+  }))
+
+  // Actions
+  const fetchOrders = async (params = {}) => {
+    loading.value.orders = true
+    error.value = null
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams()
+
+      // Add pagination
+      if (params.page) queryParams.append('page', params.page)
+      if (params.per_page) queryParams.append('per_page', params.per_page)
+
+      // Add filters
+      if (params.status) queryParams.append('status', params.status)
+      if (params.vendor_id) queryParams.append('vendor_id', params.vendor_id)
+      if (params.city) queryParams.append('city', params.city)
+      if (params.agent_id) queryParams.append('agent_id', params.agent_id)
+      if (params.rider_id) queryParams.append('rider_id', params.rider_id)
+      if (params.zone_id) queryParams.append('zone_id', params.zone_id)
+      if (params.product_id) queryParams.append('product_id', params.product_id)
+      if (params.category_id) queryParams.append('category_id', params.category_id)
+      if (params.search) queryParams.append('search', params.search)
+      if (params.created_from) queryParams.append('created_from', params.created_from)
+      if (params.created_to) queryParams.append('created_to', params.created_to)
+
+      const response = await axios.get(`/api/v1/orders?${queryParams.toString()}`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch orders')
+      }
+
+      // Reset create mode when fetching orders
+      isCreateMode.value = false
+
+      const data = result.data
+      orders.value = data.data || []
+
+      // Update pagination
+      pagination.value = {
+        current_page: data.current_page || 1,
+        last_page: data.last_page || 1,
+        per_page: data.per_page || 15,
+        total: data.total || 0,
+        from: data.from || 0,
+        to: data.to || 0
+      }
+
+      return data
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to fetch orders'
+      addNotification({ type: 'error', message: error.value })
+      throw err
+    } finally {
+      loading.value.orders = false
+    }
+  }
+
+  const loadOrder = async (id) => {
+    loading.value.orders = true
+    error.value = null
+    try {
+      const order = await getOrderDetails(id)
+      selectedOrder.value = order
+      selectedOrderId.value = id
+      return order
+    } catch (err) {
+      error.value = err.message || 'Failed to load order'
+      throw err
+    } finally {
+      loading.value.orders = false
+    }
+  }
+
+  const createOrder = async (orderData) => {
+    loading.value.creating = true
+    error.value = null
+    try {
+      const response = await axios.post('/api/v1/orders', orderData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to create order')
+      }
+
+      // Add new order to the beginning of the list
+      orders.value.unshift(result.data)
+      pagination.value.total += 1
+
+      addNotification({ type: 'success', message: 'Order created successfully' })
+      return result.data
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to create order'
+      addNotification({ type: 'error', message: error.value })
+      throw err
+    } finally {
+      loading.value.creating = false
+    }
+  }
+
+  const updateOrder = async (id, orderData) => {
+    loading.value.updating = true
+    error.value = null
+    try {
+      const response = await axios.put(`/api/v1/orders/${id}`, orderData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update order')
+      }
+
+      // Update order in local state
+      const index = orders.value.findIndex(order => order.id === id)
+      if (index !== -1) {
+        orders.value[index] = result.data
+      }
+
+      // Update selected order if it's the same
+      if (selectedOrderId.value === id) {
+        selectedOrder.value = result.data
+      }
+
+      addNotification({ type: 'success', message: 'Order updated successfully' })
+      return result.data
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to update order'
+      addNotification({ type: 'error', message: error.value })
+      throw err
+    } finally {
+      loading.value.updating = false
+    }
+  }
+
+  const deleteOrder = async (id) => {
+    loading.value.deleting = true
+    error.value = null
+    try {
+      const response = await axios.delete(`/api/v1/orders/${id}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to delete order')
+      }
+
+      // Remove order from local state
+      const index = orders.value.findIndex(order => order.id === id)
+      if (index !== -1) {
+        orders.value.splice(index, 1)
+        pagination.value.total -= 1
+      }
+
+      addNotification({ type: 'success', message: 'Order deleted successfully' })
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to delete order'
+      addNotification({ type: 'error', message: error.value })
+      throw err
+    } finally {
+      loading.value.deleting = false
+    }
+  }
+
+  const getOrderDetails = async (id) => {
+    try {
+      const response = await axios.get(`/api/v1/orders/${id}`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch order details')
+      }
+
+      return result.data
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Failed to fetch order details'
+      addNotification({ type: 'error', message })
+      throw new Error(message)
+    }
+  }
+
+  const updateOrderCustomer = async (id, customerData) => {
+    return updateOrder(id, { customer: customerData })
+  }
+
+  const updateOrderItems = async (id, items) => {
+    return updateOrder(id, { order_items: items })
+  }
+
+  // Fetch dropdown options with proper loading management
+  const fetchDropdownOptions = async (vendorId = null) => {
+    if (loading.value.options) {
+      console.log('Options already loading, skipping...')
+      return
+    }
+
+    loading.value.options = true
+    try {
+      console.log('Fetching dropdown options...')
+
+      const requests = [
+        axios.get('/api/v1/statuses').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/categories').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/cities').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/zones').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/agents').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/riders').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/vendors').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/countries').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/warehouses').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/delivery-statuses').catch(err => ({ data: { success: false, data: [] } })),
+        axios.get('/api/v1/users').catch(err => ({ data: { success: false, data: [] } }))
+      ]
+
+      // Add products request if vendorId is provided
+      if (vendorId) {
+        requests.push(
+          axios.get(`/api/v1/vendors/${vendorId}/products`).catch(err => ({ data: { success: false, data: [] } }))
+        )
+      } else {
+        requests.push(
+          axios.get('/api/v1/products').catch(err => ({ data: { success: false, data: [] } }))
+        )
+      }
+
+      const [
+        statusesRes,
+        categoriesRes,
+        citiesRes,
+        zonesRes,
+        agentsRes,
+        ridersRes,
+        vendorsRes,
+        countriesRes,
+        warehousesRes,
+        deliveryStatusRes,
+        usersRes,
+        productsRes
+      ] = await Promise.all(requests)
+
+      // Set options with fallback to empty arrays
+      orderStatusOptions.value = statusesRes.data.success ? statusesRes.data.data : []
+      productOptions.value = productsRes.data.success ? productsRes.data.data : []
+      categoryOptions.value = categoriesRes.data.success ? categoriesRes.data.data : []
+      cityOptions.value = citiesRes.data.success ? citiesRes.data.data : []
+      zoneOptions.value = zonesRes.data.success ? zonesRes.data.data : []
+      agentOptions.value = agentsRes.data.success ? agentsRes.data.data : []
+      riderOptions.value = ridersRes.data.success ? ridersRes.data.data : []
+      // vendorOptions.value = vendorsRes.data.success ? vendorsRes.data.data : []
+      vendorOptions.value = vendorsRes.data.success
+        ? (Array.isArray(vendorsRes.data.data)
+        ? vendorsRes.data.data
+        : vendorsRes.data.data?.data || [])
+        : []
+
+      countryOptions.value = countriesRes.data.success ? countriesRes.data.data : []
+
+      warehouseOptions.value = warehousesRes.data.success ? warehousesRes.data.data : []
+      deliveryStatusOptions.value = deliveryStatusRes.data.success ? deliveryStatusRes.data.data : []
+      userOptions.value = usersRes.data.success ? usersRes.data.data : []
+
+      console.log('Dropdown options loaded successfully')
+    } catch (err) {
+      console.error('Failed to fetch dropdown options:', err)
+      addNotification({ type: 'error', message: 'Failed to load dropdown options' })
+      throw err
+    } finally {
+      loading.value.options = false
+    }
+  }
+
+  // Notification helpers
+  const addNotification = (notification) => {
+    notifications.value.push({
+      id: Date.now(),
+      timestamp: new Date(),
+      ...notification
+    })
+  }
+
+  const removeNotification = (id) => {
+    notifications.value = notifications.value.filter(n => n.id !== id)
+  }
+
+  // Dialog helpers
+  const openDialog = async (orderId) => {
+    selectedOrderId.value = orderId
+    isCreateMode.value = false
+
+    dialog.value = true
+
+    if (orderId) {
+      await loadOrder(orderId)
+    }
+  }
+
+  const openCreateDialog = () => {
+    dialog.value = true
+    selectedOrderId.value = null
+    selectedOrder.value = null
+    isCreateMode.value = true
+    // If you have a resetForm function, call it here. Otherwise, remove the line below.
+    // resetForm()
+  }
+
+  const closeDialog = () => {
+    dialog.value = false
+    selectedOrderId.value = null
+    selectedOrder.value = null
+  }
+
+  // Filter helpers
+  const clearAllFilters = () => {
+    orderFilterStatus.value = null
+    orderFilterProduct.value = null
+    orderFilterZone.value = null
+    orderFilterAgent.value = null
+    orderFilterRider.value = null
+    orderFilterVendor.value = null
+    orderFilterCity.value = null
+    orderFilterCategory.value = null
+    orderDateRange.value = []
+    orderSearch.value = ''
+  }
+
+  const applyFilters = async () => {
+    const filters = {}
+
+    if (orderFilterStatus.value) filters.status = orderFilterStatus.value
+    if (orderFilterProduct.value) filters.product_id = orderFilterProduct.value
+    if (orderFilterZone.value) filters.zone_id = orderFilterZone.value
+    if (orderFilterAgent.value) filters.agent_id = orderFilterAgent.value
+    if (orderFilterRider.value) filters.rider_id = orderFilterRider.value
+    if (orderFilterVendor.value) filters.vendor_id = orderFilterVendor.value
+    if (orderFilterCity.value) filters.city = orderFilterCity.value
+    if (orderFilterCategory.value) filters.category_id = orderFilterCategory.value
+    if (orderSearch.value) filters.search = orderSearch.value
+
+    if (orderDateRange.value && orderDateRange.value.length === 2) {
+      filters.created_from = orderDateRange.value[0]
+      filters.created_to = orderDateRange.value[1]
+    }
+
+    // Reset to first page when applying filters
+    filters.page = 1
+    await fetchOrders(filters)
+  }
+
+  // Initialization
+  const initialize = async () => {
+    if (initialized.value) return
+
+    try {
+      await Promise.all([
+        fetchDropdownOptions(),
+        fetchOrders({ page: 1 })
+      ])
+      initialized.value = true
+    } catch (err) {
+      console.error('Failed to initialize order store:', err)
+    }
+  }
+
+  // Return all state, getters, and actions
+  return {
+    // State
+    orders,
+    loading,
+    error,
+    notifications,
+    dialog,
+    selectedOrderId,
+    selectedOrder,
+    initialized,
+    isCreateMode,
+
+    // Filters
+    orderFilterStatus,
+    orderFilterProduct,
+    orderFilterZone,
+    orderFilterAgent,
+    orderFilterRider,
+    orderFilterVendor,
+    orderFilterCity,
+    orderFilterCategory,
+    orderDateRange,
+    orderSearch,
+
+    // Options
+    orderStatusOptions,
+    productOptions,
+    categoryOptions,
+    cityOptions,
+    zoneOptions,
+    agentOptions,
+    riderOptions,
+    vendorOptions,
+    clientOptions,
+    warehouseOptions,
+    countryOptions,
+    deliveryStatusOptions,
+    userOptions,
+
     // Pagination
-    pagination: {
-      page: 1,
-      itemsPerPage: 25,
-      totalItems: 0
-    },
+    pagination,
 
-    // Cache for vendor products to improve performance
-    vendorProductsCache: new Map(),
-    
-    // Error handling
-    lastError: null,
-    notifications: [],
+    // Getters
+    getOrderById,
+    confirmedOrders,
+    pendingOrders,
+    cancelledOrders,
+    totalRevenue,
+    activeFilterCount,
+    currentFilters,
 
-    // Initialization flag
-    initialized: false
-  }),
-
-  getters: {
-    // Get active filter count
-    activeFilterCount: (state) => {
-      let count = 0
-      if (state.orderFilterStatus) count++
-      if (state.orderFilterProduct) count++
-      if (state.orderFilterZone) count++
-      if (state.orderFilterAgent) count++
-      if (state.orderFilterRider) count++
-      if (state.orderFilterVendor) count++
-      if (state.orderDateRange && state.orderDateRange.length > 0) count++
-      if (state.orderSearch) count++
-      return count
-    },
-    
-    // Get current filters as object
-    currentFilters: (state) => ({
-      status: state.orderFilterStatus,
-      product: state.orderFilterProduct,
-      zone: state.orderFilterZone,
-      agent: state.orderFilterAgent,
-      rider: state.orderFilterRider,
-      vendor: state.orderFilterVendor,
-      dateRange: state.orderDateRange,
-      search: state.orderSearch
-    }),
-    
-    // Check if any loading state is active
-    isLoading: (state) => {
-      return Object.values(state.loading).some(loading => loading)
-    },
-
-    // Get vendor products from cache
-    getVendorProducts: (state) => (vendorId) => {
-      return state.vendorProductsCache.get(vendorId) || []
-    },
-
-    // Get order by ID
-    getOrderById: (state) => (orderId) => {
-      return state.orders.find(order => order.id === orderId) || null
-    },
-
-    // Get table items (this is what the component should use)
-    tableItems: (state) => {
-      const items = state.activeFilterCount > 0 ? state.filteredOrders : state.orders
-      console.log('[OrderStore] tableItems getter called, returning:', items?.length || 0, 'items')
-      return items || []
-    }
-  },
-
-  actions: {
-    // INITIALIZATION - This is crucial
-    async initialize() {
-      if (this.initialized) {
-        console.log('[OrderStore] Already initialized, skipping...')
-        return
-      }
-
-      console.log('[OrderStore] Initializing store...')
-      
-      try {
-        // Initialize options in parallel
-        await Promise.allSettled([
-          this.loadOrderStatusOptions(),
-          this.loadProductOptions(),
-          this.loadZoneOptions(),
-          this.loadAgentOptions(),
-          this.loadRiderOptions(),
-          this.loadVendorOptions(),
-          this.loadClientOptions(),
-          this.loadWarehouseOptions(),
-          this.loadCountryOptions()
-        ])
-
-        // Load initial orders
-        await this.loadOrdersWithFilters({})
-        
-        this.initialized = true
-        console.log('[OrderStore] Initialization complete')
-      } catch (error) {
-        console.error('[OrderStore] Initialization error:', error)
-        this.setError(error)
-      }
-    },
-
-    // Error handling
-    setError(error) {
-      this.lastError = error
-      console.error('Order Store Error:', error)
-    },
-
-    clearError() {
-      this.lastError = null
-    },
-
-    addNotification(notification) {
-      this.notifications.push({
-        id: Date.now(),
-        timestamp: new Date(),
-        ...notification
-      })
-    },
-
-    removeNotification(id) {
-      this.notifications = this.notifications.filter(n => n.id !== id)
-    },
-
-    // Clear all filters
-    clearAllFilters() {
-      this.orderFilterStatus = null
-      this.orderFilterProduct = null
-      this.orderFilterZone = null
-      this.orderFilterAgent = null
-      this.orderFilterRider = null
-      this.orderFilterVendor = null
-      this.orderDateRange = []
-      this.orderSearch = ''
-    },
-
-    // Generic API call helper with error handling
-    async apiCall(url, options = {}) {
-      try {
-        // Use axios for API calls (assumes axios is imported)
-        const config = {
-          url,
-          method: options.method ? options.method.toLowerCase() : 'get',
-          headers: {
-            'Accept': 'application/json',
-            ...(options.headers || {})
-          },
-          withCredentials: true
-        }
-
-        if (options.body) {
-          config.data = typeof options.body === 'string'
-            ? JSON.parse(options.body)
-            : options.body
-        }
-
-        if (config.method === 'get' && config.data) {
-          config.params = config.data
-          delete config.data
-        }
-
-        const response = await axios(config)
-        return response.data
-      } catch (error) {
-        let message = 'Unknown error'
-        if (error.response && error.response.data) {
-          message = error.response.data.message || JSON.stringify(error.response.data)
-        } else if (error.message) {
-          message = error.message
-        }
-        this.setError(new Error(message))
-        throw new Error(message)
-      }
-    },
-
-    // Load order status options
-    async loadOrderStatusOptions() {
-      try {
-        this.loading.statusOptions = true
-        // Try to load from API, fallback to defaults
-        try {
-          const data = await this.apiCall('/api/v1/order-statuses')
-          this.orderStatusOptions = Array.isArray(data) ? data : data.statuses || this.orderStatusOptions
-        } catch (error) {
-          console.warn('Could not load status options from API, using defaults')
-        }
-      } catch (error) {
-        console.error('Error loading status options:', error)
-      } finally {
-        this.loading.statusOptions = false
-      }
-    },
-
-    // Load product options (general products)
-    async loadProductOptions() {
-      try {
-        this.loading.productOptions = true
-        const data = await this.apiCall('/api/v1/products')
-        this.productOptions = Array.isArray(data) ? data : data.products || []
-      } catch (error) {
-        console.error('Error loading product options:', error)
-        this.productOptions = []
-      } finally {
-        this.loading.productOptions = false
-      }
-    },
-
-    // Load zone options
-    async loadZoneOptions() {
-      try {
-        this.loading.zoneOptions = true
-        const data = await this.apiCall('/api/v1/zones')
-        this.zoneOptions = Array.isArray(data) ? data : data.zones || []
-      } catch (error) {
-        console.error('Error loading zone options:', error)
-        this.zoneOptions = []
-      } finally {
-        this.loading.zoneOptions = false
-      }
-    },
-
-    // Load agent options
-    async loadAgentOptions() {
-      try {
-        this.loading.agentOptions = true
-        const data = await this.apiCall('/api/v1/agents')
-        this.agentOptions = Array.isArray(data) ? data : data.agents || []
-      } catch (error) {
-        console.error('Error loading agent options:', error)
-        this.agentOptions = []
-      } finally {
-        this.loading.agentOptions = false
-      }
-    },
-
-    // Load rider options
-    async loadRiderOptions() {
-      try {
-        this.loading.riderOptions = true
-        const data = await this.apiCall('/api/v1/riders')
-        this.riderOptions = Array.isArray(data) ? data : data.riders || []
-      } catch (error) {
-        console.error('Error loading rider options:', error)
-        this.riderOptions = []
-      } finally {
-        this.loading.riderOptions = false
-      }
-    },
-
-    // Load vendor options
-    async loadVendorOptions() {
-      try {
-        this.loading.vendorOptions = true
-        const data = await this.apiCall('/api/v1/vendors')
-        this.vendorOptions = Array.isArray(data) ? data : data.vendors || []
-      } catch (error) {
-        console.error('Error loading vendor options:', error)
-        this.vendorOptions = []
-      } finally {
-        this.loading.vendorOptions = false
-      }
-    },
-
-    // Load client options with search functionality
-    async loadClientOptions(search = '') {
-      try {
-        this.loading.clientOptions = true
-        const queryParam = search ? `?search=${encodeURIComponent(search)}&limit=50` : '?limit=100'
-        const data = await this.apiCall(`/api/v1/clients${queryParam}`)
-        this.clientOptions = Array.isArray(data) ? data : data.clients || []
-      } catch (error) {
-        console.error('Error loading client options:', error)
-        this.clientOptions = []
-      } finally {
-        this.loading.clientOptions = false
-      }
-    },
-
-    // Load warehouse options
-    async loadWarehouseOptions() {
-      try {
-        this.loading.warehouseOptions = true
-        const data = await this.apiCall('/api/v1/warehouses')
-        this.warehouseOptions = Array.isArray(data) ? data : data.warehouses || []
-      } catch (error) {
-        console.error('Error loading warehouse options:', error)
-        this.warehouseOptions = []
-      } finally {
-        this.loading.warehouseOptions = false
-      }
-    },
-
-    // Load country options
-    async loadCountryOptions() {
-      try {
-        this.loading.countryOptions = true
-        const data = await this.apiCall('/api/v1/countries')
-        this.countryOptions = Array.isArray(data) ? data : data.countries || []
-      } catch (error) {
-        console.error('Error loading country options:', error)
-        this.countryOptions = []
-      } finally {
-        this.loading.countryOptions = false
-      }
-    },
-
-    // CORE METHOD: Load orders with filters - FIXED VERSION
-    async loadOrdersWithFilters(filters = {}) {
-      try {
-        console.log('[OrderStore] loadOrdersWithFilters called with filters:', filters)
-        this.loading.orders = true
-        this.clearError()
-
-        // Build URL with filters
-        let url = '/api/v1/orders'
-        const queryParams = new URLSearchParams()
-
-        // Add filters to query params if they have values
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== null && value !== undefined && value !== '') {
-            if (Array.isArray(value)) {
-              if (value.length > 0) {
-                console.log(`[OrderStore] Adding array filter: ${key} =`, value)
-                queryParams.append(key, JSON.stringify(value))
-              }
-            } else {
-              console.log(`[OrderStore] Adding filter: ${key} =`, value)
-              queryParams.append(key, value)
-            }
-          }
-        })
-
-        // Always add pagination
-        queryParams.append('page', this.pagination.page.toString())
-        queryParams.append('per_page', this.pagination.itemsPerPage.toString())
-
-        if (queryParams.toString()) {
-          url += `?${queryParams.toString()}`
-        }
-
-        console.log('[OrderStore] Final orders API URL:', url)
-
-        // Make API call
-        const response = await this.apiCall(url)
-        console.log('[OrderStore] Raw API Response:', response)
-
-        // CRITICAL: Handle Laravel pagination structure correctly
-        if (response && typeof response === 'object') {
-          if (response.data && Array.isArray(response.data)) {
-            // Laravel pagination format
-            this.orders = response.data
-            this.filteredOrders = response.data
-            
-            // Handle Laravel pagination meta
-            if (response.meta) {
-              this.pagination.totalItems = response.meta.total || 0
-            }
-            
-            console.log('[OrderStore] Successfully loaded orders:', this.orders.length)
-            console.log('[OrderStore] Sample order:', this.orders[0])
-            
-            // Ensure orderItems are properly formatted for your templates
-            this.orders.forEach(order => {
-              if (!order.orderItems && order.order_items) {
-                order.orderItems = order.order_items
-              }
-              if (!order.orderItems) {
-                order.orderItems = []
-              }
-            })
-          } else if (Array.isArray(response)) {
-            // Direct array response
-            this.orders = response
-            this.filteredOrders = response
-            this.pagination.totalItems = response.length
-            
-            console.log('[OrderStore] Loaded direct array orders:', this.orders.length)
-          } else {
-            console.warn('[OrderStore] Unexpected response format:', response)
-            this.orders = []
-            this.filteredOrders = []
-            this.pagination.totalItems = 0
-          }
-        } else {
-          console.warn('[OrderStore] Invalid response:', response)
-          this.orders = []
-          this.filteredOrders = []
-          this.pagination.totalItems = 0
-        }
-
-        return this.orders
-      } catch (error) {
-        console.error('[OrderStore] Error loading orders:', error)
-        this.orders = []
-        this.filteredOrders = []
-        this.pagination.totalItems = 0
-        throw error
-      } finally {
-        this.loading.orders = false
-        console.log('[OrderStore] loadOrdersWithFilters finished. Orders count:', this.orders.length)
-      }
-    },
-
-    // Load specific order details
-    async loadOrder(orderId) {
-      try {
-        this.loading.orders = true
-        const data = await this.apiCall(`/api/v1/orders/${orderId}`)
-        const order = data.data || data
-
-        // Ensure proper data structure
-        if (order) {
-          order.orderItems = order.orderItems || order.order_items || []
-          order.client = order.client || {}
-          order.vendor = order.vendor || {}
-          order.agent = order.agent || {}
-          order.rider = order.rider || {}
-          order.warehouse = order.warehouse || {}
-          order.country = order.country || {}
-        }
-
-        return order
-      } catch (error) {
-        console.error('Error loading order:', error)
-        throw error
-      } finally {
-        this.loading.orders = false
-      }
-    },
-
-    // Dialog management
-    async openDialog(orderId) {
-      console.log('[OrderStore] openDialog called with:', orderId)
-
-      // Handle object parameter
-      const id = typeof orderId === 'object' && orderId !== null && 'id' in orderId
-        ? orderId.id
-        : orderId
-
-      this.selectedOrderId = id
-      this.dialog = true
-
-      // Load order details
-      try {
-        const order = await this.loadOrder(id)
-        this.selectedOrder = order
-        console.log('[OrderStore] Order loaded and stored:', order)
-      } catch (error) {
-        console.error('[OrderStore] Error loading order:', error)
-        this.selectedOrder = null
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to load order details',
-          details: error.message
-        })
-      }
-    },
-
-    openCreateDialog() {
-      this.createDialog = true
-      this.dialog = true
-      this.selectedOrderId = null
-      this.selectedOrder = null
-    },
-
-    closeDialog() {
-      this.dialog = false
-      this.createDialog = false
-      this.selectedOrderId = null
-      this.selectedOrder = null
-    },
-
-    // UPDATE - Update order
-    async updateOrder(orderId, orderData) {
-      try {
-        this.loading.updating = true
-        this.clearError()
-
-        const data = await this.apiCall(`/api/v1/orders/${orderId}`, {
-          method: 'PUT',
-          body: JSON.stringify(orderData)
-        })
-
-        const updatedOrder = data.data || data
-
-        // Update selectedOrder if it matches
-        if (this.selectedOrder && this.selectedOrder.id === orderId) {
-          this.selectedOrder = updatedOrder
-        }
-
-        // Update in orders array
-        const orderIndex = this.orders.findIndex(order => order.id === orderId)
-        if (orderIndex !== -1) {
-          this.orders[orderIndex] = updatedOrder
-          this.filteredOrders[orderIndex] = updatedOrder
-        }
-
-        this.addNotification({
-          type: 'success',
-          message: 'Order updated successfully'
-        })
-
-        return updatedOrder
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to update order',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.updating = false
-      }
-    },
-
-    // CREATE - Create new order
-    async createOrder(orderData) {
-      try {
-        this.loading.creating = true
-        this.clearError()
-
-        // Validate required fields
-        if (!orderData.client_id) {
-          throw new Error('Client is required')
-        }
-        if (!orderData.vendor_id) {
-          throw new Error('Vendor is required')
-        }
-
-        const data = await this.apiCall('/api/v1/orders', {
-          method: 'POST',
-          body: JSON.stringify(orderData)
-        })
-        
-        const newOrder = data.data || data
-        
-        // Add to orders array
-        this.orders.unshift(newOrder)
-        this.filteredOrders.unshift(newOrder)
-        this.pagination.totalItems += 1
-        
-        this.addNotification({
-          type: 'success',
-          message: 'Order created successfully',
-          details: `Order ${newOrder.order_no} has been created`
-        })
-        
-        return newOrder
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to create order',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.creating = false
-      }
-    },
-
-    // DELETE - Delete order
-    async deleteOrder(orderId) {
-      try {
-        this.loading.deleting = true
-        this.clearError()
-
-        await this.apiCall(`/api/v1/orders/${orderId}`, {
-          method: 'DELETE'
-        })
-        
-        // Remove from orders array
-        this.orders = this.orders.filter(order => order.id !== orderId)
-        this.filteredOrders = this.filteredOrders.filter(order => order.id !== orderId)
-        this.pagination.totalItems = Math.max(0, this.pagination.totalItems - 1)
-        
-        // Clear selected order if it was deleted
-        if (this.selectedOrder && this.selectedOrder.id === orderId) {
-          this.selectedOrder = null
-          this.selectedOrderId = null
-          this.dialog = false
-        }
-
-        this.addNotification({
-          type: 'success',
-          message: 'Order deleted successfully'
-        })
-        
-        return true
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to delete order',
-          details: error.message
-        })
-        throw error
-      } finally {
-        this.loading.deleting = false
-      }
-    },
-
-    // Set pagination
-    setPagination(pagination) {
-      this.pagination = { ...this.pagination, ...pagination }
-    },
-
-    // Refresh data
-    async refreshOrders() {
-      try {
-        this.loading.refresh = true
-        await this.loadOrdersWithFilters(this.currentFilters)
-        
-        this.addNotification({
-          type: 'info',
-          message: 'Orders refreshed successfully'
-        })
-      } catch (error) {
-        this.addNotification({
-          type: 'error',
-          message: 'Failed to refresh orders',
-          details: error.message
-        })
-      } finally {
-        this.loading.refresh = false
-      }
-    },
-
-    // Reset store to initial state
-    $reset() {
-      this.clearAllFilters()
-      this.orders = []
-      this.filteredOrders = []
-      this.selectedOrders = []
-      this.dialog = false
-      this.createDialog = false
-      this.selectedOrderId = null
-      this.selectedOrder = null
-      this.pagination = {
-        page: 1,
-        itemsPerPage: 25,
-        totalItems: 0
-      }
-      
-      // Reset loading states
-      Object.keys(this.loading).forEach(key => {
-        this.loading[key] = false
-      })
-
-      this.initialized = false
-      this.vendorProductsCache.clear()
-      this.notifications = []
-      this.lastError = null
-    }
+    // Actions
+    fetchOrders,
+    loadOrder,
+    createOrder,
+    updateOrder,
+    updateOrderCustomer,
+    updateOrderItems,
+    deleteOrder,
+    getOrderDetails,
+    fetchDropdownOptions,
+    addNotification,
+    removeNotification,
+    openDialog,
+    openCreateDialog,
+    closeDialog,
+    clearAllFilters,
+    applyFilters,
+    initialize
   }
 })

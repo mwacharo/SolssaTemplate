@@ -38,10 +38,16 @@ class Product extends Model
             ->useLogName('product');
     }
 
+    // public function vendor()
+    // {
+    //     return $this->belongsTo(Vendor::class);
+    // }
+
     public function vendor()
-    {
-        return $this->belongsTo(Vendor::class);
-    }
+{
+    return $this->belongsTo(\App\Models\User::class, 'vendor_id');
+}
+
 
     public function category()
     {

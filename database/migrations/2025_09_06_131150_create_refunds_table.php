@@ -20,6 +20,8 @@ return new class extends Migration
           $table->string('reason', 255)->nullable();
           $table->json('meta')->nullable();
           $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+                $table->softDeletes();
           $table->index('order_id', 'idx_order');
           $table->index('payment_id', 'idx_payment');
        });

@@ -65,4 +65,10 @@ class CallHistory extends Model
     {
         return $this->hasMany(CallTranscript::class, 'call_history_id');
     }
+
+     public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
 }

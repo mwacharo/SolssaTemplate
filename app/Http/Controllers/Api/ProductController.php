@@ -66,7 +66,7 @@ public function store(Request $request)
 
     Log::info('Attempting to create product', ['request_data' => $request->all()]);
     $validated = $request->validate([
-        'vendor_id'   => 'required|exists:vendors,id',
+        'vendor_id'   => 'required|exists:users,id',
         'category_id' => 'required|exists:categories,id',
         'product_name'=> 'required|string|max:255',
         'description' => 'nullable|string',
@@ -250,7 +250,7 @@ public function store(Request $request)
         ]);
 
         $validated = $request->validate([
-            'vendor_id'   => 'sometimes|exists:vendors,id',
+            'vendor_id'   => 'sometimes|exists:user,id',
             'category_id' => 'sometimes|exists:categories,id',
             'product_name'=> 'sometimes|string|max:255',
             'description' => 'nullable|string',

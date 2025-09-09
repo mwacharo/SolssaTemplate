@@ -15,7 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('sku')->unique();
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('vendor_id')->constrained()->cascadeOnDelete();
+
+            // vendor_id points to users.id
+            $table->foreignId('vendor_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
             $table->string('product_name');
             $table->text('description')->nullable();
             $table->timestamps();

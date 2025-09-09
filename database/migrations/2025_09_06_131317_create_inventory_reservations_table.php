@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamp('released_at')->nullable();
             $table->string('reason', 255)->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('sku', 'idx_sku');
             $table->index('order_id', 'idx_order');

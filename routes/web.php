@@ -119,6 +119,8 @@ Route::middleware([
         Route::get('/scan-dispatch', fn() => Inertia::render('Orders/ScanDispatch'))->name('scan-dispatch');
         Route::get('/dispatch-list', fn() => Inertia::render('Orders/DispatchList'))->name('dispatch-list');
         Route::get('/ship', fn() => Inertia::render('Orders/Ship'))->name('ship');
+        // new order form
+        Route::get('/create', fn() => Inertia::render('Orders/OrderForm'))->name('create');
     });
 
     // Users & Teams
@@ -147,8 +149,8 @@ Route::middleware([
         Route::get('/', fn() => Inertia::render('Branches/ViewBranches'))->name('index');
         Route::get('/create', fn() => Inertia::render('Branches/AddBranch'))->name('create');
         Route::get('/locations', fn() => Inertia::render('Branches/ManageLocations'))->name('locations');
-        Route::get('/cities', fn() => Inertia::render('Branches/Cities'))->name('cities');
-        Route::get('/zones', fn() => Inertia::render('Branches/Zones'))->name('zones');
+        Route::get('/cities', fn() => Inertia::render('Branches/City'))->name('cities');
+        Route::get('/zones', fn() => Inertia::render('Branches/Zone'))->name('zones');
     });
 
     // Settings

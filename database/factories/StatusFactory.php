@@ -18,8 +18,9 @@ class StatusFactory extends Factory
     {
         return [
             'name' => $this->faker->word,
-            'description' => $this->faker->sentence,
-            'color' => $this->faker->safeColorName,
+            'status_category' => $this->faker->optional()->word,
+            'description' => $this->faker->optional()->sentence,
+            'color' => $this->faker->optional()->safeColorName,
             'country_id' => \App\Models\Country::factory(),
         ];
     }

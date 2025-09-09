@@ -114,16 +114,17 @@ class UserController extends Controller
 
 
     public function update(UserUpdateRequest $request, $id)
-{
-    $user = $this->userService->update($id, $request->validated());
+    {
+        $user = $this->userService->update($id, $request->validated());
 
-    if ($request->has('roles')) {
-        // Teams are disabled, so no need for teamId
-        $user->syncRoles($request->input('roles'));
+        if ($request->has('role_id')) {
+            // Assign a single role by ID
+            $roleId = $request->input('role_id');
+            $user->syncRoles([$roleId]);
+        }
+
+        return new UserResource($user);
     }
-
-    return new UserResource($user);
-}
 
 
     public function destroy($id)

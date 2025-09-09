@@ -24,6 +24,7 @@ return new class extends Migration
           $table->dateTime('delivered_at')->nullable();
           $table->timestamp('created_at')->useCurrent();
           $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->softDeletes();
 
           $table->index('webhook_subscription_id', 'idx_subscription');
           $table->index('order_event_id', 'idx_order_event');
