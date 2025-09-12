@@ -11,7 +11,7 @@ class OrderStatusTimestamp extends Model
     protected $fillable = [
         'order_id',
         'status_id',
-        
+        'status_notes',
         'timestamp',
     ];
 

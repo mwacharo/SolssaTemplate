@@ -47,6 +47,9 @@ export const useOrderStore = defineStore('orders', () => {
   const countryOptions = ref([])
   const deliveryStatusOptions = ref([])
   const userOptions = ref([])
+  const statusOptions = ref([
+
+  ])
 
   // Pagination
   const pagination = ref({
@@ -149,7 +152,7 @@ export const useOrderStore = defineStore('orders', () => {
       return data
     } catch (err) {
       error.value = err.response?.data?.message || err.message || 'Failed to fetch orders'
-      addNotification({ type: 'error', message: error.value })
+      // addNotification({ type: 'error', message: error.value })
       throw err
     } finally {
       loading.value.orders = false
@@ -192,11 +195,11 @@ export const useOrderStore = defineStore('orders', () => {
       orders.value.unshift(result.data)
       pagination.value.total += 1
 
-      addNotification({ type: 'success', message: 'Order created successfully' })
+      // addNotification({ type: 'success', message: 'Order created successfully' })
       return result.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message || 'Failed to create order'
-      addNotification({ type: 'error', message: error.value })
+      // addNotification({ type: 'error', message: error.value })
       throw err
     } finally {
       loading.value.creating = false
@@ -230,11 +233,11 @@ export const useOrderStore = defineStore('orders', () => {
         selectedOrder.value = result.data
       }
 
-      addNotification({ type: 'success', message: 'Order updated successfully' })
+      // addNotification({ type: 'success', message: 'Order updated successfully' })
       return result.data
     } catch (err) {
       error.value = err.response?.data?.message || err.message || 'Failed to update order'
-      addNotification({ type: 'error', message: error.value })
+      // addNotification({ type: 'error', message: error.value })
       throw err
     } finally {
       loading.value.updating = false
@@ -263,10 +266,10 @@ export const useOrderStore = defineStore('orders', () => {
         pagination.value.total -= 1
       }
 
-      addNotification({ type: 'success', message: 'Order deleted successfully' })
+      // addNotification({ type: 'success', message: 'Order deleted successfully' })
     } catch (err) {
       error.value = err.response?.data?.message || err.message || 'Failed to delete order'
-      addNotification({ type: 'error', message: error.value })
+      // addNotification({ type: 'error', message: error.value })
       throw err
     } finally {
       loading.value.deleting = false
@@ -289,7 +292,7 @@ export const useOrderStore = defineStore('orders', () => {
       return result.data
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Failed to fetch order details'
-      addNotification({ type: 'error', message })
+      // addNotification({ type: 'error', message })
       throw new Error(message)
     }
   }
@@ -314,17 +317,16 @@ export const useOrderStore = defineStore('orders', () => {
       console.log('Fetching dropdown options...')
 
       const requests = [
-        axios.get('/api/v1/statuses').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/categories').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/cities').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/zones').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/agents').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/riders').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/vendors').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/countries').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/warehouses').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/delivery-statuses').catch(err => ({ data: { success: false, data: [] } })),
-        axios.get('/api/v1/users').catch(err => ({ data: { success: false, data: [] } }))
+        axios.get('/api/v1/statuses').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/categories').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/cities').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/zones').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/agents').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/riders').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/vendors').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/countries').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/warehouses').catch(() => ({ data: { data: [] } })),
+        axios.get('/api/v1/clients').catch(() => ({ data: { data: [] } })),
       ]
 
       // Add products request if vendorId is provided
@@ -338,6 +340,15 @@ export const useOrderStore = defineStore('orders', () => {
         )
       }
 
+
+      const normalize = (res) => {
+        if (!res || !res.data) return []
+        if (Array.isArray(res.data)) return res.data
+        if (Array.isArray(res.data.data)) return res.data.data
+        return []
+      }
+
+
       const [
         statusesRes,
         categoriesRes,
@@ -348,36 +359,27 @@ export const useOrderStore = defineStore('orders', () => {
         vendorsRes,
         countriesRes,
         warehousesRes,
-        deliveryStatusRes,
-        usersRes,
+        clientsRes,
         productsRes
       ] = await Promise.all(requests)
 
       // Set options with fallback to empty arrays
-      orderStatusOptions.value = statusesRes.data.success ? statusesRes.data.data : []
-      productOptions.value = productsRes.data.success ? productsRes.data.data : []
-      categoryOptions.value = categoriesRes.data.success ? categoriesRes.data.data : []
-      cityOptions.value = citiesRes.data.success ? citiesRes.data.data : []
-      zoneOptions.value = zonesRes.data.success ? zonesRes.data.data : []
-      agentOptions.value = agentsRes.data.success ? agentsRes.data.data : []
-      riderOptions.value = ridersRes.data.success ? ridersRes.data.data : []
-      // vendorOptions.value = vendorsRes.data.success ? vendorsRes.data.data : []
-      vendorOptions.value = vendorsRes.data.success
-        ? (Array.isArray(vendorsRes.data.data)
-        ? vendorsRes.data.data
-        : vendorsRes.data.data?.data || [])
-        : []
-
-      countryOptions.value = countriesRes.data.success ? countriesRes.data.data : []
-
-      warehouseOptions.value = warehousesRes.data.success ? warehousesRes.data.data : []
-      deliveryStatusOptions.value = deliveryStatusRes.data.success ? deliveryStatusRes.data.data : []
-      userOptions.value = usersRes.data.success ? usersRes.data.data : []
+      statusOptions.value = normalize(statusesRes)
+      categoryOptions.value = normalize(categoriesRes)
+      cityOptions.value = normalize(citiesRes)
+      zoneOptions.value = normalize(zonesRes)
+      agentOptions.value = normalize(agentsRes)
+      riderOptions.value = normalize(ridersRes)
+      vendorOptions.value = normalize(vendorsRes)
+      countryOptions.value = normalize(countriesRes)
+      warehouseOptions.value = normalize(warehousesRes)
+      clientOptions.value = normalize(clientsRes)
+      productOptions.value = normalize(productsRes)
 
       console.log('Dropdown options loaded successfully')
     } catch (err) {
       console.error('Failed to fetch dropdown options:', err)
-      addNotification({ type: 'error', message: 'Failed to load dropdown options' })
+      // addNotification({ type: 'error', message: 'Failed to load dropdown options' })
       throw err
     } finally {
       loading.value.options = false
@@ -385,17 +387,17 @@ export const useOrderStore = defineStore('orders', () => {
   }
 
   // Notification helpers
-  const addNotification = (notification) => {
-    notifications.value.push({
-      id: Date.now(),
-      timestamp: new Date(),
-      ...notification
-    })
-  }
+  // const addNotification = (notification) => {
+  //   notifications.value.push({
+  //     id: Date.now(),
+  //     timestamp: new Date(),
+  //     ...notification
+  //   })
+  // }
 
-  const removeNotification = (id) => {
-    notifications.value = notifications.value.filter(n => n.id !== id)
-  }
+  // const removeNotification = (id) => {
+  //   notifications.value = notifications.value.filter(n => n.id !== id)
+  // }
 
   // Dialog helpers
   const openDialog = async (orderId) => {
@@ -515,6 +517,7 @@ export const useOrderStore = defineStore('orders', () => {
     countryOptions,
     deliveryStatusOptions,
     userOptions,
+    statusOptions,
 
     // Pagination
     pagination,
@@ -538,8 +541,8 @@ export const useOrderStore = defineStore('orders', () => {
     deleteOrder,
     getOrderDetails,
     fetchDropdownOptions,
-    addNotification,
-    removeNotification,
+    // addNotification,
+    // removeNotification,
     openDialog,
     openCreateDialog,
     closeDialog,

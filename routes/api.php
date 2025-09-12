@@ -175,6 +175,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/vendors/{id}', [VendorController::class, 'show']);
     Route::put('/vendors/{id}', [VendorController::class, 'update']);
     Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
+    // Endpoint to fetch products for a specific vendor
+    Route::get('/vendors/{vendorId}/products', [ProductController::class, 'productsByVendor']);
 
     // clients 
 

@@ -31,21 +31,21 @@ class UpdateOrderRequest extends FormRequest
         return [
             'order_no' => [
                 'sometimes',
-                'required',
-                Rule::unique('orders')->ignore($orderId)
+                // 'required',
+                // Rule::unique('orders')->ignore($orderId)
             ],
             'reference' => 'nullable|string|max:255',
             'client_id' => 'sometimes|required|exists:clients,id',
-            'customer_id' => 'nullable|exists:customers,id',
+            // 'customer_id' => 'nullable|exists:customers,id',
             'warehouse_id' => 'sometimes|required|exists:warehouses,id',
-            'country_id' => 'sometimes|required|exists:countries,id',
+            // 'country_id' => 'sometimes|required|exists:countries,id',
             'agent_id' => 'nullable|exists:users,id',
             'user_id' => 'sometimes|required|exists:users,id',
             'rider_id' => 'nullable|exists:users,id',
             'zone_id' => 'nullable|exists:zones,id',
             'status' => 'sometimes|required|string|max:50',
             'delivery_status' => 'nullable|string|max:50',
-            'delivery_date' => 'nullable|date',
+            // 'delivery_date' => 'nullable|date',
             'schedule_date' => 'nullable|date',
             'paid' => 'boolean',
             'payment_method' => 'nullable|string|max:50',
@@ -65,7 +65,7 @@ class UpdateOrderRequest extends FormRequest
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'distance' => 'nullable|numeric|min:0',
-            'customer_notes' => 'nullable|string',
+            // 'customer_notes' => 'nullable|string',
             
             // For nested relationships
             'order_items' => 'nullable|array',

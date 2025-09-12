@@ -23,9 +23,6 @@ class GoogleSheet extends Model
         static::addGlobalScope(new CountryScope);
     }
 
-
-
-
     protected $fillable = [
         'sheet_name',
         'post_spreadsheet_id',
@@ -46,7 +43,7 @@ class GoogleSheet extends Model
 
     public function vendor()
     {
-        return $this->belongsTo(Vendor::class);
+        return $this->belongsTo(\App\Models\User::class, 'vendor_id');
     }
     
 }

@@ -9,6 +9,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;  
 
+use App\Traits\BelongsToUserAndCountry;
+
+
 
 
 class Order extends Model
@@ -16,6 +19,9 @@ class Order extends Model
     use SoftDeletes;
     use HasFactory;
     use LogsActivity;
+
+        use BelongsToUserAndCountry;
+
 
     /**
      * Get the options for activity logging.
@@ -32,16 +38,17 @@ class Order extends Model
 
     protected $fillable = [
         'order_no',
-        
+        'custommer_notes',
         'reference',
         'client_id',
         'customer_id',
         'warehouse_id',
         'country_id',
         'vendor_id',
+        'country_id',
         'currency',
         'agent_id',
-        'user_id',
+        // 'user_id',
         'rider_id',
         'zone_id',
         'status',
@@ -56,7 +63,7 @@ class Order extends Model
         'discount',
         'shipping_charges',
         'currency',
-        'weight',
+        // 'weight',
         'platform',
         'source',
         'pickup_address',

@@ -22,7 +22,13 @@ class StoreWarehouseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'country_id'     => ['required', 'integer', 'exists:countries,id'],
+            'city_id'        => ['required', 'integer', 'exists:cities,id'],
+            'zone_id'        => ['required', 'integer', 'exists:zones,id'],
+            'name'           => ['required', 'string', 'max:255'],
+            'location'       => ['required', 'string', 'max:255'],
+            'contact_person' => ['required', 'string', 'max:255'],
+            'phone'          => ['required', 'string', 'max:20'],
         ];
     }
 }

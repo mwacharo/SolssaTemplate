@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWarehouseRequest;
 use App\Http\Requests\UpdateWarehouseRequest;
 use App\Models\Warehouse;
+use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
@@ -13,15 +14,9 @@ class WarehouseController extends Controller
      */
     public function index()
     {
-        //
-    }
+        $warehouses = Warehouse::with('country')->get();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        return response()->json($warehouses);
     }
 
     /**
@@ -29,7 +24,8 @@ class WarehouseController extends Controller
      */
     public function store(StoreWarehouseRequest $request)
     {
-        //
+        $warehouse = Warehouse::create($request->validated());
+        return response()->json($warehouse, 201);
     }
 
     /**
@@ -37,15 +33,7 @@ class WarehouseController extends Controller
      */
     public function show(Warehouse $warehouse)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Warehouse $warehouse)
-    {
-        //
+        return response()->json($warehouse);
     }
 
     /**
@@ -53,7 +41,8 @@ class WarehouseController extends Controller
      */
     public function update(UpdateWarehouseRequest $request, Warehouse $warehouse)
     {
-        //
+        $warehouse->update($request->validated());
+        return response()->json($warehouse);
     }
 
     /**
@@ -61,6 +50,7 @@ class WarehouseController extends Controller
      */
     public function destroy(Warehouse $warehouse)
     {
-        //
+        $warehouse->delete();
+        return response()->json(null, 204);
     }
 }

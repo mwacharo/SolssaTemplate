@@ -23,19 +23,38 @@
             
             <v-row>
               <v-col cols="12" md="6">
+
                 <v-text-field 
-                  v-model="orderEdit.reference" 
-                  label="Order Reference" 
-                  placeholder="Optional reference number"
-                  prepend-inner-icon="mdi-tag"
-                  variant="outlined"
-                  density="comfortable"
+                  v-model="orderEdit.order_no" 
+                  label="Order Number" 
+                  placeholder="Enter order number"
                 />
               </v-col>
-              
+
+             
+
+
+               <!-- add status -->
+
               <v-col cols="12" md="6">
-                <v-select 
-                  v-model="orderEdit.platform" 
+                <v-select
+                  v-model="orderEdit.status_id"
+                  :items="statusOptionsStore"
+                  item-title="name"
+                  item-value="id"
+                  label="Status"
+                  prepend-inner-icon="mdi-flag"
+                  variant="outlined"
+                  density="comfortable"
+                  :rules="[rules.required]"
+                  clearable
+                  placeholder="Select status"
+                />
+              </v-col>
+
+               <v-col cols="12" md="6">
+                 <v-select 
+                   v-model="orderEdit.platform" 
                   :items="platformOptions" 
                   label="Platform"
                   prepend-inner-icon="mdi-devices"
@@ -68,6 +87,18 @@
                 />
               </v-col>
             </v-row>
+
+            <!-- customer notes -->
+            <v-col cols="12">
+              <v-textarea
+                v-model="orderEdit.customer_notes"
+                label="Customer Notes"
+                placeholder="Enter any special instructions or notes"
+                rows="4"
+                variant="outlined"
+                density="comfortable"
+              />
+            </v-col>
           </div>
 
           <!-- Vendor Information -->
@@ -377,55 +408,101 @@
             </div>
 
           <!-- Order Items Preview (if editing) -->
-          <div v-if="!isCreateMode && order?.order_items?.length" class="mb-4">
+          <!-- Order Items Table (for both create and edit) -->
+          <div class="mb-6">
             <h3 class="text-subtitle-1 font-weight-medium mb-3 text-primary">
               <v-icon class="mr-1" size="small">mdi-package-variant</v-icon>
-              Order Items ({{ order.order_items.length }})
+              Order Items
             </h3>
-            
-            <v-card variant="outlined">
-              <v-list density="compact">
-                <v-list-item 
-                  v-for="item in order.order_items.slice(0, 3)" 
-                  :key="item.id"
-                >
-                  <v-list-item-title>{{ item.product_name || 'Product' }}</v-list-item-title>
-                  <v-list-item-subtitle>
-                    Qty: {{ item.quantity }} × ${{ item.unit_price }}
-                  </v-list-item-subtitle>
-                  
-                  <template #append>
-                    <span class="text-subtitle-2 font-weight-medium">
-                      ${{ (item.quantity * item.unit_price).toFixed(2) }}
-                    </span>
-                  </template>
-                </v-list-item>
-                
-                <v-list-item v-if="order.order_items.length > 3">
-                  <v-list-item-title class="text-center text-grey">
-                    +{{ order.order_items.length - 3 }} more items
-                  </v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-card>
+            <v-table density="comfortable" class="mb-2">
+              <thead>
+                <tr>
+                  <th style="width: 30%">Product</th>
+                  <th style="width: 15%">Quantity</th>
+                  <th style="width: 15%">Unit Price</th>
+                  <th style="width: 15%">Total</th>
+                  <th style="width: 10%"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in orderEdit.order_items || []" :key="item.id || idx">
+                  <td>
+                    <v-text-field
+                      v-model="item.product_name"
+                      placeholder="Product name"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      :readonly="!isCreateMode && !item.editable"
+                    />
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model.number="item.quantity"
+                      type="number"
+                      min="1"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      :readonly="!isCreateMode && !item.editable"
+                    />
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model.number="item.unit_price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      density="compact"
+                      hide-details
+                      variant="outlined"
+                      prefix="$"
+                      :readonly="!isCreateMode && !item.editable"
+                    />
+                  </td>
+                  <td>
+                    ${{ (item.quantity * item.unit_price).toFixed(2) }}
+                  </td>
+                  <td>
+                    <v-btn
+                      icon="mdi-delete"
+                      size="small"
+                      color="error"
+                      variant="text"
+                      @click="removeOrderItem(idx)"
+                      v-if="isCreateMode || (item.editable !== false)"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+            <v-btn
+              color="primary"
+              variant="text"
+              prepend-icon="mdi-plus"
+              @click="addOrderItem"
+              class="mt-2"
+            >
+              Add Item
+            </v-btn>
           </div>
 
           <!-- Status (if editing) -->
-          <div v-if="!isCreateMode" class="mb-4">
+          <!-- <div v-if="!isCreateMode" class="mb-4">
             <h3 class="text-subtitle-1 font-weight-medium mb-3 text-primary">
               <v-icon class="mr-1" size="small">mdi-flag</v-icon>
               Order Status
             </h3>
             
             <v-select 
-              v-model="orderEdit.status" 
+              v-model="orderEdit.status_id" 
               :items="statusOptions" 
               label="Status"
               prepend-inner-icon="mdi-flag"
               variant="outlined"
               density="comfortable"
             />
-          </div>
+          </div> -->
         </v-form>
       </v-card-text>
       
@@ -503,11 +580,7 @@ const sourceOptions = [
   { title: 'Call Center', value: 'call_center' }
 ]
 
-const statusOptions = [
-  { title: 'Pending', value: 0 },
-  { title: 'Confirmed', value: 1 },
-  { title: 'Cancelled', value: 2 }
-]
+
 
 // Computed options from store
 const vendorOptions = computed(() => orderStore.vendorOptions)
@@ -515,44 +588,66 @@ const categoryOptions = computed(() => orderStore.categoryOptions)
 const cityOptions = computed(() => orderStore.cityOptions)
 const zoneOptions = computed(() => orderStore.zoneOptions)
 const warehouseOptions = computed(() => orderStore.warehouseOptions)
+const statusOptionsStore = computed(() => orderStore.statusOptions)
 
 const order = computed(() => orderStore.selectedOrder)
 
 // Form data
 const orderEdit = ref({
+  id: null,
+  order_no: '',
   reference: '',
-  platform: 'api',
-  source: 'vendor_api',
+  customer_id: null,
   vendor_id: null,
-  category_id: null,
+  warehouse_id: null,
+  country_id: null,
+  source: 'vendor_api',
+  platform: 'api',
+  currency: 'KSH',
+  sub_total: '0.00',
+  total_price: '0.00',
+  shipping_charges: '0.00',
+  amount_paid: '0.00',
+  weight: '',
+  paid: false,
+  tracking_no: null,
+  waybill_no: null,
+  distance: '',
+  geocoded: 0,
+  archived_at: null,
   delivery_date: '',
-  status: 0,
+  status_id: '',
+  customer_notes: '',
+  order_items: [],
   customer_address: {
     full_name: '',
     phone: '',
     city: '',
     zone_id: null,
-    address: ''
+    address: '',
+    region: '',
+    zipcode: '',
+    email: ''
   },
   pickup_address: {
     full_name: '',
     phone: '',
-    email: '',
     city: '',
     zone_id: null,
+    address: '',
     region: '',
     zipcode: '',
-    address: ''
+    email: ''
   },
   dropoff_address: {
     full_name: '',
     phone: '',
-    email: '',
     city: '',
     zone_id: null,
+    address: '',
     region: '',
     zipcode: '',
-    address: ''
+    email: ''
   }
 })
 
@@ -567,7 +662,7 @@ const initializeEditForm = (orderData) => {
     vendor_id: orderData.vendor_id || null,
     category_id: orderData.category_id || null,
     delivery_date: orderData.delivery_date || '',
-    status: orderData.status || 0,
+    status_id: orderData.status_id || '',
     customer_address: {
       full_name: orderData.shipping_address?.full_name || '',
       phone: orderData.shipping_address?.phone || '',
@@ -596,27 +691,45 @@ const initializeEditForm = (orderData) => {
 // Initialize form for creation
 const initializeCreateForm = () => {
   orderEdit.value = {
+    order_no: '',
     reference: '',
     platform: 'api',
     source: 'vendor_api',
     vendor_id: null,
-    category_id: null,
+    warehouse_id: null,
     delivery_date: '',
-    status: 0,
+    status_id: '',
+    customer_notes: '',
+    order_items: [],
     customer_address: {
       full_name: '',
       phone: '',
       city: '',
       zone_id: null,
-      address: ''
+      address: '',
+      region: '',
+      zipcode: '',
+      email: ''
     },
-    from_warehouse_id: null,
-    to_warehouse_id: null,
-    from_address: {
-      city: ''
+    pickup_address: {
+      full_name: '',
+      phone: '',
+      city: '',
+      zone_id: null,
+      address: '',
+      region: '',
+      zipcode: '',
+      email: ''
     },
-    to_address: {
-      city: ''
+    dropoff_address: {
+      full_name: '',
+      phone: '',
+      city: '',
+      zone_id: null,
+      address: '',
+      region: '',
+      zipcode: '',
+      email: ''
     }
   }
   addressType.value = 'customer'
@@ -654,42 +767,64 @@ const onAddressTypeChange = (type) => {
 const closeDialog = () => {
   orderStore.closeDialog()
   emit('dialog-closed')
-}
+ }
 
-const saveOrder = async () => {
-  if (!formRef.value?.validate()) return
-  
+
+
+ const saveOrder = async () => {
+  if (!(await formRef.value?.validate())) return
+
   saving.value = true
   try {
     let orderData = { ...orderEdit.value }
-    
-    // Clean up data based on address type
-    if (addressType.value === 'customer') {
-      delete orderData.from_warehouse_id
-      delete orderData.to_warehouse_id
-      delete orderData.from_address
-      delete orderData.to_address
-      orderData.shipping_address = orderData.customer_address
+
+    if (addressType.value === "customer") {
+      // Map to backend expected "customer" object
+      orderData.customer = { ...orderData.customer_address }
       delete orderData.customer_address
-    } else {
+      delete orderData.pickup_address
+      delete orderData.dropoff_address
+    } else if (addressType.value === "pickup_dropoff") {
+      // Use pickup/dropoff and also push them into addresses array
+      orderData.pickup_address = { ...orderData.pickup_address }
+      orderData.dropoff_address = { ...orderData.dropoff_address }
+
+      // also format for backend addresses[]
+      orderData.addresses = [
+        { type: "pickup", ...orderData.pickup_address },
+        { type: "shipping", ...orderData.dropoff_address },
+      ]
+
       delete orderData.customer_address
-      delete orderData.shipping_address
     }
-    
+
+    // Order items cleanup
+    if (Array.isArray(orderData.order_items)) {
+      orderData.order_items = orderData.order_items.map(item => ({
+        ...item,
+        quantity: Number(item.quantity) || 1,
+        unit_price: Number(item.unit_price) || 0,
+      }))
+    }
+
     if (isCreateMode.value) {
       await orderStore.createOrder(orderData)
-    } else {
+    } else if (order.value?.id) {
       await orderStore.updateOrder(order.value.id, orderData)
+    } else {
+      throw new Error("No order selected for editing.")
     }
-    
-    emit('order-saved')
+
+    emit("order-saved")
     closeDialog()
   } catch (error) {
-    console.error('Error saving order:', error)
+    console.error("Error saving order:", error)
   } finally {
     saving.value = false
   }
 }
+
+
 </script>
 
 <style scoped>

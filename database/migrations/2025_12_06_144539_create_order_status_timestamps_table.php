@@ -25,6 +25,8 @@ return new class extends Migration
                 ->constrained('statuses')
                 ->nullOnDelete();
 
+            $table->text('status_notes')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
 

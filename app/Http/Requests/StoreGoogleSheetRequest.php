@@ -30,7 +30,7 @@ class StoreGoogleSheetRequest extends FormRequest
             'sync_all' => 'boolean',
             'sync_interval' => 'required|integer|min:5|max:1440',
             'order_prefix' => 'nullable|string|max:50',
-            'vendor_id' => 'required|integer|exists:vendors,id',
+            'vendor_id' => 'required|integer|exists:users,id',
             'is_current' => 'boolean',
             // 'country_id' => 'required|integer|exists:countries,id',
         ];

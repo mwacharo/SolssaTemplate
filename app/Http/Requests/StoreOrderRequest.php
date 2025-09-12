@@ -23,100 +23,80 @@ class StoreOrderRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
     */
-    public function rules(): array
-    {
-       return [
-          'order_no' => 'required|unique:orders,order_no',
-          'reference' => 'nullable|string|max:255',
-          // 'client_id' => 'required|exists:clients,id',
-          'warehouse_id' => 'required|exists:warehouses,id',
-          'country_id' => 'required|exists:countries,id',
-        //   'vendor_id' => [
-        //      function ($attribute, $value, $fail) {
-        //         $user = $this->user();
-
-        //         // If user is a vendor, they don't need to provide vendor_id
-        //         if ($user && $user->hasRole('Vendor')) {
-        //             return;
-        //         }
-
-        //         // If not a vendor, vendor_id is required and must exist
-        //         if (empty($value)) {
-        //             $fail('Vendor ID is required.');
-        //             return;
-        //         }
-
-        //         if (!\App\Models\Vendor::where('id', $value)->exists()) {
-        //             $fail('The selected vendor id is invalid.');
-        //         }
-        //      }
-        //   ],
+   public function rules(): array
+   {
+      $rules = [
+        'order_no' => 'required|unique:orders,order_no',
+        'reference' => 'nullable|string|max:255',
+        'warehouse_id' => 'required|exists:warehouses,id',
+        'country_id' => 'nullable|exists:countries,id',
         'vendor_id' => 'nullable|exists:users,id',
-          // 'agent_id' => 'nullable|exists:users,id',
-          // 'user_id' => 'required|exists:users,id',
-          // 'rider_id' => 'nullable|exists:users,id',
-          // 'zone_id' => 'nullable|exists:zones,id',
-          'status_id' => 'required|integer',
-          'delivery_status_id' => 'nullable|integer',
-          // 'delivery_date' => 'nullable|date',
-          // 'schedule_date' => 'nullable|date',
-          'paid' => 'boolean',
-          // 'payment_method' => 'nullable|string|max:50',
-          'payment_id' => 'nullable|exists:payments,id',
-          // 'sub_total' => 'required|numeric|min:0',
-          // 'total_price' => 'required|numeric|min:0',
-          // 'discount' => 'nullable|numeric|min:0',
-          'shipping_charges' => 'nullable|numeric|min:0',
-          // 'currency' => 'required|string|max:3',
-          'weight' => 'nullable|numeric|min:0',
-          'platform' => 'nullable|string|max:50',
-          'source' => 'nullable|string|max:50',
-          // 'pickup_address' => 'nullable|string',
-          // 'pickup_city' => 'nullable|string|max:100',
-          // 'pickup_phone' => 'nullable|string|max:20',
-          // 'pickup_shop' => 'nullable|string|max:100',
-          // 'latitude' => 'nullable|numeric',
-          // 'longitude' => 'nullable|numeric',
-          'distance' => 'nullable|numeric|min:0',
-          // 'customer_notes' => 'nullable|string',
+        'status_id' => 'required|integer',
+        'delivery_status_id' => 'nullable|integer',
+        'paid' => 'boolean',
+        'payment_id' => 'nullable|exists:payments,id',
+        'shipping_charges' => 'nullable|numeric|min:0',
+        'weight' => 'nullable|numeric|min:0',
+        'platform' => 'nullable|string|max:50',
+        'source' => 'nullable|string|max:50',
+        'distance' => 'nullable|numeric|min:0',
 
-          // For nested relationships
-          'order_items' => 'nullable|array',
-          'order_items.*.product_id' => 'required|exists:products,id',
-          'order_items.*.sku' => 'nullable|string|max:100',
-          'order_items.*.unit_price' => 'required|numeric|min:0',
-          'order_items.*.quantity' => 'required|integer|min:1',
-          // 'order_items.*.discount' => 'nullable|numeric|min:0',
-          // 'order_items.*.total' => 'required|numeric|min:0',
-          // 'order_items.*.currency' => 'required|string|max:3',
+        // For nested relationships
+        'order_items' => 'nullable|array',
+        'order_items.*.product_id' => 'required|exists:products,id',
+        'order_items.*.sku' => 'nullable|string|max:100',
+        'order_items.*.unit_price' => 'required|numeric|min:0',
+        'order_items.*.quantity' => 'required|integer|min:1',
 
-          'addresses' => 'nullable|array',
-          'addresses.*.type' => 'required|in:shipping,pickup,billing,return,drop',
-          'addresses.*.full_name' => 'required|string|max:255',
-          // 'addresses.*.email' => 'nullable|email|max:255',
-          'addresses.*.phone' => 'required|string|max:20',
-          'addresses.*.address' => 'required|string',
-          'addresses.*.city' => 'required|string|max:100',
-          'addresses.*.region' => 'nullable|string|max:100',
-          // 'addresses.*.country_id' => 'required|exists:countries,id',
-          // 'addresses.*.zone_id' => 'nullable|exists:zones,id',
-          'addresses.*.zipcode' => 'nullable|string|max:20',
+        'addresses' => 'nullable|array',
+        'addresses.*.type' => 'required|in:shipping,pickup,billing,return,drop',
+        'addresses.*.full_name' => 'required|string|max:255',
+        'addresses.*.email' => 'nullable|email|max:255',
+        'addresses.*.phone' => 'required|string|max:20',
+        'addresses.*.address' => 'required|string',
+        'addresses.*.city' => 'required|string|max:100',
+        'addresses.*.region' => 'nullable|string|max:100',
+        'addresses.*.zone_id' => 'nullable|exists:zones,id',
+        'addresses.*.zipcode' => 'nullable|string|max:20',
 
-          // customer 
-          'customer.full_name' => 'nullable|string|max:255',
-          'customer.email' => 'nullable|email|max:255',
-          'customer.phone' => 'required|string|max:20',
-          'customer.customer_id' => 'nullable|string|max:20',
-          'customer.alt_phone' => 'nullable|string|max:20',
-          'customer.address' => 'nullable|string',
-          'customer.city' => 'nullable|string|max:100',
-          'customer.region' => 'nullable|string|max:100',
-          'customer.country_id' => 'nullable|exists:countries,id',
-          'customer.zone_id' => 'nullable|exists:zones,id',
-          'customer.zipcode' => 'nullable|string|max:20',
-          'customer.is_spam' => 'boolean',
-       ];
-    }
+        // customer 
+        'customer.full_name' => 'nullable|string|max:255',
+        'customer.email' => 'nullable|email|max:255',
+        'customer.phone' => 'required|string|max:20',
+        'customer.customer_id' => 'nullable|string|max:20',
+        'customer.alt_phone' => 'nullable|string|max:20',
+        'customer.address' => 'nullable|string',
+        'customer.shipping_address' => 'nullable|string',
+        'customer.city' => 'nullable|string|max:100',
+        'customer.region' => 'nullable|string|max:100',
+        'customer.country_id' => 'nullable|exists:countries,id',
+        'customer.zone_id' => 'nullable|exists:zones,id',
+        'customer.zipcode' => 'nullable|string|max:20',
+        'customer.is_spam' => 'boolean',
+      ];
+
+      // If addresses contain both pickup and shipping/drop, customer.phone is not required
+      $addresses = $this->input('addresses', []);
+      $hasPickup = false;
+      $hasDrop = false;
+
+      foreach ($addresses as $address) {
+          if (isset($address['type']) && $address['type'] === 'pickup') {
+              $hasPickup = true;
+          }
+          if (isset($address['type']) && in_array($address['type'], ['drop', 'shipping'])) {
+              $hasDrop = true;
+          }
+      }
+
+      if ($hasPickup && $hasDrop) {
+          // Remove required from customer.phone
+          $rules['customer.phone'] = 'nullable|string|max:20';
+      }
+
+      return $rules;
+   }
+    
     public function messages()
     {
        return [

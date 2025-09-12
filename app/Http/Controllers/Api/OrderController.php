@@ -535,7 +535,8 @@ class OrderController extends Controller
             'assignments',
             'payments',
             // 'events',
-            'statusTimestamps.status'
+            'statusTimestamps.status',
+            'customer'
         ])
             ->latest()
             ->paginate($perPage);
@@ -555,12 +556,6 @@ class OrderController extends Controller
             $validated = $request->validated();
             Log::info('Validated order data', ['validated' => $validated]);
 
-
-            // set zero 
-
-            // check if auth hasrole vendor  take vendor id from auth
-
-
             // log auth user details
             Log::info('Auth user details', ['user' => Auth::user()]);
 
@@ -568,7 +563,6 @@ class OrderController extends Controller
             if ($user && $user->hasRole('Vendor')) {
                 $validated['vendor_id'] = $user->id;
             } else {
-                // vendor is required therefore user must provide vendor id
                 if (empty($validated['vendor_id'])) {
                     return response()->json([
                         'success' => false,
@@ -580,10 +574,45 @@ class OrderController extends Controller
 
             /**
              * Step 1: Handle customer
+             * If pickup_address and dropoff_address exist, treat both as customers and create them.
              */
             $customerId = $validated['customer_id'] ?? null;
 
-            if (!$customerId && !empty($validated['customer']['phone'])) {
+            // If both pickup and dropoff addresses exist, create customers for both
+            if (!empty($validated['pickup_address']) && !empty($validated['dropoff_address'])) {
+                // Create pickup customer
+                $pickupCustomer = Customer::firstOrCreate(
+                    ['phone' => $validated['pickup_address']['phone']],
+                    [
+                        'name' => $validated['pickup_address']['full_name'] ?? null,
+                        'email' => $validated['pickup_address']['email'] ?? null,
+                        'city' => $validated['pickup_address']['city'] ?? null,
+                        'zone' => $validated['pickup_address']['zone'] ?? null,
+                        // 'zone_id' => $validated['pickup_address']['zone_id'] ?? null,
+                        'address' => $validated['pickup_address']['address'] ?? null,
+                        'region' => $validated['pickup_address']['region'] ?? null,
+                        'zipcode' => $validated['pickup_address']['zipcode'] ?? null,
+                    ]
+                );
+                // Create dropoff customer
+                $dropoffCustomer = Customer::firstOrCreate(
+                    ['phone' => $validated['dropoff_address']['phone']],
+                    [
+                        'name' => $validated['dropoff_address']['full_name'] ?? null,
+                        'email' => $validated['dropoff_address']['email'] ?? null,
+                        'city' => $validated['dropoff_address']['city'] ?? null,
+                        // 'zone_id' => $validated['dropoff_address']['zone_id'] ?? null,
+                        'zone' => $validated['dropoff_address']['zone'] ?? null,
+                        'address' => $validated['dropoff_address']['address'] ?? null,
+                        'region' => $validated['dropoff_address']['region'] ?? null,
+                        'zipcode' => $validated['dropoff_address']['zipcode'] ?? null,
+                    ]
+                );
+                // Set main customer_id as pickup customer
+                $customerId = $pickupCustomer->id;
+                // Optionally, you can store dropoff_customer_id in the order if your schema supports it
+                $validated['dropoff_customer_id'] = $dropoffCustomer->id;
+            } elseif (!$customerId && !empty($validated['customer']['phone'])) {
                 $customer = Customer::firstOrCreate(
                     ['phone' => $validated['customer']['phone']],
                     $validated['customer']
@@ -619,13 +648,11 @@ class OrderController extends Controller
             if (!empty($validated['order_items'])) {
                 foreach ($validated['order_items'] as $item) {
                     try {
-                        // Find product by SKU instead of product_id
                         $product = Product::where('sku', $item['sku'])->firstOrFail();
                         $item['product_id'] = $product->id;
 
                         $orderItem = $order->orderItems()->create($item);
 
-                        // Reserve stock using SKU
                         InventoryReservation::create([
                             'sku'        => $item['sku'],
                             'order_id'   => $order->id,
@@ -682,7 +709,7 @@ class OrderController extends Controller
              */
             OrderStatusTimestamp::create([
                 'order_id'   => $order->id,
-                'status_id'     => $order->status_id ?? 1, // Default to 1 if not set
+                'status_id'     => $order->status_id ?? 1,
                 'created_at' => now()
             ]);
 

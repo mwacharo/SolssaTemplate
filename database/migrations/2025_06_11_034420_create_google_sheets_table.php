@@ -25,7 +25,7 @@ return new class extends Migration
             $table->dateTime('last_product_synced')->nullable();
             $table->boolean('is_current')->default(0);
             $table->string('order_prefix')->nullable();
-            $table->foreignId('vendor_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('vendor_id')->constrained('users')->cascadeOnDelete();
             $table->string('lastUpdatedOrderNumber')->nullable();
             $table->foreignId('country_id')->constrained()->cascadeOnDelete()->nullable();
             $table->timestamps();
