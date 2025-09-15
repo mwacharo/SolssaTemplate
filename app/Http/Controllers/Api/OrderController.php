@@ -144,7 +144,10 @@ class OrderController extends Controller
             'assignments.user',
             'payments',
             // 'events.user',
-            'statusTimestamps',
+            'statusTimestamps' => function ($query) {
+                $query->latest('created_at')->limit(1);
+            },
+            'customer',
             // 'refunds',
             // 'remittances'
         ])
@@ -180,25 +183,68 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
-            // Update the order
-            $order->update($request->validated());
+            $validated = $request->validated();
+
+            // Handle customer update or creation if customer data is provided
+            if (isset($validated['customer']) && is_array($validated['customer'])) {
+                $customerData = $validated['customer'];
+                $customer = Customer::firstOrCreate(
+                    ['phone' => $customerData['phone']],
+                    [
+                        'name' => $customerData['full_name'] ?? null,
+                        'email' => $customerData['email'] ?? null,
+                        'city' => $customerData['city'] ?? null,
+                        'zone_id' => $customerData['zone_id'] ?? null,
+                        'address' => $customerData['address'] ?? null,
+                        'region' => $customerData['region'] ?? null,
+                        'zipcode' => $customerData['zipcode'] ?? null,
+                    ]
+                );
+                $validated['customer_id'] = $customer->id;
+                unset($validated['customer']);
+            }
+
+            // Update the order fields except order_items
+            $order->update(collect($validated)->except(['order_items'])->toArray());
 
             // Update order items if provided
-            if ($request->has('order_items')) {
+            if (isset($validated['order_items']) && is_array($validated['order_items'])) {
                 // Delete existing items
                 OrderItem::where('order_id', $order->id)->delete();
 
                 // Create new items
-                foreach ($request->input('order_items') as $item) {
-                    OrderItem::create(array_merge($item, ['order_id' => $order->id]));
+                foreach ($validated['order_items'] as $item) {
+                    $itemData = [
+                        'order_id' => $order->id,
+                        'product_id' => $item['product_id'] ?? null,
+                        'sku' => $item['sku'] ?? null,
+                        'name' => $item['name'] ?? null,
+                        'quantity' => $item['quantity'] ?? 1,
+                        'unit_price' => $item['unit_price'] ?? 0,
+                        'total_price' => $item['total_price'] ?? 0,
+                        'discount' => $item['discount'] ?? 0,
+                        'currency' => $item['currency'] ?? 'KSH',
+                        'weight' => $item['weight'] ?? null,
+                        'delivered_quantity' => $item['delivered_quantity'] ?? 0,
+                    ];
+
+                    // Try to resolve product_id by SKU if not provided
+                    if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
+                        $product = Product::where('sku', $itemData['sku'])->first();
+                        if ($product) {
+                            $itemData['product_id'] = $product->id;
+                        }
+                    }
+
+                    OrderItem::create($itemData);
                 }
             }
 
-            // Update status timestamp if status changed
-            if ($request->has('status') && $request->input('status') !== $order->getOriginal('status')) {
+            // Update status timestamp if status_id changed
+            if (isset($validated['status_id']) && $validated['status_id'] != $order->getOriginal('status_id')) {
                 OrderStatusTimestamp::create([
                     'order_id' => $order->id,
-                    'status' => $request->input('status'),
+                    'status_id' => $validated['status_id'],
                     'created_at' => now()
                 ]);
             }
@@ -209,9 +255,10 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Order updated successfully',
                 'data' => $order->load([
-                    'orderItems',
+                    'orderItems.product',
                     'addresses',
-                    'statusTimestamps'
+                    'statusTimestamps',
+                    'customer',
                 ])
             ]);
         } catch (\Exception $e) {
@@ -223,8 +270,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
-
 
 
 
@@ -535,6 +580,9 @@ class OrderController extends Controller
             'assignments',
             'payments',
             // 'events',
+            'statusTimestamps' => function ($query) {
+                $query->latest('created_at')->limit(1);
+            },
             'statusTimestamps.status',
             'customer'
         ])

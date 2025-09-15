@@ -20,7 +20,7 @@
 
         <!-- Filters -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <!-- Seller Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">SELLER</label>
@@ -34,58 +34,78 @@
               outlined
               placeholder="Search sellers..."
               class="w-full"
-              >
-              </v-autocomplete>
+              autocomplete
+              />
             </div>
 
             <!-- Product Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">PRODUCT</label>
-              <select v-model="orderStore.orderFilterProduct"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
-                <option value="">Search products...</option>
-                <option v-for="product in orderStore.productOptions" :key="product.id" :value="product.id">
-                  {{ product.product_name }}
-                </option>
-              </select>
+              <v-autocomplete
+              v-model="orderStore.orderFilterProduct"
+              :items="orderStore.productOptions"
+              item-title="product_name"
+              item-value="id"
+              clearable
+              dense
+              outlined
+              placeholder="Search products..."
+              class="w-full"
+              autocomplete
+              />
             </div>
 
             <!-- Category Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CATEGORY</label>
-              <select v-model="orderStore.orderFilterCategory"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
-                <option value="">All categories</option>
-                <option v-for="category in orderStore.categoryOptions" :key="category.id" :value="category.id">
-                  {{ category.name }}
-                </option>
-              </select>
+              <v-autocomplete
+              v-model="orderStore.orderFilterCategory"
+              :items="orderStore.categoryOptions"
+              item-title="name"
+              item-value="id"
+              clearable
+              dense
+              outlined
+              placeholder="Search categories..."
+              class="w-full"
+              autocomplete
+              />
             </div>
 
             <!-- City Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CITY</label>
-              <select v-model="orderStore.orderFilterCity"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
-                <option value="">All cities</option>
-                <option v-for="city in orderStore.cityOptions" :key="city.id" :value="city.name">
-                  {{ city.name }}
-                </option>
-              </select>
+              <v-autocomplete
+              v-model="orderStore.orderFilterCity"
+              :items="orderStore.cityOptions"
+              item-title="name"
+              item-value="name"
+              clearable
+              dense
+              outlined
+              placeholder="Search cities..."
+              class="w-full"
+              autocomplete
+              />
             </div>
 
             <!-- Call Agent Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CALL AGENT</label>
-              <select v-model="orderStore.orderFilterAgent"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
-                <option value="">Select the call agent</option>
-                <option v-for="agent in orderStore.agentOptions" :key="agent.id" :value="agent.id">
-                  {{ agent.name }}
-                </option>
-              </select>
+              <v-autocomplete
+              v-model="orderStore.orderFilterAgent"
+              :items="orderStore.agentOptions"
+              item-title="name"
+              item-value="id"
+              clearable
+              dense
+              outlined
+              placeholder="Search agents..."
+              class="w-full"
+              autocomplete
+              />
             </div>
-          </div>
+            </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <!-- Confirmation Status -->
@@ -439,10 +459,18 @@
       </div>
     </div>
     <CallDialogs />
-    <OrderForm
+    <!-- <OrderForm
+
       @order-saved="onOrderSaved"
       @dialog-closed="onDialogClosed"
-    />
+    /> -->
+
+    <OrderForm
+  :is-create="isCreateMode"
+  @order-saved="onOrderSaved"
+  @dialog-closed="onDialogClosed"
+/>
+
   </AppLayout>
 </template>
 

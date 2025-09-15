@@ -23,79 +23,116 @@ class StoreOrderRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
     */
-   public function rules(): array
-   {
-      $rules = [
-        'order_no' => 'required|unique:orders,order_no',
-        'reference' => 'nullable|string|max:255',
-        'warehouse_id' => 'required|exists:warehouses,id',
-        'country_id' => 'nullable|exists:countries,id',
-        'vendor_id' => 'nullable|exists:users,id',
-        'status_id' => 'required|integer',
-        'delivery_status_id' => 'nullable|integer',
-        'paid' => 'boolean',
-        'payment_id' => 'nullable|exists:payments,id',
-        'shipping_charges' => 'nullable|numeric|min:0',
-        'weight' => 'nullable|numeric|min:0',
-        'platform' => 'nullable|string|max:50',
-        'source' => 'nullable|string|max:50',
-        'distance' => 'nullable|numeric|min:0',
+public function rules(): array
+{
+    $rules = [
+      'order_no' => 'required|unique:orders,order_no',
+      'reference' => 'nullable|string|max:255',
+      'warehouse_id' => 'required|exists:warehouses,id',
+      'country_id' => 'nullable|exists:countries,id',
+      'vendor_id' => 'nullable|exists:users,id',
+      'status_id' => 'required|integer',
+      'delivery_status_id' => 'nullable|integer',
+      'paid' => 'boolean',
+      'payment_id' => 'nullable|exists:payments,id',
+      'shipping_charges' => 'nullable|numeric|min:0',
+      'weight' => 'nullable|numeric|min:0',
+      'platform' => 'nullable|string|max:50',
+      'source' => 'nullable|string|max:50',
+      'distance' => 'nullable|numeric|min:0',
+      'delivery_date' => 'nullable|date',
+      'recall_date' => 'nullable|date',
+      'customer_notes' => 'nullable|string',
 
-        // For nested relationships
-        'order_items' => 'nullable|array',
-        'order_items.*.product_id' => 'required|exists:products,id',
-        'order_items.*.sku' => 'nullable|string|max:100',
-        'order_items.*.unit_price' => 'required|numeric|min:0',
-        'order_items.*.quantity' => 'required|integer|min:1',
+      // For nested relationships
+      'order_items' => 'nullable|array',
+      'order_items.*.product_id' => 'nullable|exists:products,id',
+      'order_items.*.sku' => 'nullable|string|max:100',
+      'order_items.*.unit_price' => 'required|numeric|min:0',
+      'order_items.*.quantity' => 'required|integer|min:1',
 
-        'addresses' => 'nullable|array',
-        'addresses.*.type' => 'required|in:shipping,pickup,billing,return,drop',
-        'addresses.*.full_name' => 'required|string|max:255',
-        'addresses.*.email' => 'nullable|email|max:255',
-        'addresses.*.phone' => 'required|string|max:20',
-        'addresses.*.address' => 'required|string',
-        'addresses.*.city' => 'required|string|max:100',
-        'addresses.*.region' => 'nullable|string|max:100',
-        'addresses.*.zone_id' => 'nullable|exists:zones,id',
-        'addresses.*.zipcode' => 'nullable|string|max:20',
+      'addresses' => 'nullable|array',
+      'addresses.*.type' => 'required|in:shipping,pickup,billing,return,drop',
+      'addresses.*.full_name' => 'required|string|max:255',
+      'addresses.*.email' => 'nullable|email|max:255',
+      'addresses.*.phone' => 'required|string|max:20',
+      'addresses.*.address' => 'required|string',
+      'addresses.*.city' => 'required|string|max:100',
+      'addresses.*.region' => 'nullable|string|max:100',
+      'addresses.*.zone_id' => 'nullable|exists:zones,id',
+      'addresses.*.zipcode' => 'nullable|string|max:20',
 
-        // customer 
-        'customer.full_name' => 'nullable|string|max:255',
-        'customer.email' => 'nullable|email|max:255',
-        'customer.phone' => 'required|string|max:20',
-        'customer.customer_id' => 'nullable|string|max:20',
-        'customer.alt_phone' => 'nullable|string|max:20',
-        'customer.address' => 'nullable|string',
-        'customer.shipping_address' => 'nullable|string',
-        'customer.city' => 'nullable|string|max:100',
-        'customer.region' => 'nullable|string|max:100',
-        'customer.country_id' => 'nullable|exists:countries,id',
-        'customer.zone_id' => 'nullable|exists:zones,id',
-        'customer.zipcode' => 'nullable|string|max:20',
-        'customer.is_spam' => 'boolean',
-      ];
+      // customer 
+      'customer.full_name' => 'nullable|string|max:255',
+      'customer.email' => 'nullable|email|max:255',
+      'customer.phone' => 'required|string|max:20',
+      'customer.customer_id' => 'nullable|string|max:20',
+      'customer.alt_phone' => 'nullable|string|max:20',
+      'customer.address' => 'nullable|string',
+      'customer.shipping_address' => 'nullable|string',
+      'customer.city' => 'nullable|string|max:100',
+      'customer.region' => 'nullable|string|max:100',
+      'customer.country_id' => 'nullable|exists:countries,id',
+      'customer.zone_id' => 'nullable|exists:zones,id',
+      'customer.zipcode' => 'nullable|string|max:20',
+      'customer.is_spam' => 'boolean',
+    ];
 
-      // If addresses contain both pickup and shipping/drop, customer.phone is not required
-      $addresses = $this->input('addresses', []);
-      $hasPickup = false;
-      $hasDrop = false;
+    // If addresses contain both pickup and shipping/drop, customer.phone is not required
+    $addresses = $this->input('addresses', []);
+    $hasPickup = false;
+    $hasDrop = false;
 
-      foreach ($addresses as $address) {
-          if (isset($address['type']) && $address['type'] === 'pickup') {
+    foreach ($addresses as $address) {
+         if (isset($address['type']) && $address['type'] === 'pickup') {
               $hasPickup = true;
-          }
-          if (isset($address['type']) && in_array($address['type'], ['drop', 'shipping'])) {
+         }
+         if (isset($address['type']) && in_array($address['type'], ['drop', 'shipping'])) {
               $hasDrop = true;
-          }
-      }
+         }
+    }
 
-      if ($hasPickup && $hasDrop) {
-          // Remove required from customer.phone
-          $rules['customer.phone'] = 'nullable|string|max:20';
-      }
+    if ($hasPickup && $hasDrop) {
+         // Remove required from customer.phone
+         $rules['customer.phone'] = 'nullable|string|max:20';
+    }
 
-      return $rules;
-   }
+    // Allow order_items.*.product_id to be nullable if not present
+    // Allow order_items.*.sku/unit_price/quantity to be present even if product_id is missing
+
+    // Allow pickup_address and dropoff_address as optional arrays
+    $rules['pickup_address'] = 'nullable|array';
+    $rules['pickup_address.full_name'] = 'nullable|string|max:255';
+    $rules['pickup_address.phone'] = 'nullable|string|max:20';
+    $rules['pickup_address.city'] = 'nullable|string|max:100';
+    $rules['pickup_address.zone_id'] = 'nullable|exists:zones,id';
+    $rules['pickup_address.address'] = 'nullable|string';
+    $rules['pickup_address.region'] = 'nullable|string|max:100';
+    $rules['pickup_address.zipcode'] = 'nullable|string|max:20';
+    $rules['pickup_address.email'] = 'nullable|email|max:255';
+
+    $rules['dropoff_address'] = 'nullable|array';
+    $rules['dropoff_address.full_name'] = 'nullable|string|max:255';
+    $rules['dropoff_address.phone'] = 'nullable|string|max:20';
+    $rules['dropoff_address.city'] = 'nullable|string|max:100';
+    $rules['dropoff_address.zone_id'] = 'nullable|exists:zones,id';
+    $rules['dropoff_address.address'] = 'nullable|string';
+    $rules['dropoff_address.region'] = 'nullable|string|max:100';
+    $rules['dropoff_address.zipcode'] = 'nullable|string|max:20';
+    $rules['dropoff_address.email'] = 'nullable|email|max:255';
+
+    // from_warehouse_id and to_warehouse_id as nullable
+    $rules['from_warehouse_id'] = 'nullable|exists:warehouses,id';
+    $rules['to_warehouse_id'] = 'nullable|exists:warehouses,id';
+
+    // from_address and to_address as optional arrays
+    $rules['from_address'] = 'nullable|array';
+    $rules['from_address.city'] = 'nullable|string|max:100';
+    $rules['to_address'] = 'nullable|array';
+    $rules['to_address.city'] = 'nullable|string|max:100';
+
+    return $rules;
+}
     
     public function messages()
     {
@@ -112,6 +149,9 @@ class StoreOrderRequest extends FormRequest
           'delivery_status_id.integer' => 'Delivery Status ID must be an integer.',
           'paid.boolean' => 'Paid must be true or false.',
           'payment_id.exists' => 'The selected payment method is invalid.',
+        'delivery_date.date' => 'Delivery date must be a valid date.',
+            'recall_date.date' => 'Recall date must be a valid date.',
+            'customer_notes.string' => 'Customer notes must be a string.',
           // 'sub_total.required' => 'Sub total is required.',
           // 'sub_total.numeric' => 'Sub total must be a number.',
           // 'total_price.required' => 'Total price is required.',

@@ -47,12 +47,21 @@ return new class extends Migration
             $table->boolean('paid')->default(0);
             $table->string('tracking_no', 128)->nullable();
             $table->string('waybill_no', 128)->nullable();
+            $table->string('customer_notes', 128)->nullable();
+
             $table->decimal('distance', 8, 2)->nullable();
             $table->boolean('geocoded')->default(0);
 
             $table->dateTime('archived_at')->nullable();
 
+            $table->timestamp('delivery_date')->nullable();
+            $table->timestamp('recall_date')->nullable();
+
+
+            // $table->dateTime('schedule_date')->nullable();
+
             $table->timestamps();
+
             $table->softDeletes();
 
             // Indexes

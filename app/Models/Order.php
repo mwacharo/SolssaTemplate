@@ -54,6 +54,7 @@ class Order extends Model
         'status',
         'delivery_status',
         'delivery_date',
+        'recall_date',
         'schedule_date',
         'paid',
         'payment_method',
@@ -78,7 +79,7 @@ class Order extends Model
 
     protected $casts = [
         'paid' => 'boolean',
-        'delivery_date' => 'datetime',
+        // 'delivery_date' => 'datetime',
         'schedule_date' => 'datetime',
         'sub_total' => 'decimal:2',
         'total_price' => 'decimal:2',

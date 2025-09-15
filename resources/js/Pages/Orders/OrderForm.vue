@@ -9,9 +9,9 @@
         <v-spacer />
         <v-btn icon="mdi-close" variant="text" @click="closeDialog" />
       </v-card-title>
-      
+
       <v-divider />
-      
+
       <v-card-text class="pa-6">
         <v-form ref="formRef" v-model="formValid" @submit.prevent="saveOrder">
           <!-- Basic Order Information -->
@@ -20,84 +20,46 @@
               <v-icon class="mr-1" size="small">mdi-information</v-icon>
               Basic Information
             </h3>
-            
+
             <v-row>
               <v-col cols="12" md="6">
 
-                <v-text-field 
-                  v-model="orderEdit.order_no" 
-                  label="Order Number" 
-                  placeholder="Enter order number"
-                />
+                <v-text-field v-model="orderEdit.order_no" label="Order Number" placeholder="Enter order number" />
               </v-col>
 
-             
 
 
-               <!-- add status -->
+
+              <!-- add status -->
 
               <v-col cols="12" md="6">
-                <v-select
-                  v-model="orderEdit.status_id"
-                  :items="statusOptionsStore"
-                  item-title="name"
-                  item-value="id"
-                  label="Status"
-                  prepend-inner-icon="mdi-flag"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                  clearable
-                  placeholder="Select status"
-                />
+                <v-select v-model="orderEdit.status_id" :items="statusOptionsStore" item-title="name" item-value="id"
+                  label="Status" prepend-inner-icon="mdi-flag" variant="outlined" density="comfortable"
+                  :rules="[rules.required]" clearable placeholder="Select status" />
               </v-col>
 
-               <v-col cols="12" md="6">
-                 <v-select 
-                   v-model="orderEdit.platform" 
-                  :items="platformOptions" 
-                  label="Platform"
-                  prepend-inner-icon="mdi-devices"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                />
-              </v-col>
-              
               <v-col cols="12" md="6">
-                <v-select 
-                  v-model="orderEdit.source" 
-                  :items="sourceOptions" 
-                  label="Order Source"
-                  prepend-inner-icon="mdi-source-branch"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                />
+                <v-select v-model="orderEdit.platform" :items="platformOptions" label="Platform"
+                  prepend-inner-icon="mdi-devices" variant="outlined" density="comfortable" :rules="[rules.required]" />
               </v-col>
-              
+
               <v-col cols="12" md="6">
-                <v-text-field 
-                  v-model="orderEdit.delivery_date" 
-                  label="Delivery Date" 
-                  type="datetime-local"
-                  prepend-inner-icon="mdi-calendar-clock"
-                  variant="outlined"
-                  density="comfortable"
-                />
+                <v-select v-model="orderEdit.source" :items="sourceOptions" label="Order Source"
+                  prepend-inner-icon="mdi-source-branch" variant="outlined" density="comfortable"
+                  :rules="[rules.required]" />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field v-model="orderEdit.delivery_date" label="Delivery Date" type="datetime-local"
+                  prepend-inner-icon="mdi-calendar-clock" variant="outlined" density="comfortable" />
               </v-col>
             </v-row>
 
             <!-- customer notes -->
             <v-col cols="12">
-              <v-textarea
-                v-model="orderEdit.customer_notes"
-                label="Customer Notes"
-                placeholder="Enter any special instructions or notes"
-                rows="4"
-                variant="outlined"
-                density="comfortable"
-              />
+              <v-textarea v-model="orderEdit.customer_notes" label="Customer Notes"
+                placeholder="Enter any special instructions or notes" rows="4" variant="outlined"
+                density="comfortable" />
             </v-col>
           </div>
 
@@ -107,305 +69,138 @@
               <v-icon class="mr-1" size="small">mdi-store</v-icon>
               Vendor & Warehouse
             </h3>
-                
-                <v-row>
-                  <v-col cols="12" md="6">
-                    <v-select 
-                      v-model="orderEdit.vendor_id" 
-                      :items="vendorOptions" 
-                      item-title="name"
-                      item-value="id" 
-                      label="Vendor"
-                      prepend-inner-icon="mdi-domain"
-                      variant="outlined"
-                      density="comfortable"
-                      :rules="[rules.required]"
-                      @update:model-value="onVendorChange"
-                    />
-                  </v-col>
-                  
-                    <v-col cols="12" md="6">
-                    <v-select 
-                      v-model="orderEdit.warehouse_id" 
-                      :items="warehouseOptions" 
-                      item-title="name"
-                      item-value="id" 
-                      label="Warehouse"
-                      prepend-inner-icon="mdi-warehouse"
-                      variant="outlined"
-                      density="comfortable"
-                      :rules="[rules.required]"
-                    />
-                    </v-col>
-                </v-row>
-              </div>
+
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-select v-model="orderEdit.vendor_id" :items="vendorOptions" item-title="name" item-value="id"
+                  label="Vendor" prepend-inner-icon="mdi-domain" variant="outlined" density="comfortable"
+                  :rules="[rules.required]" @update:model-value="onVendorChange" />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-select v-model="orderEdit.warehouse_id" :items="warehouseOptions" item-title="name" item-value="id"
+                  label="Warehouse" prepend-inner-icon="mdi-warehouse" variant="outlined" density="comfortable"
+                  :rules="[rules.required]" />
+              </v-col>
+            </v-row>
+          </div>
 
           <!-- Address Section - Smart UI based on order type -->
-            <div class="mb-6">
+          <div class="mb-6">
             <h3 class="text-subtitle-1 font-weight-medium mb-3 text-primary">
               <v-icon class="mr-1" size="small">mdi-map-marker</v-icon>
               Address Information
             </h3>
-            
+
             <!-- Address Type Selector -->
-            <v-radio-group 
-              v-model="addressType" 
-              inline 
-              class="mb-4"
-              @update:model-value="onAddressTypeChange"
-            >
-              <v-radio 
-              label="Pickup & Drop-off" 
-              value="pickup_dropoff"
-              color="primary"
-              />
-              <v-radio 
-              label="Customer Delivery" 
-              value="customer"
-              color="primary"
-              />
+            <v-radio-group v-model="addressType" inline class="mb-4" @update:model-value="onAddressTypeChange">
+              <v-radio label="Pickup & Drop-off" value="pickup_dropoff" color="primary" />
+              <v-radio label="Customer Delivery" value="customer" color="primary" />
             </v-radio-group>
 
             <!-- Pickup & Drop-off Addresses -->
             <div v-if="addressType === 'pickup_dropoff'">
               <v-row>
-              <!-- Pickup Address -->
-              <v-col cols="12" md="6">
-                <v-card variant="outlined" class="pa-4">
-                <v-card-title class="text-subtitle-2 pa-0 mb-3">
-                  <v-icon class="mr-1" color="orange">mdi-map-marker-up</v-icon>
-                  Pickup Address
-                </v-card-title>
-                
-                <v-text-field 
-                  v-model="orderEdit.pickup_address.full_name" 
-                  label="Full Name"
-                  prepend-inner-icon="mdi-account"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.pickup_address.phone" 
-                  label="Phone Number"
-                  prepend-inner-icon="mdi-phone"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required, rules.phone]"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.pickup_address.email" 
-                  label="Email"
-                  prepend-inner-icon="mdi-email"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-select 
-                  v-model="orderEdit.pickup_address.city" 
-                  :items="cityOptions" 
-                  item-title="name"
-                  item-value="name"
-                  label="City"
-                  prepend-inner-icon="mdi-city"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                  class="mb-3"
-                />
-                <v-select 
-                  v-model="orderEdit.pickup_address.zone_id" 
-                  :items="zoneOptions" 
-                  item-title="name"
-                  item-value="id"
-                  label="Zone"
-                  prepend-inner-icon="mdi-map-marker-radius"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.pickup_address.region"
-                  label="Region"
-                  prepend-inner-icon="mdi-map"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.pickup_address.zipcode"
-                  label="Zip Code"
-                  prepend-inner-icon="mdi-numeric"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-textarea 
-                  v-model="orderEdit.pickup_address.address" 
-                  label="Full Address"
-                  prepend-inner-icon="mdi-home"
-                  variant="outlined"
-                  density="comfortable"
-                  rows="2"
-                  :rules="[rules.required]"
-                />
-                </v-card>
-              </v-col>
-              <!-- Drop-off Address -->
-              <v-col cols="12" md="6">
-                <v-card variant="outlined" class="pa-4">
-                <v-card-title class="text-subtitle-2 pa-0 mb-3">
-                  <v-icon class="mr-1" color="green">mdi-map-marker-down</v-icon>
-                  Drop-off Address
-                </v-card-title>
-                
-                <v-text-field 
-                  v-model="orderEdit.dropoff_address.full_name" 
-                  label="Full Name"
-                  prepend-inner-icon="mdi-account"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.dropoff_address.phone" 
-                  label="Phone Number"
-                  prepend-inner-icon="mdi-phone"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required, rules.phone]"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.dropoff_address.email" 
-                  label="Email"
-                  prepend-inner-icon="mdi-email"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-select 
-                  v-model="orderEdit.dropoff_address.city" 
-                  :items="cityOptions" 
-                  item-title="name"
-                  item-value="name"
-                  label="City"
-                  prepend-inner-icon="mdi-city"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                  class="mb-3"
-                />
-                <v-select 
-                  v-model="orderEdit.dropoff_address.zone_id" 
-                  :items="zoneOptions" 
-                  item-title="name"
-                  item-value="id"
-                  label="Zone"
-                  prepend-inner-icon="mdi-map-marker-radius"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.dropoff_address.region"
-                  label="Region"
-                  prepend-inner-icon="mdi-map"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-text-field 
-                  v-model="orderEdit.dropoff_address.zipcode"
-                  label="Zip Code"
-                  prepend-inner-icon="mdi-numeric"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                />
-                <v-textarea 
-                  v-model="orderEdit.dropoff_address.address" 
-                  label="Full Address"
-                  prepend-inner-icon="mdi-home"
-                  variant="outlined"
-                  density="comfortable"
-                  rows="2"
-                  :rules="[rules.required]"
-                />
-                </v-card>
-              </v-col>
+                <!-- Pickup Address -->
+                <v-col cols="12" md="6">
+                  <v-card variant="outlined" class="pa-4">
+                    <v-card-title class="text-subtitle-2 pa-0 mb-3">
+                      <v-icon class="mr-1" color="orange">mdi-map-marker-up</v-icon>
+                      Pickup Address
+                    </v-card-title>
+
+                    <v-text-field v-model="orderEdit.pickup_address.full_name" label="Full Name"
+                      prepend-inner-icon="mdi-account" variant="outlined" density="comfortable"
+                      :rules="[rules.required]" class="mb-3" />
+                    <v-text-field v-model="orderEdit.pickup_address.phone" label="Phone Number"
+                      prepend-inner-icon="mdi-phone" variant="outlined" density="comfortable"
+                      :rules="[rules.required, rules.phone]" class="mb-3" />
+                    <v-text-field v-model="orderEdit.pickup_address.email" label="Email" prepend-inner-icon="mdi-email"
+                      variant="outlined" density="comfortable" class="mb-3" />
+                    <v-select v-model="orderEdit.pickup_address.city" :items="cityOptions" item-title="name"
+                      item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                      density="comfortable" :rules="[rules.required]" class="mb-3" />
+                    <v-select v-model="orderEdit.pickup_address.zone_id" :items="zoneOptions" item-title="name"
+                      item-value="id" label="Zone" prepend-inner-icon="mdi-map-marker-radius" variant="outlined"
+                      density="comfortable" class="mb-3" />
+                    <v-text-field v-model="orderEdit.pickup_address.region" label="Region" prepend-inner-icon="mdi-map"
+                      variant="outlined" density="comfortable" class="mb-3" />
+                    <v-text-field v-model="orderEdit.pickup_address.zipcode" label="Zip Code"
+                      prepend-inner-icon="mdi-numeric" variant="outlined" density="comfortable" class="mb-3" />
+                    <v-textarea v-model="orderEdit.pickup_address.address" label="Full Address"
+                      prepend-inner-icon="mdi-home" variant="outlined" density="comfortable" rows="2"
+                      :rules="[rules.required]" />
+                  </v-card>
+                </v-col>
+                <!-- Drop-off Address -->
+                <v-col cols="12" md="6">
+                  <v-card variant="outlined" class="pa-4">
+                    <v-card-title class="text-subtitle-2 pa-0 mb-3">
+                      <v-icon class="mr-1" color="green">mdi-map-marker-down</v-icon>
+                      Drop-off Address
+                    </v-card-title>
+
+                    <v-text-field v-model="orderEdit.dropoff_address.full_name" label="Full Name"
+                      prepend-inner-icon="mdi-account" variant="outlined" density="comfortable"
+                      :rules="[rules.required]" class="mb-3" />
+                    <v-text-field v-model="orderEdit.dropoff_address.phone" label="Phone Number"
+                      prepend-inner-icon="mdi-phone" variant="outlined" density="comfortable"
+                      :rules="[rules.required, rules.phone]" class="mb-3" />
+                    <v-text-field v-model="orderEdit.dropoff_address.email" label="Email" prepend-inner-icon="mdi-email"
+                      variant="outlined" density="comfortable" class="mb-3" />
+                    <v-select v-model="orderEdit.dropoff_address.city" :items="cityOptions" item-title="name"
+                      item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                      density="comfortable" :rules="[rules.required]" class="mb-3" />
+                    <v-select v-model="orderEdit.dropoff_address.zone_id" :items="zoneOptions" item-title="name"
+                      item-value="id" label="Zone" prepend-inner-icon="mdi-map-marker-radius" variant="outlined"
+                      density="comfortable" class="mb-3" />
+                    <v-text-field v-model="orderEdit.dropoff_address.region" label="Region" prepend-inner-icon="mdi-map"
+                      variant="outlined" density="comfortable" class="mb-3" />
+                    <v-text-field v-model="orderEdit.dropoff_address.zipcode" label="Zip Code"
+                      prepend-inner-icon="mdi-numeric" variant="outlined" density="comfortable" class="mb-3" />
+                    <v-textarea v-model="orderEdit.dropoff_address.address" label="Full Address"
+                      prepend-inner-icon="mdi-home" variant="outlined" density="comfortable" rows="2"
+                      :rules="[rules.required]" />
+                  </v-card>
+                </v-col>
               </v-row>
             </div>
 
             <!-- Customer Address (Single Address) -->
             <div v-else-if="addressType === 'customer'">
               <v-row>
-              <v-col cols="12" md="6">
-                <v-text-field 
-                v-model="orderEdit.customer_address.full_name" 
-                label="Customer Name"
-                prepend-inner-icon="mdi-account"
-                variant="outlined"
-                density="comfortable"
-                :rules="[rules.required]"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-text-field 
-                v-model="orderEdit.customer_address.phone" 
-                label="Phone Number"
-                prepend-inner-icon="mdi-phone"
-                variant="outlined"
-                density="comfortable"
-                :rules="[rules.required, rules.phone]"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-select 
-                v-model="orderEdit.customer_address.city" 
-                :items="cityOptions" 
-                item-title="name"
-                item-value="name"
-                label="City"
-                prepend-inner-icon="mdi-city"
-                variant="outlined"
-                density="comfortable"
-                :rules="[rules.required]"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6">
-                <v-select 
-                v-model="orderEdit.customer_address.zone_id" 
-                :items="zoneOptions" 
-                item-title="name"
-                item-value="id"
-                label="Zone"
-                prepend-inner-icon="mdi-map-marker-radius"
-                variant="outlined"
-                density="comfortable"
-                />
-              </v-col>
-              
-              <v-col cols="12">
-                <v-textarea 
-                v-model="orderEdit.customer_address.address" 
-                label="Full Address"
-                prepend-inner-icon="mdi-home"
-                variant="outlined"
-                density="comfortable"
-                rows="2"
-                :rules="[rules.required]"
-                />
-              </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="orderEdit.customer_address.full_name" label="Customer Name"
+                    prepend-inner-icon="mdi-account" variant="outlined" density="comfortable"
+                    :rules="[rules.required]" />
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <v-text-field v-model="orderEdit.customer_address.phone" label="Phone Number"
+                    prepend-inner-icon="mdi-phone" variant="outlined" density="comfortable"
+                    :rules="[rules.required, rules.phone]" />
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <v-select v-model="orderEdit.customer_address.city" :items="cityOptions" item-title="name"
+                    item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                    density="comfortable" :rules="[rules.required]" />
+                </v-col>
+
+                <v-col cols="12" md="6">
+                  <v-select v-model="orderEdit.customer_address.zone_id" :items="zoneOptions" item-title="name"
+                    item-value="id" label="Zone" prepend-inner-icon="mdi-map-marker-radius" variant="outlined"
+                    density="comfortable" />
+                </v-col>
+
+                <v-col cols="12">
+                  <v-textarea v-model="orderEdit.customer_address.address" label="Full Address"
+                    prepend-inner-icon="mdi-home" variant="outlined" density="comfortable" rows="2"
+                    :rules="[rules.required]" />
+                </v-col>
               </v-row>
             </div>
-            </div>
+          </div>
 
           <!-- Order Items Preview (if editing) -->
           <!-- Order Items Table (for both create and edit) -->
@@ -427,103 +222,64 @@
               <tbody>
                 <tr v-for="(item, idx) in orderEdit.order_items || []" :key="item.id || idx">
                   <td>
-                    <v-text-field
-                      v-model="item.product_name"
-                      placeholder="Product name"
-                      density="compact"
-                      hide-details
-                      variant="outlined"
-                      :readonly="!isCreateMode && !item.editable"
-                    />
+                    <v-autocomplete v-model="item.sku" :items="orderStore.productOptions" item-title="product_name"
+                      item-value="sku" placeholder="Product name" density="compact" hide-details variant="outlined"
+                      :readonly="!isCreateMode && !item.editable" />
                   </td>
                   <td>
-                    <v-text-field
-                      v-model.number="item.quantity"
-                      type="number"
-                      min="1"
-                      density="compact"
-                      hide-details
-                      variant="outlined"
-                      :readonly="!isCreateMode && !item.editable"
-                    />
+                    <v-text-field v-model.number="item.quantity" type="number" min="1" density="compact" hide-details
+                      variant="outlined" :readonly="!isCreateMode && !item.editable" />
                   </td>
                   <td>
-                    <v-text-field
-                      v-model.number="item.unit_price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      density="compact"
-                      hide-details
-                      variant="outlined"
-                      prefix="$"
-                      :readonly="!isCreateMode && !item.editable"
-                    />
+                    <v-text-field v-model.number="item.unit_price" type="number" min="0" step="0.01" density="compact"
+                      hide-details variant="outlined"  :readonly="!isCreateMode && !item.editable" />
                   </td>
                   <td>
-                    ${{ (item.quantity * item.unit_price).toFixed(2) }}
+                  {{ (item.quantity * item.unit_price).toFixed(2) }}
                   </td>
                   <td>
-                    <v-btn
-                      icon="mdi-delete"
-                      size="small"
-                      color="error"
-                      variant="text"
-                      @click="removeOrderItem(idx)"
-                      v-if="isCreateMode || (item.editable !== false)"
-                    />
+                    <v-btn icon="mdi-delete" size="small" color="error" variant="text" @click="removeOrderItem(idx)"
+                      v-if="isCreateMode || (item.editable !== false)" />
                   </td>
                 </tr>
               </tbody>
             </v-table>
-            <v-btn
-              color="primary"
-              variant="text"
-              prepend-icon="mdi-plus"
-              @click="addOrderItem"
-              class="mt-2"
-            >
+            <v-btn color="primary" variant="text" prepend-icon="mdi-plus" @click="addOrderItem" class="mt-2">
               Add Item
             </v-btn>
           </div>
 
-          <!-- Status (if editing) -->
-          <!-- <div v-if="!isCreateMode" class="mb-4">
-            <h3 class="text-subtitle-1 font-weight-medium mb-3 text-primary">
-              <v-icon class="mr-1" size="small">mdi-flag</v-icon>
-              Order Status
-            </h3>
+
+          <!-- add total value of order -->
+
+          <div class="mt-4">  
+            <v-row>
+                <v-col cols="12" md="4">
+                <v-text-field
+                  v-model="orderEdit.total_price"
+                  :value="orderEdit.order_items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unit_price)), 0).toFixed(2)"
+                  label="Total"
+                  variant="outlined"
+                  density="comfortable"
+                />
+                </v-col>
             
-            <v-select 
-              v-model="orderEdit.status_id" 
-              :items="statusOptions" 
-              label="Status"
-              prepend-inner-icon="mdi-flag"
-              variant="outlined"
-              density="comfortable"
-            />
-          </div> -->
+            </v-row>
+          </div>
+
+       
         </v-form>
       </v-card-text>
-      
+
       <v-divider />
-      
+
       <v-card-actions class="pa-4">
         <v-spacer />
-        <v-btn 
-          variant="outlined" 
-          @click="closeDialog"
-          :disabled="saving"
-        >
+        <v-btn variant="outlined" @click="closeDialog" :disabled="saving">
           Cancel
         </v-btn>
-        <v-btn 
-          :color="isCreateMode ? 'success' : 'primary'" 
-          variant="flat" 
-          @click="saveOrder" 
-          :loading="saving"
-          :disabled="!formValid"
-        >
+        <v-btn :color="isCreateMode ? 'success' : 'primary'" variant="flat" @click="saveOrder" :loading="saving"
+          :disabled="!formValid">
           <v-icon class="mr-1">
             {{ isCreateMode ? 'mdi-plus' : 'mdi-content-save' }}
           </v-icon>
@@ -547,7 +303,11 @@ const formRef = ref(null)
 const formValid = ref(false)
 
 
-        const { dialog, isCreateMode } = toRefs(orderStore)
+
+// const { dialog, isCreateMode } = toRefs(orderStore)
+
+const { dialog, isCreateMode, selectedOrder } = toRefs(orderStore)
+
 
 const saving = ref(false)
 const addressType = ref('customer') // 'customer' or 'warehouse'
@@ -605,7 +365,7 @@ const orderEdit = ref({
   platform: 'api',
   currency: 'KSH',
   sub_total: '0.00',
-  total_price: '0.00',
+  total_price: '',
   shipping_charges: '0.00',
   amount_paid: '0.00',
   weight: '',
@@ -651,40 +411,97 @@ const orderEdit = ref({
   }
 })
 
-// Initialize form for editing
+/**
+ * Initialize form for editing
+ * - Always show the most recent status (from status_timestamps if available)
+ * - If customer exists, use its info for customer_address
+ */
 const initializeEditForm = (orderData) => {
   if (!orderData) return
-  
-  orderEdit.value = {
-    reference: orderData.reference || '',
-    platform: orderData.platform || 'api',
-    source: orderData.source || 'vendor_api',
-    vendor_id: orderData.vendor_id || null,
-    category_id: orderData.category_id || null,
-    delivery_date: orderData.delivery_date || '',
-    status_id: orderData.status_id || '',
-    customer_address: {
-      full_name: orderData.shipping_address?.full_name || '',
-      phone: orderData.shipping_address?.phone || '',
-      city: orderData.shipping_address?.city || '',
-      zone_id: orderData.shipping_address?.zone_id || null,
-      address: orderData.shipping_address?.address || ''
-    },
-    from_warehouse_id: orderData.from_warehouse_id || null,
-    to_warehouse_id: orderData.to_warehouse_id || null,
-    from_address: {
-      city: orderData.from_address?.city || ''
-    },
-    to_address: {
-      city: orderData.to_address?.city || ''
-    }
-  }
-  
-  // Set address type based on existing data
-  if (orderData.from_warehouse_id && orderData.to_warehouse_id) {
-    addressType.value = 'warehouse'
+
+  // Find pickup and dropoff addresses from addresses array if present
+  let pickup = orderData.pickup_address || orderData.addresses?.find(a => a.type === 'pickup') || {}
+  let dropoff = orderData.dropoff_address || orderData.addresses?.find(a => a.type === 'shipping') || {}
+
+  // Use customer object if present, else fallback to customer_address or shipping_address
+  let customer = orderData.customer || orderData.customer_address || orderData.shipping_address || {}
+
+  // Determine address type
+  if (pickup.full_name || dropoff.full_name) {
+    addressType.value = 'pickup_dropoff'
   } else {
     addressType.value = 'customer'
+  }
+
+  // Always use the most recent status if available
+  let status_id = ''
+  if (orderData.status_timestamps && orderData.status_timestamps.status_id) {
+    status_id = orderData.status_timestamps.status_id
+  } else if (orderData.status_id) {
+    status_id = orderData.status_id
+  }
+
+  orderEdit.value = {
+    id: orderData.id ?? null,
+    order_no: orderData.order_no ?? '',
+    reference: orderData.reference ?? '',
+    customer_id: orderData.customer_id ?? null,
+    vendor_id: orderData.vendor_id ?? null,
+    warehouse_id: orderData.warehouse_id ?? null,
+    country_id: orderData.country_id ?? null,
+    source: orderData.source ?? 'vendor_api',
+    platform: orderData.platform ?? 'api',
+    currency: orderData.currency ?? 'KSH',
+    sub_total: orderData.sub_total ?? '0.00',
+    total_price: orderData.total_price ?? '0.00',
+    shipping_charges: orderData.shipping_charges ?? '0.00',
+    amount_paid: orderData.amount_paid ?? '0.00',
+    weight: orderData.weight ?? '',
+    paid: orderData.paid ?? false,
+    tracking_no: orderData.tracking_no ?? null,
+    waybill_no: orderData.waybill_no ?? null,
+    distance: orderData.distance ?? '',
+    geocoded: orderData.geocoded ?? 0,
+    archived_at: orderData.archived_at ?? null,
+    delivery_date: orderData.delivery_date ?? '',
+    status_id: status_id,
+    customer_notes: orderData.customer_notes ?? '',
+    order_items: (orderData.order_items || []).map(item => ({
+      ...item,
+      quantity: Number(item.quantity) || 1,
+      unit_price: Number(item.unit_price) || 0,
+      editable: true
+    })),
+    customer_address: {
+      full_name: customer.full_name ?? '',
+      phone: customer.phone ?? '',
+      city: customer.city ?? '',
+      zone_id: customer.zone_id ?? null,
+      address: customer.address ?? '',
+      region: customer.region ?? '',
+      zipcode: customer.zipcode ?? '',
+      email: customer.email ?? ''
+    },
+    pickup_address: {
+      full_name: pickup.full_name ?? '',
+      phone: pickup.phone ?? '',
+      city: pickup.city ?? '',
+      zone_id: pickup.zone_id ?? null,
+      address: pickup.address ?? '',
+      region: pickup.region ?? '',
+      zipcode: pickup.zipcode ?? '',
+      email: pickup.email ?? ''
+    },
+    dropoff_address: {
+      full_name: dropoff.full_name ?? '',
+      phone: dropoff.phone ?? '',
+      city: dropoff.city ?? '',
+      zone_id: dropoff.zone_id ?? null,
+      address: dropoff.address ?? '',
+      region: dropoff.region ?? '',
+      zipcode: dropoff.zipcode ?? '',
+      email: dropoff.email ?? ''
+    }
   }
 }
 
@@ -692,6 +509,10 @@ const initializeEditForm = (orderData) => {
 const initializeCreateForm = () => {
   orderEdit.value = {
     order_no: '',
+    total_price: '',
+    sub_total: '0.00',
+    shipping_charges: '0.00',
+    amount_paid: '0.00',
     reference: '',
     platform: 'api',
     source: 'vendor_api',
@@ -737,7 +558,18 @@ const initializeCreateForm = () => {
 
 
 
+const addOrderItem = () => {
+  orderEdit.value.order_items.push({
+    sku: '',
+    quantity: 1,
+    unit_price: 0.00,
+    editable: true
+  })
+}
 
+const removeOrderItem = (index) => {
+  orderEdit.value.order_items.splice(index, 1)
+}
 
 // Methods
 const onVendorChange = (vendorId) => {
@@ -767,11 +599,11 @@ const onAddressTypeChange = (type) => {
 const closeDialog = () => {
   orderStore.closeDialog()
   emit('dialog-closed')
- }
+}
 
 
 
- const saveOrder = async () => {
+const saveOrder = async () => {
   if (!(await formRef.value?.validate())) return
 
   saving.value = true
@@ -823,6 +655,48 @@ const closeDialog = () => {
     saving.value = false
   }
 }
+
+
+
+
+// Watch for changes in the selected order from store (for editing)
+watch(
+  () => selectedOrder.value,
+  (newOrder) => {
+    if (newOrder && !isCreateMode.value) {
+      console.log('Selected order changed:', newOrder)
+      initializeEditForm(newOrder)
+    }
+  },
+  { immediate: true, deep: true }
+)
+
+// Watch for create mode changes
+watch(
+  () => isCreateMode.value,
+  (isCreate) => {
+    if (isCreate) {
+      console.log('Switching to create mode')
+      initializeCreateForm()
+    }
+  },
+  { immediate: true }
+)
+
+// Also watch dialog state to handle initialization
+watch(
+  () => dialog.value,
+  (isOpen) => {
+    if (isOpen) {
+      if (isCreateMode.value) {
+        initializeCreateForm()
+      } else if (selectedOrder.value) {
+        initializeEditForm(selectedOrder.value)
+      }
+    }
+  }
+)
+
 
 
 </script>

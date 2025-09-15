@@ -31,7 +31,7 @@ return new class extends Migration
             $table->softDeletes();
 
             // Ensure each order can only have one timestamp per status
-            $table->unique(['order_id', 'status_id']);
+            // $table->unique(['order_id', 'status_id']);
         });
     }
 

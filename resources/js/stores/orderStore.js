@@ -1,10 +1,15 @@
 // stores/orderStore.js - Fixed version
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, reactive } from 'vue'
 import axios from 'axios'
 
 export const useOrderStore = defineStore('orders', () => {
   // State
+
+// Removed unused orderEdit to fix unused variable error
+
+
+
   const orders = ref([])
   const loading = ref({
     orders: false,
@@ -407,7 +412,14 @@ export const useOrderStore = defineStore('orders', () => {
     dialog.value = true
 
     if (orderId) {
-      await loadOrder(orderId)
+      const order = await loadOrder(orderId)
+
+          selectedOrder.value = order  // Make sure this line exists
+    return order
+      // Pass the loaded order to the form
+      // For example, if you have a form state or method, set it here:
+      // form.value = { ...order }
+      // Replace 'form' with your actual form state variable
     }
   }
 
