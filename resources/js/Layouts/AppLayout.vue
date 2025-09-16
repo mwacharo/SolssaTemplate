@@ -9,6 +9,7 @@ import { onMounted } from 'vue';
 import { useWebRTCStore } from '@/stores/webrtc';
 import IncomingCallDialog from '@/Pages/CallCenter/Dialogs/IncomingCallDialog.vue'
 
+import {  usePage } from '@inertiajs/vue3';
 
 
 defineProps({
@@ -20,11 +21,20 @@ const navStore = useNavStore()
 
 const webrtc = useWebRTCStore();
 
+const page = usePage();
+
+const userRoles = computed(() => page.props.authUser?.roles || []);
+console.log('User Roles:', userRoles.value);
+
+const userPermissions = computed(() => page.props.authUser?.permissions || []);
+console.log('User Permissions:', userPermissions.value);
+
+
 
 // For development - enable all features and permissions
-const userRole = 'admin'
 const userPlan = 'Enterprise' // Use Enterprise to see all plan-restricted features
 const enabledFeatures = [
+  'dashboard',
   'call-center',
   'team-management',
   'reports',
@@ -39,19 +49,23 @@ const enabledFeatures = [
   'orders'
 ] // All features enabled for development
 
-// Mock permissions - include all possible permissions for development
-const userPermissions = [
-  'view branches',
-  'create branches',
-  'manage users',
-  'view reports',
-  'manage settings',
-  'view audit logs'
-] // All permissions for development
 
-const navItems = computed(() =>
-  navStore.filteredNavItems(userRole, userPlan, enabledFeatures, userPermissions)
-)
+const navItems = computed(() => {
+  console.log('userRoles.value:', userRoles.value);
+  console.log('userPermissions.value:', userPermissions.value);
+  console.log('userPlan:', userPlan);
+  console.log('enabledFeatures:', enabledFeatures);
+
+  const filtered = navStore.filteredNavItems(
+    userRoles.value,
+    userPlan,
+    enabledFeatures,
+    userPermissions.value
+  );
+
+  console.log('Filtered nav items:', filtered);
+  return filtered;
+});
 
 // Navigation drawer control
 const drawer = ref(true);

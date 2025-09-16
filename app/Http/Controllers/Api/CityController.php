@@ -16,7 +16,9 @@ class CityController extends Controller
      */
     public function index()
     {
-        return CityResource::collection(City::paginate(15));
+        return CityResource::collection(
+            City::with('country')->paginate(15)
+        );
     }
 
     /**
@@ -39,8 +41,9 @@ class CityController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCityRequest $request, City $city)
+    public function update(UpdateCityRequest $request, $id)
     {
+        $city = City::findOrFail($id);
         $city->update($request->validated());
         return new CityResource($city);
     }

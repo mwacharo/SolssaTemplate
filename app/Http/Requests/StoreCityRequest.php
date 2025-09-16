@@ -23,7 +23,7 @@ class StoreCityRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'country_id' => 'required|exists:countries,id',
+            // 'country_id' => 'required|exists:countries,id',
             // 'state_id' => 'nullable|exists:states,id',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',

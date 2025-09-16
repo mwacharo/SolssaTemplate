@@ -16,7 +16,7 @@ class ZoneController extends Controller
      */
     public function index()
     {
-        $zones = Zone::paginate(15);
+        $zones = Zone::with(['country', 'city'])->paginate(15);
         return ZoneResource::collection($zones);
     }
 
@@ -40,8 +40,9 @@ class ZoneController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateZoneRequest $request, Zone $zone)
+    public function update(UpdateZoneRequest $request, $id)
     {
+        $zone = Zone::findOrFail($id);
         $zone->update($request->validated());
         return new ZoneResource($zone);
     }

@@ -499,9 +499,9 @@ async function fetchCountries() {
 
 async function fetchCities(countryId = null) {
   try {
-    const url = countryId ? `/api/v1/cities?country_id=${countryId}` : '/api/v1/admin/cities'
+    const url = countryId ? `/api/v1/cities?country_id=${countryId}` : '/api/v1/cities'
     const { data } = await axios.get(url)
-    cities.value = data
+    cities.value = Array.isArray(data) ? data : []
   } catch (error) {
     notify.error('Failed to load cities')
     console.error('Error fetching cities:', error)
@@ -559,7 +559,7 @@ async function updateWarehouse() {
 async function deleteWarehouse() {
   deletingWarehouse.value = warehouseToDelete.value.id
   try {
-    await axios.delete(`/api/v1/admin/warehouses/${warehouseToDelete.value.id}`)
+    await axios.delete(`/api/v1/warehouses/${warehouseToDelete.value.id}`)
     warehouses.value = warehouses.value.filter(w => w.id !== warehouseToDelete.value.id)
     notify.success('Warehouse deleted successfully')
     closeDeleteDialog()

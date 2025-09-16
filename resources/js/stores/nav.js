@@ -27,11 +27,11 @@ export const ROUTES = {
     DISPATCH_LIST: 'orders.dispatch-list',
     // SHIP: 'orders.ship',
   },
- 
+
 
   USERS: {
     // INDEX: 'users.index',
-      INDEX: 'admin.users', 
+    INDEX: 'admin.users',
 
     ROLES: 'users.roles',
     PERMISSIONS: 'users.permissions',
@@ -60,7 +60,7 @@ export const ROUTES = {
     CATEGORY: 'warehouse.category', // Route::get('/category', ...)->name('category')
     // ORDERS: 'warehouse.orders',
     // SUPPLIERS: 'warehouse.suppliers',
-  },  
+  },
   SETTINGS: {
     // PROFILE: 'settings.profile',
     // ORG: 'settings.org',
@@ -112,7 +112,7 @@ export const ROUTES = {
     PAYMENTS: 'vendor.payments',
     REVIEWS: 'vendor.reviews',
   },
-  
+
   SUPPORT: {
     FAQS: 'support.faqs',
     CONTACT: 'support.contact',
@@ -139,14 +139,12 @@ export const useNavStore = defineStore('nav', {
         title: 'Dashboard',
         icon: 'mdi-view-dashboard',
         route: ROUTES.DASHBOARD.INDEX,
-        roles: ['admin', 'staff', 'user'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Free', 'Pro', 'Enterprise'],
-        features: [],
+        features: ['dashboard'],
+        permissions: ['dashboard_view', 'dashboard_export'],
         children: [
-          { title: 'Overview', route: ROUTES.DASHBOARD.INDEX, icon: 'mdi-view-dashboard-outline' },
-          // { title: 'Metrics & KPIs', route: ROUTES.DASHBOARD.METRICS, icon: 'mdi-chart-line' },
-          // { title: 'Activity Logs', route: ROUTES.DASHBOARD.ACTIVITY, icon: 'mdi-history' },
-          // { title: 'System Status', route: ROUTES.DASHBOARD.STATUS, icon: 'mdi-server' },
+          { title: 'Overview', route: ROUTES.DASHBOARD.INDEX, icon: 'mdi-view-dashboard-outline', permission: 'dashboard_view' },
         ],
       },
 
@@ -154,38 +152,36 @@ export const useNavStore = defineStore('nav', {
         title: 'Call Center',
         icon: 'mdi-headset',
         route: ROUTES.CALL_CENTRE.INDEX,
-        roles: ['admin', 'staff', 'user'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Free', 'Pro', 'Enterprise'],
         features: ['call-center'],
+        permissions: ['call_center_view'],
         children: [
-          { title: 'Call Centre', route: ROUTES.CALL_CENTRE.INDEX, icon: 'mdi-headset' },
-          { title: 'Tickets', route: ROUTES.CALL_CENTRE.TICKETS, icon: 'mdi-ticket-outline' },
-          { title: 'Messages', route: ROUTES.CALL_CENTRE.MESSAGES, icon: 'mdi-message-text-outline' },
-          { title: 'WhatsApp', route: ROUTES.CALL_CENTRE.WHATSAPP, icon: 'mdi-whatsapp' },
-          { title: 'Emails', route: ROUTES.CALL_CENTRE.EMAILS, icon: 'mdi-email-outline' },
-          { title: 'Clients', route: ROUTES.CALL_CENTRE.CLIENTS, icon: 'mdi-account-multiple-outline' },
-          { title: 'Contacts', route: ROUTES.CALL_CENTRE.CONTACTS, icon: 'mdi-phone-outline' },
-          { title: 'Telegram', route: ROUTES.CALL_CENTRE.TELEGRAM, icon: 'mdi-telegram' },
-          { title: 'Notes', route: ROUTES.CALL_CENTRE.NOTES, icon: 'mdi-note-text-outline' },
+          { title: 'Call Centre', route: ROUTES.CALL_CENTRE.INDEX, icon: 'mdi-headset', permission: 'call_center_view' },
+          { title: 'Tickets', route: ROUTES.CALL_CENTRE.TICKETS, icon: 'mdi-ticket-outline', permission: 'tickets_view' },
+          { title: 'Messages', route: ROUTES.CALL_CENTRE.MESSAGES, icon: 'mdi-message-text-outline', permission: 'messages_view' },
+          { title: 'WhatsApp', route: ROUTES.CALL_CENTRE.WHATSAPP, icon: 'mdi-whatsapp', permission: 'whatsapp_view' },
+          { title: 'Emails', route: ROUTES.CALL_CENTRE.EMAILS, icon: 'mdi-email-outline', permission: 'emails_view' },
+          { title: 'Clients', route: ROUTES.CALL_CENTRE.CLIENTS, icon: 'mdi-account-multiple-outline', permission: 'clients_view' },
+          { title: 'Contacts', route: ROUTES.CALL_CENTRE.CONTACTS, icon: 'mdi-phone-outline', permission: 'contacts_view' },
+          { title: 'Telegram', route: ROUTES.CALL_CENTRE.TELEGRAM, icon: 'mdi-telegram', permission: 'telegram_view' },
+          { title: 'Notes', route: ROUTES.CALL_CENTRE.NOTES, icon: 'mdi-note-text-outline', permission: 'notes_view' },
         ],
       },
 
-
-      // order
-
-
-      {    title: 'Orders',
+      {
+        title: 'Orders',
         icon: 'mdi-cart',
         route: ROUTES.ORDERS.INDEX,
-        roles: ['admin', 'staff', 'user'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Free', 'Pro', 'Enterprise'],
         features: ['orders'],
+        permissions: ['orders_view', 'orders_create', 'orders_edit', 'orders_delete', 'orders_ship', 'orders_dispatch', 'orders_scan', 'orders_track', 'orders_update_status', 'orders_refund'],
         children: [
-          { title: 'All Orders', route: ROUTES.ORDERS.INDEX, icon: 'mdi-cart-outline' },
-          { title: 'Shipping', route: ROUTES.ORDERS.SHIPPING, icon: 'mdi-truck-outline' },
-          { title: 'Scan & Dispatch', route: ROUTES.ORDERS.SCAN_DISPATCH, icon: 'mdi-barcode-scan' },
-          { title: 'Dispatch List', route: ROUTES.ORDERS.DISPATCH_LIST, icon: 'mdi-format-list-bulleted' },
-          // { title: 'Ship Orders', route: ROUTES.ORDERS.SHIP, icon: 'mdi-rocket-launch-outline' },
+          { title: 'All Orders', route: ROUTES.ORDERS.INDEX, icon: 'mdi-cart-outline', permission: 'orders_view' },
+          { title: 'Shipping', route: ROUTES.ORDERS.SHIPPING, icon: 'mdi-truck-outline', permission: 'orders_ship' },
+          { title: 'Scan & Dispatch', route: ROUTES.ORDERS.SCAN_DISPATCH, icon: 'mdi-barcode-scan', permission: 'orders_scan' },
+          { title: 'Dispatch List', route: ROUTES.ORDERS.DISPATCH_LIST, icon: 'mdi-format-list-bulleted', permission: 'orders_dispatch' },
         ],
       },
 
@@ -193,15 +189,14 @@ export const useNavStore = defineStore('nav', {
         title: 'Users & Teams',
         icon: 'mdi-account-group',
         route: ROUTES.USERS.INDEX,
-        roles: ['admin'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
         features: ['team-management'],
+        permissions: ['users_view', 'users_create', 'users_edit', 'users_delete', 'users_impersonate', 'roles_view', 'roles_create', 'roles_edit', 'roles_delete', 'roles_assign', 'permissions_view', 'permissions_create', 'permissions_edit', 'permissions_delete'],
         children: [
-          { title: 'User Management', route: ROUTES.USERS.INDEX, icon: 'mdi-account-group-outline' },
-          { title: 'User Roles', route: ROUTES.USERS.ROLES, icon: 'mdi-account-key-outline' },
-          { title: 'Permissions', route: ROUTES.USERS.PERMISSIONS, icon: 'mdi-shield-key-outline' },
-          // { title: 'Teams', route: ROUTES.USERS.TEAMS, icon: 'mdi-account-multiple' },
-          // { title: 'Invitations', route: ROUTES.USERS.INVITATIONS, icon: 'mdi-email-send' },
+          { title: 'User Management', route: ROUTES.USERS.INDEX, icon: 'mdi-account-group-outline', permission: 'users_view' },
+          { title: 'User Roles', route: ROUTES.USERS.ROLES, icon: 'mdi-account-key-outline', permission: 'roles_view' },
+          { title: 'Permissions', route: ROUTES.USERS.PERMISSIONS, icon: 'mdi-shield-key-outline', permission: 'permissions_view' },
         ],
       },
 
@@ -209,14 +204,12 @@ export const useNavStore = defineStore('nav', {
         title: 'Reports',
         icon: 'mdi-chart-box',
         route: ROUTES.REPORTS.INDEX,
-        roles: ['admin', 'staff'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
         features: ['reports'],
+        permissions: ['reports_view', 'reports_create', 'reports_export', 'reports_schedule', 'reports_share'],
         children: [
-          { title: 'View Reports', route: ROUTES.REPORTS.INDEX, icon: 'mdi-chart-box-outline' },
-          // { title: 'Generate Report', route: ROUTES.REPORTS.GENERATE, icon: 'mdi-file-chart' },
-          // { title: 'Export', route: ROUTES.REPORTS.EXPORT, icon: 'mdi-download' },
-          // { title: 'Schedule Reports', route: ROUTES.REPORTS.SCHEDULE, icon: 'mdi-calendar-clock' },
+          { title: 'View Reports', route: ROUTES.REPORTS.INDEX, icon: 'mdi-chart-box-outline', permission: 'reports_view' },
         ],
       },
 
@@ -224,37 +217,31 @@ export const useNavStore = defineStore('nav', {
         title: 'Branches',
         icon: 'mdi-map-marker-outline',
         route: ROUTES.BRANCHES.INDEX,
-        roles: ['admin', 'staff'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
         features: ['branch-management'],
-        permissions: ['view branches'],
+        permissions: ['branches_view', 'branches_create', 'branches_edit', 'branches_delete', 'cities_manage', 'zones_manage'],
         children: [
-          { title: 'View Branches', route: ROUTES.BRANCHES.INDEX, icon: 'mdi-map-marker-radius-outline' },
-          // { title: 'Add Branch', route: ROUTES.BRANCHES.CREATE, icon: 'mdi-map-marker-plus' },
-          // { title: 'Manage Locations', route: ROUTES.BRANCHES.LOCATIONS, icon: 'mdi-map' },
-          { title: 'Cities', route: ROUTES.BRANCHES.CITIES, icon: 'mdi-city' },
-          { title: 'Zones', route: ROUTES.BRANCHES.ZONES, icon: 'mdi-shape-outline' },  
+          { title: 'View Branches', route: ROUTES.BRANCHES.INDEX, icon: 'mdi-map-marker-radius-outline', permission: 'branches_view' },
+          { title: 'Cities', route: ROUTES.BRANCHES.CITIES, icon: 'mdi-city', permission: 'cities_manage' },
+          { title: 'Zones', route: ROUTES.BRANCHES.ZONES, icon: 'mdi-shape-outline', permission: 'zones_manage' },
         ],
       },
 
-      // warehousing
       {
         title: 'Warehousing',
         icon: 'mdi-warehouse',
-        route: 'warehouse.index', // Laravel route name matches: warehouse.index
-        roles: ['admin', 'staff'],
+        route: 'warehouse.index',
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
-        features: ['warehousing'],  
+        features: ['warehousing'],
+        permissions: ['warehouse_view', 'warehouse_manage', 'products_view', 'products_create', 'products_edit', 'products_delete', 'inventory_view', 'inventory_adjust', 'inventory_transfer', 'categories_manage'],
         children: [
-          { title: 'Warehouse', route: ROUTES.WAREHOUSE.INDEX, icon: 'mdi-warehouse' },
-          // { title: 'Products', route: ROUTES.WAREHOUSING.PRODUCTS, icon: 'mdi-package-variant-closed' },
-          // { title: 'Stock Management', route: ROUTES.WAREHOUSING.STOCK, icon: 'mdi-warehouse' },
-          // { title: 'Orders', route: ROUTES.WAREHOUSING.ORDERS, icon: 'mdi-cart-outline' },
-          //{ title: 'Suppliers', route: ROUTES.WAREHOUSING.SUPPLIERS, icon: 'mdi-account-multiple-outline' },
-          { title: 'Products', route: ROUTES.WAREHOUSE.PRODUCTS, icon: 'mdi-package-variant-closed' },
-          { title: 'Inventory', route: ROUTES.WAREHOUSE.INVENTORY, icon: 'mdi-warehouse' },
-          { title: 'Statistics', route: ROUTES.WAREHOUSE.STATISTICS, icon: 'mdi-chart-bar' },
-          { title: 'Category', route: ROUTES.WAREHOUSE.CATEGORY, icon: 'mdi-tag-multiple' },
+          { title: 'Warehouse', route: ROUTES.WAREHOUSE.INDEX, icon: 'mdi-warehouse', permission: 'warehouse_view' },
+          { title: 'Products', route: ROUTES.WAREHOUSE.PRODUCTS, icon: 'mdi-package-variant-closed', permission: 'products_view' },
+          { title: 'Inventory', route: ROUTES.WAREHOUSE.INVENTORY, icon: 'mdi-warehouse', permission: 'inventory_view' },
+          { title: 'Statistics', route: ROUTES.WAREHOUSE.STATISTICS, icon: 'mdi-chart-bar', permission: 'warehouse_view' },
+          { title: 'Category', route: ROUTES.WAREHOUSE.CATEGORY, icon: 'mdi-tag-multiple', permission: 'categories_manage' },
         ],
       },
 
@@ -262,21 +249,16 @@ export const useNavStore = defineStore('nav', {
         title: 'Settings',
         icon: 'mdi-cog',
         route: ROUTES.SETTINGS.PROFILE,
-        roles: ['admin'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Free', 'Pro', 'Enterprise'],
         features: [],
+        permissions: ['settings_view', 'settings_edit', 'ivr_manage', 'integrations_view', 'integrations_manage', 'templates_view', 'templates_create', 'templates_edit', 'templates_delete', 'call_settings_manage', 'system_status_view', 'system_status_manage'],
         children: [
-          // { title: 'Profile & Account', route: ROUTES.SETTINGS.PROFILE, icon: 'mdi-account-cog' },
-          // { title: 'Organization', route: ROUTES.SETTINGS.ORG, icon: 'mdi-office-building' },
-          { title: 'IVR Options', route: ROUTES.SETTINGS.IVR, icon: 'mdi-phone-settings' },
-          { title: 'Integrations', route: ROUTES.SETTINGS.INTEGRATIONS, icon: 'mdi-puzzle' },
-          { title: 'Templates', route: ROUTES.SETTINGS.TEMPLATES, icon: 'mdi-file-outline' },
-          { title: 'Call Settings', route: ROUTES.SETTINGS.CALL_SETTINGS, icon: 'mdi-phone-outline' },
-          // add status
-          { title: 'System Statuses', route: ROUTES.SETTINGS.STATUS, icon: 'mdi-server' },
-          // { title: 'Feature Toggles', route: ROUTES.SETTINGS.FEATURES, icon: 'mdi-toggle-switch' },
-          // { title: 'Notifications', route: ROUTES.SETTINGS.NOTIFICATIONS, icon: 'mdi-bell-cog' },
-          // { title: 'Branding', route: ROUTES.SETTINGS.BRANDING, icon: 'mdi-palette' },
+          { title: 'IVR Options', route: ROUTES.SETTINGS.IVR, icon: 'mdi-phone-settings', permission: 'ivr_manage' },
+          { title: 'Integrations', route: ROUTES.SETTINGS.INTEGRATIONS, icon: 'mdi-puzzle', permission: 'integrations_view' },
+          { title: 'Templates', route: ROUTES.SETTINGS.TEMPLATES, icon: 'mdi-file-outline', permission: 'templates_view' },
+          { title: 'Call Settings', route: ROUTES.SETTINGS.CALL_SETTINGS, icon: 'mdi-phone-outline', permission: 'call_settings_manage' },
+          { title: 'System Statuses', route: ROUTES.SETTINGS.STATUS, icon: 'mdi-server', permission: 'system_status_view' },
         ],
       },
 
@@ -284,14 +266,12 @@ export const useNavStore = defineStore('nav', {
         title: 'Integrations',
         icon: 'mdi-api',
         route: ROUTES.INTEGRATIONS.API,
-        roles: ['admin'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
         features: ['integrations'],
+        permissions: ['integrations_view', 'integrations_manage', 'api_manage', 'webhooks_manage'],
         children: [
-          // { title: 'API Management', route: ROUTES.INTEGRATIONS.API, icon: 'mdi-api' },
-          // { title: 'Webhooks', route: ROUTES.INTEGRATIONS.WEBHOOKS, icon: 'mdi-webhook' },
-          // { title: 'Third-Party Apps', route: ROUTES.INTEGRATIONS.APPS, icon: 'mdi-application' },
-          { title: 'Marketplace', route: ROUTES.INTEGRATIONS.MARKETPLACE, icon: 'mdi-storefront-outline' },
+          { title: 'Marketplace', route: ROUTES.INTEGRATIONS.MARKETPLACE, icon: 'mdi-storefront-outline', permission: 'integrations_view' },
         ],
       },
 
@@ -299,15 +279,16 @@ export const useNavStore = defineStore('nav', {
         title: 'Billing',
         icon: 'mdi-credit-card',
         route: ROUTES.BILLING.PLANS,
-        roles: ['admin'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
         features: ['billing'],
+        permissions: ['billing_view', 'billing_manage', 'invoices_view', 'invoices_create', 'payments_view', 'payments_process'],
         children: [
-          { title: 'Plans & Pricing', route: ROUTES.BILLING.PLANS, icon: 'mdi-card-account-details' },
-          { title: 'Payment Methods', route: ROUTES.BILLING.PAYMENTS, icon: 'mdi-credit-card-outline' },
-          { title: 'Invoices', route: ROUTES.BILLING.INVOICES, icon: 'mdi-receipt' },
-          { title: 'Usage Metering', route: ROUTES.BILLING.USAGE, icon: 'mdi-gauge' },
-          { title: 'License Management', route: ROUTES.BILLING.LICENSES, icon: 'mdi-license' },
+          { title: 'Plans & Pricing', route: ROUTES.BILLING.PLANS, icon: 'mdi-card-account-details', permission: 'billing_view' },
+          { title: 'Payment Methods', route: ROUTES.BILLING.PAYMENTS, icon: 'mdi-credit-card-outline', permission: 'payments_view' },
+          { title: 'Invoices', route: ROUTES.BILLING.INVOICES, icon: 'mdi-receipt', permission: 'invoices_view' },
+          { title: 'Usage Metering', route: ROUTES.BILLING.USAGE, icon: 'mdi-gauge', permission: 'billing_view' },
+          { title: 'License Management', route: ROUTES.BILLING.LICENSES, icon: 'mdi-license', permission: 'billing_manage' },
         ],
       },
 
@@ -315,13 +296,14 @@ export const useNavStore = defineStore('nav', {
         title: 'Notifications',
         icon: 'mdi-bell',
         route: ROUTES.NOTIFICATIONS.CENTER,
-        roles: ['admin', 'staff'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Pro', 'Enterprise'],
         features: ['notifications'],
+        permissions: ['notifications_view', 'notifications_create', 'notifications_manage'],
         children: [
-          { title: 'Notification Center', route: ROUTES.NOTIFICATIONS.CENTER, icon: 'mdi-bell-outline' },
-          { title: 'Activity Trail', route: ROUTES.NOTIFICATIONS.ACTIVITY, icon: 'mdi-timeline' },
-          { title: 'Read/Unread', route: ROUTES.NOTIFICATIONS.STATUS, icon: 'mdi-bell-check' },
+          { title: 'Notification Center', route: ROUTES.NOTIFICATIONS.CENTER, icon: 'mdi-bell-outline', permission: 'notifications_view' },
+          { title: 'Activity Trail', route: ROUTES.NOTIFICATIONS.ACTIVITY, icon: 'mdi-timeline', permission: 'notifications_view' },
+          { title: 'Read/Unread', route: ROUTES.NOTIFICATIONS.STATUS, icon: 'mdi-bell-check', permission: 'notifications_view' },
         ],
       },
 
@@ -329,13 +311,14 @@ export const useNavStore = defineStore('nav', {
         title: 'Audit Logs',
         icon: 'mdi-clipboard-text-clock',
         route: ROUTES.AUDIT.LOGINS,
-        roles: ['admin'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Enterprise'],
         features: ['audit-trail'],
+        permissions: ['audit_logs_view', 'login_history_view', 'system_changes_view', 'security_settings_manage'],
         children: [
-          { title: 'Login History', route: ROUTES.AUDIT.LOGINS, icon: 'mdi-account-clock' },
-          { title: 'User Actions', route: ROUTES.AUDIT.ACTIONS, icon: 'mdi-account-edit' },
-          { title: 'System Changes', route: ROUTES.AUDIT.SYSTEM, icon: 'mdi-cog-clockwise' },
+          { title: 'Login History', route: ROUTES.AUDIT.LOGINS, icon: 'mdi-account-clock', permission: 'login_history_view' },
+          { title: 'User Actions', route: ROUTES.AUDIT.ACTIONS, icon: 'mdi-account-edit', permission: 'audit_logs_view' },
+          { title: 'System Changes', route: ROUTES.AUDIT.SYSTEM, icon: 'mdi-cog-clockwise', permission: 'system_changes_view' },
         ],
       },
 
@@ -343,39 +326,38 @@ export const useNavStore = defineStore('nav', {
         title: 'Developer Tools',
         icon: 'mdi-code-tags',
         route: ROUTES.DEVELOPER.DOCS,
-        roles: ['admin'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Enterprise'],
         features: ['developer-tools'],
+        permissions: ['developer_tools_access', 'api_manage', 'webhooks_manage', 'sandbox_access', 'feature_flags_manage'],
         children: [
-          { title: 'API Docs', route: ROUTES.DEVELOPER.DOCS, icon: 'mdi-book-open-variant' },
-          { title: 'SDKs', route: ROUTES.DEVELOPER.SDKS, icon: 'mdi-package-variant' },
-          { title: 'Sandbox Mode', route: ROUTES.DEVELOPER.SANDBOX, icon: 'mdi-play-box-outline' },
-          { title: 'Usage Stats', route: ROUTES.DEVELOPER.STATS, icon: 'mdi-chart-line-variant' },
+          { title: 'API Docs', route: ROUTES.DEVELOPER.DOCS, icon: 'mdi-book-open-variant', permission: 'developer_tools_access' },
+          { title: 'SDKs', route: ROUTES.DEVELOPER.SDKS, icon: 'mdi-package-variant', permission: 'developer_tools_access' },
+          { title: 'Sandbox Mode', route: ROUTES.DEVELOPER.SANDBOX, icon: 'mdi-play-box-outline', permission: 'sandbox_access' },
+          { title: 'Usage Stats', route: ROUTES.DEVELOPER.STATS, icon: 'mdi-chart-line-variant', permission: 'developer_tools_access' },
         ],
       },
 
-
-       {
-        title: 'Vendor',
-        icon: 'mdi-store',
-        route: ROUTES.VENDOR.INDEX,
-        roles: ['admin', 'staff'],
-        plans: ['Pro', 'Enterprise'],
-        features: ['vendor-management'],
-        children: [
-          { title: 'Vendor Dashboard', route: ROUTES.VENDOR.INDEX, icon: 'mdi-store-outline' },
-          { title: 'Products', route: ROUTES.VENDOR.PRODUCTS, icon: 'mdi-package-variant-closed' },
-          { title: 'Orders', route: ROUTES.VENDOR.ORDERS, icon: 'mdi-cart-outline' },
-          // { title: 'Payments', route: ROUTES.VENDOR.PAYMENTS, icon: 'mdi-cash-multiple' },
-          // { title: 'Reviews', route: ROUTES.VENDOR.REVIEWS, icon: 'mdi-star-outline' },
-        ],
-      },
+      // {
+      //   title: 'Vendor',
+      //   icon: 'mdi-store',
+      //   route: ROUTES.VENDOR.INDEX,
+      //   roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
+      //   plans: ['Pro', 'Enterprise'],
+      //   features: ['vendor-management'],
+      //   permissions: ['vendors_view', 'vendors_create', 'vendors_edit', 'vendors_delete', 'vendors_approve', 'vendors_manage', 'vendor_profile_view', 'vendor_profile_edit'],
+      //   children: [
+      //     { title: 'Vendor Dashboard', route: ROUTES.VENDOR.INDEX, icon: 'mdi-store-outline', permission: 'vendors_view' },
+      //     { title: 'Products', route: ROUTES.VENDOR.PRODUCTS, icon: 'mdi-package-variant-closed', permission: 'products_view' },
+      //     { title: 'Orders', route: ROUTES.VENDOR.ORDERS, icon: 'mdi-cart-outline', permission: 'orders_view' },
+      //   ],
+      // },
 
       {
         title: 'Help & Support',
         icon: 'mdi-lifebuoy',
         route: ROUTES.SUPPORT.FAQS,
-        roles: ['admin', 'staff', 'user'],
+        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
         plans: ['Free', 'Pro', 'Enterprise'],
         features: [],
         children: [
@@ -385,55 +367,67 @@ export const useNavStore = defineStore('nav', {
           { title: 'Submit a Ticket', route: ROUTES.SUPPORT.TICKET, icon: 'mdi-ticket-plus-outline' },
         ],
       },
-
-      
     ],
   }),
 
   getters: {
     filteredNavItems: (state) => {
-      return (userRole, userPlan, enabledFeatures = [], userPermissions = []) => {
-        return state.navItems.filter(item => {
-          const hasRole = item.roles.includes(userRole)
-          const hasPlan = item.plans.includes(userPlan)
-          const hasFeatures = item.features.length === 0 || item.features.every(f => enabledFeatures.includes(f))
-          const hasPermissions = !item.permissions || item.permissions.every(p => userPermissions.includes(p))
-          
-          return hasRole && hasPlan && hasFeatures && hasPermissions
-        })
-      }
-    },
+      return (userRoles, userPlan, enabledFeatures = [], userPermissions = []) => {
+        // Normalize everything to lowercase strings
+        const roles = Array.isArray(userRoles)
+          ? userRoles.map(r => String(r || '').toLowerCase())
+          : [String(userRoles || '').toLowerCase()];
 
-    // Get filtered children for a specific nav item
-    getFilteredChildren: (state) => {
-      return (parentItem, userRole, userPlan, enabledFeatures = [], userPermissions = []) => {
-        if (!parentItem.children) return []
-        
-        return parentItem.children.filter(child => {
-          const hasPermission = !child.permission || userPermissions.includes(child.permission)
-          const hasRole = !child.role || child.role === userRole
-          return hasPermission && hasRole
-        })
-      }
-    },
+        const plan = String(userPlan || '').toLowerCase();
+        const permissions = [...(Array.isArray(userPermissions) ? userPermissions : [])].map(p => p.toLowerCase());
+        const features = enabledFeatures.map(f => f.toLowerCase());
 
-    // Get navigation items grouped by category
-    getGroupedNavItems: (state) => {
-      return (userRole, userPlan, enabledFeatures = [], userPermissions = []) => {
-        const filtered = state.filteredNavItems(userRole, userPlan, enabledFeatures, userPermissions)
-        
-        return {
-          core: filtered.filter(item => ['Dashboard', 'Call Center'].includes(item.title)),
-          management: filtered.filter(item => ['Users & Teams', 'Branches', 'Reports'].includes(item.title)),
-          configuration: filtered.filter(item => ['Settings', 'Integrations'].includes(item.title)),
-          business: filtered.filter(item => ['Billing', 'Notifications'].includes(item.title)),
-          security: filtered.filter(item => ['Audit Logs'].includes(item.title)),
-          development: filtered.filter(item => ['Developer Tools'].includes(item.title)),
-          support: filtered.filter(item => ['Help & Support'].includes(item.title)),
-          vendor: filtered.filter(item => ['Vendor'].includes(item.title)),
-        }
-      }
-    }
+        return state.navItems
+          .map(item => {
+            const itemRoles = (item.roles || []).map(r => r.toLowerCase());
+            const itemPlans = (item.plans || []).map(p => p.toLowerCase());
+            const itemFeatures = (item.features || []).map(f => f.toLowerCase());
+
+            // Support both `permission` and `permissions`
+            const itemPermissions = [];
+            if (item.permission) itemPermissions.push(item.permission.toLowerCase());
+            if (Array.isArray(item.permissions)) {
+              itemPermissions.push(...item.permissions.map(p => p.toLowerCase()));
+            }
+
+            // Check if user has at least one of the required roles
+            const hasRole = itemRoles.length === 0 ||
+              roles.some(userRole => itemRoles.includes(userRole));
+
+            const hasPlan = itemPlans.length === 0 || itemPlans.includes(plan);
+            const hasFeatures = itemFeatures.length === 0 ||
+              itemFeatures.every(f => features.includes(f));
+            // const hasPermissions = itemPermissions.length === 0 || 
+            //   itemPermissions.every(p => permissions.includes(p));
+
+            const hasPermissions = itemPermissions.length === 0 ||
+              itemPermissions.some(p => permissions.includes(p));
+
+            if (!(hasRole && hasPlan && hasFeatures && hasPermissions)) return null;
+
+            // Filter children
+            let children = [];
+            if (item.children) {
+              children = item.children.filter(child => {
+                const childPermission = child.permission?.toLowerCase();
+                const childRole = child.role?.toLowerCase();
+
+                const okPermission = !childPermission || permissions.includes(childPermission);
+                const okRole = !childRole || roles.includes(childRole);
+                return okPermission && okRole;
+              });
+            }
+
+            return { ...item, children };
+          })
+          .filter(Boolean);
+      };
+    },
   },
 
   actions: {
@@ -477,14 +471,14 @@ export const useNavStore = defineStore('nav', {
     getBreadcrumb(route) {
       const navItem = this.findNavItemByRoute(route)
       if (!navItem) return []
-      
+
       if (navItem.parent) {
         return [
           { title: navItem.parent.title, route: navItem.parent.route },
           { title: navItem.child.title, route: navItem.child.route }
         ]
       }
-      
+
       return [{ title: navItem.title, route: navItem.route }]
     }
   }

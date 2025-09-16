@@ -23,7 +23,7 @@ class StoreZoneRequest extends FormRequest
     {
        return [
           'name' => 'required|string|max:255',
-          'country_id' => 'required|integer|exists:countries,id',
+        //   'country_id' => 'required|integer|exists:countries,id',
           // 'state_id' => 'nullable|integer|exists:states,id',
           'city_id' => 'required|integer|exists:cities,id',
           'latitude' => 'required|numeric|between:-90,90',

@@ -23,7 +23,7 @@ class UpdateCityRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'country_id' => 'required|integer|exists:countries,id',
+            // 'country_id' => 'required|integer|exists:countries,id',
             // 'state_id' => 'nullable|integer|exists:states,id',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',

@@ -11,7 +11,7 @@ class UpdateZoneRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,7 @@ class UpdateZoneRequest extends FormRequest
     {
        return [
           'name' => 'required|string|max:255',
-          'country_id' => 'required|integer|exists:countries,id',
+        //   'country_id' => 'required|integer|exists:countries,id',
           // 'state_id' => 'nullable|integer|exists:states,id',
           'city_id' => 'nullable|integer|exists:cities,id',
           'latitude' => 'nullable|numeric|between:-90,90',

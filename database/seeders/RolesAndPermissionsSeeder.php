@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -66,13 +65,20 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Order Management Permissions
             ['name' => 'orders_view', 'description' => 'View all orders and order details', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-outline', 'color' => 'indigo'],
+            ['name' => 'orders_view_own', 'description' => 'View only own orders (vendor-specific)', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-outline', 'color' => 'indigo'],
+            ['name' => 'orders_view_assigned', 'description' => 'View only assigned orders (delivery agent)', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-outline', 'color' => 'indigo'],
             ['name' => 'orders_create', 'description' => 'Create new orders', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-plus', 'color' => 'indigo'],
             ['name' => 'orders_edit', 'description' => 'Edit order information', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-outline', 'color' => 'indigo'],
+            ['name' => 'orders_edit_own', 'description' => 'Edit only own orders', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-outline', 'color' => 'indigo'],
             ['name' => 'orders_delete', 'description' => 'Cancel or delete orders', 'guard_name' => 'sanctum', 'icon' => 'mdi-cart-remove', 'color' => 'red'],
             ['name' => 'orders_ship', 'description' => 'Process shipping for orders', 'guard_name' => 'sanctum', 'icon' => 'mdi-truck', 'color' => 'green'],
+            ['name' => 'orders_ship_own', 'description' => 'Process shipping for own orders only', 'guard_name' => 'sanctum', 'icon' => 'mdi-truck', 'color' => 'green'],
             ['name' => 'orders_dispatch', 'description' => 'Dispatch orders for delivery', 'guard_name' => 'sanctum', 'icon' => 'mdi-send', 'color' => 'orange'],
             ['name' => 'orders_scan', 'description' => 'Scan order barcodes and QR codes', 'guard_name' => 'sanctum', 'icon' => 'mdi-barcode-scan', 'color' => 'blue'],
             ['name' => 'orders_track', 'description' => 'Track order status and delivery', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-closed', 'color' => 'teal'],
+            ['name' => 'orders_track_own', 'description' => 'Track own orders only', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-closed', 'color' => 'teal'],
+            ['name' => 'orders_track_assigned', 'description' => 'Track assigned orders only', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-closed', 'color' => 'teal'],
+            ['name' => 'orders_update_status', 'description' => 'Update order delivery status', 'guard_name' => 'sanctum', 'icon' => 'mdi-update', 'color' => 'orange'],
             ['name' => 'orders_refund', 'description' => 'Process refunds and returns', 'guard_name' => 'sanctum', 'icon' => 'mdi-cash-refund', 'color' => 'red'],
 
             // User Management Permissions
@@ -95,8 +101,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Reports and Analytics
             ['name' => 'reports_view', 'description' => 'View reports and analytics', 'guard_name' => 'sanctum', 'icon' => 'mdi-chart-box', 'color' => 'green'],
+            ['name' => 'reports_view_own', 'description' => 'View own reports only', 'guard_name' => 'sanctum', 'icon' => 'mdi-chart-box', 'color' => 'green'],
             ['name' => 'reports_create', 'description' => 'Generate custom reports', 'guard_name' => 'sanctum', 'icon' => 'mdi-file-chart', 'color' => 'blue'],
             ['name' => 'reports_export', 'description' => 'Export reports in various formats', 'guard_name' => 'sanctum', 'icon' => 'mdi-download', 'color' => 'teal'],
+            ['name' => 'reports_export_own', 'description' => 'Export own reports only', 'guard_name' => 'sanctum', 'icon' => 'mdi-download', 'color' => 'teal'],
             ['name' => 'reports_schedule', 'description' => 'Schedule automated reports', 'guard_name' => 'sanctum', 'icon' => 'mdi-calendar-clock', 'color' => 'orange'],
             ['name' => 'reports_share', 'description' => 'Share reports with other users', 'guard_name' => 'sanctum', 'icon' => 'mdi-share-variant', 'color' => 'purple'],
 
@@ -112,11 +120,17 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'warehouse_view', 'description' => 'View warehouse information', 'guard_name' => 'sanctum', 'icon' => 'mdi-warehouse', 'color' => 'brown'],
             ['name' => 'warehouse_manage', 'description' => 'Manage warehouse operations', 'guard_name' => 'sanctum', 'icon' => 'mdi-warehouse', 'color' => 'brown'],
             ['name' => 'products_view', 'description' => 'View product catalog', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant', 'color' => 'green'],
+            ['name' => 'products_view_own', 'description' => 'View own products only', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant', 'color' => 'green'],
             ['name' => 'products_create', 'description' => 'Add new products', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-plus', 'color' => 'green'],
+            ['name' => 'products_create_own', 'description' => 'Add own products only', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-plus', 'color' => 'green'],
             ['name' => 'products_edit', 'description' => 'Edit product information', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant', 'color' => 'orange'],
+            ['name' => 'products_edit_own', 'description' => 'Edit own products only', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant', 'color' => 'orange'],
             ['name' => 'products_delete', 'description' => 'Delete products from catalog', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-remove', 'color' => 'red'],
+            ['name' => 'products_delete_own', 'description' => 'Delete own products only', 'guard_name' => 'sanctum', 'icon' => 'mdi-package-variant-remove', 'color' => 'red'],
             ['name' => 'inventory_view', 'description' => 'View inventory levels and stock', 'guard_name' => 'sanctum', 'icon' => 'mdi-clipboard-list', 'color' => 'blue'],
+            ['name' => 'inventory_view_own', 'description' => 'View own inventory only', 'guard_name' => 'sanctum', 'icon' => 'mdi-clipboard-list', 'color' => 'blue'],
             ['name' => 'inventory_adjust', 'description' => 'Adjust inventory quantities', 'guard_name' => 'sanctum', 'icon' => 'mdi-clipboard-edit', 'color' => 'orange'],
+            ['name' => 'inventory_adjust_own', 'description' => 'Adjust own inventory only', 'guard_name' => 'sanctum', 'icon' => 'mdi-clipboard-edit', 'color' => 'orange'],
             ['name' => 'inventory_transfer', 'description' => 'Transfer inventory between locations', 'guard_name' => 'sanctum', 'icon' => 'mdi-truck-delivery', 'color' => 'purple'],
             ['name' => 'categories_manage', 'description' => 'Manage product categories', 'guard_name' => 'sanctum', 'icon' => 'mdi-tag-multiple', 'color' => 'pink'],
 
@@ -144,6 +158,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Notifications
             ['name' => 'notifications_view', 'description' => 'View system notifications', 'guard_name' => 'sanctum', 'icon' => 'mdi-bell', 'color' => 'orange'],
+            ['name' => 'notifications_view_own', 'description' => 'View own notifications only', 'guard_name' => 'sanctum', 'icon' => 'mdi-bell', 'color' => 'orange'],
             ['name' => 'notifications_create', 'description' => 'Create and send notifications', 'guard_name' => 'sanctum', 'icon' => 'mdi-bell-plus', 'color' => 'green'],
             ['name' => 'notifications_manage', 'description' => 'Manage notification settings', 'guard_name' => 'sanctum', 'icon' => 'mdi-bell-cog', 'color' => 'blue'],
 
@@ -160,49 +175,21 @@ class RolesAndPermissionsSeeder extends Seeder
             ['name' => 'sandbox_access', 'description' => 'Access sandbox/testing environment', 'guard_name' => 'sanctum', 'icon' => 'mdi-play-box-outline', 'color' => 'orange'],
             ['name' => 'feature_flags_manage', 'description' => 'Manage feature flags and beta features', 'guard_name' => 'sanctum', 'icon' => 'mdi-flag', 'color' => 'red'],
 
-            // vendor specific permissions
-            [
-            'name' => 'vendor_view',
-            'description' => 'View vendor information and profiles',
-            'guard_name' => 'sanctum',
-            'icon' => 'mdi-storefront',
-            'color' => 'cyan'
-            ],
-            [
-            'name' => 'vendor_create',
-            'description' => 'Create new vendor records',
-            'guard_name' => 'sanctum',
-            'icon' => 'mdi-storefront-plus',
-            'color' => 'cyan'
-            ],
-            [
-            'name' => 'vendor_edit',
-            'description' => 'Edit vendor information',
-            'guard_name' => 'sanctum',
-            'icon' => 'mdi-storefront-edit',
-            'color' => 'cyan'
-            ],
-            [
-            'name' => 'vendor_delete',
-            'description' => 'Delete vendor records',
-            'guard_name' => 'sanctum',
-            'icon' => 'mdi-storefront-remove',
-            'color' => 'red'
-            ],
-            [
-            'name' => 'vendor_approve',
-            'description' => 'Approve or reject vendor applications',
-            'guard_name' => 'sanctum',
-            'icon' => 'mdi-check-decagram',
-            'color' => 'green'
-            ],
-            [
-            'name' => 'vendor_manage_products',
-            'description' => 'Manage products associated with vendors',
-            'guard_name' => 'sanctum',
-            'icon' => 'mdi-package-variant-closed',
-            'color' => 'blue'
-            ]
+            // Vendor specific permissions
+            ['name' => 'vendors_view', 'description' => 'View vendor information and profiles', 'guard_name' => 'sanctum', 'icon' => 'mdi-storefront', 'color' => 'cyan'],
+            ['name' => 'vendors_create', 'description' => 'Create new vendor records', 'guard_name' => 'sanctum', 'icon' => 'mdi-storefront-plus', 'color' => 'cyan'],
+            ['name' => 'vendors_edit', 'description' => 'Edit vendor information', 'guard_name' => 'sanctum', 'icon' => 'mdi-storefront-edit', 'color' => 'cyan'],
+            ['name' => 'vendors_delete', 'description' => 'Delete vendor records', 'guard_name' => 'sanctum', 'icon' => 'mdi-storefront-remove', 'color' => 'red'],
+            ['name' => 'vendors_approve', 'description' => 'Approve or reject vendor applications', 'guard_name' => 'sanctum', 'icon' => 'mdi-check-decagram', 'color' => 'green'],
+            ['name' => 'vendors_manage', 'description' => 'Full vendor management capabilities', 'guard_name' => 'sanctum', 'icon' => 'mdi-storefront-edit', 'color' => 'blue'],
+
+            // Vendor profile permissions (for vendors themselves)
+            ['name' => 'vendor_profile_view', 'description' => 'View own vendor profile', 'guard_name' => 'sanctum', 'icon' => 'mdi-account-circle', 'color' => 'cyan'],
+            ['name' => 'vendor_profile_edit', 'description' => 'Edit own vendor profile', 'guard_name' => 'sanctum', 'icon' => 'mdi-account-edit', 'color' => 'cyan'],
+
+            // Scoped message permissions
+            ['name' => 'messages_view_own', 'description' => 'View own messages only', 'guard_name' => 'sanctum', 'icon' => 'mdi-message-text', 'color' => 'blue'],
+            ['name' => 'emails_view_own', 'description' => 'View own emails only', 'guard_name' => 'sanctum', 'icon' => 'mdi-email', 'color' => 'red'],
         ];
 
         foreach ($permissions as $permission) {
@@ -212,58 +199,108 @@ class RolesAndPermissionsSeeder extends Seeder
         // Define roles and assign relevant permissions
         $roles = [
             'Admin' => Permission::all()->pluck('name')->toArray(),
+            
             'Manager' => [
                 'dashboard_view',
+                'dashboard_export',
                 'call_center_view',
+                'call_center_view_call_history',
                 'tickets_view',
-                'clients_view',
-                'orders_view',
-                'users_view',
-                'roles_view',
-                'reports_view',
-                'branches_view',
-                'warehouse_view',
-                'settings_view',
-                'billing_view',
-                'notifications_view',
-                'audit_logs_view',
-                'developer_tools_access'
-            ],
-            'CallAgent' => [
-                'call_center_view',
-                'call_center_make_calls',
-                'call_center_receive_calls',
-                'tickets_view',
-                'tickets_create',
-                'tickets_edit',
+                'tickets_assign',
+                'tickets_escalate',
+                'messages_view',
+                'emails_view',
                 'clients_view',
                 'contacts_view',
                 'notes_view',
                 'orders_view',
+                'orders_edit',
+                'orders_ship',
+                'orders_dispatch',
+                'orders_track',
+                'users_view',
+                'roles_view',
+                'reports_view',
+                'reports_create',
+                'reports_export',
+                'branches_view',
+                'warehouse_view',
+                'products_view',
+                'inventory_view',
+                'settings_view',
+                'billing_view',
+                'invoices_view',
+                'notifications_view',
+                'audit_logs_view',
+                'vendors_view'
+            ],
+            
+            'CallAgent' => [
+                'call_center_view',
+                'call_center_make_calls',
+                'call_center_receive_calls',
+                'call_center_transfer_calls',
+                'call_center_hold_calls',
+                'tickets_view',
+                'tickets_create',
+                'tickets_edit',
+                'tickets_assign',
                 'messages_view',
                 'messages_send',
+                'whatsapp_view',
+                'whatsapp_send',
                 'emails_view',
-                'emails_send',  
-        ]
-
-            ,
-            'Vendor' => [
-                'vendor_view',
-                'vendor_create',
-                'vendor_edit',
-                'vendor_delete',
-                'vendor_approve',
-                'vendor_manage_products',
+                'emails_send',
+                'telegram_view',
+                'telegram_send',
+                'clients_view',
+                'clients_create',
+                'clients_edit',
+                'contacts_view',
+                'contacts_create',
+                'contacts_edit',
+                'notes_view',
+                'notes_create',
+                'notes_edit',
                 'orders_view',
-                'products_view',
-                'inventory_view'
+                'orders_create',
+                'orders_edit'
             ],
+            
+            'Vendor' => [
+                'dashboard_view',
+                'orders_view_own',
+                'orders_edit_own',
+                'orders_ship_own',
+                'orders_track_own',
+                'products_view_own',
+                'products_create_own',
+                'products_edit_own',
+                'products_delete_own',
+                'inventory_view_own',
+                'inventory_adjust_own',
+                'reports_view_own',
+                'reports_export_own',
+                'vendor_profile_view',
+                'vendor_profile_edit',
+                'messages_view_own',
+                'emails_view_own',
+                'notifications_view_own'
+            ],
+            
             'Delivery Agent' => [
+                'dashboard_view',
+                'orders_view_assigned',
+                'orders_scan',
+                'orders_track_assigned',
+                'orders_update_status',
                 'clients_view',
                 'contacts_view',
-                'orders_view',
                 'messages_view',
-                'emails_view'
+                'messages_send',
+                'notes_view',
+                'notes_create',
+                'notifications_view_own'
             ]
         ];
 
@@ -271,6 +308,5 @@ class RolesAndPermissionsSeeder extends Seeder
             $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'sanctum']);
             $role->syncPermissions($rolePermissions);
         }
-
     }
 }
