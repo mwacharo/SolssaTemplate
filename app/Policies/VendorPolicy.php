@@ -3,64 +3,59 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Vendor;
-use Illuminate\Auth\Access\Response;
 
 class VendorPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Can the user view the vendor listing?
+     * - Admins: can view all vendors
+     * - Vendors: can view only themselves
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin') || $user->hasRole('Vendor');
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Can the user view a specific vendor?
+     * - Admins: can view all vendors
+     * - Vendors: can view only themselves
      */
-    public function view(User $user, Vendor $vendor): bool
+    public function view(User $user, User $vendor): bool
     {
+        if ($user->hasRole('Admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('Vendor')) {
+            return $user->id === $vendor->id;
+        }
+
         return false;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasRole('Admin'); // only Admins can create vendors
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Vendor $vendor): bool
+    public function update(User $user, User $vendor): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Vendor $vendor): bool
+    public function delete(User $user, User $vendor): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Vendor $vendor): bool
+    public function restore(User $user, User $vendor): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Vendor $vendor): bool
+    public function forceDelete(User $user, User $vendor): bool
     {
-        return false;
+        return $user->hasRole('Admin');
     }
 }

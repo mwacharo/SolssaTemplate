@@ -250,7 +250,7 @@ public function store(Request $request)
         ]);
 
         $validated = $request->validate([
-            'vendor_id'   => 'sometimes|exists:user,id',
+            'vendor_id'   => 'sometimes|exists:users,id',
             'category_id' => 'sometimes|exists:categories,id',
             'product_name'=> 'sometimes|string|max:255',
             'description' => 'nullable|string',

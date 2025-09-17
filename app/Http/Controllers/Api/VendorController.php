@@ -10,21 +10,43 @@ use App\Http\Requests\UpdateVendorRequest;
 use App\Http\Resources\VendorResource;
 use App\Models\User;
 use App\Models\Vendor;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class VendorController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
+    // public function index()
+    // {
+    //     $vendors = User::role('Vendor')
+    //         // ->with('customers')
+    //         ->whereNull('deleted_at')
+    //         ->latest()
+    //         ->paginate(20, ['*'], 'page', request()->get('page', 1));
+    //     return VendorResource::collection($vendors);
+    // }
+
+
+
     public function index()
     {
-        $vendors = User::role('Vendor')
-            // ->with('customers')
+        $this->authorize('viewAny', User::class);
+
+        $query = User::role('Vendor')
             ->whereNull('deleted_at')
-            ->latest()
-            ->paginate(20, ['*'], 'page', request()->get('page', 1));
+            ->latest();
+
+        if (auth()->user()->hasRole('Vendor')) {
+            $query->where('id', auth()->id());
+        }
+
+        $vendors = $query->paginate(20, ['*'], 'page', request()->get('page', 1));
+
         return VendorResource::collection($vendors);
     }
+
 
     // /**
     //  * Show the form for creating a new resource.
@@ -78,7 +100,4 @@ class VendorController extends Controller
         $vendor->delete();
         return response()->json(['message' => 'Vendor deleted successfully.']);
     }
-
-
-    
 }

@@ -45,8 +45,9 @@ class CountryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCountryRequest $request, Country $country)
+    public function update(UpdateCountryRequest $request, $id)
     {
+        $country = Country::findOrFail($id);
         $country->update($request->validated());
         return new CountryResource($country);
     }

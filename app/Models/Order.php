@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use Illuminate\Database\Eloquent\Factories\HasFactory;  
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use App\Traits\BelongsToUserAndCountry;
+use App\Traits\BelongsToVendor; 
 
 
 
@@ -20,7 +21,8 @@ class Order extends Model
     use HasFactory;
     use LogsActivity;
 
-        use BelongsToUserAndCountry;
+    use BelongsToUserAndCountry;
+    use BelongsToVendor;
 
 
     /**
@@ -125,7 +127,7 @@ class Order extends Model
     }
 
 
-    
+
     public function zone()
     {
         return $this->belongsTo(Zone::class);
@@ -185,7 +187,7 @@ class Order extends Model
     }
 
     public function callLogs()
-{
-    return $this->hasMany(CallHistory::class);
-}
+    {
+        return $this->hasMany(CallHistory::class);
+    }
 }

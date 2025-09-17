@@ -6,10 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
+use App\Traits\BelongsToVendor;
 
 class Product extends Model
 {
     use HasFactory, LogsActivity,SoftDeletes;
+        use BelongsToVendor;
+
 
     protected $fillable = [
         'sku',
@@ -38,10 +41,7 @@ class Product extends Model
             ->useLogName('product');
     }
 
-    // public function vendor()
-    // {
-    //     return $this->belongsTo(Vendor::class);
-    // }
+   
 
     public function vendor()
 {
