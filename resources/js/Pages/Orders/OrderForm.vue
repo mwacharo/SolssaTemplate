@@ -232,10 +232,10 @@
                   </td>
                   <td>
                     <v-text-field v-model.number="item.unit_price" type="number" min="0" step="0.01" density="compact"
-                      hide-details variant="outlined"  :readonly="!isCreateMode && !item.editable" />
+                      hide-details variant="outlined" :readonly="!isCreateMode && !item.editable" />
                   </td>
                   <td>
-                  {{ (item.quantity * item.unit_price).toFixed(2) }}
+                    {{ (item.quantity * item.unit_price).toFixed(2) }}
                   </td>
                   <td>
                     <v-btn icon="mdi-delete" size="small" color="error" variant="text" @click="removeOrderItem(idx)"
@@ -252,7 +252,7 @@
 
           <!-- add total value of order -->
 
-          <div class="mt-4">  
+          <!-- <div class="mt-4">  
             <v-row>
                 <v-col cols="12" md="4">
                 <v-text-field
@@ -265,9 +265,35 @@
                 </v-col>
             
             </v-row>
+          </div> -->
+
+
+
+
+          <!-- Replace your current total value section with this -->
+          <div class="mt-4">
+            <v-row>
+              <v-col cols="12" md="4">
+                <v-text-field :model-value="calculateTotal()" @update:model-value="orderEdit.total_price = $event"
+                  label="Total" variant="outlined" density="comfortable" readonly />
+              </v-col>
+              <v-col cols="12" md="4">
+                <v-text-field v-model="orderEdit.shipping_charges" label="Shipping Charges" type="number" min="0"
+                  step="0.01" variant="outlined" density="comfortable" @update:model-value="updateTotals()" />
+              </v-col>
+
+
+
+              <v-col cols="12" md="4">
+                <v-text-field :model-value="(parseFloat(calculateTotal()) + parseFloat(orderEdit.shipping_charges || 0)).toFixed(2)"
+                  label="Grand Total" variant="outlined" density="comfortable" readonly />
+              </v-col>
+
+
+            </v-row>
           </div>
 
-       
+
         </v-form>
       </v-card-text>
 
@@ -558,18 +584,18 @@ const initializeCreateForm = () => {
 
 
 
-const addOrderItem = () => {
-  orderEdit.value.order_items.push({
-    sku: '',
-    quantity: 1,
-    unit_price: 0.00,
-    editable: true
-  })
-}
+// const addOrderItem = () => {
+//   orderEdit.value.order_items.push({
+//     sku: '',
+//     quantity: 1,
+//     unit_price: 0.00,
+//     editable: true
+//   })
+// }
 
-const removeOrderItem = (index) => {
-  orderEdit.value.order_items.splice(index, 1)
-}
+// const removeOrderItem = (index) => {
+//   orderEdit.value.order_items.splice(index, 1)
+// }
 
 // Methods
 const onVendorChange = (vendorId) => {
@@ -657,6 +683,47 @@ const saveOrder = async () => {
 }
 
 
+
+const calculateTotal = () => {
+  if (!orderEdit.value.order_items || orderEdit.value.order_items.length === 0) {
+    return '0.00';
+  }
+  
+  const itemsTotal = orderEdit.value.order_items.reduce((sum, item) => {
+    return sum + (Number(item.quantity) * Number(item.unit_price));
+  }, 0);
+  
+  return itemsTotal.toFixed(2);
+};
+
+const updateTotals = () => {
+  // This ensures the total_price is always in sync with the calculated total
+  orderEdit.value.total_price = calculateTotal();
+  orderEdit.value.sub_total = calculateTotal();
+};
+
+// Also update your addOrderItem and removeOrderItem methods to call updateTotals:
+const addOrderItem = () => {
+  orderEdit.value.order_items.push({
+    sku: '',
+    quantity: 1,
+    unit_price: 0.00,
+    editable: true
+  });
+  updateTotals();
+};
+
+const removeOrderItem = (index) => {
+  orderEdit.value.order_items.splice(index, 1);
+  updateTotals();
+};
+
+// Add watchers to update totals when item quantities or prices change
+watch(() => orderEdit.value.order_items, (newItems) => {
+  if (newItems && newItems.length > 0) {
+    updateTotals();
+  }
+}, { deep: true });
 
 
 // Watch for changes in the selected order from store (for editing)

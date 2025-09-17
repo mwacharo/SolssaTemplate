@@ -335,7 +335,7 @@
 
                   <!-- total_price -->
 
-                  <td class="px-4 py-3 font-mono text-sm">${{ order.total_price || '0.00' }}</td>
+                  <td class="px-4 py-3 font-mono text-sm">KSH{{ order.total_price || '0.00' }}</td>
                  
                  
                  

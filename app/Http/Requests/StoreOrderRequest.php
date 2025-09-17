@@ -154,7 +154,7 @@ public function rules(): array
             'customer_notes.string' => 'Customer notes must be a string.',
           // 'sub_total.required' => 'Sub total is required.',
           // 'sub_total.numeric' => 'Sub total must be a number.',
-          // 'total_price.required' => 'Total price is required.',
+          'total_price.required' => 'Total price is required.',
           // 'total_price.numeric' => 'Total price must be a number.',
           // 'discount.numeric' => 'Discount must be a number.',
           'shipping_charges.numeric' => 'Shipping charges must be a number.',
