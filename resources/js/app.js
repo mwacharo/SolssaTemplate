@@ -26,6 +26,10 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
 
+// ApexCharts
+import VueApexCharts from "vue3-apexcharts"
+
+
 window.Pusher = Pusher;
 
 window.Echo = new Echo({
@@ -122,6 +126,7 @@ createInertiaApp({
       .use(ZiggyVue)
       .use(vuetify)
       .use(pinia)
+      .use(VueApexCharts) // 👈 Register ApexCharts
       .use(Vue3Toastify, {
       position: 'top-center', // Changed from 'top-right' to 'top-center'
       autoClose: 5000,

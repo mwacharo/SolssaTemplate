@@ -4,7 +4,7 @@ import { defineStore } from 'pinia'
 export const ROUTES = {
   DASHBOARD: {
     INDEX: 'dashboard',
-    // METRICS: 'dashboard.metrics',
+    METRICS: 'dashboard.metrics',
     // ACTIVITY: 'dashboard.activity',
     // STATUS: 'dashboard.status',
   },
@@ -145,6 +145,7 @@ export const useNavStore = defineStore('nav', {
         permissions: ['dashboard_view', 'dashboard_export'],
         children: [
           { title: 'Overview', route: ROUTES.DASHBOARD.INDEX, icon: 'mdi-view-dashboard-outline', permission: 'dashboard_view' },
+          { title: 'Metrics', route: ROUTES.DASHBOARD.METRICS, icon: 'mdi-chart-line', permission: 'dashboard_view' },
         ],
       },
 
