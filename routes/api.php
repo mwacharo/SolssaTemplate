@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ZoneController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\CallCentreStatistics;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\StatusController;
@@ -381,7 +382,13 @@ Route::get('sent', [EmailController::class, 'getSentEmails']);
 Route::post('send', [EmailController::class, 'sendEmail']);
 Route::post('bulk-send', [EmailController::class, 'sendBulkEmails']);
 
+
+Route::get('/dashboard', [DashboardController::class, 'index']);
+
+
 });
+
+
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 

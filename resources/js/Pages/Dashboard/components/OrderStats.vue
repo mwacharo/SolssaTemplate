@@ -164,6 +164,9 @@ const averageDeliveryTime = computed(() => {
 
 // Helper functions
 const formatNumber = (num) => {
+  if (num === undefined || num === null || isNaN(num)) {
+    return '0'
+  }
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + 'M'
   } else if (num >= 1000) {

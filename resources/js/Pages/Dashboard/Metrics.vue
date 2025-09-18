@@ -61,7 +61,9 @@
 
 
 <script setup>
+import { ref, onMounted } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+
 
 import OrderStats from "@/Pages/Dashboard/components/OrderStats.vue";
 import OrderAnalytics from "@/Pages/Dashboard/components/OrderAnalytics.vue";
@@ -76,28 +78,54 @@ import TopAgents from "@/Pages/Dashboard/components/TopAgents.vue";
 // import Shipments from "@/Pages/Dashboard/components/Shipments.vue";
 
 // Dummy data – replace with API later
-const orderStats = {
-  totalOrders: 120,
-  deliveries: 95
-};
+// const orderStats = {
+//   totalOrders: 120,
+//   deliveries: 95
+// };
 
-const orderChart = [
-  { name: "Confirmed", data: [10, 20, 30, 40, 50, 65] },
-  { name: "Delivered", data: [8, 18, 28, 38, 45, 60] }
-];
+// const orderChart = [
+//   { name: "Confirmed", data: [10, 20, 30, 40, 50, 65] },
+//   { name: "Delivered", data: [8, 18, 28, 38, 45, 60] }
+// ];
 
-const inventory = {
-  items: 0,
-  skus: 0,
-  inStock: 0,
-  lowStock: 0,
-  outStock: 0
-};
+// const inventory = {
+//   items: 0,
+//   skus: 0,
+//   inStock: 0,
+//   lowStock: 0,
+//   outStock: 0
+// };
 
-const statusData = [20, 15, 40, 10, 5]; // pending, shipped, delivered, returned, cancelled
+// const statusData = [20, 15, 40, 10, 5]; // pending, shipped, delivered, returned, cancelled
 
-const wallet = {
-  balance: 12500,
-  progress: 75 // payout progress
-};
+// const wallet = {
+//   balance: 12500,
+//   progress: 75 // payout progress
+// };
+
+
+
+const orderStats = ref({});
+const orderChart = ref([]);
+const inventory = ref({});
+const statusData = ref([]);
+const wallet = ref({});
+const topAgents = ref([]);
+const topProducts = ref([]);
+const topSellers = ref([]);
+const deliveryRate = ref({});
+
+onMounted(async () => {
+  const { data } = await axios.get("/api/v1/dashboard");
+
+  orderStats.value = data.orderStats;
+  orderChart.value = data.orderChart;
+  inventory.value = data.inventory;
+  statusData.value = Object.values(data.statusData); // for chart
+  wallet.value = data.wallet;
+  topAgents.value = data.topAgents;
+  topProducts.value = data.topProducts;
+  topSellers.value = data.topSellers;
+  deliveryRate.value = data.deliveryRate;
+});
 </script>
