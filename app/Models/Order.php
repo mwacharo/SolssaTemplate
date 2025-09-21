@@ -183,11 +183,17 @@ class Order extends Model
 
     public function statusTimestamps()
     {
-        return $this->hasOne(OrderStatusTimestamp::class);
+        return $this->hasMany(OrderStatusTimestamp::class);
     }
 
     public function callLogs()
     {
         return $this->hasMany(CallHistory::class);
     }
+
+
+    public function latestStatus()
+{
+    return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
+}
 }

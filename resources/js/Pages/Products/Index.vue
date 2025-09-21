@@ -213,16 +213,21 @@
                         </path>
                       </svg>
                     </button>
-                    <button @click="adjustStock(product, -1)" class="text-red-600 hover:text-red-800 p-1" title="Remove Stock">
+                    <!-- <button @click="adjustStock(product, -1)" class="text-red-600 hover:text-red-800 p-1" title="Remove Stock">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5"></path>
+                      </svg>
+                    </button> -->
+                    <button @click="openStockDialog(product)" class="text-indigo-600 hover:text-indigo-800 p-1" title="Edit Stock">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m4-4H8"></path>
                       </svg>
                     </button>
-                    <button @click="adjustStock(product, 1)" class="text-green-600 hover:text-green-800 p-1" title="Add Stock">
+                    <!-- <button @click="adjustStock(product, 1)" class="text-green-600 hover:text-green-800 p-1" title="Add Stock">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
-                    </button>
+                    </button> -->
                     <button @click="openMoveStockModal(product)" class="text-yellow-600 hover:text-yellow-800 p-1" title="Move Stock">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -380,7 +385,7 @@
 
                 <div class="md:col-span-2">
                   <label class="block text-sm font-medium text-gray-700 mb-2">Price (KES)</label>
-                  <input v-model="form.price" type="number" min="0" step="0.01"
+                  <input v-model="form.base_price" type="number" min="0" step="0.01"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter product price" />
                 </div>
@@ -536,6 +541,21 @@
         </div>
       </div>
     </div>
+
+      <!-- Stock Dialog -->
+    <StockEditDialog
+      :isOpen="showDialog"
+      :productId="selectedProduct.id"
+      :productName="selectedProduct.name"
+      :warehouseId="selectedProduct.warehouse_id"
+      :currentStock="selectedProduct.current_stock"
+      :committedStock="selectedProduct.committed_stock"
+      :defectedStock="selectedProduct.defected_stock"
+      :historicalStock="selectedProduct.historical_stock"
+      :warehouses="availableWarehouses"
+      @close="closeDialog"
+      @save="handleSave"
+    />
   </AppLayout>
 </template>
 
@@ -545,6 +565,8 @@ import AppLayout from "@/Layouts/AppLayout.vue"
 import { useCategoryStore } from '@/stores/categoryStore'
 import { useClientStore } from '@/stores/clientStore'
 import axios from 'axios'
+import StockEditDialog from './StockEditDialog.vue'
+
 
 // Configure axios defaults
 axios.defaults.withCredentials = true
@@ -607,6 +629,25 @@ const showStockModal = ref(false)
 const isEditing = ref(false)
 const currentProduct = ref(null)
 
+// Stock dialog states
+const showDialog = ref(false)
+const selectedProduct = ref({})
+const availableWarehouses = ref([]) // You can populate this as needed
+
+// Add openStockDialog method
+const openStockDialog = (product) => {
+  selectedProduct.value = {
+    id: product.id,
+    name: product.product_name,
+    warehouse_id: product.stocks?.[0]?.warehouse_id || null,
+    current_stock: getCurrentStock(product),
+    committed_stock: getCommittedStock(product),
+    defected_stock: getDefectedStock(product),
+    historical_stock: product.stocks?.[0]?.historical_stock || [],
+  }
+  showDialog.value = true
+}
+
 // Filters
 const filters = ref({
   date: '',
@@ -635,7 +676,7 @@ const form = ref({
   vendor_id: '',
   initial_quantity: 0,
   stock_threshold: 0,
-  price: 0
+  base_price: 0
 })
 
 // Form validation errors
@@ -693,8 +734,12 @@ const getStockThreshold = (product) => {
 }
 
 const getProductPrice = (product) => {
-  const price = product.prices?.[0]
-  return Number(price?.base_price || price?.discount_price || price?.price || 0)
+  // Use the first active price if available, otherwise fallback to base_price
+  if (product.prices && product.prices.length > 0) {
+    const activePrice = product.prices.find(p => p.is_active)
+    return Number((activePrice?.base_price ?? product.prices[0].base_price) || 0)
+  }
+  return Number(product.base_price || 0)
 }
 
 // Debounced search
@@ -706,10 +751,24 @@ const handleSearch = () => {
   }, 500)
 }
 
-// Watch filters for auto-apply
-watch(filters, () => {
-  applyFilters()
-}, { deep: true })
+// Methods
+
+
+
+const closeDialog = () => {
+  showDialog.value = false
+  selectedProduct.value = {}
+}
+
+const handleSave = (payload) => {
+  // Implement save logic for stock dialog
+  showDialog.value = false
+  fetchProducts(pagination.value.current_page)
+}
+
+// const fetchProducts = async (page = 1) => {
+//   applyFilters()
+// }, { deep: true })
 
 // Methods
 const fetchProducts = async (page = 1) => {
@@ -860,7 +919,7 @@ const openCreateModal = () => {
     vendor_id: '',
     initial_quantity: 0,
     stock_threshold: 0,
-    price: 0
+    base_price: 0
   }
   showModal.value = true
 }
@@ -877,7 +936,7 @@ const editProduct = (product) => {
     vendor_id: product.vendor_id || product.vendor?.id,
     initial_quantity: getCurrentStock(product),
     stock_threshold: getStockThreshold(product),
-    price: getProductPrice(product)
+    base_price: getProductPrice(product)
   }
   showModal.value = true
 }
@@ -901,7 +960,7 @@ const closeModal = () => {
     vendor_id: '',
     initial_quantity: 0,
     stock_threshold: 0,
-    price: 0
+    base_price: 0
   }
 }
 
@@ -1084,11 +1143,11 @@ const formatDate = (dateString) => {
   })
 }
 
-const formatPrice = (price) => {
+const formatPrice = (base_price) => {
   return new Intl.NumberFormat('en-KE', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  }).format(price || 0)
+  }).format(base_price || 0)
 }
 
 // Get CSRF token on component mount

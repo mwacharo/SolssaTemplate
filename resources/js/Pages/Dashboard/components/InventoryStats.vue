@@ -41,7 +41,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-emerald-700">Stock Value</p>
-            <p class="text-2xl font-bold text-emerald-900">${{ stockValue }}</p>
+            <p class="text-2xl font-bold text-emerald-900">KSH{{ stockValue }}</p>
           </div>
           <div class="p-2 bg-emerald-200 rounded-lg">
             <svg class="w-4 h-4 text-emerald-700" fill="currentColor" viewBox="0 0 20 20">
@@ -188,7 +188,8 @@ const props = defineProps({
       skus: 0,
       inStock: 0,
       lowStock: 0,
-      outStock: 0
+      outStock: 0,
+      stockValue: 0
     })
   }
 })
@@ -198,9 +199,10 @@ const chartType = ref('column')
 
 // Computed values
 const stockValue = computed(() => {
-  // Mock calculation - replace with real data
-  return (props.inventory.items * 45.50).toLocaleString()
-})
+  // Use inventory.stockValue if provided, otherwise fallback to calculation
+  const value = props.inventory.stockValue ?? (props.inventory.items * 45.50);
+  return Number(value).toLocaleString();
+});
 
 const chartSeries = computed(() => {
   if (chartType.value === 'donut') {
@@ -347,6 +349,9 @@ const chartOptions = computed(() => {
 
 // Helper functions
 const formatNumber = (num) => {
+  if (num == null || isNaN(num)) {
+    return '0'
+  }
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + 'M'
   } else if (num >= 1000) {

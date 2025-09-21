@@ -10,8 +10,6 @@ class DashboardController extends Controller
     //
 
 
-
-
     protected $service;
 
     public function __construct(DashboardService $service)
@@ -23,8 +21,8 @@ class DashboardController extends Controller
     {
         return response()->json([
             'orderStats'     => $this->service->getOrderStats(),
-            // 'orderChart'     => $this->service->getOrderAnalytics(),
-            // 'inventory'      => $this->service->getInventoryStats(),
+            'orderChart'     => $this->service->getOrderAnalytics(),
+            'inventory'      => $this->service->getInventoryStats(),
             // 'statusData'     => $this->service->getStatusOverview(),
             // 'topAgents'      => $this->service->getTopAgents(),
             // 'deliveryRate'   => $this->service->getDeliveryRate(),

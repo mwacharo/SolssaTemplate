@@ -54,11 +54,7 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function stocks()
-    {
-        return $this->hasMany(ProductStock::class);
-    }
-
+   
     public function statistics()
     {
         return $this->hasOne(ProductStatistic::class);
@@ -68,6 +64,11 @@ class Product extends Model
     {
         return $this->hasMany(ProductPrice::class);
     }
+     public function stocks()
+    {
+        return $this->hasMany(ProductStock::class);
+    }
+
 
     public function media()
     {
