@@ -164,6 +164,87 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
+
+  const selectedOrders = ref([])
+
+  const bulkPrint = async () => {
+    if (selectedOrders.value.length === 0) return
+    try {
+      const response = await axios.post('/api/v1/orders/bulk-print-waybills', {
+        order_ids: selectedOrders.value
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        responseType: 'blob' // If you expect a PDF or file
+      })
+      // Handle file download (example for PDF)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'waybills.pdf')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to bulk print waybills'
+      throw err
+    }
+  }
+
+  // const printOrders = async (orderIds) => {
+  //   if (!orderIds || orderIds.length === 0) return
+  //   try {
+  //     for (const id of orderIds) {
+  //       const response = await axios.get(`/api/v1/orders/${id}/print-waybill`, {
+  //         headers: {
+  //           'Accept': 'application/json'
+  //         },
+  //         responseType: 'blob'
+  //       })
+  //       // Handle file download (example for PDF)
+  //       const url = window.URL.createObjectURL(new Blob([response.data]))
+  //       const link = document.createElement('a')
+  //       link.href = url
+  //       link.setAttribute('download', `waybill-${id}.pdf`)
+  //       document.body.appendChild(link)
+  //       link.click()
+  //       link.remove()
+  //     }
+  //   } catch (err) {
+  //     error.value = err.response?.data?.message || err.message || 'Failed to print waybill'
+  //     throw err
+  //   }
+  // }
+
+
+  const printOrders = async (orderIds) => {
+    if (!orderIds || orderIds.length === 0) return
+    try {
+      const response = await axios.post('/api/v1/bulk-print-waybills', {
+        order_ids: orderIds     
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        responseType: 'blob' // If you expect a PDF or file
+      })      
+      // Handle file download (example for PDF)
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')    
+      link.href = url
+      link.setAttribute('download', 'waybills.pdf')
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message || 'Failed to print waybill'
+      throw err
+    }
+  } 
+
   const loadOrder = async (id) => {
     loading.value.orders = true
     error.value = null
@@ -544,6 +625,7 @@ export const useOrderStore = defineStore('orders', () => {
     currentFilters,
 
     // Actions
+    printOrders,
     fetchOrders,
     loadOrder,
     createOrder,

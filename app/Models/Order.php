@@ -53,6 +53,7 @@ class Order extends Model
         // 'user_id',
         'rider_id',
         'zone_id',
+        'city_id',
         'status',
         'delivery_status',
         'delivery_date',

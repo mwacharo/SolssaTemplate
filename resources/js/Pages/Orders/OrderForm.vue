@@ -32,11 +32,21 @@
 
               <!-- add status -->
 
-              <v-col cols="12" md="6">
-                <v-select v-model="orderEdit.status_id" :items="statusOptionsStore" item-title="name" item-value="id"
-                  label="Status" prepend-inner-icon="mdi-flag" variant="outlined" density="comfortable"
-                  :rules="[rules.required]" clearable placeholder="Select status" />
-              </v-col>
+                <v-col cols="12" md="6">
+                <v-select
+                  v-model="orderEdit.status_id"
+                  :items="statusOptionsStore"
+                  item-title="name"
+                  item-value="id"
+                  label="Status"
+                  prepend-inner-icon="mdi-flag"
+                  variant="outlined"
+                  density="comfortable"
+                  :rules="[rules.required]"
+                  clearable
+                  placeholder="Select status"
+                />
+                </v-col>
 
               <v-col cols="12" md="6">
                 <v-select v-model="orderEdit.platform" :items="platformOptions" label="Platform"

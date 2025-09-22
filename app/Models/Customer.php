@@ -32,7 +32,7 @@ class Customer extends Model
         'phone',
         'alt_phone',
         'address',
-        'city',
+        'city_id',
         'region',
         'country_id',
         'vendor_id',

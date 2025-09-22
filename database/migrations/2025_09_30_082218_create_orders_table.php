@@ -33,6 +33,8 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->unsignedSmallInteger('country_id');
+            $table->unsignedBigInteger('zone_id')->nullable();
+            $table->unsignedBigInteger('city_id')->nullable();
 
             $table->string('source', 50)->default('manual');
             $table->string('platform', 50)->nullable();

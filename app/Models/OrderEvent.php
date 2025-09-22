@@ -20,4 +20,32 @@ class OrderEvent extends Model
     {
         return $this->belongsTo(Order::class);
     }
+
+    /**
+     * Compare with previous event and return changes.
+     */
+    public function diffWith(?OrderEvent $previousEvent): array
+    {
+        if (!$previousEvent) {
+            return [];
+        }
+
+        $old = $previousEvent->event_data ?? [];
+        $new = $this->event_data ?? [];
+
+        $diffs = [];
+
+        foreach ($new as $key => $value) {
+            $oldValue = $old[$key] ?? null;
+
+            if ($value !== $oldValue) {
+                $diffs[$key] = [
+                    'old' => $oldValue,
+                    'new' => $value,
+                ];
+            }
+        }
+
+        return $diffs;
+    }
 }

@@ -203,6 +203,18 @@
               New Order
             </button>
 
+            <!-- bulk print -->
+
+            <button @click="bulkPrint" :disabled="selectedOrders.length === 0 || orderStore.loading.orders"
+              class="px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors flex items-center gap-2 text-sm disabled:opacity-50">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2h-2M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h2m10 9v1a3 3 0 01-3 3H10a3 3 0 01-3-3v-1m10 0H7m10 0a5 5 0 00-10 0m10 0v-3a5 5 0 00-10 0v3">
+                </path>
+              </svg>
+              Print ({{ selectedOrders.length }}) 
+            </button>
+
             <button @click="exportOrders" :disabled="orderStore.loading.orders"
               class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,6 +233,17 @@
                 </path>
               </svg>
               Change Status ({{ selectedOrders.length }})
+            </button>
+
+            <!-- assign delivery person -->
+            <button @click="assignDeliveryPerson" :disabled="selectedOrders.length === 0 || orderStore.loading.orders"
+              class="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h1l1 2h13l1-2h1m-1 0V6a2 2 0 00-2-2H5a2 2 0 00-2 2v4m16 0v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6m16 0h-3.586a1 1 0 00-.707.293l-1.414 1.414a1 1 0 01-.707.293H8a1 1 0 01-1-1v-3a1 1 0 011-1h8a1 1 0 011 1v3z">
+                </path>
+              </svg>
+              Assign Delivery ({{ selectedOrders.length }})
             </button>
 
             <button @click="bulkDelete" :disabled="selectedOrders.length === 0 || orderStore.loading.orders"
@@ -341,16 +364,16 @@
                  
                   <td class="px-4 py-3">
                     <div class="flex flex-col gap-1">
-                      <span
+                        <span
                         class="px-2 py-1 text-xs rounded"
-                        :style="order.status_timestamps?.status?.color ? { backgroundColor: order.status_timestamps.status.color, color: 'white' } : {}"
-                      >
-                        {{ order.status_timestamps?.status?.name || orderStatusLabel(order.status) }}
-                      </span>
-                      <div v-if="order.status_timestamps?.created_at"
+                        :style="order.latest_status?.status?.color ? { backgroundColor: order.latest_status.status.color, color: 'white' } : {}"
+                        >
+                        {{ order.latest_status?.status?.name || orderStatusLabel(order.status) }}
+                        </span>
+                        <div v-if="order.latest_status?.created_at"
                         class="text-xs text-gray-600 bg-green-100 px-1 py-0.5 rounded">
-                        Status at {{ formatDateTime(order.status_timestamps.created_at) }}
-                      </div>
+                        Status at {{ formatDateTime(order.latest_status.created_at) }}
+                        </div>
                       <div class="text-xs text-center">
                         <img v-if="order.agent && order.agent.avatar" :src="order.agent.avatar"
                           :alt="order.agent.name" class="w-6 h-6 rounded-full mx-auto">
@@ -480,6 +503,8 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import { useOrderStore } from '@/stores/orderStore'
 import { useCallCenterStore } from '@/stores/callCenter';
 import OrderForm from './OrderForm.vue';
+// orderjourney
+
 
 // Initialize store
 const orderStore = useOrderStore()
@@ -515,6 +540,16 @@ const editOrder = (id) => {
 const newOrder = async() => {
   await orderStore.fetchDropdownOptions()
   orderStore.openCreateDialog() 
+}
+// 
+
+const bulkPrint = () => {
+  if (selectedOrders.value.length === 0) return
+  orderStore.printOrders(selectedOrders.value)
+}
+const assignDeliveryPerson = () => {
+  if (selectedOrders.value.length === 0) return
+  orderStore.openAssignDeliveryDialog(selectedOrders.value)
 }
 
 // emitted events

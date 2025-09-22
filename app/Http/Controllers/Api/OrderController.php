@@ -28,11 +28,11 @@ use Illuminate\Support\Facades\Auth;
 class OrderController extends Controller
 {
 
-    public function __construct(protected OrderBulkActionService $orderService)
-    {
+    public function __construct(
 
+        protected OrderBulkActionService $orderService,
 
-
+    ) {
 
         // Apply middleware for API authentication/authorization
         // $this->middleware('auth:sanctum');
@@ -40,6 +40,26 @@ class OrderController extends Controller
         // $this->middleware('can:create,App\Models\Order')->only(['store']);
         // $this->middleware('can:update,App\Models\Order')->only(['update']);
         // $this->middleware('can:delete,App\Models\Order')->only(['destroy']);
+    }
+
+    public function timeline($id): JsonResponse
+    {
+        try {
+            $timeline = $this->orderService->timeline($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $timeline
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching order timeline: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch order timeline',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 
 
@@ -78,20 +98,30 @@ class OrderController extends Controller
         return response()->json(['message' => 'Status updated successfully']);
     }
 
+
+
     /**
-     * Print waybill for an order - Returns PDF stream
+     * Print waybill(s) for orders - Returns PDF stream
      */
-    public function printWaybill(Request $request, string $id)
+    public function printWaybill(Request $request, string $id = null)
     {
         try {
-            // Call the service to get the PDF
-            $pdf = $this->orderService->printWaybill($request, $id);
+            // Accept either a single ID from route or multiple from request
+            $ids = $request->input('order_ids', $id ? [$id] : []);
 
-            // Return the PDF stream
+            if (empty($ids)) {
+                return response()->json([
+                    'error' => 'No order IDs provided',
+                ], 400);
+            }
+
+            // Generate the PDF with multiple orders
+            $pdf = $this->orderService->printWaybills($ids);
+
             return $pdf;
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to generate waybill',
+                'error' => 'Failed to generate waybill(s)',
                 'message' => $e->getMessage()
             ], 500);
         }
@@ -109,7 +139,7 @@ class OrderController extends Controller
             ]);
 
             // Call the service to get the PDF
-            $pdf = $this->orderService->bulkPrintWaybills($request->input('order_ids'));
+            $pdf = $this->orderService->printWaybills($request->input('order_ids'));
 
             // Return the PDF stream
             return $pdf;
@@ -120,7 +150,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
 
 
 
@@ -144,9 +173,11 @@ class OrderController extends Controller
             'assignments.user',
             'payments',
             // 'events.user',
-            'statusTimestamps' => function ($query) {
-                $query->latest('created_at')->limit(1);
-            },
+            // 'statusTimestamps' => function ($query) {
+            //     $query->latest('created_at')->limit(1);
+            // },
+            'latestStatus.status', // ✅ latest status with relation
+
             'customer',
             // 'refunds',
             // 'remittances'
@@ -163,6 +194,24 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'data' => $order
+        ]);
+    }
+
+    // write function to fetch order journey from order_events table
+    public function journey($id): JsonResponse
+    {
+        $order = Order::with(['events.user'])->find($id);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $order->events
         ]);
     }
 
@@ -191,7 +240,7 @@ class OrderController extends Controller
                 $customer = Customer::firstOrCreate(
                     ['phone' => $customerData['phone']],
                     [
-                        'name' => $customerData['full_name'] ?? null,
+                        'full_name' => $customerData['full_name'] ?? null,
                         'email' => $customerData['email'] ?? null,
                         'city' => $customerData['city'] ?? null,
                         'zone_id' => $customerData['zone_id'] ?? null,
@@ -249,6 +298,12 @@ class OrderController extends Controller
                 ]);
             }
 
+            $order->events()->create([
+                'event_type' => 'order_updated',
+                'event_data' => json_encode($validated),
+                'user_id'    => Auth::id(),
+            ]);
+
             DB::commit();
 
             return response()->json([
@@ -270,17 +325,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -486,16 +530,47 @@ class OrderController extends Controller
     {
         $query->where(function ($q) use ($search) {
             $q->where('order_no', 'like', "%{$search}%")
-                ->orWhereHas('client', function ($clientQuery) use ($search) {
-                    $clientQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('phone_number', 'like', "%{$search}%")
+                ->orWhereHas('customer', function ($customerQuery) use ($search) {
+                    $customerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 })
                 ->orWhereHas('orderItems.product', function ($productQuery) use ($search) {
-                    $productQuery->where('product_name', 'like', "%{$search}%")
+                    $productQuery->where('name', 'like', "%{$search}%")
                         ->orWhere('sku', 'like', "%{$search}%");
                 });
         });
+    }
+
+    /**
+     * Apply additional filters for vendor_id, city, category_id, created_from, created_to
+     */
+    private function applyExtraFilters($query, Request $request): void
+    {
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->get('vendor_id'));
+        }
+
+        if ($request->filled('city')) {
+            $query->whereHas('customer', function ($q) use ($request) {
+                $q->where('city', $request->get('city'));
+            });
+        }
+
+        if ($request->filled('category_id')) {
+            $categoryId = $request->get('category_id');
+            $query->whereHas('orderItems.product', function ($q) use ($categoryId) {
+                $q->where('category_id', $categoryId);
+            });
+        }
+
+        if ($request->filled('created_from')) {
+            $query->whereDate('created_at', '>=', $request->get('created_from'));
+        }
+
+        if ($request->filled('created_to')) {
+            $query->whereDate('created_at', '<=', $request->get('created_to'));
+        }
     }
 
     /**
@@ -566,7 +641,8 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = $request->input('per_page', 15);
-        $orders = Order::with([
+
+        $query = Order::with([
             'warehouse',
             'country',
             'agent',
@@ -579,15 +655,30 @@ class OrderController extends Controller
             'pickupAddress',
             'assignments',
             'payments',
-            // 'events',
-            'statusTimestamps' => function ($query) {
-                $query->latest('created_at')->limit(1);
-            },
-            'statusTimestamps.status',
+            'latestStatus.status',
             'customer'
-        ])
-            ->latest()
-            ->paginate($perPage);
+        ]);
+
+        // Apply filters
+        $this->applyFilters($query, $request);
+
+        // Filter by product_id if provided
+        if ($request->filled('product_id')) {
+            $productId = $request->input('product_id');
+            $query->whereHas('orderItems', function ($q) use ($productId) {
+                $q->where('product_id', $productId);
+            });
+        }
+
+        // Apply search if provided
+        if ($request->filled('search')) {
+            $this->applySearch($query, $request->input('search'));
+        }
+
+        // Apply sorting
+        $this->applySorting($query, $request);
+
+        $orders = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,
@@ -635,8 +726,7 @@ class OrderController extends Controller
                         'name' => $validated['pickup_address']['full_name'] ?? null,
                         'email' => $validated['pickup_address']['email'] ?? null,
                         'city' => $validated['pickup_address']['city'] ?? null,
-                        'zone' => $validated['pickup_address']['zone'] ?? null,
-                        // 'zone_id' => $validated['pickup_address']['zone_id'] ?? null,
+                        'zone_id' => $validated['pickup_address']['zone_id'] ?? null,
                         'address' => $validated['pickup_address']['address'] ?? null,
                         'region' => $validated['pickup_address']['region'] ?? null,
                         'zipcode' => $validated['pickup_address']['zipcode'] ?? null,
@@ -649,8 +739,7 @@ class OrderController extends Controller
                         'name' => $validated['dropoff_address']['full_name'] ?? null,
                         'email' => $validated['dropoff_address']['email'] ?? null,
                         'city' => $validated['dropoff_address']['city'] ?? null,
-                        // 'zone_id' => $validated['dropoff_address']['zone_id'] ?? null,
-                        'zone' => $validated['dropoff_address']['zone'] ?? null,
+                        'zone_id' => $validated['dropoff_address']['zone_id'] ?? null,
                         'address' => $validated['dropoff_address']['address'] ?? null,
                         'region' => $validated['dropoff_address']['region'] ?? null,
                         'zipcode' => $validated['dropoff_address']['zipcode'] ?? null,
@@ -798,20 +887,64 @@ class OrderController extends Controller
 
     public function destroy($id): JsonResponse
     {
-        $order = Order::find($id);
+        DB::beginTransaction();
 
-        if (!$order) {
+        try {
+            $order = Order::with([
+                'warehouse',
+                'country',
+                'agent',
+                'createdBy',
+                'rider',
+                'zone',
+                'orderItems',
+                'addresses',
+                'shippingAddress',
+                'pickupAddress',
+                'assignments',
+                'payments',
+                // 'events',
+                // 'statusTimestamps' => function ($query) {
+                //     $query->latest('created_at')->limit(1);
+                // },
+                // 'statusTimestamps.status',
+                'latestStatus.status',
+                'customer'
+            ])->find($id);
+
+            if (!$order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order not found'
+                ], 404);
+            }
+
+            // Delete related details
+            $order->orderItems()->delete();
+            $order->addresses()->delete();
+            $order->shippingAddress()->delete();
+            $order->pickupAddress()->delete();
+            $order->assignments()->delete();
+            $order->payments()->delete();
+            $order->events()->delete();
+            $order->statusTimestamps()->delete();
+
+            // Delete the order itself
+            $order->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order and all its details deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found'
-            ], 404);
+                'message' => 'Failed to delete order',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $order->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order deleted successfully'
-        ]);
     }
 }

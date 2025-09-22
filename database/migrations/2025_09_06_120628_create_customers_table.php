@@ -19,6 +19,7 @@ return new class extends Migration
     $table->string('alt_phone')->nullable();
     $table->string('address')->nullable();
     $table->string('city')->nullable();
+    // $table->foreignId('city_id')->nullable()->constrained()->nullOnDelete();
     $table->string('region')->nullable();
 
     // vendor is a user with role "vendor"

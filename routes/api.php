@@ -74,11 +74,14 @@ Route::prefix('v1')->group(function () {
     // Update a specific order
 
     // Print waybill
-    Route::get('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
-    Route::get('/{id}/print-waybill', [OrderController::class, 'printWaybill'])->name('orders.print-waybill');
-    Route::get('/{id}/download-waybill', [OrderController::class, 'downloadWaybill'])->name('orders.download-waybill');
-    Route::get('/{id}/preview-waybill', [OrderController::class, 'previewWaybill'])->name('orders.preview-waybill');
-    Route::post('/bulk-print-waybills', [OrderController::class, 'bulkPrintWaybills'])->name('orders.bulk-print-waybills');
+    // Route::get('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
+        // Route::post('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
+
+    // Route::get('/{id}/print-waybill', [OrderController::class, 'printWaybill'])->name('orders.print-waybill');
+    // Route::get('/{id}/download-waybill', [OrderController::class, 'downloadWaybill'])->name('orders.download-waybill');
+    // Route::get('/{id}/preview-waybill', [OrderController::class, 'previewWaybill'])->name('orders.preview-waybill');
+    Route::post('/bulk-print-waybills', [OrderController::class, 'printWaybill'])->name('orders.bulk-print-waybills');
+    Route::get('/orders/{id}/timeline', [OrderController::class, 'timeline']);
 
 
 

@@ -1,14 +1,11 @@
 <?php
 
-
-
 namespace App\Services\Order;
-
-
 
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Http\Resources\OrderResource;
+use App\Models\OrderEvent;
 use App\Models\WaybillSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -16,11 +13,81 @@ use Illuminate\Support\Facades\Log;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Picqer\Barcode\BarcodeGeneratorHTML;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 
 
 
 class OrderBulkActionService
 {
+
+    // 
+
+    public function timeline($id): JsonResponse
+    {
+        $order = Order::with(['events.user', 'statusTimestamps.status'])->find($id);
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 404);
+        }
+
+        // Merge events and status timestamps into a single timeline array
+        $timeline = [];
+
+        foreach ($order->statusTimestamps as $statusTimestamp) {
+            $timeline[] = [
+                'type' => 'status',
+                'status' => $statusTimestamp->status->name ?? null,
+                'status_id' => $statusTimestamp->status_id,
+                'created_at' => $statusTimestamp->created_at,
+            ];
+        }
+
+        foreach ($order->events as $event) {
+            $timeline[] = [
+                'type' => 'event',
+                'event_type' => $event->event_type,
+                'event_data' => $event->event_data,
+                'user' => $event->user ? [
+                    'id' => $event->user->id,
+                    'name' => $event->user->name,
+                    'email' => $event->user->email,
+                ] : null,
+                'created_at' => $event->created_at,
+            ];
+        }
+
+        // Sort timeline by created_at ascending
+        usort($timeline, function ($a, $b) {
+            return strtotime($a['created_at']) <=> strtotime($b['created_at']);
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $timeline
+        ]);
+    }
+
+
+
+    public function logEvent($orderId, string $eventType, array $eventData = [])
+    {
+        try {
+            OrderEvent::create([
+                'order_id'   => $orderId,
+                'event_type' => $eventType,
+                'event_data' => $eventData,
+                'actor_id'   => auth()->id(),
+            ]);
+
+            Log::info("Order event logged: {$eventType}", ['order_id' => $orderId, 'data' => $eventData]);
+        } catch (\Throwable $e) {
+            Log::error("Failed to log order event", ['error' => $e->getMessage()]);
+        }
+    }
+
 
     /**
      * Create a new order with provided data.
@@ -120,109 +187,225 @@ class OrderBulkActionService
 
 
 
-public function printWaybill(Request $request, string $id)
-{
-    // Fetch order with all related data
-    $order = Order::with([
-        'client', 
-        'orderItems.product', 
-        'vendor', 
-        'rider', 
-        'agent'
-    ])
-    ->where('id', $id)
-    ->whereNull('deleted_at')
-    ->firstOrFail();
 
-    // Generate barcode
-    $generator = new BarcodeGeneratorHTML();
-    $barcode = $generator->getBarcode(
-        $order->order_no, 
-        $generator::TYPE_CODE_128,
-        2, // Width
-        50 // Height
-    );
+    /**
+     * Print waybill PDF for a single order.
+     */
+    public function printWaybill(Request $request, string $id)
+    {
+        // Fetch order with all related data
+        $order = Order::with([
+            'customer',
+            'orderItems.product',
+            'vendor',
+            'rider',
+            'agent'
+        ])
+            ->where('id', $id)
+            ->whereNull('deleted_at')
+            ->firstOrFail();
 
-    // Get waybill settings
-    $company = WaybillSetting::first();
+        // Generate barcode
+        $generator = new BarcodeGeneratorHTML();
+        $barcode = $generator->getBarcode(
+            $order->order_no,
+            $generator::TYPE_CODE_128,
+            2, // Width
+            50 // Height
+        );
 
-    // Debug: Log the company data structure
-    Log::info('Company data structure:', [
-        'company' => $company ? $company->toArray() : null,
-        'options_type' => $company && isset($company->options) ? gettype($company->options) : 'null',
-        'options_value' => $company && isset($company->options) ? $company->options : null
-    ]);
+        // Get waybill settings
+        $company = WaybillSetting::first();
 
-    // Handle company settings safely
-    if (!$company) {
-        $company = (object) [
-            'name' => config('app.name', 'Your Company'),
-            'phone' => '',
-            'email' => '',
-            'address' => '',
-            'template_name' => 'Express Courier',
-            'options' => (object) ['color' => 'blue', 'size' => 'A6'],
-            'terms' => 'Standard terms and conditions apply.',
-            'footer' => 'Terms & Conditions',
-            'brand_color' => '#667eea'
-        ];
-    } else {
-        // Safely handle options field
-        if (isset($company->options)) {
-            if (is_string($company->options)) {
-                try {
-                    $company->options = json_decode($company->options);
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-                    }
-                } catch (\Exception $e) {
-                    $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-                }
-            } elseif (is_array($company->options)) {
-                $company->options = (object) $company->options;
-            } elseif (!is_object($company->options)) {
-                $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-            }
-        } else {
-            $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-        }
-        
-        // Ensure brand_color exists
-        if (!isset($company->brand_color)) {
-            $company->brand_color = '#667eea';
-        }
-    }
-
-    // Prepare data for the template
-    $data = [
-        'order' => $order,
-        'barcode' => $barcode,
-        'company' => $company
-    ];
-
-    // Determine paper size
-    $paperSize = 'a6';
-    if (isset($company->options->size)) {
-        $paperSize = strtolower($company->options->size);
-    }
-
-    // Generate PDF
-    $pdf = Pdf::loadView('waybill.template', $data)
-        ->setPaper($paperSize, 'portrait')
-        ->setOptions([
-            'dpi' => 150,
-            'defaultFont' => 'sans-serif',
-            'isHtml5ParserEnabled' => true,
-            'isPhpEnabled' => false,
-            'margin-top' => 0,
-            'margin-right' => 0,
-            'margin-bottom' => 0,
-            'margin-left' => 0,
-            'enable-local-file-access' => true,
+        // Debug: Log the company data structure
+        Log::info('Company data structure:', [
+            'company' => $company ? $company->toArray() : null,
+            'options_type' => $company && isset($company->options) ? gettype($company->options) : 'null',
+            'options_value' => $company && isset($company->options) ? $company->options : null
         ]);
 
-    return $pdf->stream("waybill_{$order->order_no}.pdf");
-}
+        // Handle company settings safely
+        if (!$company) {
+            $company = (object) [
+                'name' => config('app.name', 'Your Company'),
+                'phone' => '',
+                'email' => '',
+                'address' => '',
+                'template_name' => 'Express Courier',
+                'options' => (object) ['color' => 'blue', 'size' => 'A6'],
+                'terms' => 'Standard terms and conditions apply.',
+                'footer' => 'Terms & Conditions',
+                'brand_color' => '#667eea'
+            ];
+        } else {
+            // Safely handle options field
+            if (isset($company->options)) {
+                if (is_string($company->options)) {
+                    try {
+                        $company->options = json_decode($company->options);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error decoding company options in printWaybills', ['error' => $e->getMessage()]);
+                        $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                    }
+                } elseif (is_array($company->options)) {
+                    $company->options = (object) $company->options;
+                } elseif (!is_object($company->options)) {
+                    $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                }
+            } else {
+                $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+            }
+
+            // Ensure brand_color exists
+            if (!isset($company->brand_color)) {
+                $company->brand_color = '#667eea';
+            }
+        }
+
+        // Prepare data for the template
+        $data = [
+            'order' => $order,
+            'barcode' => $barcode,
+            'company' => $company
+        ];
+
+        // Determine paper size
+        $paperSize = 'a6';
+        if (isset($company->options->size)) {
+            $paperSize = strtolower($company->options->size);
+        }
+
+        // Generate PDF
+        $pdf = Pdf::loadView('waybill.template', $data)
+            ->setPaper($paperSize, 'portrait')
+            ->setOptions([
+                'dpi' => 150,
+                'defaultFont' => 'sans-serif',
+                'isHtml5ParserEnabled' => true,
+                'isPhpEnabled' => false,
+                'margin-top' => 0,
+                'margin-right' => 0,
+                'margin-bottom' => 0,
+                'margin-left' => 0,
+                'enable-local-file-access' => true,
+            ]);
+
+        return $pdf->stream("waybill_{$order->order_no}.pdf");
+    }
+
+    /**
+     * Print waybill PDF for multiple orders (bulk).
+     */
+    public function printWaybills(array $ids)
+    {
+        $orders = Order::with([
+            'customer',
+            'orderItems.product',
+            'vendor',
+            'rider',
+            'agent'
+        ])
+            ->whereIn('id', $ids)
+            ->whereNull('deleted_at')
+            ->get();
+
+        if ($orders->isEmpty()) {
+            throw new \Exception("No orders found for given IDs");
+        }
+
+        // Get waybill settings
+        $company = WaybillSetting::first();
+
+        // Handle company settings safely (same logic as single print)
+        if (!$company) {
+            $company = (object) [
+                'name' => config('app.name', 'Your Company'),
+                'phone' => '',
+                'email' => '',
+                'address' => '',
+                'template_name' => 'Express Courier',
+                'options' => (object) ['color' => 'blue', 'size' => 'A6'],
+                'terms' => 'Standard terms and conditions apply.',
+                'footer' => 'Terms & Conditions',
+                'brand_color' => '#667eea'
+            ];
+        } else {
+            if (isset($company->options)) {
+                if (is_string($company->options)) {
+                    try {
+                        $company->options = json_decode($company->options);
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error decoding company options in printWaybills', ['error' => $e->getMessage()]);
+                        $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                    }
+                } elseif (is_array($company->options)) {
+                    $company->options = (object) $company->options;
+                } elseif (!is_object($company->options)) {
+                    $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+                }
+            } else {
+                $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+            }
+
+            if (!isset($company->brand_color)) {
+                $company->brand_color = '#667eea';
+            }
+        }
+
+        // Generate barcodes for each order
+        $generator = new BarcodeGeneratorHTML();
+        $waybills = [];
+        // Log the orders for debugging
+        Log::info('Bulk waybill orders:', ['orders' => $orders->toArray()]);
+        foreach ($orders as $order) {
+            $waybills[] = [
+                'order' => $order,
+                'barcode' => $generator->getBarcode(
+                    $order->order_no,
+                    $generator::TYPE_CODE_128,
+                    2,
+                    50
+                ),
+                'company' => $company
+            ];
+        }
+
+        // Determine paper size
+        $paperSize = 'a6';
+        if (isset($company->options->size)) {
+            $paperSize = strtolower($company->options->size);
+        }
+
+        // Load Blade template with multiple orders
+        $pdf = Pdf::loadView('waybill.bulk-template', [
+            'waybills' => $waybills,
+            'company' => $company
+        ])
+            ->setPaper($paperSize, 'portrait')
+            ->setOptions([
+                'dpi' => 150,
+                'defaultFont' => 'sans-serif',
+                'isHtml5ParserEnabled' => true,
+                'isPhpEnabled' => false,
+                'margin-top' => 0,
+                'margin-right' => 0,
+                'margin-bottom' => 0,
+                'margin-left' => 0,
+                'enable-local-file-access' => true,
+            ]);
+
+        // ✅ use a fixed filename for bulk
+        return $pdf->stream("bulk_waybills.pdf");
+    }
+
+
+
 
     /**
      * Get waybill data for preview (without generating PDF)
@@ -230,22 +413,22 @@ public function printWaybill(Request $request, string $id)
     public function getWaybillData(string $orderId)
     {
         $order = Order::with([
-            'client', 
-            'orderItems.product', 
-            'vendor', 
-            'rider', 
+            'client',
+            'orderItems.product',
+            'vendor',
+            'rider',
             'agent'
         ])
-        ->where('id', $orderId)
-        ->whereNull('deleted_at')
-        ->firstOrFail();
+            ->where('id', $orderId)
+            ->whereNull('deleted_at')
+            ->firstOrFail();
 
         $generator = new BarcodeGeneratorHTML();
         $barcode = $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128);
 
         $company = WaybillSetting::when($order->client && $order->client->country_id, function ($query) use ($order) {
-                return $query->where('country_id', $order->client->country_id);
-            })
+            return $query->where('country_id', $order->client->country_id);
+        })
             ->first() ?? WaybillSetting::first();
 
         return [
@@ -258,99 +441,4 @@ public function printWaybill(Request $request, string $id)
 
 
 
-    public function downloadWaybill(string $id)
-    {
-        $order = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
-            ->where('id', $id)
-            ->whereNull('deleted_at')
-            ->firstOrFail();
-
-        $generator = new BarcodeGeneratorHTML();
-        $barcode = $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128);
-        $qrCode = QrCode::size(100)->generate($order->order_no);
-
-        $data = [
-            'order' => $order,
-            'barcode' => $barcode,
-            'qrCode' => $qrCode,
-            'company' => [
-                'name' => 'Boxleo Courier & Fulfillment Services Ltd',
-                'phone' => '0761 976 581/0764 900539',
-                'email' => 'tanzania@boxleocourier.com',
-                'address' => 'Makongo juu Darajani, University Rd, Dar es Salaam'
-            ]
-        ];
-
-        $pdf = Pdf::loadView('waybill.template', $data)
-            ->setPaper('a4', 'portrait');
-
-        return $pdf->download("waybill_{$order->order_no}.pdf");
-    }
-
-    /**
-     * Print waybill as HTML (for testing)
-     */
-    public function previewWaybill(string $id)
-    {
-        $order = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
-            ->where('id', $id)
-            ->whereNull('deleted_at')
-            ->firstOrFail();
-
-        $generator = new BarcodeGeneratorHTML();
-        $barcode = $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128);
-        $qrCode = QrCode::size(100)->generate($order->order_no);
-
-        return view('waybill.template', [
-            'order' => $order,
-            'barcode' => $barcode,
-            'qrCode' => $qrCode,
-            'company' => [
-                'name' => 'Boxleo Courier & Fulfillment Services Ltd',
-                'phone' => '0761 976 581/0764 900539',
-                'email' => 'tanzania@boxleocourier.com',
-                'address' => 'Makongo juu Darajani, University Rd, Dar es Salaam'
-            ]
-        ]);
-    }
-
-    /**
-     * Bulk print waybills
-     */
-    public function bulkPrintWaybills(Request $request)
-    {
-        $orderIds = $request->input('order_ids', []);
-
-        $orders = Order::with(['client', 'orderItems.product', 'vendor', 'rider', 'agent'])
-            ->whereIn('id', $orderIds)
-            ->whereNull('deleted_at')
-            ->get();
-
-        $generator = new BarcodeGeneratorHTML();
-        $waybills = [];
-
-        foreach ($orders as $order) {
-            $waybills[] = [
-                'order' => $order,
-                'barcode' => $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128),
-                'qrCode' => QrCode::size(100)->generate($order->order_no)
-            ];
-        }
-
-        $data = [
-            'waybills' => $waybills,
-            'company' => [
-                'name' => 'Boxleo Courier & Fulfillment Services Ltd',
-                'phone' => '0761 976 581/0764 900539',
-                'email' => 'tanzania@boxleocourier.com',
-                'address' => 'Makongo juu Darajani, University Rd, Dar es Salaam'
-            ]
-        ];
-
-        $pdf = Pdf::loadView('waybill.bulk-template', $data)
-            ->setPaper('a5', 'landscape');
-
-        return $pdf->stream('bulk_waybills.pdf');
-    }
 }
-// This service class provides methods to perform bulk actions on orders such as assigning a rider, assigning an agent, and updating the status of multiple orders.
