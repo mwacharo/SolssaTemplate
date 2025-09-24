@@ -20,92 +20,44 @@
 
         <!-- Filters -->
         <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <!-- Seller Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">SELLER</label>
-              <v-autocomplete
-              v-model="orderStore.orderFilterVendor"
-              :items="orderStore.vendorOptions"
-              item-title="name"
-              item-value="id"
-              clearable
-              dense
-              outlined
-              placeholder="Search sellers..."
-              class="w-full"
-              autocomplete
-              />
+              <v-autocomplete v-model="orderStore.orderFilterVendor" :items="orderStore.vendorOptions" item-title="name"
+                item-value="id" clearable dense outlined placeholder="Search sellers..." class="w-full" autocomplete />
             </div>
 
             <!-- Product Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">PRODUCT</label>
-              <v-autocomplete
-              v-model="orderStore.orderFilterProduct"
-              :items="orderStore.productOptions"
-              item-title="product_name"
-              item-value="id"
-              clearable
-              dense
-              outlined
-              placeholder="Search products..."
-              class="w-full"
-              autocomplete
-              />
+              <v-autocomplete v-model="orderStore.orderFilterProduct" :items="orderStore.productOptions"
+                item-title="product_name" item-value="id" clearable dense outlined placeholder="Search products..."
+                class="w-full" autocomplete />
             </div>
 
             <!-- Category Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CATEGORY</label>
-              <v-autocomplete
-              v-model="orderStore.orderFilterCategory"
-              :items="orderStore.categoryOptions"
-              item-title="name"
-              item-value="id"
-              clearable
-              dense
-              outlined
-              placeholder="Search categories..."
-              class="w-full"
-              autocomplete
-              />
+              <v-autocomplete v-model="orderStore.orderFilterCategory" :items="orderStore.categoryOptions"
+                item-title="name" item-value="id" clearable dense outlined placeholder="Search categories..."
+                class="w-full" autocomplete />
             </div>
 
             <!-- City Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CITY</label>
-              <v-autocomplete
-              v-model="orderStore.orderFilterCity"
-              :items="orderStore.cityOptions"
-              item-title="name"
-              item-value="name"
-              clearable
-              dense
-              outlined
-              placeholder="Search cities..."
-              class="w-full"
-              autocomplete
-              />
+              <v-autocomplete v-model="orderStore.orderFilterCity" :items="orderStore.cityOptions" item-title="name"
+                item-value="name" clearable dense outlined placeholder="Search cities..." class="w-full" autocomplete />
             </div>
 
             <!-- Call Agent Filter -->
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CALL AGENT</label>
-              <v-autocomplete
-              v-model="orderStore.orderFilterAgent"
-              :items="orderStore.agentOptions"
-              item-title="name"
-              item-value="id"
-              clearable
-              dense
-              outlined
-              placeholder="Search agents..."
-              class="w-full"
-              autocomplete
-              />
+              <v-autocomplete v-model="orderStore.orderFilterAgent" :items="orderStore.agentOptions" item-title="name"
+                item-value="id" clearable dense outlined placeholder="Search agents..." class="w-full" autocomplete />
             </div>
-            </div>
+          </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <!-- Confirmation Status -->
@@ -113,17 +65,8 @@
 
             <div>
               <label class="block text-sm font-medium text-red-600 mb-1">CONFIRMATION STATUS</label>
-              <v-autocomplete
-              v-model="orderStore.orderFilterStatus"
-              :items="orderStore.statusOptions"
-              item-title="name"
-              item-value="id"
-              clearable
-              dense
-              outlined
-              placeholder="Search statuses..."
-              class="w-full"
-              />
+              <v-autocomplete v-model="orderStore.orderFilterStatus" :items="orderStore.statusOptions" item-title="name"
+                item-value="id" clearable dense outlined placeholder="Search statuses..." class="w-full" />
             </div>
 
             <!-- Created From -->
@@ -185,20 +128,20 @@
           </div>
 
           <div class="flex gap-2 flex-wrap">
-            <button
+            <button @click="associateAgents" :disabled="selectedOrders.length === 0 || orderStore.loading.orders"
               class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors flex items-center gap-2 text-sm">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              Disassociate agents
+            Associate agents
             </button>
 
             <button @click="newOrder"
               class="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 text-sm">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                </path>
               </svg>
               New Order
             </button>
@@ -212,7 +155,7 @@
                   d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2h-2M7 17H5a2 2 0 01-2-2v-4a2 2 0 012-2h2m10 9v1a3 3 0 01-3 3H10a3 3 0 01-3-3v-1m10 0H7m10 0a5 5 0 00-10 0m10 0v-3a5 5 0 00-10 0v3">
                 </path>
               </svg>
-              Print ({{ selectedOrders.length }}) 
+              Print ({{ selectedOrders.length }})
             </button>
 
             <button @click="exportOrders" :disabled="orderStore.loading.orders"
@@ -335,8 +278,7 @@
                     </div>
                   </td>
                   <td class="px-4 py-3">
-                    <span
-                      class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
+                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
                       <span class="w-2 h-2 bg-red-500 rounded-full"></span>
                       {{ order.order_items?.length || 0 }} product{{ order.order_items?.length !== 1 ? 's' : '' }}
                     </span>
@@ -359,31 +301,26 @@
                   <!-- total_price -->
 
                   <td class="px-4 py-3 font-mono text-sm">KSH{{ order.total_price || '0.00' }}</td>
-                 
-                 
-                 
+
+
+
                   <td class="px-4 py-3">
                     <div class="flex flex-col gap-1">
-                        <span
-                        class="px-2 py-1 text-xs rounded"
-                        :style="order.latest_status?.status?.color ? { backgroundColor: order.latest_status.status.color, color: 'white' } : {}"
-                        >
+                      <span class="px-2 py-1 text-xs rounded"
+                        :style="order.latest_status?.status?.color ? { backgroundColor: order.latest_status.status.color, color: 'white' } : {}">
                         {{ order.latest_status?.status?.name || orderStatusLabel(order.status) }}
-                        </span>
-                        <div v-if="order.latest_status?.created_at"
+                      </span>
+                      <div v-if="order.latest_status?.created_at"
                         class="text-xs text-gray-600 bg-green-100 px-1 py-0.5 rounded">
                         Status at {{ formatDateTime(order.latest_status.created_at) }}
-                        </div>
+                      </div>
                       <div class="text-xs text-center">
-                        <img v-if="order.agent && order.agent.avatar" :src="order.agent.avatar"
-                          :alt="order.agent.name" class="w-6 h-6 rounded-full mx-auto">
+                        <img v-if="order.agent && order.agent.avatar" :src="order.agent.avatar" :alt="order.agent.name"
+                          class="w-6 h-6 rounded-full mx-auto">
                         <span v-else>-</span>
                       </div>
                     </div>
                   </td>
-
-
-
 
 
                   <td class="px-4 py-3">
@@ -482,27 +419,29 @@
       </div>
     </div>
     <CallDialogs />
-    <!-- <OrderForm
 
-      @order-saved="onOrderSaved"
-      @dialog-closed="onDialogClosed"
-    /> -->
 
-    <OrderForm
-  :is-create="isCreateMode"
-  @order-saved="onOrderSaved"
-  @dialog-closed="onDialogClosed"
-/>
+    <OrderForm :is-create="isCreateMode" @order-saved="onOrderSaved" @dialog-closed="onDialogClosed" />
+    <!-- Reusable Dialog -->
+    <!-- <BulkAction :show="orderStore.bulkActionDialog" :type="orderStore.dialogType" :title="orderStore.dialogTitle"
+      :selectedOrders="orderStore.selectedOrders" :deliveryMen="deliveryMen" :callCentreAgents="callCentreAgents"
+      @close="orderStore.closeBulkActionDialog" @confirm="handleConfirm" /> -->
+
+    <BulkAction />
 
   </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, reactive } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { useOrderStore } from '@/stores/orderStore'
 import { useCallCenterStore } from '@/stores/callCenter';
 import OrderForm from './OrderForm.vue';
+
+import BulkAction from './BulkAction.vue';
+
+// import CallDialogs from "@/components/CallDialogs.vue";
 // orderjourney
 
 
@@ -511,9 +450,47 @@ const orderStore = useOrderStore()
 
 const createMode = ref(false)
 
+// Dialog state
+const dialog = ref({
+  show: false,
+  type: '',
+  title: '',
+})
+
 // Component state
 const selectedOrders = ref([])
 const selectAll = ref(false)
+
+
+// Dialog state
+const dialogType = ref('')
+const dialogTitle = ref('')
+
+const bulkActionDialog = computed({
+  get: () => orderStore.bulkActionDialog,
+  set: (val) => {
+    if (!val) orderStore.closeBulkActionDialog()
+    else orderStore.bulkActionDialog = val
+  }
+})
+
+function confirm() {
+  orderStore.handleBulkAction({
+    type: type.value,
+    data: { ...form },
+    orders: selectedOrders.value
+  })
+}
+
+
+const type = computed(() => orderStore.dialogType)
+const title = computed(() => orderStore.dialogTitle)
+// const selectedOrders = computed(() => orderStore.selectedOrders)
+const loading = computed(() => orderStore.loading.orders)
+
+const form = orderStore.bulkActionForm
+const errors = {}
+
 
 // Computed properties
 const visiblePages = computed(() => {
@@ -534,12 +511,12 @@ const visiblePages = computed(() => {
 
 // Methods
 const editOrder = (id) => {
-  orderStore.openDialog(id) 
+  orderStore.openDialog(id)
 }
 
-const newOrder = async() => {
+const newOrder = async () => {
   await orderStore.fetchDropdownOptions()
-  orderStore.openCreateDialog() 
+  orderStore.openCreateDialog()
 }
 // 
 
@@ -548,8 +525,13 @@ const bulkPrint = () => {
   orderStore.printOrders(selectedOrders.value)
 }
 const assignDeliveryPerson = () => {
-  if (selectedOrders.value.length === 0) return
+  console.debug('Assign Delivery Person clicked', { selectedOrders: selectedOrders.value })
+  if (selectedOrders.value.length === 0) {
+    console.warn('No orders selected for delivery assignment')
+    return
+  }
   orderStore.openAssignDeliveryDialog(selectedOrders.value)
+  console.info('Opened assign delivery dialog for orders:', selectedOrders.value)
 }
 
 // emitted events
@@ -642,7 +624,11 @@ const bulkUpdateStatus = () => {
 }
 
 const bulkDelete = () => {
-  orderStore.bulkDelete(selectedOrders.value)
+  orderStore.openDeleteDialog(selectedOrders.value)
+}
+const associateAgents = () => {
+  if (selectedOrders.value.length === 0) return
+  orderStore.openAssignCallCentreDialog(selectedOrders.value)
 }
 
 const previousPage = async () => {

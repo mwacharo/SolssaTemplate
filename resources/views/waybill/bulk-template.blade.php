@@ -184,13 +184,13 @@
                 </div>
                 <div class="info-card">
                     <h3>Ship To</h3>
-                    <div class="name">{{ $order->client->name ?? 'Customer Name' }}</div>
+                    <div class="name">{{ $order->customer->full_name ?? 'Customer Name' }}</div>
                     <div class="details">
-                        {{ $order->client->phone ?? 'N/A' }}<br>
-                        {{ $order->delivery_address ?? $order->client->address ?? 'Delivery Address' }}
+                        {{ $order->customer->phone ?? 'N/A' }}<br>
+                        {{ $order->delivery_address ?? $order->customer->address ?? 'Delivery Address' }}
                     </div>
-                    @if(isset($order->client->city))
-                        <div class="city-tag">{{ $order->client->city }}</div>
+                    @if(isset($order->customer->city))
+                        <div class="city-tag">{{ $order->customer->city }}</div>
                     @endif
                 </div>
             </div>

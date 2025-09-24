@@ -6,10 +6,19 @@ import axios from 'axios'
 export const useOrderStore = defineStore('orders', () => {
   // State
 
-// Removed unused orderEdit to fix unused variable error
+  // Removed unused orderEdit to fix unused variable error
 
 
-
+  const dialogType = ref('')
+  const dialogTitle = ref('')
+  const bulkActionForm = reactive({
+    deliveryPerson: '',
+    callCentreAgent: '',
+    status: '',
+    notes: '',
+    zone: '',
+    city: ''
+  })
   const orders = ref([])
   const loading = ref({
     orders: false,
@@ -21,6 +30,7 @@ export const useOrderStore = defineStore('orders', () => {
   const error = ref(null)
   const notifications = ref([])
   const dialog = ref(false)
+  const bulkActionDialog = ref(false)
   const selectedOrderId = ref(null)
   const selectedOrder = ref(null)
   const initialized = ref(false)
@@ -167,11 +177,16 @@ export const useOrderStore = defineStore('orders', () => {
 
   const selectedOrders = ref([])
 
-  const bulkPrint = async () => {
-    if (selectedOrders.value.length === 0) return
+
+
+
+
+
+  const printOrders = async (orderIds) => {
+    if (!orderIds || orderIds.length === 0) return
     try {
-      const response = await axios.post('/api/v1/orders/bulk-print-waybills', {
-        order_ids: selectedOrders.value
+      const response = await axios.post('/api/v1/bulk-print-waybills', {
+        order_ids: orderIds
       }, {
         headers: {
           'Accept': 'application/json',
@@ -188,62 +203,10 @@ export const useOrderStore = defineStore('orders', () => {
       link.click()
       link.remove()
     } catch (err) {
-      error.value = err.response?.data?.message || err.message || 'Failed to bulk print waybills'
-      throw err
-    }
-  }
-
-  // const printOrders = async (orderIds) => {
-  //   if (!orderIds || orderIds.length === 0) return
-  //   try {
-  //     for (const id of orderIds) {
-  //       const response = await axios.get(`/api/v1/orders/${id}/print-waybill`, {
-  //         headers: {
-  //           'Accept': 'application/json'
-  //         },
-  //         responseType: 'blob'
-  //       })
-  //       // Handle file download (example for PDF)
-  //       const url = window.URL.createObjectURL(new Blob([response.data]))
-  //       const link = document.createElement('a')
-  //       link.href = url
-  //       link.setAttribute('download', `waybill-${id}.pdf`)
-  //       document.body.appendChild(link)
-  //       link.click()
-  //       link.remove()
-  //     }
-  //   } catch (err) {
-  //     error.value = err.response?.data?.message || err.message || 'Failed to print waybill'
-  //     throw err
-  //   }
-  // }
-
-
-  const printOrders = async (orderIds) => {
-    if (!orderIds || orderIds.length === 0) return
-    try {
-      const response = await axios.post('/api/v1/bulk-print-waybills', {
-        order_ids: orderIds     
-      }, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        responseType: 'blob' // If you expect a PDF or file
-      })      
-      // Handle file download (example for PDF)
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')    
-      link.href = url
-      link.setAttribute('download', 'waybills.pdf')
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } catch (err) {
       error.value = err.response?.data?.message || err.message || 'Failed to print waybill'
       throw err
     }
-  } 
+  }
 
   const loadOrder = async (id) => {
     loading.value.orders = true
@@ -418,11 +381,11 @@ export const useOrderStore = defineStore('orders', () => {
       // Add products request if vendorId is provided
       if (vendorId) {
         requests.push(
-          axios.get(`/api/v1/vendors/${vendorId}/products`).catch(err => ({ data: { success: false, data: [] } }))
+          axios.get(`/api/v1/vendors/${vendorId}/products`).catch(() => ({ data: { success: false, data: [] } }))
         )
       } else {
         requests.push(
-          axios.get('/api/v1/products').catch(err => ({ data: { success: false, data: [] } }))
+          axios.get('/api/v1/products').catch(() => ({ data: { success: false, data: [] } }))
         )
       }
 
@@ -495,8 +458,8 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderId) {
       const order = await loadOrder(orderId)
 
-          selectedOrder.value = order  // Make sure this line exists
-    return order
+      selectedOrder.value = order  // Make sure this line exists
+      return order
       // Pass the loaded order to the form
       // For example, if you have a form state or method, set it here:
       // form.value = { ...order }
@@ -512,6 +475,13 @@ export const useOrderStore = defineStore('orders', () => {
     // If you have a resetForm function, call it here. Otherwise, remove the line below.
     // resetForm()
   }
+
+  // Add this function to fix the error
+  // const openAssignDeliveryDialog = (selectedOrdersParam = []) => {
+  //   bulkActionDialog.value = true
+  //   selectedOrders.value = selectedOrdersParam
+  //   // You can add more logic if needed
+  // }
 
   const closeDialog = () => {
     dialog.value = false
@@ -571,6 +541,113 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
+
+  // Actions
+  const setSelectedOrders = (ordersList) => {
+    selectedOrders.value = ordersList
+  }
+
+  const openAssignDeliveryDialog = (selectedOrdersParam = []) => {
+    console.debug('openAssignDeliveryDialog called with:', selectedOrdersParam)
+    selectedOrders.value = selectedOrdersParam
+    dialogType.value = 'assignDelivery'
+    dialogTitle.value = 'Assign Delivery Person'
+    bulkActionDialog.value = true
+    console.debug('Bulk action dialog opened. State:', {
+      selectedOrders: selectedOrders.value,
+      dialogType: dialogType.value,
+      dialogTitle: dialogTitle.value,
+      bulkActionDialog: bulkActionDialog.value
+    })
+  }
+
+  const openAssignCallCentreDialog = (selectedOrdersParam = []) => {
+    selectedOrders.value = selectedOrdersParam
+    dialogType.value = 'assignCallCentre'
+    dialogTitle.value = 'Assign Call Centre Agent'
+    bulkActionDialog.value = true
+  }
+
+  const openBulkStatusDialog = (selectedOrdersParam = []) => {
+    selectedOrders.value = selectedOrdersParam
+    dialogType.value = 'status'
+    dialogTitle.value = 'Change Status'
+    bulkActionDialog.value = true
+  }
+
+  const openDeleteDialog = (selectedOrdersParam = []) => {
+    selectedOrders.value = selectedOrdersParam
+    dialogType.value = 'delete'
+    dialogTitle.value = 'Delete Orders'
+    bulkActionDialog.value = true
+  }
+
+  const closeBulkActionDialog = () => {
+    bulkActionDialog.value = false
+    dialogType.value = ''
+    dialogTitle.value = ''
+    selectedOrders.value = []
+    // Reset form
+    Object.keys(bulkActionForm).forEach(key => {
+      bulkActionForm[key] = ''
+    })
+  }
+
+  const handleBulkAction = async (actionData) => {
+    loading.value.updating = true
+    try {
+      const { type, data, orders: ordersList } = actionData
+
+      switch (type) {
+        case 'assignDelivery':
+          await assignDeliveryPersonToOrders(ordersList, data.deliveryPerson)
+          break
+        case 'assignCallCentre':
+          await assignCallCentreAgentToOrders(ordersList, data.callCentreAgent)
+          break
+        case 'status':
+          await updateOrdersStatus(ordersList, data)
+          break
+        case 'delete':
+          await deleteOrders(ordersList)
+          break
+      }
+
+      closeBulkActionDialog()
+    } catch (error) {
+      console.error('Bulk action failed:', error)
+      // Handle error (show notification, etc.)
+    } finally {
+      loading.value.updating = false
+    }
+  }
+
+  // API calls (you'll need to implement these based on your backend)
+  const assignDeliveryPersonToOrders = async (ordersList, deliveryPersonId) => {
+    // Make API call to assign delivery person
+    console.log('Assigning delivery person:', deliveryPersonId, 'to orders:', ordersList)
+    // Example API call:
+    // await $fetch('/api/orders/assign-delivery', {
+    //   method: 'POST',
+    //   body: { orderIds: ordersList.map(o => o.id), deliveryPersonId }
+    // })
+  }
+
+  const assignCallCentreAgentToOrders = async (ordersList, agentId) => {
+    // Make API call to assign call centre agent
+    console.log('Assigning call centre agent:', agentId, 'to orders:', ordersList)
+  }
+
+  const updateOrdersStatus = async (ordersList, data) => {
+    // Make API call to update status
+    console.log('Updating status for orders:', ordersList, 'with data:', data)
+  }
+
+  const deleteOrders = async (ordersList) => {
+    // Make API call to delete orders
+    console.log('Deleting orders:', ordersList)
+  }
+
   // Return all state, getters, and actions
   return {
     // State
@@ -579,6 +656,7 @@ export const useOrderStore = defineStore('orders', () => {
     error,
     notifications,
     dialog,
+    bulkActionDialog,
     selectedOrderId,
     selectedOrder,
     initialized,
@@ -639,6 +717,15 @@ export const useOrderStore = defineStore('orders', () => {
     // removeNotification,
     openDialog,
     openCreateDialog,
+    openAssignDeliveryDialog,
+    openAssignCallCentreDialog,
+    openBulkStatusDialog,
+    dialogType,
+    dialogTitle,
+    bulkActionForm,
+    openDeleteDialog,
+    closeBulkActionDialog,
+    handleBulkAction,
     closeDialog,
     clearAllFilters,
     applyFilters,
