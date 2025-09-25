@@ -5,7 +5,9 @@ namespace App\Services\Order;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Http\Resources\OrderResource;
+use App\Models\OrderAssignment;
 use App\Models\OrderEvent;
+use App\Models\OrderStatusTimestamp;
 use App\Models\WaybillSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -169,21 +171,55 @@ class OrderBulkActionService
             return $order->load(['client', 'orderItems', 'agent', 'rider']);
         });
     }
-    public function assignRider(array $orderIds, int $riderId): void
+    public function assignRider(array $orderIds, int $riderId, string $role = 'Delivery Agent'): void
     {
-        Order::whereIn('id', $orderIds)->update(['rider_id' => $riderId]);
+        foreach ($orderIds as $orderId) {
+            // Create or update assignment record for this order and rider
+            OrderAssignment::updateOrCreate(
+                [
+                    'order_id' => $orderId,
+                    'user_id' => $riderId,
+                    'role' => $role,
+                ],
+                [
+                    // 'assigned_by' => $assignedBy,
+                    // 'assigned_at' => now(),
+                    // 'active' => 1,
+                ]
+            );
+        }
     }
 
-    public function assignAgent(array $orderIds, int $agentId): void
+    public function assignAgent(array $orderIds, int $agentId , string $role = 'CallAgent'): void
     {
-        Order::whereIn('id', $orderIds)->update(['agent_id' => $agentId]);
+        foreach ($orderIds as $orderId) {
+            // Create or update assignment record for this order and agent
+            OrderAssignment::updateOrCreate(
+                [
+                    'order_id' => $orderId,
+                    'user_id' => $agentId,
+                    'role' => $role,
+                ],
+                [
+                    // 'assigned_by' => $assignedBy,
+                    // 'assigned_at' => now(),
+                    // 'active' => 1,
+                ]
+            );
+        }
     }
 
-    public function updateStatus(array $orderIds, string $status): void
+    public function updateStatus(array $orderIds, $statusId, $statusNotes = null): void
     {
-        Order::whereIn('id', $orderIds)->update(['status' => $status]);
+        foreach ($orderIds as $orderId) {
+            OrderStatusTimestamp::create([
+                'order_id' => $orderId,
+                'status_id' => $statusId,
+                'status_notes' => $statusNotes,
+            
+            ]);
+        }
     }
-
 
 
 

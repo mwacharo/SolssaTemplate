@@ -112,15 +112,17 @@ class Order extends Model
         return $this->belongsTo(Country::class);
     }
 
-    public function agent()
-    {
-        return $this->belongsTo(User::class, 'agent_id');
-    }
-
+   
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+     public function agent()
+    {
+        return $this->belongsTo(User::class, 'agent_id');
+    }
+
 
     public function rider()
     {

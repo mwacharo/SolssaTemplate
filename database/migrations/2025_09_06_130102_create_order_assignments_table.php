@@ -13,16 +13,15 @@ return new class extends Migration
     {
         Schema::create('order_assignments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('order_id');
-            $table->unsignedBigInteger('user_id');
-            $table->string('role', 32);
-            $table->timestamp('assigned_at')->useCurrent();
-            $table->boolean('active')->default(1);
+            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('role', 32)->index();
+            $table->string('status')->default('assigned');
+            // $table->timestamp('assigned_at')->useCurrent();
             $table->timestamps();
             $table->softDeletes();
 
-            $table->index('order_id', 'idx_order');
-            $table->index(['user_id', 'role'], 'idx_user_role');
+            // $table->unique(['order_id', 'user_id', 'role'], 'uniq_order_user_role');
         });
     }
 

@@ -69,7 +69,9 @@ class OrderController extends Controller
         Log::info('Assigning rider to orders', ['data' => $request->validated()]);
         $this->orderService->assignRider(
             $request->validated('order_ids'),
-            $request->validated('rider_id')
+            $request->validated('rider_id'),
+            // role 
+            'Delivery Agent'
         );
 
         Log::info('Rider assigned successfully');
@@ -81,7 +83,10 @@ class OrderController extends Controller
         Log::info('Assigning agent to orders', ['data' => $request->validated()]);
         $this->orderService->assignAgent(
             $request->validated('order_ids'),
-            $request->validated('agent_id')
+            $request->validated('agent_id'),
+            // role
+            'CallAgent'
+
         );
         Log::info('Agent assigned successfully');
         return response()->json(['message' => 'Agent assigned successfully']);
@@ -91,7 +96,7 @@ class OrderController extends Controller
     {
         Log::info('Updating order status', ['data' => $request->validated()]);
         $this->orderService->updateStatus(
-            $request->validated('orderIds'),
+            $request->validated('order_ids'),
             $request->validated('status')
         );
         Log::info('Order status updated successfully');

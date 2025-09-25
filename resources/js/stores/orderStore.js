@@ -543,8 +543,8 @@ export const useOrderStore = defineStore('orders', () => {
 
 
   // Actions
-  const setSelectedOrders = (ordersList) => {
-    selectedOrders.value = ordersList
+  const setSelectedOrders = (orders) => {
+    selectedOrders.value = orders
   }
 
   const openAssignDeliveryDialog = (selectedOrdersParam = []) => {
@@ -596,56 +596,124 @@ export const useOrderStore = defineStore('orders', () => {
   const handleBulkAction = async (actionData) => {
     loading.value.updating = true
     try {
-      const { type, data, orders: ordersList } = actionData
+      const { type, data, orders } = actionData
+      // Use selectedOrders if orders is undefined or not an array
+      const targetOrders = Array.isArray(orders) && orders.length > 0 ? orders : selectedOrders.value
+      console.debug('handleBulkAction called with:', { type, data, orders: targetOrders })
 
       switch (type) {
         case 'assignDelivery':
-          await assignDeliveryPersonToOrders(ordersList, data.deliveryPerson)
+          if (!data.deliveryPerson) {
+            console.error("No delivery person selected")
+            throw new Error("No delivery person selected")
+          }
+          console.debug('Assigning delivery person:', data.deliveryPerson, 'to orders:', targetOrders)
+          await assignDeliveryPersonToOrders(targetOrders, data.deliveryPerson)
           break
+
         case 'assignCallCentre':
-          await assignCallCentreAgentToOrders(ordersList, data.callCentreAgent)
+          if (!data.callCentreAgent) {
+            console.error("No call centre agent selected")
+            throw new Error("No call centre agent selected")
+          }
+          console.debug('Assigning call centre agent:', data.callCentreAgent, 'to orders:', targetOrders)
+          await assignCallCentreAgentToOrders(targetOrders, data.callCentreAgent)
           break
+
         case 'status':
-          await updateOrdersStatus(ordersList, data)
+          if (!data.status) {
+            console.error("No status selected")
+            throw new Error("No status selected")
+          }
+          console.debug('Updating status for orders:', targetOrders, 'with status:', data.status)
+          await updateOrdersStatus(targetOrders, data.status)
           break
+
         case 'delete':
-          await deleteOrders(ordersList)
+          console.debug('Deleting orders:', targetOrders)
+          await deleteOrders(targetOrders)
           break
+
+        default:
+          console.warn("Unknown bulk action type:", type)
       }
 
       closeBulkActionDialog()
     } catch (error) {
       console.error('Bulk action failed:', error)
-      // Handle error (show notification, etc.)
+      // TODO: show toast/snackbar notification
     } finally {
       loading.value.updating = false
     }
   }
 
   // API calls (you'll need to implement these based on your backend)
-  const assignDeliveryPersonToOrders = async (ordersList, deliveryPersonId) => {
-    // Make API call to assign delivery person
-    console.log('Assigning delivery person:', deliveryPersonId, 'to orders:', ordersList)
-    // Example API call:
-    // await $fetch('/api/orders/assign-delivery', {
-    //   method: 'POST',
-    //   body: { orderIds: ordersList.map(o => o.id), deliveryPersonId }
-    // })
+  const assignDeliveryPersonToOrders = async (orders = [], deliveryPersonId) => {
+    if (!orders.length || !deliveryPersonId) {
+      throw new Error('Orders and deliveryPersonId are required')
+    }
+    try {
+      await axios.post('/api/v1/orders/assign-rider', {
+        order_ids: orders,
+        rider_id: deliveryPersonId
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      console.log('Assigned delivery person:', deliveryPersonId, 'to orders:', orders)
+    } catch (err) {
+      console.error('Failed to assign rider:', err)
+      throw err
+    }
   }
 
-  const assignCallCentreAgentToOrders = async (ordersList, agentId) => {
-    // Make API call to assign call centre agent
-    console.log('Assigning call centre agent:', agentId, 'to orders:', ordersList)
+  const assignCallCentreAgentToOrders = async (orders = [], agentId) => {
+    if (!orders.length || !agentId) {
+      throw new Error('Orders and agentId are required')
+    }
+    try {
+      await axios.post('/api/v1/orders/assign-agent', {
+        order_ids: orders,
+        agent_id: agentId
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      console.log('Assigned call centre agent:', agentId, 'to orders:', orders)
+    } catch (err) {
+      console.error('Failed to assign agent:', err)
+      throw err
+    }
   }
 
-  const updateOrdersStatus = async (ordersList, data) => {
-    // Make API call to update status
-    console.log('Updating status for orders:', ordersList, 'with data:', data)
+  const updateOrdersStatus = async (orders = [], status) => {
+    if (!orders.length || !status) {
+      throw new Error('Orders and status are required')
+    }
+    try {
+      await axios.post('/api/v1/orders/update-status', {
+        order_ids: orders,
+        status: status
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      console.log('Updated status for orders:', orders, 'to status:', status)
+    } catch (err) {
+      console.error('Failed to update status:', err)
+      throw err
+    }
   }
 
-  const deleteOrders = async (ordersList) => {
+  const deleteOrders = async (orders) => {
     // Make API call to delete orders
-    console.log('Deleting orders:', ordersList)
+    console.log('Deleting orders:', orders)
   }
 
   // Return all state, getters, and actions

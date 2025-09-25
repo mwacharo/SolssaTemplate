@@ -83,6 +83,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/bulk-print-waybills', [OrderController::class, 'printWaybill'])->name('orders.bulk-print-waybills');
     Route::get('/orders/{id}/timeline', [OrderController::class, 'timeline']);
 
+    // assign delivery agent
+    Route::post('/orders/assign-rider', [OrderController::class, 'assignRider']);
+    // assign call centre agent
+    Route::post('/orders/assign-agent', [OrderController::class, 'assignAgent']);
+    // update status
+    Route::post('/orders/update-status', [OrderController::class, 'updateStatus']);    
+
 
 
 
