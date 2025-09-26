@@ -32,21 +32,11 @@
 
               <!-- add status -->
 
-                <v-col cols="12" md="6">
-                <v-select
-                  v-model="orderEdit.status_id"
-                  :items="statusOptionsStore"
-                  item-title="name"
-                  item-value="id"
-                  label="Status"
-                  prepend-inner-icon="mdi-flag"
-                  variant="outlined"
-                  density="comfortable"
-                  :rules="[rules.required]"
-                  clearable
-                  placeholder="Select status"
-                />
-                </v-col>
+              <v-col cols="12" md="6">
+                <v-select v-model="orderEdit.status_id" :items="statusOptionsStore" item-title="name" item-value="id"
+                  label="Status" prepend-inner-icon="mdi-flag" variant="outlined" density="comfortable"
+                  :rules="[rules.required]" clearable placeholder="Select status" />
+              </v-col>
 
               <v-col cols="12" md="6">
                 <v-select v-model="orderEdit.platform" :items="platformOptions" label="Platform"
@@ -186,9 +176,12 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
+
+
                   <v-text-field v-model="orderEdit.customer_address.phone" label="Phone Number"
                     prepend-inner-icon="mdi-phone" variant="outlined" density="comfortable"
-                    :rules="[rules.required, rules.phone]" />
+                    :rules="[rules.required, rules.phone]" @click:prepend-inner="openNewCallDialog"
+                    readonly-on-click></v-text-field>
                 </v-col>
 
                 <v-col cols="12" md="6">
@@ -295,7 +288,8 @@
 
 
               <v-col cols="12" md="4">
-                <v-text-field :model-value="(parseFloat(calculateTotal()) + parseFloat(orderEdit.shipping_charges || 0)).toFixed(2)"
+                <v-text-field
+                  :model-value="(parseFloat(calculateTotal()) + parseFloat(orderEdit.shipping_charges || 0)).toFixed(2)"
                   label="Grand Total" variant="outlined" density="comfortable" readonly />
               </v-col>
 
@@ -331,7 +325,12 @@
 import { ref, computed, toRefs, watch } from 'vue'
 import { useOrderStore } from '@/stores/orderStore'
 
-const emit = defineEmits(['order-saved', 'dialog-closed'])
+const emit = defineEmits(['order-saved', 'dialog-closed', 'open-call-dialog'])
+
+
+const openNewCallDialog = () => {
+  emit('open-call-dialog', orderEdit.value.customer_address.phone)
+}
 
 const orderStore = useOrderStore()
 
@@ -698,11 +697,11 @@ const calculateTotal = () => {
   if (!orderEdit.value.order_items || orderEdit.value.order_items.length === 0) {
     return '0.00';
   }
-  
+
   const itemsTotal = orderEdit.value.order_items.reduce((sum, item) => {
     return sum + (Number(item.quantity) * Number(item.unit_price));
   }, 0);
-  
+
   return itemsTotal.toFixed(2);
 };
 
@@ -727,6 +726,8 @@ const removeOrderItem = (index) => {
   orderEdit.value.order_items.splice(index, 1);
   updateTotals();
 };
+
+
 
 // Add watchers to update totals when item quantities or prices change
 watch(() => orderEdit.value.order_items, (newItems) => {

@@ -418,10 +418,28 @@
         </div>
       </div>
     </div>
-    <CallDialogs />
+    <!-- <CallDialogs /> -->
+
+     <!-- <CallDialogs
+      v-model:is-open="isNewCallDialog"
+      :phone="newCallPhone"
+      @close="isNewCallDialog = false"
+    /> -->
+
+       <!-- Call Dialog Component -->
+    <CallDialogs
+      v-model="callDialogType"
+      :call-data="{ phone: newCallPhone }"
+      @call-made="onCallMade"
+      @call-transferred="onCallTransferred"
+      @agent-called="onAgentCalled"
+    />
 
 
-    <OrderForm :is-create="isCreateMode" @order-saved="onOrderSaved" @dialog-closed="onDialogClosed" />
+    <OrderForm :is-create="isCreateMode" @order-saved="onOrderSaved" 
+    @dialog-closed="onDialogClosed"
+      @open-call-dialog="handleOpenCallDialog"
+    />
     <!-- Reusable Dialog -->
     <!-- <BulkAction :show="orderStore.bulkActionDialog" :type="orderStore.dialogType" :title="orderStore.dialogTitle"
       :selectedOrders="orderStore.selectedOrders" :deliveryMen="deliveryMen" :callCentreAgents="callCentreAgents"
@@ -440,15 +458,49 @@ import { useCallCenterStore } from '@/stores/callCenter';
 import OrderForm from './OrderForm.vue';
 
 import BulkAction from './BulkAction.vue';
+import CallDialogs from '@/Pages/CallCenter/Dialogs/CallDialogs.vue';
 
-// import CallDialogs from "@/components/CallDialogs.vue";
 // orderjourney
+
+
+
 
 
 // Initialize store
 const orderStore = useOrderStore()
 
 const createMode = ref(false)
+
+const isNewCallDialog = ref(false)
+const newCallPhone = ref('')
+const isCreateMode = ref(false)
+const callDialogType = ref('')
+
+
+
+// Handle opening call dialog from order form
+const handleOpenCallDialog = (phoneNumber) => {
+  newCallPhone.value = phoneNumber || ''
+  callDialogType.value = 'newCall' // This opens the "Make New Call" dialog
+}
+
+// Handle call dialog events
+const onCallMade = (callData) => {
+  console.log('Call made:', callData)
+  // You can add logic here to update the order status or add notes
+  // For example, mark that customer was contacted
+  callDialogType.value = null // Close dialog
+}
+
+const onCallTransferred = (transferData) => {
+  console.log('Call transferred:', transferData)
+  callDialogType.value = null // Close dialog
+}
+
+const onAgentCalled = (agentData) => {
+  console.log('Agent called:', agentData)
+  callDialogType.value = null // Close dialog
+}
 
 // Dialog state
 const dialog = ref({
