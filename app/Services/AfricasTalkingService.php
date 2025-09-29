@@ -709,12 +709,9 @@ class AfricasTalkingService
 
     return $response;
 }
-
-
-
 private function generateDialResponse(string $clientDialedNumber): string
 {
-    $authUser = Aut::user();
+    $authUser = Auth::user();
 
     if (!$authUser || !$authUser->country_id) {
         Log::error("Authenticated user missing or has no country_id", [
@@ -723,7 +720,6 @@ private function generateDialResponse(string $clientDialedNumber): string
         throw new \Exception("Authenticated user does not have a country assigned.");
     }
 
-    // 🔎 Fetch country phone code for authenticated user
     $country = DB::table('countries')->where('id', $authUser->country_id)->first();
 
     if (!$country) {
@@ -731,8 +727,16 @@ private function generateDialResponse(string $clientDialedNumber): string
         throw new \Exception("Country not found for authenticated user");
     }
 
-    // ✅ Normalize with user's country phone code
-    $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
+       // 🔎 If it's a SIP client (e.g. BoxleoKenya.client_xxx), bypass normalization
+    if (str_contains($clientDialedNumber, '.client_')) {
+        $cleanNumber = $clientDialedNumber;
+        $type = 'sip_client';
+    }
+    else {
+        // ✅ Normalize real phone numbers using E.164
+        $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
+        $type = 'phone_number';
+    }
 
     $response  = '<?xml version="1.0" encoding="UTF-8"?>';
     $response .= '<Response>';
@@ -742,7 +746,8 @@ private function generateDialResponse(string $clientDialedNumber): string
     Log::info("Generated outgoing dial response", [
         'clientDialedNumber' => $clientDialedNumber,
         'cleanNumber' => $cleanNumber,
-        'country' => $country->name
+        'country' => $country->name,
+        'type' => $type
     ]);
 
     return $response;
