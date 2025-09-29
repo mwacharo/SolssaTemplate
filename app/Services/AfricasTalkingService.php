@@ -1056,7 +1056,8 @@ class AfricasTalkingService
                     // ✅ Save token + FULL client_name (with prefix) in DB
                     $user->update([
                         'token' => $response['token'],
-                        'client_name' => $clientNameForApi // Store "BoxleoKenya.Mwacharo"
+                        // 'client_name' => $clientNameForApi // Store "BoxleoKenya.Mwacharo"
+                        'client_name' => $username . '.' . $user->username,
                     ]);
 
                     Log::info("Token updated successfully for user {$user->id}");
@@ -1064,7 +1065,7 @@ class AfricasTalkingService
                     $updatedTokens[] = [
                         'user_id'     => $user->id,
                         'token'       => $response['token'],
-                        'clientName'  => $clientNameForApi, // Full prefixed value stored in DB
+                        'clientName'  => $user->client_name, // Full prefixed value stored in DB
                         'incoming'    => $response['incoming'] ?? null,
                         'outgoing'    => $response['outgoing'] ?? null,
                         'lifeTimeSec' => $response['lifeTimeSec'] ?? $lifeTime,
