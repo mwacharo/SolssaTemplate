@@ -375,32 +375,32 @@ class AfricasTalkingService
 
 
 
-     private function getOrderAndAgent(string $callerNumber): array|null
-{
-    if (!class_exists(Order::class)) {
-        return null;
+    private function getOrderAndAgent(string $callerNumber): array|null
+    {
+        if (!class_exists(Order::class)) {
+            return null;
+        }
+
+        // Get the most recent order by caller with agent assigned
+        $order = Order::whereHas('client', function ($query) use ($callerNumber) {
+            $query->where('phone_number', $callerNumber);
+        })
+            ->whereNotNull('agent_id')
+            ->with('agent', 'client')
+            ->latest()
+            ->first();
+
+        // Validate order and check if agent is available
+        if (!$order || !$order->agent || $order->agent->status !== 'available') {
+            return null;
+        }
+
+        // Return both order and agent
+        return [
+            'order' => $order,
+            'agent' => $order->agent,
+        ];
     }
-
-    // Get the most recent order by caller with agent assigned
-    $order = Order::whereHas('client', function ($query) use ($callerNumber) {
-        $query->where('phone_number', $callerNumber);
-    })
-    ->whereNotNull('agent_id')
-    ->with('agent', 'client')
-    ->latest()
-    ->first();
-
-    // Validate order and check if agent is available
-    if (!$order || !$order->agent || $order->agent->status !== 'available') {
-        return null;
-    }
-
-    // Return both order and agent
-    return [
-        'order' => $order,
-        'agent' => $order->agent,
-    ];
-}
 
 
     /**
@@ -444,39 +444,38 @@ class AfricasTalkingService
 
 
     private function assignAgent(User $agent, string $sessionId): string
-{
-    try {
-        Log::info("Assigning agent", [
-            'agent_id' => $agent->id,
-            'phone_number' => $agent->phone_number,
-            'sessionId' => $sessionId
-        ]);
+    {
+        try {
+            Log::info("Assigning agent", [
+                'agent_id' => $agent->id,
+                'phone_number' => $agent->phone_number,
+                'sessionId' => $sessionId
+            ]);
 
-        $agent->update([
-            'status' => 'busy',
-            'sessionId' => $sessionId ?: uniqid()
-        ]);
+            $agent->update([
+                'status' => 'busy',
+                'sessionId' => $sessionId ?: uniqid()
+            ]);
 
-        $this->updateCallHistory($sessionId, ['user_id' => $agent->id]);
+            $this->updateCallHistory($sessionId, ['user_id' => $agent->id]);
 
-        Log::info("Agent assigned successfully", [
-            'agent_id' => $agent->id,
-            'sessionId' => $sessionId
-        ]);
+            Log::info("Agent assigned successfully", [
+                'agent_id' => $agent->id,
+                'sessionId' => $sessionId
+            ]);
 
-        // Always return a string (never null)
-        // return (string) ($agent->username ?? $agent->phone_number ?? '');
-                return (string) ($agent->client_name ?? $agent->phone_number ?? '');
-
-    } catch (Exception $e) {
-        Log::error("Error assigning agent", [
-            'error' => $e->getMessage(),
-            'agent_id' => $agent->id ?? null,
-            'sessionId' => $sessionId
-        ]);
-        return '';
+            // Always return a string (never null)
+            // return (string) ($agent->username ?? $agent->phone_number ?? '');
+            return (string) ($agent->client_name ?? $agent->phone_number ?? '');
+        } catch (Exception $e) {
+            Log::error("Error assigning agent", [
+                'error' => $e->getMessage(),
+                'agent_id' => $agent->id ?? null,
+                'sessionId' => $sessionId
+            ]);
+            return '';
+        }
     }
-}
 
     /**
      * Generate dynamic IVR menu from database
@@ -546,8 +545,8 @@ class AfricasTalkingService
             "You selected {$ivrOption->description}. Connecting your call.",
             // route to soft phone if no real phone number is set
             $ivrOption->phone_number ?? $ivrOption->forward_number ??
-            config('voice.default_forward_number') ??
-            $ivrOption->forward_number ?? config('voice.default_forward_number')
+                config('voice.default_forward_number') ??
+                $ivrOption->forward_number ?? config('voice.default_forward_number')
         );
     }
 
@@ -601,12 +600,12 @@ class AfricasTalkingService
         }
 
 
-                // redirecting to soft phone
+        // redirecting to soft phone
 
         if (!$user && $ivrOption->forward_number) {
             $user = User::where('phone_number', $ivrOption->forward_number)->first();
 
-        //  $user = User::where('username', $ivrOption->forward_number)->first();
+            //  $user = User::where('username', $ivrOption->forward_number)->first();
 
         }
 
@@ -665,95 +664,94 @@ class AfricasTalkingService
      */
 
     private function createDialResponse(string $phoneNumber): void
-{
-    $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-    $ringbackAttr = $this->config['urls']['ringback_tone']
-        ? ' ringbackTone="' . $this->config['urls']['ringback_tone'] . '"'
-        : '';
+    {
+        $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
+        $ringbackAttr = $this->config['urls']['ringback_tone']
+            ? ' ringbackTone="' . $this->config['urls']['ringback_tone'] . '"'
+            : '';
 
-    // Add space before each attribute if it’s not empty to avoid malformed tags
-    $attributes = trim("$recordAttr$ringbackAttr");
+        // Add space before each attribute if it’s not empty to avoid malformed tags
+        $attributes = trim("$recordAttr$ringbackAttr");
 
-    $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-        . "<Response>\n"
-        . "  <Dial $attributes sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
-        . "</Response>";
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            . "<Response>\n"
+            . "  <Dial $attributes sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
+            . "</Response>";
 
-    header('Content-Type: application/xml');
-    echo $xml;
-    exit;
-}
+        header('Content-Type: application/xml');
+        echo $xml;
+        exit;
+    }
 
 
     /**
      * Generate dial response for outgoing calls
      */
-  private function generateDialResponsex(string $clientDialedNumber): string
-{
-    // Ensure number starts with +254... format
-    $cleanNumber = ltrim(trim($clientDialedNumber));
+    private function generateDialResponsex(string $clientDialedNumber): string
+    {
+        // Ensure number starts with +254... format
+        $cleanNumber = ltrim(trim($clientDialedNumber));
 
-    if (!str_starts_with($cleanNumber, '+')) {
-        $cleanNumber = '+'.$cleanNumber;
-    }
+        if (!str_starts_with($cleanNumber, '+')) {
+            $cleanNumber = '+' . $cleanNumber;
+        }
 
-    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-    $response .= '<Response>';
-    $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
-    $response .= '</Response>';
+        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+        $response .= '<Response>';
+        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
+        $response .= '</Response>';
 
-    Log::info("Generated outgoing dial response", [
-        'clientDialedNumber' => $clientDialedNumber,
-        'cleanNumber' => $cleanNumber
-    ]);
-
-    return $response;
-}
-private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
-{
-    $agent = User::where('client_name', $callerNumber)->first();
-
-    if (!$agent || !$agent->country_id) {
-        Log::error("Agent not found or missing country_id", [
-            'callerNumber' => $callerNumber,
-            'agent' => $agent
+        Log::info("Generated outgoing dial response", [
+            'clientDialedNumber' => $clientDialedNumber,
+            'cleanNumber' => $cleanNumber
         ]);
-        throw new \Exception("Cannot resolve agent/country for outgoing call");
+
+        return $response;
     }
+    private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
+    {
+        $agent = User::where('client_name', $callerNumber)->first();
 
-    // Get country phone code
-    $country = DB::table('countries')->where('id', $agent->country_id)->first();
+        if (!$agent || !$agent->country_id) {
+            Log::error("Agent not found or missing country_id", [
+                'callerNumber' => $callerNumber,
+                'agent' => $agent
+            ]);
+            throw new \Exception("Cannot resolve agent/country for outgoing call");
+        }
 
-    if (!$country) {
-        Log::error("Country not found", ['country_id' => $agent->country_id]);
-        throw new \Exception("Country not found for authenticated user");
+        // Get country phone code
+        $country = DB::table('countries')->where('id', $agent->country_id)->first();
+
+        if (!$country) {
+            Log::error("Country not found", ['country_id' => $agent->country_id]);
+            throw new \Exception("Country not found for authenticated user");
+        }
+
+        // 🔎 If it's a SIP client (e.g. BoxleoKenya.client_xxx), bypass normalization
+        if (str_contains($clientDialedNumber, '.client_')) {
+            $cleanNumber = $clientDialedNumber;
+            $type = 'sip_client';
+        } else {
+            // ✅ Normalize real phone numbers using E.164
+            $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
+            $type = 'phone_number';
+        }
+
+        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+        $response .= '<Response>';
+        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
+        $response .= '</Response>';
+
+        Log::info("Generated outgoing dial response", [
+            'clientDialedNumber' => $clientDialedNumber,
+            'cleanNumber' => $cleanNumber,
+            'country' => $country->name,
+            'type' => $type
+        ]);
+
+        return $response;
     }
-
-       // 🔎 If it's a SIP client (e.g. BoxleoKenya.client_xxx), bypass normalization
-    if (str_contains($clientDialedNumber, '.client_')) {
-        $cleanNumber = $clientDialedNumber;
-        $type = 'sip_client';
-    }
-    else {
-        // ✅ Normalize real phone numbers using E.164
-        $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
-        $type = 'phone_number';
-    }
-
-    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-    $response .= '<Response>';
-    $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
-    $response .= '</Response>';
-
-    Log::info("Generated outgoing dial response", [
-        'clientDialedNumber' => $clientDialedNumber,
-        'cleanNumber' => $cleanNumber,
-        'country' => $country->name,
-        'type' => $type
-    ]);
-
-    return $response;
-}
 
 
     /**
@@ -902,7 +900,7 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
             $payload = $request->all();
 
             // Update call history with event data
-            $callHistory=CallHistory::updateOrCreate(
+            $callHistory = CallHistory::updateOrCreate(
                 ['sessionId' => $payload['sessionId'] ?? null],
                 [
                     'callerNumber' => $payload['callerNumber'] ?? null,
@@ -927,21 +925,21 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
             );
 
 
-             // ✅ Dispatch download job if recording exists
-        if (!empty($payload['recordingUrl'])) {
-            Log::info('Dispatching DownloadCallRecordingJob', [
-            'call_history_id' => $callHistory->id,
-            'recordingUrl' => $payload['recordingUrl']
-            ]);
-            DownloadCallRecordingJob::dispatch(
-                $callHistory->id,
-                $payload['recordingUrl']
-            )->delay(now()->addMinutes(3));
-            // ->onQueue('recordings'); // Optional: use a dedicated queue
-            Log::info('DownloadCallRecordingJob dispatched successfully', [
-            'call_history_id' => $callHistory->id
-            ]);
-        }
+            // ✅ Dispatch download job if recording exists
+            if (!empty($payload['recordingUrl'])) {
+                Log::info('Dispatching DownloadCallRecordingJob', [
+                    'call_history_id' => $callHistory->id,
+                    'recordingUrl' => $payload['recordingUrl']
+                ]);
+                DownloadCallRecordingJob::dispatch(
+                    $callHistory->id,
+                    $payload['recordingUrl']
+                )->delay(now()->addMinutes(3));
+                // ->onQueue('recordings'); // Optional: use a dedicated queue
+                Log::info('DownloadCallRecordingJob dispatched successfully', [
+                    'call_history_id' => $callHistory->id
+                ]);
+            }
 
 
             // Check if call is completed and reset agent status
@@ -1012,86 +1010,88 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
     /**
      * Generate capability tokens for WebRTC
      */
-  public function generateTokens(?array $userIds = null): array
-{
-    $apiKey = $this->config['africastalking']['api_key'];
-    $username = $this->config['africastalking']['username'];
-    $phoneNumber = $this->config['africastalking']['phone'];
+    public function generateTokens(?array $userIds = null): array
+    {
+        $apiKey = $this->config['africastalking']['api_key'];
+        $username = $this->config['africastalking']['username'];
+        $phoneNumber = $this->config['africastalking']['phone'];
 
-    if (!$username || !$apiKey) {
-        throw new Exception('Africa\'s Talking credentials are missing');
-    }
-
-    $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
-    $updatedTokens = [];
-    $failedUpdates = [];
-
-    foreach ($users as $user) {
-        try {
-            DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, &$updatedTokens) {
-                // ensure a clientName exists and is unique
-                if (empty($user->client_name)) {
-                    $user->client_name = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
-                    $user->save();
-                }
-
-                // SIP format: username.client_name
-                $clientName = $username . '.' . str_replace(' ', '', $user->client_name);
-
-                $incoming = $user->can_receive_calls ?? true;
-                $outgoing = $user->can_call ?? true;
-
-                $payload = [
-                    'username'    => $username,
-                    'clientName'  => $clientName,
-                    'phoneNumber' => $phoneNumber,
-                    'incoming'    => $incoming ? "true" : "false",
-                    'outgoing'    => $outgoing ? "true" : "false",
-                    'lifeTimeSec' => "86400"
-                ];
-
-                $response = $this->makeTokenRequest($payload, $apiKey);
-
-                if (!isset($response['token'])) {
-                    throw new Exception($response['message'] ?? 'Unknown API error');
-                }
-
-                // update token and client_name safely
-                $user->updateOrFail([
-                    'token'       => $response['token'],
-                    'client_name' => $clientName,
-                ]);
-
-                Log::info("Token updated successfully for user {$user->id}");
-
-                $updatedTokens[] = [
-                    'user_id'     => $user->id,
-                    'token'       => $response['token'],
-                    'clientName'  => $clientName,
-                    'incoming'    => $response['incoming'] ?? null,
-                    'outgoing'    => $response['outgoing'] ?? null,
-                    'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
-                    'message'     => $response['message'] ?? null,
-                    'success'     => $response['success'] ?? false
-                ];
-            });
-        } catch (Exception $e) {
-            Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
-
-            $failedUpdates[] = [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage()
-            ];
+        if (!$username || !$apiKey) {
+            throw new Exception('Africa\'s Talking credentials are missing');
         }
+
+        $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
+        $updatedTokens = [];
+        $failedUpdates = [];
+
+        foreach ($users as $user) {
+            try {
+                
+DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, &$updatedTokens) {
+    // Ensure client_name exists ONCE (never overwrite if already set)
+    if (empty($user->client_name)) {
+        $user->client_name = 'client_' . $user->id; // no hash if you want it permanent
+        $user->save();
     }
 
-    return [
-        'updatedTokens' => $updatedTokens,
-        'failedUpdates' => $failedUpdates,
-        'totalUpdated'  => count($updatedTokens),
-        'totalFailed'   => count($failedUpdates),
+    // SIP format for API (never save this full format in DB)
+    $clientName = $username . '.' . str_replace(' ', '', $user->client_name);
+
+    $incoming = $user->can_receive_calls ?? true;
+    $outgoing = $user->can_call ?? true;
+
+    $payload = [
+        'username'    => $username,
+        'clientName'  => $clientName,
+        'phoneNumber' => $phoneNumber,
+        'incoming'    => $incoming ? "true" : "false",
+        'outgoing'    => $outgoing ? "true" : "false",
+        'lifeTimeSec' => "86400"
     ];
-}
+
+    $response = $this->makeTokenRequest($payload, $apiKey);
+
+    if (!isset($response['token'])) {
+        throw new Exception($response['message'] ?? 'Unknown API error');
+    }
+
+    // ✅ Only update token in DB, not the prefixed clientName
+    $user->updateOrFail([
+        'token' => $response['token'],
+    ]);
+
+    Log::info("Token updated successfully for user {$user->id}");
+
+    $updatedTokens[] = [
+        'user_id'     => $user->id,
+        'token'       => $response['token'],
+        'clientName'  => $clientName, // still return SIP format for frontend
+        'incoming'    => $response['incoming'] ?? null,
+        'outgoing'    => $response['outgoing'] ?? null,
+        'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
+        'message'     => $response['message'] ?? null,
+        'success'     => $response['success'] ?? false
+    ];
+});
+
+
+            } catch (Exception $e) {
+                Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
+
+                $failedUpdates[] = [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage()
+                ];
+            }
+        }
+
+        return [
+            'updatedTokens' => $updatedTokens,
+            'failedUpdates' => $failedUpdates,
+            'totalUpdated'  => count($updatedTokens),
+            'totalFailed'   => count($failedUpdates),
+        ];
+    }
 
     /**
      * Make token request to Africa's Talking API
@@ -1336,7 +1336,7 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
             $sortBy = $filters['sort_by'] ?? 'created_at';
             $sortDesc = $filters['sort_desc'] ?? true;
 
-            $query = CallHistory::with('agent', 'ivrOption','calltranscripts');
+            $query = CallHistory::with('agent', 'ivrOption', 'calltranscripts');
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -1375,28 +1375,28 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
 
 
     /**
- * Normalize phone numbers into +E.164 format
- */
-private function normalizePhoneNumber(string $number, string $phoneCode): string
-{
-    // Remove spaces, dashes, brackets
-    $number = preg_replace('/[\s\-\(\)]/', '', $number);
+     * Normalize phone numbers into +E.164 format
+     */
+    private function normalizePhoneNumber(string $number, string $phoneCode): string
+    {
+        // Remove spaces, dashes, brackets
+        $number = preg_replace('/[\s\-\(\)]/', '', $number);
 
-    // Already in E.164 format
-    if (str_starts_with($number, '+')) {
-        return $number;
+        // Already in E.164 format
+        if (str_starts_with($number, '+')) {
+            return $number;
+        }
+
+        // Local format starting with 0 → replace with country code
+        if (preg_match('/^0\d+$/', $number)) {
+            return '+' . $phoneCode . substr($number, 1);
+        }
+
+        // If it’s just digits
+        if (preg_match('/^\d+$/', $number)) {
+            return '+' . $phoneCode . $number;
+        }
+
+        throw new \Exception("Invalid phone number format: {$number}");
     }
-
-    // Local format starting with 0 → replace with country code
-    if (preg_match('/^0\d+$/', $number)) {
-        return '+' . $phoneCode . substr($number, 1);
-    }
-
-    // If it’s just digits
-    if (preg_match('/^\d+$/', $number)) {
-        return '+' . $phoneCode . $number;
-    }
-
-    throw new \Exception("Invalid phone number format: {$number}");
-}
 }
