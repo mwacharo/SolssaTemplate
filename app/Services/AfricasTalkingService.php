@@ -1010,119 +1010,141 @@ class AfricasTalkingService
     /**
      * Generate capability tokens for WebRTC
      */
-    public function generateTokens(?array $userIds = null): array
-    {
-        $apiKey = $this->config['africastalking']['api_key'];
-        $username = $this->config['africastalking']['username'];
-        $phoneNumber = $this->config['africastalking']['phone'];
+  public function generateTokens(?array $userIds = null): array
+{
+    $apiKey      = $this->config['africastalking']['api_key'];
+    $username    = $this->config['africastalking']['username'];
+    $phoneNumber = $this->config['africastalking']['phone'];
+    $lifeTime    = (string) config('africastalking.token_lifetime', 86400); // default 24h
 
-        if (!$username || !$apiKey) {
-            throw new Exception('Africa\'s Talking credentials are missing');
-        }
-
-        $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
-        $updatedTokens = [];
-        $failedUpdates = [];
-
-        foreach ($users as $user) {
-            try {
-
-                DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, &$updatedTokens) {
-                    // Ensure username exists ONCE (never overwrite if already set)
-                    if (empty($user->username)) {
-                        $user->username = 'client_' . $user->id; // no hash if you want it permanent
-                        $user->save();
-                    }
-
-                    // SIP format for API (never save this full format in DB)
-                    // $clientName = $username . '.' . str_replace(' ', '', $user->username);
-
-                    $clientName = $user->username;
-
-                    $incoming = $user->can_receive_calls ?? true;
-                    $outgoing = $user->can_call ?? true;
-
-                    $payload = [
-                        'username'    => $username,
-                        'clientName'  => $clientName,
-                        'phoneNumber' => $phoneNumber,
-                        'incoming'    => $incoming ? "true" : "false",
-                        'outgoing'    => $outgoing ? "true" : "false",
-                        'lifeTimeSec' => "86400"
-                    ];
-
-                    $response = $this->makeTokenRequest($payload, $apiKey);
-
-                    if (!isset($response['token'])) {
-                        throw new Exception($response['message'] ?? 'Unknown API error');
-                    }
-
-                    // ✅ Only update token in DB, not the prefixed clientName
-                    $user->updateOrFail([
-                        'token' => $response['token'],
-                        // 
-                        'client_name' => $response['clientName'] , // do NOT save full SIP format in DB
-
-                    ]);
-
-                    Log::info("Token updated successfully for user {$user->id}");
-
-                    $updatedTokens[] = [
-                        'user_id'     => $user->id,
-                        'token'       => $response['token'],
-                        'clientName'  => $response['clientName'] ?? null,
-                        'incoming'    => $response['incoming'] ?? null,
-                        'outgoing'    => $response['outgoing'] ?? null,
-                        'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
-                        'message'     => $response['message'] ?? null,
-                        'success'     => $response['success'] ?? false
-                    ];
-                });
-            } catch (Exception $e) {
-                Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
-
-                $failedUpdates[] = [
-                    'user_id' => $user->id,
-                    'error'   => $e->getMessage()
-                ];
-            }
-        }
-
-        return [
-            'updatedTokens' => $updatedTokens,
-            'failedUpdates' => $failedUpdates,
-            'totalUpdated'  => count($updatedTokens),
-            'totalFailed'   => count($failedUpdates),
-        ];
+    if (!$username || !$apiKey) {
+        throw new Exception("Africa's Talking credentials are missing");
     }
+
+    $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
+    $updatedTokens = [];
+    $failedUpdates = [];
+
+    foreach ($users as $user) {
+        try {
+            DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, $lifeTime, &$updatedTokens) {
+                // Ensure client_name exists in DB
+                if (empty($user->client_name)) {
+                    $user->client_name = 'client_' . $user->id;
+                    $user->save();
+                }
+
+                // Build AT clientName for API (never store this prefixed value in DB)
+                $clientNameForApi = $username . '.' . $user->client_name;
+
+                $payload = [
+                    'username'    => $username,
+                    'clientName'  => $clientNameForApi,
+                    'phoneNumber' => $phoneNumber,
+                    'incoming'    => ($user->can_receive_calls ?? true) ? "true" : "false",
+                    'outgoing'    => ($user->can_call ?? true) ? "true" : "false",
+                    'lifeTimeSec' => $lifeTime,
+                ];
+
+                $response = $this->makeTokenRequest($payload, $apiKey);
+
+                if (empty($response['token'])) {
+                    throw new Exception("AT Error: " . ($response['message'] ?? 'Unknown API error'));
+                }
+
+                // ✅ Save token + clean client_name in DB
+                $user->update([
+                    'token' => $response['token'],
+                ]);
+
+                Log::info("Token updated successfully for user {$user->id}");
+
+                $updatedTokens[] = [
+                    'user_id'     => $user->id,
+                    'token'       => $response['token'],
+                    'clientName'  => $user->client_name, // clean DB value
+                    'clientNameApi' => $clientNameForApi, // API value used
+                    'incoming'    => $response['incoming'] ?? null,
+                    'outgoing'    => $response['outgoing'] ?? null,
+                    'lifeTimeSec' => $response['lifeTimeSec'] ?? $lifeTime,
+                    'message'     => $response['message'] ?? null,
+                    'success'     => $response['success'] ?? true,
+                ];
+            });
+        } catch (Exception $e) {
+            Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
+
+            $failedUpdates[] = [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ];
+        }
+    }
+
+    return [
+        'updatedTokens' => $updatedTokens,
+        'failedUpdates' => $failedUpdates,
+        'totalUpdated'  => count($updatedTokens),
+        'totalFailed'   => count($failedUpdates),
+    ];
+}
+
+/**
+ * Make token request to Africa's Talking API
+ */
+private function makeTokenRequest(array $payload, string $apiKey): array
+{
+    $url = 'https://webrtc.africastalking.com/capability-token/request';
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'apiKey: ' . $apiKey,
+        'Accept: application/json',
+        'Content-Type: application/json'
+    ]);
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        throw new Exception('cURL Error: ' . curl_error($ch));
+    }
+
+    curl_close($ch);
+
+    return json_decode($response, true) ?? [];
+}
+
 
     /**
      * Make token request to Africa's Talking API
      */
-    private function makeTokenRequest(array $payload, string $apiKey): array
-    {
-        $url = 'https://webrtc.africastalking.com/capability-token/request';
+    // private function makeTokenRequest(array $payload, string $apiKey): array
+    // {
+    //     $url = 'https://webrtc.africastalking.com/capability-token/request';
 
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'apiKey: ' . $apiKey,
-            'Accept: application/json',
-            'Content-Type: application/json'
-        ]);
+    //     $ch = curl_init($url);
+    //     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //     curl_setopt($ch, CURLOPT_POST, true);
+    //     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    //     curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    //         'apiKey: ' . $apiKey,
+    //         'Accept: application/json',
+    //         'Content-Type: application/json'
+    //     ]);
 
-        $response = curl_exec($ch);
+    //     $response = curl_exec($ch);
 
-        if (curl_errno($ch)) {
-            throw new Exception('cURL Error: ' . curl_error($ch));
-        }
+    //     if (curl_errno($ch)) {
+    //         throw new Exception('cURL Error: ' . curl_error($ch));
+    //     }
 
-        curl_close($ch);
+    //     curl_close($ch);
 
-        return json_decode($response, true) ?? [];
-    }
+    //     return json_decode($response, true) ?? [];
+    // }
 
     /**
      * Upload media file for voice prompts
