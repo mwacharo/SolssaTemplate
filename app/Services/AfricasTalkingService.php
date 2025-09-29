@@ -686,22 +686,28 @@ class AfricasTalkingService
     /**
      * Generate dial response for outgoing calls
      */
-    private function generateDialResponse(string $clientDialedNumber): string
-    {
-        $cleanNumber = preg_replace('/^\+/', '', trim($clientDialedNumber));
+  private function generateDialResponse(string $clientDialedNumber): string
+{
+    // Ensure number starts with +254... format
+    $cleanNumber = ltrim(trim($clientDialedNumber));
 
-        $response = '<?xml version="1.0" encoding="UTF-8"?>';
-        $response .= '<Response>';
-        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"/></Dial>';
-        $response .= '</Response>';
-
-        Log::info("Generated outgoing dial response", [
-            'clientDialedNumber' => $clientDialedNumber,
-            'cleanNumber' => $cleanNumber
-        ]);
-
-        return $response;
+    if (!str_starts_with($cleanNumber, '+')) {
+        $cleanNumber = '+'.$cleanNumber;
     }
+
+    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+    $response .= '<Response>';
+    $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
+    $response .= '</Response>';
+
+    Log::info("Generated outgoing dial response", [
+        'clientDialedNumber' => $clientDialedNumber,
+        'cleanNumber' => $cleanNumber
+    ]);
+
+    return $response;
+}
+
 
     /**
      * Create voicemail recording response
