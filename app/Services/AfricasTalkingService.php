@@ -1011,81 +1011,84 @@ private function generateDialResponse(string $clientDialedNumber): string
      * Generate capability tokens for WebRTC
      */
     public function generateTokens(?array $userIds = null): array
-    {
+{
+    $apiKey = $this->config['africastalking']['api_key'];
+    $username = $this->config['africastalking']['username'];
+    $phoneNumber = $this->config['africastalking']['phone'];
 
-
-        $apiKey = $this->config['africastalking']['api_key'];
-        $username = $this->config['africastalking']['username'];
-        $phoneNumber = $this->config['africastalking']['phone'];
-
-        if (!$username || !$apiKey) {
-            throw new Exception('Africa\'s Talking credentials are missing');
-        }
-
-        $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
-        $updatedTokens = [];
-        $failedUpdates = [];
-
-        foreach ($users as $user) {
-            try {
-                // Ensure unique client name
-                if (empty($user->username)) {
-                    $user->username = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
-                    $user->save();
-                }
-
-                $clientName = str_replace(' ', '', $user->username);
-                $incoming = $user->can_receive_calls ?? true;
-                $outgoing = $user->can_call ?? true;
-
-                $payload = [
-                    'username' => $username,
-                    'clientName' => $clientName,
-                    'phoneNumber' => $phoneNumber,
-                    'incoming' => $incoming ? "true" : "false",
-                    'outgoing' => $outgoing ? "true" : "false",
-                    'lifeTimeSec' => "86400"
-                ];
-
-                $response = $this->makeTokenRequest($payload, $apiKey);
-
-                if (!isset($response['token'])) {
-                    throw new Exception($response['message'] ?? 'Unknown API error');
-                }
-
-                $user->updateOrFail(['token' => $response['token']]);
-                // update username
-                $user->updateOrFail(['username' => $username . '.' . $user->username]);
-
-                Log::info("Token updated successfully for user {$user->id}");
-
-                $updatedTokens[] = [
-                    'user_id' => $user->id,
-                    'token' => $response['token'],
-                    'clientName' => $response['clientName'] ?? $clientName,
-                    'incoming' => $response['incoming'] ?? null,
-                    'outgoing' => $response['outgoing'] ?? null,
-                    'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
-                    'message' => $response['message'] ?? null,
-                    'success' => $response['success'] ?? false
-                ];
-            } catch (Exception $e) {
-                Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
-
-                $failedUpdates[] = [
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
-
-        return [
-            'updatedTokens' => $updatedTokens,
-            'failedUpdates' => $failedUpdates,
-            'totalUpdated' => count($updatedTokens),
-            'totalFailed' => count($failedUpdates),
-        ];
+    if (!$username || !$apiKey) {
+        throw new Exception('Africa\'s Talking credentials are missing');
     }
+
+    $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
+    $updatedTokens = [];
+    $failedUpdates = [];
+
+    foreach ($users as $user) {
+        try {
+            // ensure a clientName exists and is unique
+            if (empty($user->client_name)) {
+                $user->client_name = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
+                $user->save();
+            }
+
+            // SIP format: username.client_name
+            $clientName = $username . '.' . str_replace(' ', '', $user->client_name);
+
+            $incoming = $user->can_receive_calls ?? true;
+            $outgoing = $user->can_call ?? true;
+
+            $payload = [
+                'username'    => $username,
+                'clientName'  => $clientName,
+                'phoneNumber' => $phoneNumber,
+                'incoming'    => $incoming ? "true" : "false",
+                'outgoing'    => $outgoing ? "true" : "false",
+                'lifeTimeSec' => "86400"
+            ];
+
+            $response = $this->makeTokenRequest($payload, $apiKey);
+
+            if (!isset($response['token'])) {
+                throw new Exception($response['message'] ?? 'Unknown API error');
+            }
+
+            // update token but keep original username intact
+            $user->updateOrFail([
+                'token'       => $response['token'],
+                'client_name' => $user->client_name, // keep for reference
+            ]);
+
+            Log::info("Token updated successfully for user {$user->id}");
+
+            $updatedTokens[] = [
+                'user_id'    => $user->id,
+                'token'      => $response['token'],
+                'clientName' => $clientName,
+                'incoming'   => $response['incoming'] ?? null,
+                'outgoing'   => $response['outgoing'] ?? null,
+                'lifeTimeSec'=> $response['lifeTimeSec'] ?? null,
+                'message'    => $response['message'] ?? null,
+                'success'    => $response['success'] ?? false
+            ];
+        } catch (Exception $e) {
+            Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
+
+            $failedUpdates[] = [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage()
+            ];
+        }
+    }
+
+    return [
+        'updatedTokens' => $updatedTokens,
+        'failedUpdates' => $failedUpdates,
+        'totalUpdated'  => count($updatedTokens),
+        'totalFailed'   => count($failedUpdates),
+    ];
+}
+
 
     /**
      * Make token request to Africa's Talking API
