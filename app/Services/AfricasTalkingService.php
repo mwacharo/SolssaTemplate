@@ -1010,7 +1010,7 @@ private function generateDialResponse(string $clientDialedNumber): string
     /**
      * Generate capability tokens for WebRTC
      */
-    public function generateTokens(?array $userIds = null): array
+  public function generateTokens(?array $userIds = null): array
 {
     $apiKey = $this->config['africastalking']['api_key'];
     $username = $this->config['africastalking']['username'];
@@ -1026,52 +1026,53 @@ private function generateDialResponse(string $clientDialedNumber): string
 
     foreach ($users as $user) {
         try {
-            // ensure a clientName exists and is unique
-            if (empty($user->client_name)) {
-                $user->client_name = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
-                $user->save();
-            }
+            DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, &$updatedTokens) {
+                // ensure a clientName exists and is unique
+                if (empty($user->client_name)) {
+                    $user->client_name = 'client_' . $user->id . '_' . substr(md5(uniqid()), 0, 6);
+                    $user->save();
+                }
 
-            // SIP format: username.client_name
-            $clientName = $username . '.' . str_replace(' ', '', $user->client_name);
+                // SIP format: username.client_name
+                $clientName = $username . '.' . str_replace(' ', '', $user->client_name);
 
-            $incoming = $user->can_receive_calls ?? true;
-            $outgoing = $user->can_call ?? true;
+                $incoming = $user->can_receive_calls ?? true;
+                $outgoing = $user->can_call ?? true;
 
-            $payload = [
-                'username'    => $username,
-                'clientName'  => $clientName,
-                'phoneNumber' => $phoneNumber,
-                'incoming'    => $incoming ? "true" : "false",
-                'outgoing'    => $outgoing ? "true" : "false",
-                'lifeTimeSec' => "86400"
-            ];
+                $payload = [
+                    'username'    => $username,
+                    'clientName'  => $clientName,
+                    'phoneNumber' => $phoneNumber,
+                    'incoming'    => $incoming ? "true" : "false",
+                    'outgoing'    => $outgoing ? "true" : "false",
+                    'lifeTimeSec' => "86400"
+                ];
 
-            $response = $this->makeTokenRequest($payload, $apiKey);
+                $response = $this->makeTokenRequest($payload, $apiKey);
 
-            if (!isset($response['token'])) {
-                throw new Exception($response['message'] ?? 'Unknown API error');
-            }
+                if (!isset($response['token'])) {
+                    throw new Exception($response['message'] ?? 'Unknown API error');
+                }
 
-            // update token but keep original username intact
-            $user->updateOrFail([
-                'token'       => $response['token'],
-                // combination of username and clientName
-                'client_name' => $updatedTokens['clientName'], // keep for reference
-            ]);
+                // update token and client_name safely
+                $user->updateOrFail([
+                    'token'       => $response['token'],
+                    'client_name' => $clientName,
+                ]);
 
-            Log::info("Token updated successfully for user {$user->id}");
+                Log::info("Token updated successfully for user {$user->id}");
 
-            $updatedTokens[] = [
-                'user_id'    => $user->id,
-                'token'      => $response['token'],
-                'clientName' => $clientName,
-                'incoming'   => $response['incoming'] ?? null,
-                'outgoing'   => $response['outgoing'] ?? null,
-                'lifeTimeSec'=> $response['lifeTimeSec'] ?? null,
-                'message'    => $response['message'] ?? null,
-                'success'    => $response['success'] ?? false
-            ];
+                $updatedTokens[] = [
+                    'user_id'     => $user->id,
+                    'token'       => $response['token'],
+                    'clientName'  => $clientName,
+                    'incoming'    => $response['incoming'] ?? null,
+                    'outgoing'    => $response['outgoing'] ?? null,
+                    'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
+                    'message'     => $response['message'] ?? null,
+                    'success'     => $response['success'] ?? false
+                ];
+            });
         } catch (Exception $e) {
             Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
 
@@ -1089,7 +1090,6 @@ private function generateDialResponse(string $clientDialedNumber): string
         'totalFailed'   => count($failedUpdates),
     ];
 }
-
 
     /**
      * Make token request to Africa's Talking API
