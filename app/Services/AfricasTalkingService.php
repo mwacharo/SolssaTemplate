@@ -692,7 +692,7 @@ class AfricasTalkingService
 
         $response = '<?xml version="1.0" encoding="UTF-8"?>';
         $response .= '<Response>';
-        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"/>';
+        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"/></Dial>';
         $response .= '</Response>';
 
         Log::info("Generated outgoing dial response", [
