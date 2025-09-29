@@ -1035,11 +1035,12 @@ class AfricasTalkingService
                     }
 
                     // Build AT clientName for API (with prefix)
-                    $clientNameForApi = $username . '.' . $user->username;
+                    // $clientNameForApi = $username . '.' . $user->username;
 
                     $payload = [
                         'username'    => $username,
-                        'clientName'  => $clientNameForApi,
+                        // 'clientName'  => $clientNameForApi,
+                        'clientName'  => $user->username, // Use clean username without prefix
                         'phoneNumber' => $phoneNumber,
                         'incoming'    => ($user->can_receive_calls ?? true) ? "true" : "false",
                         'outgoing'    => ($user->can_call ?? true) ? "true" : "false",
