@@ -194,7 +194,7 @@ class AfricasTalkingService
                 //      $xml = $this->generateDialResponse($clientDialedNumber);
                 // return response($xml, 200)->header('Content-Type', 'application/xml');
 
-                $xml = $this->generateDialResponse($clientDialedNumber);
+                $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
 
                 // Manually set the correct content type
                 header('Content-Type: application/xml');
@@ -709,21 +709,23 @@ class AfricasTalkingService
 
     return $response;
 }
-private function generateDialResponse(string $clientDialedNumber): string
+private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
 {
-    $authUser = Auth::user();
+    $agent = User::where('client_name', $callerNumber)->first();
 
-    if (!$authUser || !$authUser->country_id) {
-        Log::error("Authenticated user missing or has no country_id", [
-            'auth_user' => $authUser
+    if (!$agent || !$agent->country_id) {
+        Log::error("Agent not found or missing country_id", [
+            'callerNumber' => $callerNumber,
+            'agent' => $agent
         ]);
-        throw new \Exception("Authenticated user does not have a country assigned.");
+        throw new \Exception("Cannot resolve agent/country for outgoing call");
     }
 
-    $country = DB::table('countries')->where('id', $authUser->country_id)->first();
+    // Get country phone code
+    $country = DB::table('countries')->where('id', $agent->country_id)->first();
 
     if (!$country) {
-        Log::error("Country not found", ['country_id' => $authUser->country_id]);
+        Log::error("Country not found", ['country_id' => $agent->country_id]);
         throw new \Exception("Country not found for authenticated user");
     }
 
