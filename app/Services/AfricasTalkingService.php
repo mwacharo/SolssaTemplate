@@ -1010,113 +1010,112 @@ class AfricasTalkingService
     /**
      * Generate capability tokens for WebRTC
      */
-  public function generateTokens(?array $userIds = null): array
-{
-    $apiKey      = $this->config['africastalking']['api_key'];
-    $username    = $this->config['africastalking']['username'];
-    $phoneNumber = $this->config['africastalking']['phone'];
-    $lifeTime    = (string) config('africastalking.token_lifetime', 86400); // default 24h
+    public function generateTokens(?array $userIds = null): array
+    {
+        $apiKey      = $this->config['africastalking']['api_key'];
+        $username    = $this->config['africastalking']['username'];
+        $phoneNumber = $this->config['africastalking']['phone'];
+        $lifeTime    = (string) config('africastalking.token_lifetime', 86400); // default 24h
 
-    if (!$username || !$apiKey) {
-        throw new Exception("Africa's Talking credentials are missing");
-    }
-
-    $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
-    $updatedTokens = [];
-    $failedUpdates = [];
-
-    foreach ($users as $user) {
-        try {
-            DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, $lifeTime, &$updatedTokens) {
-                // Ensure client_name exists in DB
-                if (empty($user->username)) {
-                    $user->username = 'client_' . $user->id;
-                    $user->save();
-                }
-
-                // Build AT clientName for API (never store this prefixed value in DB)
-                $clientNameForApi = $username . '.' . $user->username;
-
-                $payload = [
-                    'username'    => $username,
-                    'clientName'  => $clientNameForApi,
-                    'phoneNumber' => $phoneNumber,
-                    'incoming'    => ($user->can_receive_calls ?? true) ? "true" : "false",
-                    'outgoing'    => ($user->can_call ?? true) ? "true" : "false",
-                    'lifeTimeSec' => $lifeTime,
-                ];
-
-                $response = $this->makeTokenRequest($payload, $apiKey);
-
-                if (empty($response['token'])) {
-                    throw new Exception("AT Error: " . ($response['message'] ?? 'Unknown API error'));
-                }
-
-                // ✅ Save token + clean client_name in DB
-                $user->update([
-                    'token' => $response['token'],
-                    'client_name' => $clientNameForApi // ensure clean value
-                ]);
-
-                Log::info("Token updated successfully for user {$user->id}");
-
-                $updatedTokens[] = [
-                    'user_id'     => $user->id,
-                    'token'       => $response['token'],
-                    'clientName'  => $user->client_name, // clean DB value
-                    'clientNameApi' => $clientNameForApi, // API value used
-                    'incoming'    => $response['incoming'] ?? null,
-                    'outgoing'    => $response['outgoing'] ?? null,
-                    'lifeTimeSec' => $response['lifeTimeSec'] ?? $lifeTime,
-                    'message'     => $response['message'] ?? null,
-                    'success'     => $response['success'] ?? true,
-                ];
-            });
-        } catch (Exception $e) {
-            Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
-
-            $failedUpdates[] = [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage(),
-            ];
+        if (!$username || !$apiKey) {
+            throw new Exception("Africa's Talking credentials are missing");
         }
+
+        $users = $userIds ? User::whereIn('id', $userIds)->get() : User::all();
+        $updatedTokens = [];
+        $failedUpdates = [];
+
+        foreach ($users as $user) {
+            try {
+                DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, $lifeTime, &$updatedTokens) {
+                    // Ensure username exists in DB (clean value without prefix)
+                    if (empty($user->username)) {
+                        $user->username = 'client_' . $user->id;
+                        $user->save();
+                    }
+
+                    // Build AT clientName for API (with prefix)
+                    $clientNameForApi = $username . '.' . $user->username;
+
+                    $payload = [
+                        'username'    => $username,
+                        'clientName'  => $clientNameForApi,
+                        'phoneNumber' => $phoneNumber,
+                        'incoming'    => ($user->can_receive_calls ?? true) ? "true" : "false",
+                        'outgoing'    => ($user->can_call ?? true) ? "true" : "false",
+                        'lifeTimeSec' => $lifeTime,
+                    ];
+
+                    $response = $this->makeTokenRequest($payload, $apiKey);
+
+                    if (empty($response['token'])) {
+                        throw new Exception("AT Error: " . ($response['message'] ?? 'Unknown API error'));
+                    }
+
+                    // ✅ Save token + FULL client_name (with prefix) in DB
+                    $user->update([
+                        'token' => $response['token'],
+                        'client_name' => $clientNameForApi // Store "BoxleoKenya.Mwacharo"
+                    ]);
+
+                    Log::info("Token updated successfully for user {$user->id}");
+
+                    $updatedTokens[] = [
+                        'user_id'     => $user->id,
+                        'token'       => $response['token'],
+                        'clientName'  => $clientNameForApi, // Full prefixed value stored in DB
+                        'incoming'    => $response['incoming'] ?? null,
+                        'outgoing'    => $response['outgoing'] ?? null,
+                        'lifeTimeSec' => $response['lifeTimeSec'] ?? $lifeTime,
+                        'message'     => $response['message'] ?? null,
+                        'success'     => $response['success'] ?? true,
+                    ];
+                });
+            } catch (Exception $e) {
+                Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
+
+                $failedUpdates[] = [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ];
+            }
+        }
+
+        return [
+            'updatedTokens' => $updatedTokens,
+            'failedUpdates' => $failedUpdates,
+            'totalUpdated'  => count($updatedTokens),
+            'totalFailed'   => count($failedUpdates),
+        ];
     }
 
-    return [
-        'updatedTokens' => $updatedTokens,
-        'failedUpdates' => $failedUpdates,
-        'totalUpdated'  => count($updatedTokens),
-        'totalFailed'   => count($failedUpdates),
-    ];
-}
+    /**
+     * Make token request to Africa's Talking API
+     */
+    private function makeTokenRequest(array $payload, string $apiKey): array
+    {
+        $url = 'https://webrtc.africastalking.com/capability-token/request';
 
-/**
- * Make token request to Africa's Talking API
- */
-private function makeTokenRequest(array $payload, string $apiKey): array
-{
-    $url = 'https://webrtc.africastalking.com/capability-token/request';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'apiKey: ' . $apiKey,
+            'Accept: application/json',
+            'Content-Type: application/json'
+        ]);
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'apiKey: ' . $apiKey,
-        'Accept: application/json',
-        'Content-Type: application/json'
-    ]);
+        $response = curl_exec($ch);
 
-    $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            throw new Exception('cURL Error: ' . curl_error($ch));
+        }
 
-    if (curl_errno($ch)) {
-        throw new Exception('cURL Error: ' . curl_error($ch));
+        curl_close($ch);
+
+        return json_decode($response, true) ?? [];
     }
-
-    curl_close($ch);
-
-    return json_decode($response, true) ?? [];
-}
 
 
     /**
