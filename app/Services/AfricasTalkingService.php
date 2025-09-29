@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Exception;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Ticket as AttributesTicket;
 
 class AfricasTalkingService
