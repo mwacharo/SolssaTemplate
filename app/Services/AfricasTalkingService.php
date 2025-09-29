@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+
 use PHPUnit\Framework\Attributes\Ticket as AttributesTicket;
 
 class AfricasTalkingService
@@ -686,7 +688,7 @@ class AfricasTalkingService
     /**
      * Generate dial response for outgoing calls
      */
-  private function generateDialResponse(string $clientDialedNumber): string
+  private function generateDialResponsex(string $clientDialedNumber): string
 {
     // Ensure number starts with +254... format
     $cleanNumber = ltrim(trim($clientDialedNumber));
@@ -703,6 +705,44 @@ class AfricasTalkingService
     Log::info("Generated outgoing dial response", [
         'clientDialedNumber' => $clientDialedNumber,
         'cleanNumber' => $cleanNumber
+    ]);
+
+    return $response;
+}
+
+
+
+private function generateDialResponse(string $clientDialedNumber): string
+{
+    $authUser = Aut::user();
+
+    if (!$authUser || !$authUser->country_id) {
+        Log::error("Authenticated user missing or has no country_id", [
+            'auth_user' => $authUser
+        ]);
+        throw new \Exception("Authenticated user does not have a country assigned.");
+    }
+
+    // 🔎 Fetch country phone code for authenticated user
+    $country = DB::table('countries')->where('id', $authUser->country_id)->first();
+
+    if (!$country) {
+        Log::error("Country not found", ['country_id' => $authUser->country_id]);
+        throw new \Exception("Country not found for authenticated user");
+    }
+
+    // ✅ Normalize with user's country phone code
+    $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
+
+    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+    $response .= '<Response>';
+    $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
+    $response .= '</Response>';
+
+    Log::info("Generated outgoing dial response", [
+        'clientDialedNumber' => $clientDialedNumber,
+        'cleanNumber' => $cleanNumber,
+        'country' => $country->name
     ]);
 
     return $response;
@@ -1319,4 +1359,31 @@ class AfricasTalkingService
     {
         return $this->callStatsService->generateCallSummaryReport($filters);
     }
+
+
+    /**
+ * Normalize phone numbers into +E.164 format
+ */
+private function normalizePhoneNumber(string $number, string $phoneCode): string
+{
+    // Remove spaces, dashes, brackets
+    $number = preg_replace('/[\s\-\(\)]/', '', $number);
+
+    // Already in E.164 format
+    if (str_starts_with($number, '+')) {
+        return $number;
+    }
+
+    // Local format starting with 0 → replace with country code
+    if (preg_match('/^0\d+$/', $number)) {
+        return '+' . $phoneCode . substr($number, 1);
+    }
+
+    // If it’s just digits
+    if (preg_match('/^\d+$/', $number)) {
+        return '+' . $phoneCode . $number;
+    }
+
+    throw new \Exception("Invalid phone number format: {$number}");
+}
 }
