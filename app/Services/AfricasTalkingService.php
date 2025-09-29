@@ -1035,7 +1035,9 @@ class AfricasTalkingService
                     }
 
                     // SIP format for API (never save this full format in DB)
-                    $clientName = $username . '.' . str_replace(' ', '', $user->username);
+                    // $clientName = $username . '.' . str_replace(' ', '', $user->username);
+
+                    $clientName = $user->username;
 
                     $incoming = $user->can_receive_calls ?? true;
                     $outgoing = $user->can_call ?? true;
@@ -1059,7 +1061,7 @@ class AfricasTalkingService
                     $user->updateOrFail([
                         'token' => $response['token'],
                         // 
-                        'client_name' => $clientName, // do NOT save full SIP format in DB
+                        'client_name' => $response['clientName'] , // do NOT save full SIP format in DB
 
                     ]);
 
@@ -1068,7 +1070,7 @@ class AfricasTalkingService
                     $updatedTokens[] = [
                         'user_id'     => $user->id,
                         'token'       => $response['token'],
-                        'clientName'  => $clientName, // still return SIP format for frontend
+                        'clientName'  => $response['clientName'] ?? null,
                         'incoming'    => $response['incoming'] ?? null,
                         'outgoing'    => $response['outgoing'] ?? null,
                         'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
