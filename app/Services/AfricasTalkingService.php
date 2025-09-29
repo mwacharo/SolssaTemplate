@@ -1026,55 +1026,56 @@ class AfricasTalkingService
 
         foreach ($users as $user) {
             try {
-                
-DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, &$updatedTokens) {
-    // Ensure client_name exists ONCE (never overwrite if already set)
-    if (empty($user->client_name)) {
-        $user->client_name = 'client_' . $user->id; // no hash if you want it permanent
-        $user->save();
-    }
 
-    // SIP format for API (never save this full format in DB)
-    $clientName = $username . '.' . str_replace(' ', '', $user->client_name);
+                DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, &$updatedTokens) {
+                    // Ensure username exists ONCE (never overwrite if already set)
+                    if (empty($user->username)) {
+                        $user->username = 'client_' . $user->id; // no hash if you want it permanent
+                        $user->save();
+                    }
 
-    $incoming = $user->can_receive_calls ?? true;
-    $outgoing = $user->can_call ?? true;
+                    // SIP format for API (never save this full format in DB)
+                    $clientName = $username . '.' . str_replace(' ', '', $user->username);
 
-    $payload = [
-        'username'    => $username,
-        'clientName'  => $clientName,
-        'phoneNumber' => $phoneNumber,
-        'incoming'    => $incoming ? "true" : "false",
-        'outgoing'    => $outgoing ? "true" : "false",
-        'lifeTimeSec' => "86400"
-    ];
+                    $incoming = $user->can_receive_calls ?? true;
+                    $outgoing = $user->can_call ?? true;
 
-    $response = $this->makeTokenRequest($payload, $apiKey);
+                    $payload = [
+                        'username'    => $username,
+                        'clientName'  => $clientName,
+                        'phoneNumber' => $phoneNumber,
+                        'incoming'    => $incoming ? "true" : "false",
+                        'outgoing'    => $outgoing ? "true" : "false",
+                        'lifeTimeSec' => "86400"
+                    ];
 
-    if (!isset($response['token'])) {
-        throw new Exception($response['message'] ?? 'Unknown API error');
-    }
+                    $response = $this->makeTokenRequest($payload, $apiKey);
 
-    // ✅ Only update token in DB, not the prefixed clientName
-    $user->updateOrFail([
-        'token' => $response['token'],
-    ]);
+                    if (!isset($response['token'])) {
+                        throw new Exception($response['message'] ?? 'Unknown API error');
+                    }
 
-    Log::info("Token updated successfully for user {$user->id}");
+                    // ✅ Only update token in DB, not the prefixed clientName
+                    $user->updateOrFail([
+                        'token' => $response['token'],
+                        // 
+                        'client_name' => $clientName, // do NOT save full SIP format in DB
 
-    $updatedTokens[] = [
-        'user_id'     => $user->id,
-        'token'       => $response['token'],
-        'clientName'  => $clientName, // still return SIP format for frontend
-        'incoming'    => $response['incoming'] ?? null,
-        'outgoing'    => $response['outgoing'] ?? null,
-        'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
-        'message'     => $response['message'] ?? null,
-        'success'     => $response['success'] ?? false
-    ];
-});
+                    ]);
 
+                    Log::info("Token updated successfully for user {$user->id}");
 
+                    $updatedTokens[] = [
+                        'user_id'     => $user->id,
+                        'token'       => $response['token'],
+                        'clientName'  => $clientName, // still return SIP format for frontend
+                        'incoming'    => $response['incoming'] ?? null,
+                        'outgoing'    => $response['outgoing'] ?? null,
+                        'lifeTimeSec' => $response['lifeTimeSec'] ?? null,
+                        'message'     => $response['message'] ?? null,
+                        'success'     => $response['success'] ?? false
+                    ];
+                });
             } catch (Exception $e) {
                 Log::error("Token generation failed for user {$user->id}: " . $e->getMessage());
 
