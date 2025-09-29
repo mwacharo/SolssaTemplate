@@ -1029,13 +1029,13 @@ class AfricasTalkingService
         try {
             DB::transaction(function () use ($user, $username, $phoneNumber, $apiKey, $lifeTime, &$updatedTokens) {
                 // Ensure client_name exists in DB
-                if (empty($user->client_name)) {
-                    $user->client_name = 'client_' . $user->id;
+                if (empty($user->username)) {
+                    $user->username = 'client_' . $user->id;
                     $user->save();
                 }
 
                 // Build AT clientName for API (never store this prefixed value in DB)
-                $clientNameForApi = $username . '.' . $user->client_name;
+                $clientNameForApi = $username . '.' . $user->username;
 
                 $payload = [
                     'username'    => $username,
@@ -1055,6 +1055,7 @@ class AfricasTalkingService
                 // ✅ Save token + clean client_name in DB
                 $user->update([
                     'token' => $response['token'],
+                    'client_name' => $clientNameForApi // ensure clean value
                 ]);
 
                 Log::info("Token updated successfully for user {$user->id}");
