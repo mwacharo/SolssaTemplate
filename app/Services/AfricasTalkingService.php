@@ -1056,7 +1056,8 @@ private function generateDialResponse(string $clientDialedNumber): string
             // update token but keep original username intact
             $user->updateOrFail([
                 'token'       => $response['token'],
-                'client_name' => $user->client_name, // keep for reference
+                // combination of username and clientName
+                'client_name' => $clientName, // keep for reference
             ]);
 
             Log::info("Token updated successfully for user {$user->id}");
