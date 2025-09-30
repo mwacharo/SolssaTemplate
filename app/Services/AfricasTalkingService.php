@@ -819,7 +819,9 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
                 'status' => $status
             ]);
 
-            $updated = User::where('phone_number', $callerNumber)
+            // $updated = User::where('phone_number', $callerNumber)
+                        $updated = User::where('client_name', $callerNumber)
+
                 ->update([
                     'status' => $status,
                     'sessionId' => $sessionId,
