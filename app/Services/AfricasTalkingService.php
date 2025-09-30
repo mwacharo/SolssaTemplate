@@ -498,7 +498,7 @@ class AfricasTalkingService
     /**
      * Generate dynamic IVR menu from database
      */
-    public function generateDynamicMenu(): string
+    public function generateDynamicMenubeta(): string
     {
         $options = IvrOption::orderBy('option_number')->get();
 
@@ -518,6 +518,27 @@ class AfricasTalkingService
 
         return $response;
     }
+
+    public function generateDynamicMenu(): string
+{
+    $options = IvrOption::orderBy('option_number')->get();
+
+    $response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response>";
+    $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\">{$this->config['messages']['welcome']}</Say>";
+    $response .= "<GetDigits timeout=\"{$this->config['voice']['timeout']}\" finishOnKey=\"#\" callbackUrl=\"{$this->config['urls']['callback_url']}\">";
+
+    $prompt = "";
+    foreach ($options as $option) {
+        $prompt .= "Press {$option->option_number} for {$option->description}. ";
+    }
+
+    $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\" barge-in=\"true\">{$prompt}</Say>";
+    $response .= "</GetDigits>";
+    $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\">{$this->config['messages']['no_input']}</Say>";
+    $response .= "</Response>";
+
+    return $response;
+}
 
     /**
      * Handle DTMF selection with configurable routing
