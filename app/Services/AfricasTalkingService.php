@@ -713,53 +713,58 @@ class AfricasTalkingService
 
         return $response;
     }
-    private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
-    {
-        $agent = User::where('client_name', $callerNumber)->first();
+   private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
+{
+    $agent = User::where('client_name', $callerNumber)->first();
 
-        if (!$agent || !$agent->country_id) {
-            Log::error("Agent not found or missing country_id", [
-                'callerNumber' => $callerNumber,
-                'agent' => $agent
-            ]);
-            throw new \Exception("Cannot resolve agent/country for outgoing call");
-        }
-
-        // Get country phone code
-        $country = DB::table('countries')->where('id', $agent->country_id)->first();
-
-        if (!$country) {
-            Log::error("Country not found", ['country_id' => $agent->country_id]);
-            throw new \Exception("Country not found for authenticated user");
-        }
-
-        // 🔎 If it's a SIP client (e.g. BoxleoKenya.client_xxx), bypass normalization
-        if (str_contains($clientDialedNumber, '.')) { // Catches all SIP formats
-            $cleanNumber = $clientDialedNumber;
-            $type = 'sip_client';
-        }
-        
-        
-        else {
-            // ✅ Normalize real phone numbers using E.164
-            $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
-            $type = 'phone_number';
-        }
-
-        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-        $response .= '<Response>';
-        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
-        $response .= '</Response>';
-
-        Log::info("Generated outgoing dial response", [
-            'clientDialedNumber' => $clientDialedNumber,
-            'cleanNumber' => $cleanNumber,
-            'country' => $country->name,
-            'type' => $type
+    if (!$agent || !$agent->country_id) {
+        Log::error("Agent not found or missing country_id", [
+            'callerNumber' => $callerNumber,
+            'agent' => $agent
         ]);
-
-        return $response;
+        throw new \Exception("Cannot resolve agent/country for outgoing call");
     }
+
+    // Get country phone code
+    $country = DB::table('countries')->where('id', $agent->country_id)->first();
+
+    if (!$country) {
+        Log::error("Country not found", ['country_id' => $agent->country_id]);
+        throw new \Exception("Country not found for authenticated user");
+    }
+
+    // Determine type: SIP client or real phone number
+    if (str_contains($clientDialedNumber, '.')) { // SIP client
+        $cleanNumber = $clientDialedNumber;
+        $type = 'sip_client';
+    } else { // Normalize real phone numbers
+        $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
+        $type = 'phone_number';
+    }
+
+    // ✅ Use nested element instead of phoneNumbers attribute
+    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+    $response .= '<Response>';
+    $response .= '<Dial record="true" sequential="true">';
+    
+    if ($type === 'sip_client') {
+        $response .= '<Client>' . htmlspecialchars($cleanNumber) . '</Client>';
+    } else {
+        $response .= '<Number>' . htmlspecialchars($cleanNumber) . '</Number>';
+    }
+
+    $response .= '</Dial>';
+    $response .= '</Response>';
+
+    Log::info("Generated outgoing dial response", [
+        'clientDialedNumber' => $clientDialedNumber,
+        'cleanNumber' => $cleanNumber,
+        'country' => $country->name,
+        'type' => $type
+    ]);
+
+    return $response;
+}
 
 
     /**
