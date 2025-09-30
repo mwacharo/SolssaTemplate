@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Services;
-
 use AfricasTalking\SDK\AfricasTalking;
 use App\Events\CallStatusUpdated;
 use App\Jobs\DownloadCallRecordingJob;
@@ -206,18 +204,25 @@ class AfricasTalkingService
 
         switch ($callSessionState) {
             case 'Ringing':
-                // Mark agent busy
                 $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
-
-                // Generate AT-compliant XML dial response
                 $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
-                
-                Log::info("Returning Dial XML for Ringing state", ['xml_length' => strlen($xml)]);
-                
-                // Exit immediately with proper headers
+
+                // Kill ALL buffers and output
+                while (@ob_end_clean());
+
+                // Disable any error output
+                ini_set('display_errors', '0');
+
+                // Send headers first
+                http_response_code(200);
                 header('Content-Type: text/xml; charset=UTF-8');
+                header('Content-Length: ' . strlen($xml));
+
+                // Output ONLY the XML
                 echo $xml;
-                exit; // ✅ Prevent any further output
+
+                // Die immediately - prevents ANY Laravel post-processing
+                die();
 
             case 'CallInitiated':
                 $this->updateCallHistory($sessionId, ['status' => 'initiated']);
@@ -734,7 +739,7 @@ class AfricasTalkingService
     }
 
 
-private function generateDialResponsebeta(string $clientDialedNumber, string $callerNumber): string
+private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
 {
     // Normalize SIP username if needed (strip sip:, @domain, etc.)
     $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
@@ -809,69 +814,6 @@ private function generateDialResponsebeta(string $clientDialedNumber, string $ca
     return $response;
 }
 
-private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
-{
-    $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
-
-    $agent = User::where('client_name', $normalizedCaller)
-        ->orWhere('phone_number', $callerNumber)
-        ->first();
-
-    if (!$agent || !$agent->country_id) {
-        Log::error("Agent not found or missing country_id", [
-            'callerNumber' => $callerNumber,
-            'normalizedCaller' => $normalizedCaller,
-            'agent' => $agent
-        ]);
-        throw new \Exception("Cannot resolve agent/country for outgoing call");
-    }
-
-    $country = DB::table('countries')->where('id', $agent->country_id)->first();
-    if (!$country || empty($country->phone_code)) {
-        Log::error("Country not found or missing phone_code", [
-            'country_id' => $agent->country_id,
-            'country' => $country
-        ]);
-        throw new \Exception("Country not found or missing phone_code for agent");
-    }
-
-    $destinations = array_map('trim', explode(',', $clientDialedNumber));
-
-    $normalizedDestinations = [];
-    foreach ($destinations as $destination) {
-        if (str_contains($destination, '@') || str_contains($destination, '.')) {
-            $normalizedDestinations[] = $destination; // SIP client
-        } else {
-            $normalizedDestinations[] = $this->normalizePhoneNumber($destination, $country->phone_code);
-        }
-    }
-
-    // ✅ Remove leading/trailing spaces and force no newline before XML declaration
-    $response = '<?xml version="1.0" encoding="UTF-8"?>';
-    $response .= '<Response>';
-    $response .= '<Dial record="true" sequential="true"';
-
-    if (!empty($this->config['urls']['ringback_tone'])) {
-        $response .= ' ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"';
-    }
-
-    $response .= ' phoneNumbers="' . htmlspecialchars(implode(',', $normalizedDestinations)) . '"';
-    $response .= ' />';
-    $response .= '</Response>';
-
-    // ✅ Ensure final XML is trimmed
-    $response = trim($response);
-
-    Log::info("Generated outgoing dial response", [
-        'original_number' => $clientDialedNumber,
-        'normalized_destinations' => $normalizedDestinations,
-        'country' => $country->name,
-        'phone_code' => $country->phone_code,
-        'xml' => $response
-    ]);
-
-    return $response;
-}
 
 
     /**
