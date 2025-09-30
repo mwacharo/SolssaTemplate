@@ -178,79 +178,79 @@ class AfricasTalkingService
 
 
     private function isOutgoingCall(string $callerNumber): bool
-{
-    // Check if callerNumber is a valid phone number
-    // Accepts +2547..., 07..., or any digit-only format
-    if (preg_match('/^\+?\d+$/', $callerNumber)) {
-        return false; // it's a real phone number
-    }
+    {
+        // Check if callerNumber is a valid phone number
+        // Accepts +2547..., 07..., or any digit-only format
+        if (preg_match('/^\+?\d+$/', $callerNumber)) {
+            return false; // it's a real phone number
+        }
 
-    // Otherwise, it's a SIP client username (Bringit, mtaahub, etc.)
-    return true;
-}
+        // Otherwise, it's a SIP client username (Bringit, mtaahub, etc.)
+        return true;
+    }
 
 
     /**
      * Handle outgoing call states
      */
     private function handleOutgoingCall(
-    Request $request,
-    string $sessionId,
-    string $callSessionState,
-    string $callerNumber,
-    string $clientDialedNumber
-) {
-    Log::info("Handling outgoing call state: {$callSessionState}", [
-        'sessionId' => $sessionId,
-        'callerNumber' => $callerNumber,
-        'clientDialedNumber' => $clientDialedNumber
-    ]);
+        Request $request,
+        string $sessionId,
+        string $callSessionState,
+        string $callerNumber,
+        string $clientDialedNumber
+    ) {
+        Log::info("Handling outgoing call state: {$callSessionState}", [
+            'sessionId' => $sessionId,
+            'callerNumber' => $callerNumber,
+            'clientDialedNumber' => $clientDialedNumber
+        ]);
 
-    switch ($callSessionState) {
-        case 'Ringing':
-            // Mark agent busy
-            $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
+        switch ($callSessionState) {
+            case 'Ringing':
+                // Mark agent busy
+                $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
 
-            // Generate AT-compliant XML dial response
-            $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
+                // Generate AT-compliant XML dial response
+                $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
 
-            return response($xml, 200)
-                ->header('Content-Type', 'text/xml; charset=UTF-8');
+                return response($xml, 200)
+                    ->header('Content-Type', 'text/xml; charset=UTF-8');
 
-        case 'CallInitiated':
-            $this->updateCallHistory($sessionId, ['status' => 'initiated']);
-            break;
+            case 'CallInitiated':
+                $this->updateCallHistory($sessionId, ['status' => 'initiated']);
+                break;
 
-        case 'CallConnected':
-            $this->updateCallHistory($sessionId, ['status' => 'connected']);
-            break;
+            case 'CallConnected':
+                $this->updateCallHistory($sessionId, ['status' => 'connected']);
+                break;
 
-        case 'CallTerminated':
-            if ($request->boolean('isActive', false)) {
-                $this->updateCallHistory($sessionId, [
-                    'callerNumber' => $callerNumber,
-                    'destinationNumber' => $clientDialedNumber,
-                    'direction' => 'outgoing',
-                    'isActive' => 1,
-                ]);
-            }
-            break;
+            case 'CallTerminated':
+                if ($request->boolean('isActive', false)) {
+                    $this->updateCallHistory($sessionId, [
+                        'callerNumber' => $callerNumber,
+                        'destinationNumber' => $clientDialedNumber,
+                        'direction' => 'outgoing',
+                        'isActive' => 1,
+                    ]);
+                }
+                break;
 
-        case 'Completed':
-            $this->finalizeCall($request, $sessionId);
-            $this->resetAgentStatus($sessionId);
-            break;
+            case 'Completed':
+                $this->finalizeCall($request, $sessionId);
+                $this->resetAgentStatus($sessionId);
+                break;
 
-        default:
-            Log::warning("Unhandled outgoing call state: {$callSessionState}");
-            break;
+            default:
+                Log::warning("Unhandled outgoing call state: {$callSessionState}");
+                break;
+        }
+
+        // Always return valid XML even if no Dial is required
+        $emptyResponse = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
+        return response($emptyResponse, 200)
+            ->header('Content-Type', 'text/xml; charset=UTF-8');
     }
-
-    // Always return valid XML even if no Dial is required
-    $emptyResponse = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
-    return response($emptyResponse, 200)
-        ->header('Content-Type', 'text/xml; charset=UTF-8');
-}
 
     /**
      * Handle incoming call routing
@@ -726,70 +726,70 @@ class AfricasTalkingService
 
         return $response;
     }
-private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
-{
-    // Normalize SIP username if needed (strip sip:, @domain, etc.)
-    $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
+    private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
+    {
+        // Normalize SIP username if needed (strip sip:, @domain, etc.)
+        $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
 
-    // Try to resolve agent by SIP username (client_name) or phone number
-    $agent = User::where('client_name', $normalizedCaller)
-        ->orWhere('phone_number', $callerNumber)
-        ->first();
+        // Try to resolve agent by SIP username (client_name) or phone number
+        $agent = User::where('client_name', $normalizedCaller)
+            ->orWhere('phone_number', $callerNumber)
+            ->first();
 
-    if (!$agent || !$agent->country_id) {
-        Log::error("Agent not found or missing country_id", [
-            'callerNumber' => $callerNumber,
-            'normalizedCaller' => $normalizedCaller,
-            'agent' => $agent
-        ]);
-        throw new \Exception("Cannot resolve agent/country for outgoing call");
-    }
-
-    // Get country phone code
-    $country = DB::table('countries')->where('id', $agent->country_id)->first();
-    if (!$country) {
-        Log::error("Country not found", ['country_id' => $agent->country_id]);
-        throw new \Exception("Country not found for authenticated user");
-    }
-
-    // Split comma-separated destinations
-    $destinations = array_map('trim', explode(',', $clientDialedNumber));
-
-    // Build XML
-    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-    $response .= '<Response>';
-    $response .= '<Dial record="true" sequential="true"';
-
-    // Optional ringback tone
-    if (!empty($this->config['urls']['ringback_tone'])) {
-        $response .= ' ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"';
-    }
-
-    $response .= '>';
-
-    foreach ($destinations as $destination) {
-        // Normalize SIP clients (remove sip: and domains)
-        if (str_contains($destination, '.') || str_contains($destination, '@')) {
-            $clean = preg_replace('/^sip:|@.+$/i', '', $destination);
-            $response .= '<Client>' . htmlspecialchars($clean) . '</Client>';
-        } else {
-            // Normalize phone number with country code
-            $clean = $this->normalizePhoneNumber($destination, $country->phone_code);
-            $response .= '<Number>' . htmlspecialchars($clean) . '</Number>';
+        if (!$agent || !$agent->country_id) {
+            Log::error("Agent not found or missing country_id", [
+                'callerNumber' => $callerNumber,
+                'normalizedCaller' => $normalizedCaller,
+                'agent' => $agent
+            ]);
+            throw new \Exception("Cannot resolve agent/country for outgoing call");
         }
+
+        // Get country phone code
+        $country = DB::table('countries')->where('id', $agent->country_id)->first();
+        if (!$country) {
+            Log::error("Country not found", ['country_id' => $agent->country_id]);
+            throw new \Exception("Country not found for authenticated user");
+        }
+
+        // Split comma-separated destinations
+        $destinations = array_map('trim', explode(',', $clientDialedNumber));
+
+        // Build XML
+        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+        $response .= '<Response>';
+        $response .= '<Dial record="true" sequential="true"';
+
+        // Optional ringback tone
+        if (!empty($this->config['urls']['ringback_tone'])) {
+            $response .= ' ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"';
+        }
+
+        $response .= '>';
+
+        foreach ($destinations as $destination) {
+            // Normalize SIP clients (remove sip: and domains)
+            if (str_contains($destination, '.') || str_contains($destination, '@')) {
+                $clean = preg_replace('/^sip:|@.+$/i', '', $destination);
+                $response .= '<Client>' . htmlspecialchars($clean) . '</Client>';
+            } else {
+                // Normalize phone number with country code
+                $clean = $this->normalizePhoneNumber($destination, $country->phone_code);
+                $response .= '<Number>' . htmlspecialchars($clean) . '</Number>';
+            }
+        }
+
+        $response .= '</Dial>';
+        $response .= '</Response>';
+
+        Log::info("Generated outgoing dial response", [
+            'clientDialedNumber' => $clientDialedNumber,
+            'destinations' => $destinations,
+            'country' => $country->name
+        ]);
+
+        return $response;
     }
-
-    $response .= '</Dial>';
-    $response .= '</Response>';
-
-    Log::info("Generated outgoing dial response", [
-        'clientDialedNumber' => $clientDialedNumber,
-        'destinations' => $destinations,
-        'country' => $country->name
-    ]);
-
-    return $response;
-}
 
 
     /**
@@ -823,7 +823,7 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
             ]);
 
             // $updated = User::where('phone_number', $callerNumber)
-                        $updated = User::where('client_name', $callerNumber)
+            $updated = User::where('client_name', $callerNumber)
 
                 ->update([
                     'status' => $status,
@@ -1074,7 +1074,7 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
                         $user->save();
                     }
 
-            
+
 
                     $payload = [
                         'username'    => $username,
@@ -1437,47 +1437,47 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
         return $this->callStatsService->generateCallSummaryReport($filters);
     }
 
-/**
- * Normalize phone number to E.164 format
- */
-private function normalizePhoneNumber(string $number, string $phoneCode): string
-{
-    // Remove spaces, dashes, brackets, dots
-    $number = preg_replace('/[\s\-\(\)\.]/', '', $number);
-    
-    // Clean phone code: remove '+' and keep only digits
-    $phoneCode = preg_replace('/[^\d]/', '', $phoneCode);
+    /**
+     * Normalize phone number to E.164 format
+     */
+    private function normalizePhoneNumber(string $number, string $phoneCode): string
+    {
+        // Remove spaces, dashes, brackets, dots
+        $number = preg_replace('/[\s\-\(\)\.]/', '', $number);
 
-    // Already has + prefix
-    if (str_starts_with($number, '+')) {
-        $number = ltrim($number, '+'); // Remove all leading +
-        $number = preg_replace('/[^\d]/', '', $number); // Keep only digits
-        
-        // Check if it already starts with country code
+        // Clean phone code: remove '+' and keep only digits
+        $phoneCode = preg_replace('/[^\d]/', '', $phoneCode);
+
+        // Already has + prefix
+        if (str_starts_with($number, '+')) {
+            $number = ltrim($number, '+'); // Remove all leading +
+            $number = preg_replace('/[^\d]/', '', $number); // Keep only digits
+
+            // Check if it already starts with country code
+            if (str_starts_with($number, $phoneCode)) {
+                return '+' . $number;
+            }
+
+            // Otherwise add country code
+            return '+' . $phoneCode . $number;
+        }
+
+        // Local format starting with 0 (e.g., 0741821113)
+        if (str_starts_with($number, '0')) {
+            $number = ltrim($number, '0');
+            return '+' . $phoneCode . $number;
+        }
+
+        // Already has country code without + (e.g., 254741821113)
         if (str_starts_with($number, $phoneCode)) {
             return '+' . $number;
         }
-        
-        // Otherwise add country code
-        return '+' . $phoneCode . $number;
-    }
 
-    // Local format starting with 0 (e.g., 0741821113)
-    if (str_starts_with($number, '0')) {
-        $number = ltrim($number, '0');
-        return '+' . $phoneCode . $number;
-    }
+        // Just the local part (e.g., 741821113)
+        if (preg_match('/^\d+$/', $number)) {
+            return '+' . $phoneCode . $number;
+        }
 
-    // Already has country code without + (e.g., 254741821113)
-    if (str_starts_with($number, $phoneCode)) {
-        return '+' . $number;
+        throw new \Exception("Invalid phone number format: {$number}");
     }
-
-    // Just the local part (e.g., 741821113)
-    if (preg_match('/^\d+$/', $number)) {
-        return '+' . $phoneCode . $number;
-    }
-
-    throw new \Exception("Invalid phone number format: {$number}");
-}
 }
