@@ -197,9 +197,14 @@ class AfricasTalkingService
                 $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
 
                 // Manually set the correct content type
-                header('Content-Type: application/xml');
-                echo $xml;
-                exit; // Stop Laravel from adding anything else
+                // header('Content-Type: application/xml');
+                // echo $xml;
+                // exit; // Stop Laravel from adding anything else
+
+
+                  // Return Laravel response with proper headers (DON'T use echo/exit)
+            return response($xml, 200)
+                ->header('Content-Type', 'application/xml; charset=UTF-8');
 
             case 'CallInitiated':
                 $this->updateCallHistory($sessionId, ['status' => 'initiated']);
