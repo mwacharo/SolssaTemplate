@@ -1400,30 +1400,47 @@ class AfricasTalkingService
         return $this->callStatsService->generateCallSummaryReport($filters);
     }
 
+/**
+ * Normalize phone number to E.164 format
+ */
+private function normalizePhoneNumber(string $number, string $phoneCode): string
+{
+    // Remove spaces, dashes, brackets, dots
+    $number = preg_replace('/[\s\-\(\)\.]/', '', $number);
+    
+    // Clean phone code: remove '+' and keep only digits
+    $phoneCode = preg_replace('/[^\d]/', '', $phoneCode);
 
-    /**
-     * Normalize phone numbers into +E.164 format
-     */
-    private function normalizePhoneNumber(string $number, string $phoneCode): string
-    {
-        // Remove spaces, dashes, brackets
-        $number = preg_replace('/[\s\-\(\)]/', '', $number);
-
-        // Already in E.164 format
-        if (str_starts_with($number, '+')) {
-            return $number;
+    // Already has + prefix
+    if (str_starts_with($number, '+')) {
+        $number = ltrim($number, '+'); // Remove all leading +
+        $number = preg_replace('/[^\d]/', '', $number); // Keep only digits
+        
+        // Check if it already starts with country code
+        if (str_starts_with($number, $phoneCode)) {
+            return '+' . $number;
         }
-
-        // Local format starting with 0 → replace with country code
-        if (preg_match('/^0\d+$/', $number)) {
-            return '+' . $phoneCode . substr($number, 1);
-        }
-
-        // If it’s just digits
-        if (preg_match('/^\d+$/', $number)) {
-            return '+' . $phoneCode . $number;
-        }
-
-        throw new \Exception("Invalid phone number format: {$number}");
+        
+        // Otherwise add country code
+        return '+' . $phoneCode . $number;
     }
+
+    // Local format starting with 0 (e.g., 0741821113)
+    if (str_starts_with($number, '0')) {
+        $number = ltrim($number, '0');
+        return '+' . $phoneCode . $number;
+    }
+
+    // Already has country code without + (e.g., 254741821113)
+    if (str_starts_with($number, $phoneCode)) {
+        return '+' . $number;
+    }
+
+    // Just the local part (e.g., 741821113)
+    if (preg_match('/^\d+$/', $number)) {
+        return '+' . $phoneCode . $number;
+    }
+
+    throw new \Exception("Invalid phone number format: {$number}");
+}
 }
