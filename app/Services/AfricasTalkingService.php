@@ -734,7 +734,7 @@ class AfricasTalkingService
     }
 
 
-private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
+private function generateDialResponsey(string $clientDialedNumber, string $callerNumber): string
 {
     // Normalize SIP username if needed (strip sip:, @domain, etc.)
     $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
@@ -809,6 +809,82 @@ private function generateDialResponse(string $clientDialedNumber, string $caller
     return $response;
 }
 
+
+private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
+{
+    // Normalize SIP username if needed (strip sip:, @domain, etc.)
+    $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
+
+    // Try to resolve agent
+    $agent = User::where('client_name', $normalizedCaller)
+        ->orWhere('phone_number', $callerNumber)
+        ->first();
+
+    if (!$agent || !$agent->country_id) {
+        Log::error("Agent not found or missing country_id", [
+            'callerNumber' => $callerNumber,
+            'normalizedCaller' => $normalizedCaller,
+            'agent' => $agent
+        ]);
+        throw new \Exception("Cannot resolve agent/country for outgoing call");
+    }
+
+    // Get country phone code
+    $country = DB::table('countries')->where('id', $agent->country_id)->first();
+    if (!$country || empty($country->phone_code)) {
+        Log::error("Country not found or missing phone_code", [
+            'country_id' => $agent->country_id,
+            'country' => $country
+        ]);
+        throw new \Exception("Country not found or missing phone_code for agent");
+    }
+    
+    Log::debug("Retrieved country info", [
+        'country_id' => $country->id,
+        'country_name' => $country->name ?? 'N/A',
+        'phone_code' => $country->phone_code
+    ]);
+
+    // Split comma-separated destinations
+    $destinations = array_map('trim', explode(',', $clientDialedNumber));
+
+    // Normalize each destination
+    $normalizedDestinations = [];
+    foreach ($destinations as $destination) {
+        if (str_contains($destination, '@') || str_contains($destination, '.')) {
+            // Keep SIP as-is (AT accepts sip usernames/emails)
+            $normalizedDestinations[] = $destination;
+        } else {
+            // ✅ CRITICAL FIX: Actually call the normalization method
+            $normalizedDestinations[] = $this->normalizePhoneNumber($destination, $country->phone_code);
+        }
+    }
+
+    // Build AT-compliant XML (no whitespace before declaration)
+    $response = '<?xml version="1.0" encoding="UTF-8"?>';
+    $response .= '<Response>';
+    $response .= '<Dial record="true" sequential="true"';
+    
+    // Add optional ringback tone
+    if (!empty($this->config['urls']['ringback_tone'])) {
+        $response .= ' ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"';
+    }
+
+    // Add phoneNumbers attribute with normalized numbers
+    $response .= ' phoneNumbers="' . htmlspecialchars(implode(',', $normalizedDestinations)) . '"';
+    $response .= ' />';
+    $response .= '</Response>';
+
+    Log::info("Generated outgoing dial response", [
+        'original_number' => $clientDialedNumber,
+        'normalized_destinations' => $normalizedDestinations,
+        'country' => $country->name,
+        'phone_code' => $country->phone_code,
+        'xml_starts_with' => substr($response, 0, 10) // Log first 10 chars to verify no whitespace
+    ]);
+
+    return $response;
+}
 
 
     /**
