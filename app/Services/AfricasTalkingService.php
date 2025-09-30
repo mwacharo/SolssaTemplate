@@ -158,21 +158,7 @@ class AfricasTalkingService
         }
     }
 
-    /**
-     * Check if call is outgoing based on configurable patterns
-     */
-    // private function isOutgoingCall(string $callerNumber): bool
-    // {
-    //     $outgoingPatterns = config('voice.outgoing_patterns', ['BoxleoKenya']);
 
-    //     foreach ($outgoingPatterns as $pattern) {
-    //         if (str_contains($callerNumber, $pattern)) {
-    //             return true;
-    //         }
-    //     }
-
-    //     return false;
-    // }
 
 
     private function isOutgoingCall(string $callerNumber): bool
@@ -516,7 +502,7 @@ class AfricasTalkingService
     {
         $options = IvrOption::orderBy('option_number')->get();
 
-        $response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n";
+        $response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response>";
         $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\">{$this->config['messages']['welcome']}</Say>\n";
         $response .= "<GetDigits timeout=\"{$this->config['voice']['timeout']}\" finishOnKey=\"#\" callbackUrl=\"{$this->config['urls']['callback_url']}\">\n";
 
