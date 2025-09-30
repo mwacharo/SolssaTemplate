@@ -729,10 +729,13 @@ class AfricasTalkingService
         }
 
         // 🔎 If it's a SIP client (e.g. BoxleoKenya.client_xxx), bypass normalization
-        if (str_contains($clientDialedNumber, '.client_')) {
+        if (str_contains($clientDialedNumber, '.')) { // Catches all SIP formats
             $cleanNumber = $clientDialedNumber;
             $type = 'sip_client';
-        } else {
+        }
+        
+        
+        else {
             // ✅ Normalize real phone numbers using E.164
             $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
             $type = 'phone_number';
@@ -1034,12 +1037,10 @@ class AfricasTalkingService
                         $user->save();
                     }
 
-                    // Build AT clientName for API (with prefix)
-                    // $clientNameForApi = $username . '.' . $user->username;
+            
 
                     $payload = [
                         'username'    => $username,
-                        // 'clientName'  => $clientNameForApi,
                         'clientName'  => $user->username, // Use clean username without prefix
                         'phoneNumber' => $phoneNumber,
                         'incoming'    => ($user->can_receive_calls ?? true) ? "true" : "false",
@@ -1056,7 +1057,6 @@ class AfricasTalkingService
                     // ✅ Save token + FULL client_name (with prefix) in DB
                     $user->update([
                         'token' => $response['token'],
-                        // 'client_name' => $clientNameForApi // Store "BoxleoKenya.Mwacharo"
                         'client_name' => $username . '.' . $user->username,
                     ]);
 
