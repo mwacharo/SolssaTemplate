@@ -179,65 +179,64 @@ class AfricasTalkingService
     /**
      * Handle outgoing call states
      */
-    private function handleOutgoingCall(Request $request, string $sessionId, string $callSessionState, string $callerNumber, string $clientDialedNumber)
-    {
-        Log::info("Handling outgoing call state: {$callSessionState}", [
-            'sessionId' => $sessionId,
-            'callerNumber' => $callerNumber,
-            'clientDialedNumber' => $clientDialedNumber
-        ]);
+    private function handleOutgoingCall(
+    Request $request,
+    string $sessionId,
+    string $callSessionState,
+    string $callerNumber,
+    string $clientDialedNumber
+) {
+    Log::info("Handling outgoing call state: {$callSessionState}", [
+        'sessionId' => $sessionId,
+        'callerNumber' => $callerNumber,
+        'clientDialedNumber' => $clientDialedNumber
+    ]);
 
-        switch ($callSessionState) {
-            case 'Ringing':
-                $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
-                // return $this->generateDialResponse($clientDialedNumber);
-                //      $xml = $this->generateDialResponse($clientDialedNumber);
-                // return response($xml, 200)->header('Content-Type', 'application/xml');
+    switch ($callSessionState) {
+        case 'Ringing':
+            // Mark agent busy
+            $this->updateAgentStatus($callerNumber, $sessionId, 'busy');
 
-                $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
+            // Generate AT-compliant XML dial response
+            $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
 
-                // Manually set the correct content type
-                // header('Content-Type: application/xml');
-                // echo $xml;
-                // exit; // Stop Laravel from adding anything else
-
-
-                  // Return Laravel response with proper headers (DON'T use echo/exit)
             return response($xml, 200)
                 ->header('Content-Type', 'application/xml; charset=UTF-8');
 
-            case 'CallInitiated':
-                $this->updateCallHistory($sessionId, ['status' => 'initiated']);
-                break;
+        case 'CallInitiated':
+            $this->updateCallHistory($sessionId, ['status' => 'initiated']);
+            break;
 
-            case 'CallConnected':
-                $this->updateCallHistory($sessionId, ['status' => 'connected']);
-                break;
+        case 'CallConnected':
+            $this->updateCallHistory($sessionId, ['status' => 'connected']);
+            break;
 
-            case 'CallTerminated':
-                if ($request->boolean('isActive')) {
-                    $this->updateCallHistory($sessionId, [
-                        'callerNumber' => $callerNumber,
-                        'destinationNumber' => $clientDialedNumber,
-                        'direction' => 'outgoing',
-                        'isActive' => 1,
-                    ]);
-                }
-                break;
+        case 'CallTerminated':
+            if ($request->boolean('isActive', false)) {
+                $this->updateCallHistory($sessionId, [
+                    'callerNumber' => $callerNumber,
+                    'destinationNumber' => $clientDialedNumber,
+                    'direction' => 'outgoing',
+                    'isActive' => 1,
+                ]);
+            }
+            break;
 
-            case 'Completed':
-                $this->finalizeCall($request, $sessionId);
-                $this->resetAgentStatus($sessionId);
-                break;
+        case 'Completed':
+            $this->finalizeCall($request, $sessionId);
+            $this->resetAgentStatus($sessionId);
+            break;
 
-            default:
-                Log::warning("Unhandled outgoing call state: {$callSessionState}");
-                break;
-        }
-
-        // return '';
-        return response('', 200)->header('Content-Type', 'application/xml');
+        default:
+            Log::warning("Unhandled outgoing call state: {$callSessionState}");
+            break;
     }
+
+    // Always return valid XML even if no Dial is required
+    $emptyResponse = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
+    return response($emptyResponse, 200)
+        ->header('Content-Type', 'application/xml; charset=UTF-8');
+}
 
     /**
      * Handle incoming call routing
@@ -733,24 +732,21 @@ class AfricasTalkingService
         throw new \Exception("Country not found for authenticated user");
     }
 
-    // Determine type: SIP client or real phone number
-    if (str_contains($clientDialedNumber, '.')) { // SIP client
-        $cleanNumber = $clientDialedNumber;
-        $type = 'sip_client';
-    } else { // Normalize real phone numbers
-        $cleanNumber = $this->normalizePhoneNumber($clientDialedNumber, $country->phone_code);
-        $type = 'phone_number';
-    }
+    // Support multiple destinations if comma-separated
+    $destinations = array_map('trim', explode(',', $clientDialedNumber));
 
-    // ✅ Use nested element instead of phoneNumbers attribute
     $response  = '<?xml version="1.0" encoding="UTF-8"?>';
     $response .= '<Response>';
     $response .= '<Dial record="true" sequential="true">';
-    
-    if ($type === 'sip_client') {
-        $response .= '<Client>' . htmlspecialchars($cleanNumber) . '</Client>';
-    } else {
-        $response .= '<Number>' . htmlspecialchars($cleanNumber) . '</Number>';
+
+    foreach ($destinations as $destination) {
+        if (str_contains($destination, '.')) { // SIP client
+            $clean = $destination;
+            $response .= '<Client>' . htmlspecialchars($clean) . '</Client>';
+        } else { // Phone number
+            $clean = $this->normalizePhoneNumber($destination, $country->phone_code);
+            $response .= '<Number>' . htmlspecialchars($clean) . '</Number>';
+        }
     }
 
     $response .= '</Dial>';
@@ -758,9 +754,8 @@ class AfricasTalkingService
 
     Log::info("Generated outgoing dial response", [
         'clientDialedNumber' => $clientDialedNumber,
-        'cleanNumber' => $cleanNumber,
-        'country' => $country->name,
-        'type' => $type
+        'destinations' => $destinations,
+        'country' => $country->name
     ]);
 
     return $response;
