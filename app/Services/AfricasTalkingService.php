@@ -188,8 +188,6 @@ class AfricasTalkingService
         // Otherwise, it's a SIP client username (Bringit, mtaahub, etc.)
         return true;
     }
-
-
     /**
      * Handle outgoing call states
      */
@@ -213,9 +211,13 @@ class AfricasTalkingService
 
                 // Generate AT-compliant XML dial response
                 $xml = $this->generateDialResponse($clientDialedNumber, $callerNumber);
-
-                return response($xml, 200)
-                    ->header('Content-Type', 'text/xml; charset=UTF-8');
+                
+                Log::info("Returning Dial XML for Ringing state", ['xml_length' => strlen($xml)]);
+                
+                // Exit immediately with proper headers
+                header('Content-Type: text/xml; charset=UTF-8');
+                echo $xml;
+                exit; // ✅ Prevent any further output
 
             case 'CallInitiated':
                 $this->updateCallHistory($sessionId, ['status' => 'initiated']);
@@ -246,10 +248,14 @@ class AfricasTalkingService
                 break;
         }
 
-        // Always return valid XML even if no Dial is required
+        // Return empty XML for all other states
         $emptyResponse = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
-        return response($emptyResponse, 200)
-            ->header('Content-Type', 'text/xml; charset=UTF-8');
+        
+        Log::info("Returning empty XML for state: {$callSessionState}");
+        
+        header('Content-Type: text/xml; charset=UTF-8');
+        echo $emptyResponse;
+        exit;
     }
 
     /**
