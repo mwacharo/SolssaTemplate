@@ -132,7 +132,7 @@ class AfricasTalkingService
     /**
      * Handle voice callback with configurable routing
      */
-    public function handleVoiceCallback(Request $request): string
+    public function handleVoiceCallback(Request $request)
     {
         Log::info('Received voice callback', [
             'headers' => $request->headers->all(),
@@ -179,7 +179,7 @@ class AfricasTalkingService
     /**
      * Handle outgoing call states
      */
-    private function handleOutgoingCall(Request $request, string $sessionId, string $callSessionState, string $callerNumber, string $clientDialedNumber): string
+    private function handleOutgoingCall(Request $request, string $sessionId, string $callSessionState, string $callerNumber, string $clientDialedNumber)
     {
         Log::info("Handling outgoing call state: {$callSessionState}", [
             'sessionId' => $sessionId,
