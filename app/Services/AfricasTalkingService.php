@@ -179,12 +179,15 @@ class AfricasTalkingService
     {
         // Check if callerNumber is a valid phone number
         // Accepts +2547..., 07..., or any digit-only format
-        if (preg_match('/^\+?\d+$/', $callerNumber)) {
-            return false; // it's a real phone number
-        }
+        $isPhoneNumber = preg_match('/^\+?\d+$/', $callerNumber) ? true : false;
+        $result = !$isPhoneNumber; // true if SIP client, false if phone number
 
-        // Otherwise, it's a SIP client username (Bringit, mtaahub, etc.)
-        return true;
+        Log::info('isOutgoingCall check', [
+            'callerNumber' => $callerNumber,
+            'isOutgoing' => $result
+        ]);
+
+        return $result;
     }
     /**
      * Handle outgoing call states
