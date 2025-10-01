@@ -286,13 +286,24 @@ class AfricasTalkingService
 
         // Africa's Talking expects plain XML, not a Laravel response object
         $xml = $this->generateDynamicMenu();
-        // header('Content-Type: application/xml');
-        // echo $xml;
-        // exit;
 
-        return response($xml, 200)
-            ->header('Content-Type', 'application/xml')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+        // Kill ALL buffers and output
+        while (@ob_end_clean());
+
+        // Disable any error output
+        ini_set('display_errors', '0');
+
+        // Send headers first
+        http_response_code(200);
+        header('Content-Type: application/xml');
+        header('Content-Length: ' . strlen($xml));
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+
+        // Output ONLY the XML
+        echo $xml;
+
+        // Die immediately - prevents ANY Laravel post-processing
+        die();
     }
 
     /**
