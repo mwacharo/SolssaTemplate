@@ -501,30 +501,31 @@ class AfricasTalkingService
         }
     }
 
-    /**
-     * Generate dynamic IVR menu from database
-     */
-    public function generateDynamicMenu()
-    {
-        $options = IvrOption::orderBy('option_number')->get();
+   public function generateDynamicMenu(): string
+{
+    $options = IvrOption::orderBy('option_number')->get();
 
-        $response = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response>";
-        $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\">{$this->config['messages']['welcome']}</Say>\n";
-        $response .= "<GetDigits timeout=\"{$this->config['voice']['timeout']}\" finishOnKey=\"#\" callbackUrl=\"{$this->config['urls']['callback_url']}\">\n";
-
-        $prompt = "";
-        foreach ($options as $option) {
-            $prompt .= "Press {$option->option_number} for {$option->description}. ";
-        }
-
-        $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\" barge-in=\"true\">{$prompt}</Say>\n";
-        $response .= "</GetDigits>\n";
-        $response .= "<Say voice=\"{$this->config['voice']['default_voice']}\">{$this->config['messages']['no_input']}</Say>\n";
-        $response .= "</Response>";
-
-        return $response;
+    $prompt = "";
+    foreach ($options as $option) {
+        $prompt .= "Press {$option->option_number} for {$option->description}. ";
     }
 
+    $voice = $this->config['voice']['default_voice'] ?? 'woman';
+    $welcomeMsg = $this->config['messages']['welcome'];
+    $noInputMsg = $this->config['messages']['no_input'];
+    $timeout = $this->config['voice']['timeout'];
+    $callbackUrl = $this->config['urls']['callback_url'];
+
+    // NO newlines or spaces
+    return '<?xml version="1.0" encoding="UTF-8"?>'
+        .'<Response>'
+        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($welcomeMsg).'</Say>'
+        .'<GetDigits timeout="'.$timeout.'" finishOnKey="#" callbackUrl="'.htmlspecialchars($callbackUrl).'">'
+        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($prompt).'</Say>'
+        .'</GetDigits>'
+        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($noInputMsg).'</Say>'
+        .'</Response>';
+}
     
     /**
      * Handle DTMF selection with configurable routing
