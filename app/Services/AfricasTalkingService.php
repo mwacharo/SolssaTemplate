@@ -529,7 +529,7 @@ class AfricasTalkingService
     {
         $options = IvrOption::orderBy('option_number')->get();
 
-        $prompt = "";
+        $prompt = '';
         foreach ($options as $option) {
             $prompt .= "Press {$option->option_number} for {$option->description}. ";
         }
@@ -541,11 +541,11 @@ class AfricasTalkingService
 
         $response = '<?xml version="1.0" encoding="UTF-8"?>'
             . '<Response>'
-            . '<Say voice="woman" playBeep="false">' . htmlspecialchars($welcomeMsg) . '</Say>'
+            . '<Say voice="woman">' . htmlspecialchars($welcomeMsg) . '</Say>'
             . '<GetDigits timeout="' . $timeout . '" finishOnKey="#" callbackUrl="' . htmlspecialchars($callbackUrl) . '">'
-            . '<Say voice="woman" playBeep="false">' . htmlspecialchars($prompt) . '</Say>'
+            . '<Say voice="woman">' . htmlspecialchars($prompt) . '</Say>'
             . '</GetDigits>'
-            . '<Say voice="woman" playBeep="false">' . htmlspecialchars($noInputMsg) . '</Say>'
+            . '<Say voice="woman">' . htmlspecialchars($noInputMsg) . '</Say>'
             . '</Response>';
 
         return $response;
