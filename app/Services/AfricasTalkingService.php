@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Services;
+
 use AfricasTalking\SDK\AfricasTalking;
 use App\Events\CallStatusUpdated;
 use App\Jobs\DownloadCallRecordingJob;
@@ -244,9 +246,9 @@ class AfricasTalkingService
 
         // Return empty XML for all other states
         $emptyResponse = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
-        
+
         Log::info("Returning empty XML for state: {$callSessionState}");
-        
+
         header('Content-Type: text/xml; charset=UTF-8');
         echo $emptyResponse;
         exit;
@@ -284,9 +286,13 @@ class AfricasTalkingService
 
         // Africa's Talking expects plain XML, not a Laravel response object
         $xml = $this->generateDynamicMenu();
-        header('Content-Type: application/xml');
-        echo $xml;
-        exit;
+        // header('Content-Type: application/xml');
+        // echo $xml;
+        // exit;
+
+        return response($xml, 200)
+            ->header('Content-Type', 'application/xml')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
 
     /**
@@ -519,31 +525,32 @@ class AfricasTalkingService
         return $response;
     }
 
- public function generateDynamicMenu(): string
-{
-    $options = IvrOption::orderBy('option_number')->get();
+    public function generateDynamicMenu(): string
+    {
+        $options = IvrOption::orderBy('option_number')->get();
 
-    $prompt = "";
-    foreach ($options as $option) {
-        $prompt .= "Press {$option->option_number} for {$option->description}. ";
+        $prompt = "";
+        foreach ($options as $option) {
+            $prompt .= "Press {$option->option_number} for {$option->description}. ";
+        }
+
+        $welcomeMsg = $this->config['messages']['welcome'] ?? 'Welcome to our service.';
+        $noInputMsg = $this->config['messages']['no_input'] ?? 'We did not receive any input. Goodbye.';
+        $timeout = $this->config['voice']['timeout'] ?? 30;
+        $callbackUrl = $this->config['urls']['callback_url'];
+
+        $response = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Response>'
+            . '<Say voice="woman" playBeep="false">' . htmlspecialchars($welcomeMsg) . '</Say>'
+            . '<GetDigits timeout="' . $timeout . '" finishOnKey="#" callbackUrl="' . htmlspecialchars($callbackUrl) . '">'
+            . '<Say voice="woman" playBeep="false">' . htmlspecialchars($prompt) . '</Say>'
+            . '</GetDigits>'
+            . '<Say voice="woman" playBeep="false">' . htmlspecialchars($noInputMsg) . '</Say>'
+            . '</Response>';
+
+        return $response;
     }
 
-    $welcomeMsg = $this->config['messages']['welcome'] ?? 'Welcome to our service.';
-    $noInputMsg = $this->config['messages']['no_input'] ?? 'We did not receive any input. Goodbye.';
-    $timeout = $this->config['voice']['timeout'] ?? 30;
-    $callbackUrl = $this->config['urls']['callback_url'];
-
-    $response = '<?xml version="1.0" encoding="UTF-8"?>'
-        . '<Response>'
-        . '<Say voice="woman" playBeep="false">' . htmlspecialchars($welcomeMsg) . '</Say>'
-        . '<GetDigits timeout="' . $timeout . '" finishOnKey="#" callbackUrl="' . htmlspecialchars($callbackUrl) . '">'
-        . '<Say voice="woman" playBeep="false">' . htmlspecialchars($prompt) . '</Say>'
-        . '</GetDigits>'
-        . '<Say voice="woman" playBeep="false">' . htmlspecialchars($noInputMsg) . '</Say>'
-        . '</Response>';
-
-    return $response;
-}
     /**
      * Handle DTMF selection with configurable routing
      */
@@ -753,80 +760,80 @@ class AfricasTalkingService
     }
 
 
-private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
-{
-    // Normalize SIP username if needed (strip sip:, @domain, etc.)
-    $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
+    private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
+    {
+        // Normalize SIP username if needed (strip sip:, @domain, etc.)
+        $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
 
-    // Try to resolve agent
-    $agent = User::where('client_name', $normalizedCaller)
-        ->orWhere('phone_number', $callerNumber)
-        ->first();
+        // Try to resolve agent
+        $agent = User::where('client_name', $normalizedCaller)
+            ->orWhere('phone_number', $callerNumber)
+            ->first();
 
-    if (!$agent || !$agent->country_id) {
-        Log::error("Agent not found or missing country_id", [
-            'callerNumber' => $callerNumber,
-            'normalizedCaller' => $normalizedCaller,
-            'agent' => $agent
-        ]);
-        throw new \Exception("Cannot resolve agent/country for outgoing call");
-    }
-
-    // Get country phone code
-    $country = DB::table('countries')->where('id', $agent->country_id)->first();
-    if (!$country || empty($country->phone_code)) {
-        Log::error("Country not found or missing phone_code", [
-            'country_id' => $agent->country_id,
-            'country' => $country
-        ]);
-        throw new \Exception("Country not found or missing phone_code for agent");
-    }
-    
-    Log::debug("Retrieved country info", [
-        'country_id' => $country->id,
-        'country_name' => $country->name ?? 'N/A',
-        'phone_code' => $country->phone_code
-    ]);
-
-    // Split comma-separated destinations
-    $destinations = array_map('trim', explode(',', $clientDialedNumber));
-
-    // Normalize each destination
-    $normalizedDestinations = [];
-    foreach ($destinations as $destination) {
-        if (str_contains($destination, '@') || str_contains($destination, '.')) {
-            // Keep SIP as-is (AT accepts sip usernames/emails)
-            $normalizedDestinations[] = $destination;
-        } else {
-            // ✅ CRITICAL FIX: Actually call the normalization method
-            $normalizedDestinations[] = $this->normalizePhoneNumber($destination, $country->phone_code);
+        if (!$agent || !$agent->country_id) {
+            Log::error("Agent not found or missing country_id", [
+                'callerNumber' => $callerNumber,
+                'normalizedCaller' => $normalizedCaller,
+                'agent' => $agent
+            ]);
+            throw new \Exception("Cannot resolve agent/country for outgoing call");
         }
+
+        // Get country phone code
+        $country = DB::table('countries')->where('id', $agent->country_id)->first();
+        if (!$country || empty($country->phone_code)) {
+            Log::error("Country not found or missing phone_code", [
+                'country_id' => $agent->country_id,
+                'country' => $country
+            ]);
+            throw new \Exception("Country not found or missing phone_code for agent");
+        }
+
+        Log::debug("Retrieved country info", [
+            'country_id' => $country->id,
+            'country_name' => $country->name ?? 'N/A',
+            'phone_code' => $country->phone_code
+        ]);
+
+        // Split comma-separated destinations
+        $destinations = array_map('trim', explode(',', $clientDialedNumber));
+
+        // Normalize each destination
+        $normalizedDestinations = [];
+        foreach ($destinations as $destination) {
+            if (str_contains($destination, '@') || str_contains($destination, '.')) {
+                // Keep SIP as-is (AT accepts sip usernames/emails)
+                $normalizedDestinations[] = $destination;
+            } else {
+                // ✅ CRITICAL FIX: Actually call the normalization method
+                $normalizedDestinations[] = $this->normalizePhoneNumber($destination, $country->phone_code);
+            }
+        }
+
+        // Build AT-compliant XML
+        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
+        $response .= '<Response>';
+        $response .= '<Dial record="true" sequential="true"';
+
+        // Add optional ringback tone
+        if (!empty($this->config['urls']['ringback_tone'])) {
+            $response .= ' ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"';
+        }
+
+        // Add phoneNumbers attribute with normalized numbers
+        $response .= ' phoneNumbers="' . htmlspecialchars(implode(',', $normalizedDestinations)) . '"';
+        $response .= ' />';
+        $response .= '</Response>';
+
+        Log::info("Generated outgoing dial response", [
+            'original_number' => $clientDialedNumber,
+            'normalized_destinations' => $normalizedDestinations,
+            'country' => $country->name,
+            'phone_code' => $country->phone_code
+        ]);
+
+        return $response;
     }
-
-    // Build AT-compliant XML
-    $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-    $response .= '<Response>';
-    $response .= '<Dial record="true" sequential="true"';
-    
-    // Add optional ringback tone
-    if (!empty($this->config['urls']['ringback_tone'])) {
-        $response .= ' ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"';
-    }
-
-    // Add phoneNumbers attribute with normalized numbers
-    $response .= ' phoneNumbers="' . htmlspecialchars(implode(',', $normalizedDestinations)) . '"';
-    $response .= ' />';
-    $response .= '</Response>';
-
-    Log::info("Generated outgoing dial response", [
-        'original_number' => $clientDialedNumber,
-        'normalized_destinations' => $normalizedDestinations,
-        'country' => $country->name,
-        'phone_code' => $country->phone_code
-    ]);
-
-    return $response;
-}
 
 
 
