@@ -17,6 +17,16 @@ class ClientController extends Controller
         return response()->json(ClientResource::collection($clients));
     }
 
+    public function findByPhone(string $phone): JsonResponse
+    {
+        $client = Client::where('phone', $phone)->first();
+        if ($client) {
+            return response()->json(new ClientResource($client));
+        } else {
+            return response()->json(['message' => 'Client not found'], 404);
+        }
+    }
+
     public function store(StoreClientRequest $request): JsonResponse
     {
         $client = Client::create($request->validated());

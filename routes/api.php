@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ZoneController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\CallCentreStatistics;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
@@ -222,8 +223,13 @@ Route::prefix('v1')->group(function () {
     // For clients (you'll need to create these)
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store']);
+    // show
+    // Route::get('/clients/{id}', [ClientController::class, 'show']); 
+
     Route::put('/clients/{id}', [ClientController::class, 'update']);
     Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
+
+    // find clent by phonebnumber
 
 
     // countries 
@@ -427,6 +433,14 @@ Route::get('/dashboard', [DashboardController::class, 'index']);
 });
 
 
+// customer routes
+Route::get('/customers', [CustomerController::class, 'index']);
+Route::post('/customers', [CustomerController::class, 'store']);
+Route::get('/customers/{id}', [CustomerController::class, 'show']);
+Route::put('/customers/{id}', [CustomerController::class, 'update']);
+Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
+// find customer by phone number
+Route::get('/customers/phone/{phone}', [CustomerController::class, 'findByPhone']);
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 

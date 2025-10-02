@@ -610,14 +610,29 @@ const loadClientData = async () => {
 }
 
 const loadClientInfo = async (phoneNumber) => {
-  // In real app, fetch from API
-  // const response = await fetch(`/api/clients/by-phone/${phoneNumber}`)
-  // const clientData = await response.json()
-  // callerInfo.value = clientData
+  try {
+    const response = await fetch(`/api/v1/customers/phone/${encodeURIComponent(phoneNumber)}`)
+    if (!response.ok) {
+      // If not found, set minimal info and log
+      console.warn('Customer not found:', phoneNumber)
+      callerInfo.value = {
+        name: 'Unknown Caller',
+        phone: phoneNumber
+      }
+      return
+    }
+    const clientData = await response.json()
+    callerInfo.value = clientData
+  } catch (error) {
+    console.error('Failed to load client info:', error)
+    // Fallback to minimal info
+    callerInfo.value.phone = phoneNumber
+  }
+    // Fallback to minimal info
+    callerInfo.value.phone = phoneNumber
+  }
   
-  // Mock implementation
-  callerInfo.value.phone = phoneNumber
-}
+
 
 const loadClientOrders = async (phoneNumber) => {
   loadingOrders.value = true
