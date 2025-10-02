@@ -666,7 +666,7 @@ class AfricasTalkingService
     /**
      * Create voice response with optional dial
      */
-    private function createVoiceResponse(string $message, ?string $phoneNumber = null): string
+    private function createVoiceResponsec(string $message, ?string $phoneNumber = null): string
     {
         Log::info("Generating voice response", [
             'message' => $message,
@@ -679,7 +679,9 @@ class AfricasTalkingService
         if ($phoneNumber) {
             $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
             $ringbackAttr = $this->config['urls']['ringback_tone'] ?
-                'ringbackTone="' . $this->config['urls']['ringback_tone'] . '"' : '';
+                'ringbackTone="' . $this->config['urls']['ringback_tone'] 
+                
+                . '"' : '';
 
             $response .= "<Dial {$recordAttr} sequential=\"true\" {$ringbackAttr} phoneNumbers=\"{$phoneNumber}\"/>\n";
         }
@@ -695,6 +697,42 @@ class AfricasTalkingService
 
         return $response;
     }
+
+
+
+    private function createVoiceResponse(string $message, ?string $phoneNumber = null): string
+{
+    Log::info("Generating voice response", [
+        'message' => $message,
+        'phoneNumber' => $phoneNumber
+    ]);
+
+    // Build XML cleanly without leading spaces/newlines
+    $response = '<?xml version="1.0" encoding="UTF-8"?>';
+    $response .= '<Response>';
+    $response .= '<Say voice="' . $this->config['voice']['default_voice'] . '">' . htmlspecialchars($message) . '</Say>';
+
+    if ($phoneNumber) {
+        $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
+        $ringbackAttr = $this->config['urls']['ringback_tone']
+            ? ' ringbackTone="' . $this->config['urls']['ringback_tone'] . '"'
+            : '';
+
+        $response .= '<Dial ' . $recordAttr . ' sequential="true"' . $ringbackAttr . ' phoneNumbers="' . $phoneNumber . '" />';
+    }
+
+    $response .= '</Response>';
+
+    // Ensure raw XML (no spaces, no JSON, no BOM)
+    if (php_sapi_name() !== 'cli') {
+        header('Content-Type: application/xml; charset=utf-8');
+        echo trim($response);
+        exit;
+    }
+
+    return trim($response);
+}
+
 
     /**
      * Create dial response for outgoing calls

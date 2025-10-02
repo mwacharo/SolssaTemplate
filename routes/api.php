@@ -34,10 +34,38 @@ use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
+use Illuminate\Support\Facades\Http;
+
 
 // Route::apiResource('/v1/admin/permissions', \App\Http\Controllers\Api\Admin\PermissionController::class)->except(['show', 'update']);
 
 
+
+Route::post('/webrtc/token', function () {
+    $payload = [
+        'username'    => 'sandbox',            // or 'sandbox'
+        'clientName'  => 'testClient01',
+        'phoneNumber' => '+254711082260',
+        'incoming'    => "true",                // must be string
+        'outgoing'    => "true",
+        'expire'      => "3600"
+    ];
+
+    \Log::debug('WebRTC Token Request Payload:', $payload);
+
+    $response = Http::withHeaders([
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+        'apiKey' => env('AFRICASTALKING_API_KEY')
+    ])->post('https://webrtc.africastalking.com/capability-token/request', $payload);
+
+    \Log::debug('WebRTC Token Response:', [
+        'status' => $response->status(),
+        'body' => $response->json()
+    ]);
+
+    return $response->json();
+});
 
 Route::post('/v1/get-vendor-token', [VendorAuthController::class, 'getToken']);
 
