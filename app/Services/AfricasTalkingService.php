@@ -700,37 +700,42 @@ class AfricasTalkingService
 
 
 
-    private function createVoiceResponse(string $message, ?string $phoneNumber = null): string
+private function createVoiceResponse(string $message, ?string $phoneNumber = null): string
 {
     Log::info("Generating voice response", [
         'message' => $message,
         'phoneNumber' => $phoneNumber
     ]);
 
-    // Build XML cleanly without leading spaces/newlines
-    $response = '<?xml version="1.0" encoding="UTF-8"?>';
-    $response .= '<Response>';
-    $response .= '<Say voice="' . $this->config['voice']['default_voice'] . '">' . htmlspecialchars($message) . '</Say>';
+    $voice = htmlspecialchars($this->config['voice']['default_voice']);
+    
+    // Build XML with NO spaces between tags, NO space before />
+    $response = '<?xml version="1.0" encoding="UTF-8"?>'
+        .'<Response>'
+        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($message).'</Say>';
 
     if ($phoneNumber) {
         $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
         $ringbackAttr = $this->config['urls']['ringback_tone']
-            ? ' ringbackTone="' . $this->config['urls']['ringback_tone'] . '"'
+            ? 'ringbackTone="'.htmlspecialchars($this->config['urls']['ringback_tone']).'"'
             : '';
-
-        $response .= '<Dial ' . $recordAttr . ' sequential="true"' . $ringbackAttr . ' phoneNumbers="' . $phoneNumber . '" />';
+        
+        // NO space before />, NO spaces between attributes
+        $response .= '<Dial '.$recordAttr.' sequential="true" '.$ringbackAttr.' phoneNumbers="'.htmlspecialchars($phoneNumber).'"/>';
     }
 
     $response .= '</Response>';
 
-    // Ensure raw XML (no spaces, no JSON, no BOM)
+    // Output raw XML and die
     if (php_sapi_name() !== 'cli') {
-        header('Content-Type: application/xml; charset=utf-8');
-        echo trim($response);
-        exit;
+        while (@ob_end_clean());
+        header('Content-Type: application/xml; charset=UTF-8');
+        header('Content-Length: ' . strlen($response));
+        echo $response;
+        die();
     }
 
-    return trim($response);
+    return $response;
 }
 
 
