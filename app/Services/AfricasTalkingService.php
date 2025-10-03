@@ -1106,8 +1106,22 @@ class AfricasTalkingService
             $user = User::where('client_name', $payload['callerNumber'] ?? null)->first();
 
             if ($user) {
+                Log::info('Associating call history with user', [
+                    'call_history_id' => $callHistory->id,
+                    'user_id' => $user->id,
+                    'client_name' => $user->client_name,
+                ]);
                 $callHistory->user()->associate($user);
                 $callHistory->save();
+                Log::info('Call history associated with user successfully', [
+                    'call_history_id' => $callHistory->id,
+                    'user_id' => $user->id,
+                ]);
+            } else {
+                Log::warning('No user found to associate with call history', [
+                    'callerNumber' => $payload['callerNumber'] ?? null,
+                    'call_history_id' => $callHistory->id,
+                ]);
             }
 
             // ✅ Dispatch download job if recording exists
