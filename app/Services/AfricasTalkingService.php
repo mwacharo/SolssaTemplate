@@ -418,11 +418,11 @@ class AfricasTalkingService
         }
 
         // Get the most recent order by caller with agent assigned
-        $order = Order::whereHas('client', function ($query) use ($callerNumber) {
+        $order = Order::whereHas('customer', function ($query) use ($callerNumber) {
             $query->where('phone_number', $callerNumber);
         })
             ->whereNotNull('agent_id')
-            ->with('agent', 'client')
+            ->with('agent', 'customer')
             ->latest()
             ->first();
 
