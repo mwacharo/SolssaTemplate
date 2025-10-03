@@ -134,7 +134,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-            Associate agents
+              Associate agents
             </button>
 
             <button @click="newOrder"
@@ -343,14 +343,33 @@
                           </path>
                         </svg>
                       </button>
-                      <button @click="duplicateOrder(order)" class="p-1 text-green-600 hover:bg-green-100 rounded"
+
+
+                      <!-- recordings -->
+                      <!-- Microphone with Soundwaves Icon -->
+                      <button @click="viewRecordings(order)" class="p-1 text-purple-600 hover:bg-purple-100 rounded"
+                        title="View Call Recordings">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                          stroke="currentColor" stroke-width="2">
+                          <!-- Mic capsule -->
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 2a3 3 0 00-3 3v6a3 3 0 006 0V5a3 3 0 00-3-3z" />
+                          <!-- Mic base -->
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19 10v2a7 7 0 01-14 0v-2m7 9v3m-4 0h8" />
+                          <!-- Sound waves -->
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 9a9 9 0 000 6M19 9a9 9 0 010 6" />
+                        </svg>
+                      </button>
+
+                      <!-- <button @click="duplicateOrder(order)" class="p-1 text-green-600 hover:bg-green-100 rounded"
                         title="Duplicate Order">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
                           </path>
                         </svg>
-                      </button>
+                      </button> -->
                       <button @click="deleteOrder(order)" class="p-1 text-red-600 hover:bg-red-100 rounded"
                         title="Delete Order">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -420,26 +439,19 @@
     </div>
     <!-- <CallDialogs /> -->
 
-     <!-- <CallDialogs
+    <!-- <CallDialogs
       v-model:is-open="isNewCallDialog"
       :phone="newCallPhone"
       @close="isNewCallDialog = false"
     /> -->
 
-       <!-- Call Dialog Component -->
-    <CallDialogs
-      v-model="callDialogType"
-      :call-data="{ phone: newCallPhone }"
-      @call-made="onCallMade"
-      @call-transferred="onCallTransferred"
-      @agent-called="onAgentCalled"
-    />
+    <!-- Call Dialog Component -->
+    <CallDialogs v-model="callDialogType" :call-data="{ phone: newCallPhone }" @call-made="onCallMade"
+      @call-transferred="onCallTransferred" @agent-called="onAgentCalled" />
 
 
-    <OrderForm :is-create="isCreateMode" @order-saved="onOrderSaved" 
-    @dialog-closed="onDialogClosed"
-      @open-call-dialog="handleOpenCallDialog"
-    />
+    <OrderForm :is-create="isCreateMode" @order-saved="onOrderSaved" @dialog-closed="onDialogClosed"
+      @open-call-dialog="handleOpenCallDialog" />
     <!-- Reusable Dialog -->
     <!-- <BulkAction :show="orderStore.bulkActionDialog" :type="orderStore.dialogType" :title="orderStore.dialogTitle"
       :selectedOrders="orderStore.selectedOrders" :deliveryMen="deliveryMen" :callCentreAgents="callCentreAgents"

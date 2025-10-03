@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Ticket;
 use App\Models\Contact;
 use App\Models\CallCenterSetting;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -512,32 +513,32 @@ class AfricasTalkingService
         }
     }
 
-   public function generateDynamicMenu(): string
-{
-    $options = IvrOption::orderBy('option_number')->get();
+    public function generateDynamicMenu(): string
+    {
+        $options = IvrOption::orderBy('option_number')->get();
 
-    $prompt = "";
-    foreach ($options as $option) {
-        $prompt .= "Press {$option->option_number} for {$option->description}. ";
+        $prompt = "";
+        foreach ($options as $option) {
+            $prompt .= "Press {$option->option_number} for {$option->description}. ";
+        }
+
+        $voice = $this->config['voice']['default_voice'] ?? 'woman';
+        $welcomeMsg = $this->config['messages']['welcome'];
+        $noInputMsg = $this->config['messages']['no_input'];
+        $timeout = $this->config['voice']['timeout'];
+        $callbackUrl = $this->config['urls']['callback_url'];
+
+        // NO newlines or spaces
+        return '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Response>'
+            . '<Say voice="' . $voice . '" playBeep="false">' . htmlspecialchars($welcomeMsg) . '</Say>'
+            . '<GetDigits timeout="' . $timeout . '" finishOnKey="#" callbackUrl="' . htmlspecialchars($callbackUrl) . '">'
+            . '<Say voice="' . $voice . '" playBeep="false">' . htmlspecialchars($prompt) . '</Say>'
+            . '</GetDigits>'
+            . '<Say voice="' . $voice . '" playBeep="false">' . htmlspecialchars($noInputMsg) . '</Say>'
+            . '</Response>';
     }
 
-    $voice = $this->config['voice']['default_voice'] ?? 'woman';
-    $welcomeMsg = $this->config['messages']['welcome'];
-    $noInputMsg = $this->config['messages']['no_input'];
-    $timeout = $this->config['voice']['timeout'];
-    $callbackUrl = $this->config['urls']['callback_url'];
-
-    // NO newlines or spaces
-    return '<?xml version="1.0" encoding="UTF-8"?>'
-        .'<Response>'
-        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($welcomeMsg).'</Say>'
-        .'<GetDigits timeout="'.$timeout.'" finishOnKey="#" callbackUrl="'.htmlspecialchars($callbackUrl).'">'
-        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($prompt).'</Say>'
-        .'</GetDigits>'
-        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($noInputMsg).'</Say>'
-        .'</Response>';
-}
-    
     /**
      * Handle DTMF selection with configurable routing
      */
@@ -679,8 +680,8 @@ class AfricasTalkingService
         if ($phoneNumber) {
             $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
             $ringbackAttr = $this->config['urls']['ringback_tone'] ?
-                'ringbackTone="' . $this->config['urls']['ringback_tone'] 
-                
+                'ringbackTone="' . $this->config['urls']['ringback_tone']
+
                 . '"' : '';
 
             $response .= "<Dial {$recordAttr} sequential=\"true\" {$ringbackAttr} phoneNumbers=\"{$phoneNumber}\"/>\n";
@@ -700,43 +701,43 @@ class AfricasTalkingService
 
 
 
-private function createVoiceResponse(string $message, ?string $phoneNumber = null): string
-{
-    Log::info("Generating voice response", [
-        'message' => $message,
-        'phoneNumber' => $phoneNumber
-    ]);
+    private function createVoiceResponse(string $message, ?string $phoneNumber = null): string
+    {
+        Log::info("Generating voice response", [
+            'message' => $message,
+            'phoneNumber' => $phoneNumber
+        ]);
 
-    $voice = htmlspecialchars($this->config['voice']['default_voice']);
-    
-    // Build XML with NO spaces between tags, NO space before />
-    $response = '<?xml version="1.0" encoding="UTF-8"?>'
-        .'<Response>'
-        .'<Say voice="'.$voice.'" playBeep="false">'.htmlspecialchars($message).'</Say>';
+        $voice = htmlspecialchars($this->config['voice']['default_voice']);
 
-    if ($phoneNumber) {
-        $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-        $ringbackAttr = $this->config['urls']['ringback_tone']
-            ? 'ringbackTone="'.htmlspecialchars($this->config['urls']['ringback_tone']).'"'
-            : '';
-        
-        // NO space before />, NO spaces between attributes
-        $response .= '<Dial '.$recordAttr.' sequential="true" '.$ringbackAttr.' phoneNumbers="'.htmlspecialchars($phoneNumber).'"/>';
+        // Build XML with NO spaces between tags, NO space before />
+        $response = '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<Response>'
+            . '<Say voice="' . $voice . '" playBeep="false">' . htmlspecialchars($message) . '</Say>';
+
+        if ($phoneNumber) {
+            $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
+            $ringbackAttr = $this->config['urls']['ringback_tone']
+                ? 'ringbackTone="' . htmlspecialchars($this->config['urls']['ringback_tone']) . '"'
+                : '';
+
+            // NO space before />, NO spaces between attributes
+            $response .= '<Dial ' . $recordAttr . ' sequential="true" ' . $ringbackAttr . ' phoneNumbers="' . htmlspecialchars($phoneNumber) . '"/>';
+        }
+
+        $response .= '</Response>';
+
+        // Output raw XML and die
+        if (php_sapi_name() !== 'cli') {
+            while (@ob_end_clean());
+            header('Content-Type: application/xml; charset=UTF-8');
+            header('Content-Length: ' . strlen($response));
+            echo $response;
+            die();
+        }
+
+        return $response;
     }
-
-    $response .= '</Response>';
-
-    // Output raw XML and die
-    if (php_sapi_name() !== 'cli') {
-        while (@ob_end_clean());
-        header('Content-Type: application/xml; charset=UTF-8');
-        header('Content-Length: ' . strlen($response));
-        echo $response;
-        die();
-    }
-
-    return $response;
-}
 
 
     /**
@@ -1012,6 +1013,11 @@ private function createVoiceResponse(string $message, ?string $phoneNumber = nul
                 'body' => $request->all()
             ]);
 
+
+            // who made the call ___can be identified callerNumber 
+
+            // what order is associated with the call ___can be associated with clientDialedNumber thats has an order
+
             $payload = $request->all();
 
             // Update call history with event data
@@ -1038,6 +1044,18 @@ private function createVoiceResponse(string $message, ?string $phoneNumber = nul
                     'lastBridgeHangupCause' => $payload['lastBridgeHangupCause'] ?? null,
                 ]
             );
+
+
+
+            $customer = Customer::where('phone', $payload['clientDialedNumber'] ?? null)->first();
+
+
+            $order = $customer?->orders()->latest()->first();
+
+            if ($order) {
+                $callHistory->order()->associate($order);
+                $callHistory->save();
+            }
 
 
             // ✅ Dispatch download job if recording exists

@@ -629,7 +629,7 @@ const loadClientInfo = async (phoneNumber) => {
     callerInfo.value.phone = phoneNumber
   }
     // Fallback to minimal info
-    callerInfo.value.phone = phoneNumber
+    // callerInfo.value.phone = phoneNumber
   }
   
 
