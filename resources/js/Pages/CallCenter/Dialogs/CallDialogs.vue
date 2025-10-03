@@ -725,6 +725,8 @@ const callClient = async () => {
   try {
     await callCenterStore.callClient(newCallForm.value.phone)
     notify.success(`Calling ${newCallForm.value.phone}`)
+        callActive.value = true
+
     emit('call-made', newCallForm.value)
     // closeDialog()
   // } catch (error) {
