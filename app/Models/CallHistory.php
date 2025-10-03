@@ -70,5 +70,6 @@ class CallHistory extends Model
     {
         return $this->belongsTo(Order::class);
     }
+    
 
 }

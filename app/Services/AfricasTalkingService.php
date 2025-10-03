@@ -1113,7 +1113,9 @@ class AfricasTalkingService
                     'user_id' => $user->id,
                     'client_name' => $user->client_name,
                 ]);
-                $callHistory->user()->associate($user);
+                // $callHistory->user()->associate($user);
+                $callHistory->agent()->associate($user);
+
                 $callHistory->save();
                 Log::info('Call history associated with user successfully', [
                     'call_history_id' => $callHistory->id,
