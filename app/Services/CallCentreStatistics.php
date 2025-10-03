@@ -65,11 +65,22 @@ class CallStatsService
                 ->where('user_id', $user->id)
                 ->whereNull('deleted_at');
 
+            // Logging for debugging outgoingQuery
+            Log::info('Building outgoingQuery for agent', [
+                'user_id' => $user->id,
+                'phone_number' => $user->phone_number,
+                'client_name' => $user->client_name,
+            ]);
+
             $outgoingQuery = CallHistory::query()
                 // ->where('callerNumber', $user->phone_number)
                 ->where('callerNumber', $user->client_name)
-
                 ->whereNull('deleted_at');
+
+            Log::info('OutgoingQuery built', [
+                'query_sql' => $outgoingQuery->toSql(),
+                'bindings' => $outgoingQuery->getBindings(),
+            ]);
 
             if ($dateRange) {
                 $incomingQuery->whereBetween('created_at', $dateRange);
