@@ -1090,7 +1090,9 @@ class AfricasTalkingService
 
 
 
-            $customer = Customer::where('phone', $payload['clientDialedNumber'] ?? null)->first();
+            // $customer = Customer::where('phone', $payload['clientDialedNumber'] ?? null)->first();
+
+        $customer = Customer::where('phone', 'like', $payload['clientDialedNumber'] ?? null)->first();
 
 
             $order = $customer?->orders()->latest()->first();
