@@ -66,7 +66,9 @@ class CallStatsService
                 ->whereNull('deleted_at');
 
             $outgoingQuery = CallHistory::query()
-                ->where('callerNumber', $user->phone_number)
+                // ->where('callerNumber', $user->phone_number)
+                ->where('callerNumber', $user->client_name)
+
                 ->whereNull('deleted_at');
 
             if ($dateRange) {
