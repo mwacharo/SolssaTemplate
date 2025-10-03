@@ -641,7 +641,9 @@ class AfricasTalkingService
         // redirecting to soft phone
 
         if (!$user && $ivrOption->forward_number) {
-            $user = User::where('phone_number', $ivrOption->forward_number)->first();
+            // $user = User::where('phone_number', $ivrOption->forward_number)->first();
+            $user = User::where('client_name', $ivrOption->forward_number)->first();
+
 
             //  $user = User::where('username', $ivrOption->forward_number)->first();
 
@@ -1057,6 +1059,15 @@ class AfricasTalkingService
                 $callHistory->save();
             }
 
+
+            // associate with user who made the call
+
+            $user = User::where('client_name', $payload['callerNumber'] ?? null)->first();
+
+            if ($user) {
+                $callHistory->user()->associate($user);
+                $callHistory->save();
+            }
 
             // ✅ Dispatch download job if recording exists
             if (!empty($payload['recordingUrl'])) {

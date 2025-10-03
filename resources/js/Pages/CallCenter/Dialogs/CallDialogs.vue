@@ -61,6 +61,20 @@
               </v-autocomplete>
             </div>
 
+
+            <!-- hold mute handgup buttons  -->
+            <div class="d-flex justify-center mb-6">
+              <v-btn icon color="grey" variant="outlined" class="mx-2">
+                <v-icon>mdi-microphone-off</v-icon>
+              </v-btn>
+              <v-btn icon color="red" variant="outlined" class="mx-2">
+                <v-icon>mdi-phone-hangup</v-icon>
+              </v-btn>
+              <!-- <v-btn icon color="grey" variant="outlined" class="mx-2">
+                <v-icon>mdi-hand-back-right</v-icon>
+              </v-btn> -->
+            </div>
+
             <!-- Call Options -->
             <v-expansion-panels class="mb-4" variant="accordion">
               <v-expansion-panel>
