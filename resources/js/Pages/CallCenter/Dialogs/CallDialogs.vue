@@ -63,15 +63,27 @@
 
 
             <!-- hold mute handgup buttons  -->
-            <div class="d-flex justify-center mb-6">
-              <v-btn icon color="grey" variant="outlined" class="mx-2">
-                <v-icon>mdi-microphone-off</v-icon>
+            <div   v-if="callActive" class="d-flex justify-center mb-6">
+              <v-btn 
+              icon 
+              color="grey" 
+              variant="outlined" 
+              class="mx-2"
+              @click="muteCall"
+              >
+              <v-icon>mdi-microphone-off</v-icon>
               </v-btn>
-              <v-btn icon color="red" variant="outlined" class="mx-2">
-                <v-icon>mdi-phone-hangup</v-icon>
+              <v-btn 
+              icon 
+              color="red" 
+              variant="outlined" 
+              class="mx-2"
+              @click="hangupCall"
+              >
+              <v-icon>mdi-phone-hangup</v-icon>
               </v-btn>
               <!-- <v-btn icon color="grey" variant="outlined" class="mx-2">
-                <v-icon>mdi-hand-back-right</v-icon>
+              <v-icon>mdi-hand-back-right</v-icon>
               </v-btn> -->
             </div>
 
@@ -551,6 +563,10 @@ const showDialpad = ref(false)
 const agentSearch = ref('')
 const selectedAgent = ref(null)
 const transferTab = ref('number')
+const callActive = ref(false) // 
+
+
+
 
 // Validation rules
 // const phoneRules = [
@@ -653,7 +669,7 @@ const closeDialog = () => {
 
 const resetForms = () => {
   newCallForm.value = {
-    phone: '0741821113',
+    phone: '',
     contact: null,
     callerId: '',
     recordCall: true,
@@ -710,11 +726,27 @@ const callClient = async () => {
     await callCenterStore.callClient(newCallForm.value.phone)
     notify.success(`Calling ${newCallForm.value.phone}`)
     emit('call-made', newCallForm.value)
-    closeDialog()
-  } catch (error) {
+    // closeDialog()
+  // } catch (error) {
     notify.error('Failed to make call')
   } finally {
     makingCall.value = false
+  }
+}
+const muteCall = async () => {
+  try {
+    await callCenterStore.handleMute()
+    notify.success('Call muted')
+  } catch (error) {
+    notify.error('Failed to mute call')
+  }
+}
+const hangupCall = async () => {
+  try {
+    await callCenterStore.hangup()
+    notify.success('Call ended')
+  } catch (error) {
+    notify.error('Failed to end call')
   }
 }
 
