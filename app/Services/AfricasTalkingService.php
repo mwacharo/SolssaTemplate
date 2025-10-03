@@ -411,32 +411,73 @@ class AfricasTalkingService
 
 
 
-    private function getOrderAndAgent(string $callerNumber): array|null
-    {
-        if (!class_exists(Order::class)) {
-            return null;
-        }
+    // private function getOrderAndAgent(string $callerNumber): array|null
+    // {
+    //     if (!class_exists(Order::class)) {
+    //         return null;
+    //     }
 
-        // Get the most recent order by caller with agent assigned
-        $order = Order::whereHas('customer', function ($query) use ($callerNumber) {
+    //     // Get the most recent order by caller with agent assigned
+    //     $order = Order::whereHas('customer', function ($query) use ($callerNumber) {
+    //         $query->where('phone', $callerNumber);
+    //     })
+    //         // ->whereNotNull('agent_id')
+
+    //         ->whereHas('orderAssignments', function ($query) use ($order) {
+    //             $query->where('role', 'CallAgent')
+    //                   ->where('order_id', $order->id);
+    //         })
+    //         ->with('agent', 'customer')
+    //         ->latest()
+    //         ->first();
+
+    //     // Validate order and check if agent is available
+    //     if (!$order || !$order->agent || $order->agent->status !== 'available') {
+    //         return null;
+    //     }
+
+    //     // Return both order and agent
+    //     return [
+    //         'order' => $order,
+    //         'agent' => $order->agent,
+    //     ];
+    // }
+    
+
+    private function getOrderAndAgent(string $callerNumber): array|null
+{
+    if (!class_exists(Order::class)) {
+        return null;
+    }
+
+    // Get the most recent order by caller
+    $order = Order::whereHas('customer', function ($query) use ($callerNumber) {
             $query->where('phone', $callerNumber);
         })
-            ->whereNotNull('agent_id')
-            ->with('agent', 'customer')
-            ->latest()
-            ->first();
+        ->with(['customer', 'orderAssignments.user' => function ($query) {
+            $query->where('role', 'CallAgent');
+        }])
+        ->latest()
+        ->first();
 
-        // Validate order and check if agent is available
-        if (!$order || !$order->agent || $order->agent->status !== 'available') {
-            return null;
-        }
-
-        // Return both order and agent
-        return [
-            'order' => $order,
-            'agent' => $order->agent,
-        ];
+    if (!$order) {
+        return null;
     }
+
+    // Find the agent from assignments
+    $agentAssignment = $order->orderAssignments
+        ->where('role', 'CallAgent')
+        ->first();
+
+    if (!$agentAssignment || !$agentAssignment->user || $agentAssignment->user->status !== 'available') {
+        return null;
+    }
+
+    return [
+        'order' => $order,
+        'agent' => $agentAssignment->user,
+    ];
+}
 
 
     /**
