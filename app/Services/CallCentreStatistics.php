@@ -30,6 +30,9 @@ class CallStatsService
             }
 
             $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
+            // the outgoing call are made by users with client_name  as the callerNumber
+
+            
             $outgoingCalls = (clone $query)->whereNotNull('callerNumber')->count();
             $incomingDuration = (clone $query)->whereNotNull('user_id')->sum('durationInSeconds');
             $outgoingDuration = (clone $query)->whereNotNull('callerNumber')->sum('durationInSeconds');
