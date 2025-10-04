@@ -157,10 +157,11 @@
             </div>
           </template>
 
-          <template v-slot:item.country="{ item }">
-            <span class="text-body-2">{{ item.country || 'N/A' }}</span>
-          </template>
-          
+            <template v-slot:item.country="{ item }">
+            <span class="text-body-2">
+              {{ item.country?.name || item.country_name || 'N/A' }}
+            </span>
+            </template>
           <template v-slot:item.actions="{ item }">
             <div class="d-flex gap-1">
               <v-tooltip text="Manage Roles" location="top">
@@ -1335,7 +1336,10 @@ function openCreateDialog() {
     name: '',
     email: '',
     password: '',
-    country: '',
+    client_name: '',
+    username: '',
+    role_id: null,
+    country_id: '',
     status: 'Active'
   }
   userDialog.value = true
@@ -1346,8 +1350,11 @@ function openEditDialog(user) {
   userFormData.value = {
     name: user.name,
     email: user.email,
+    client_name: user.client_name || '',
+    username: user.username || '',
+    role_id: user.role_id || null,
     password: '',
-    country: user.country || '',
+    country_id: user.country_id || '',
     status: user.status
   }
   userDialog.value = true
