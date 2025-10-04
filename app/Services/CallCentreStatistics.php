@@ -22,6 +22,11 @@ class CallStatsService
         Log::info('Fetching agent stats', ['user_id' => $user->id, 'date_range' => $dateRange]);
 
         $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('Admin');
+        
+        Log::info('User role check', ['user_id' => $user->id, 'is_admin' => $isAdmin]);
+
+        
+
         $ivrOptions = IvrOption::all();
 
         if ($isAdmin) {
