@@ -30,9 +30,9 @@ class CallStatsService
             }
 
             $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
-            // the outgoing call are made by users with client_name  as the callerNumber
-
             
+            // the outgoing call are made by users with client_name  as the callerNumber
+            // $outgoingCalls = (clone $query)->where('callerNumber', $user->client_name)->count();
             $outgoingCalls = (clone $query)->whereNotNull('callerNumber')->count();
             $incomingDuration = (clone $query)->whereNotNull('user_id')->sum('durationInSeconds');
             $outgoingDuration = (clone $query)->whereNotNull('callerNumber')->sum('durationInSeconds');
@@ -75,10 +75,50 @@ class CallStatsService
                 'client_name' => $user->client_name,
             ]);
 
-            $outgoingQuery = CallHistory::query()
-                // ->where('callerNumber', $user->phone_number)
-                ->where('callerNumber', $user->client_name)
-                ->whereNull('deleted_at');
+            // $outgoingQuery = CallHistory::query()
+            //     // ->where('callerNumber', $user->phone_number)
+            //     ->where('callerNumber', $user->client_name)
+            //     ->whereNull('deleted_at');
+
+
+
+
+                // Build outgoing query robustly:
+    $outgoingQuery = CallHistory::query()->whereNull('deleted_at')
+        ->where(function ($q) use ($user, $normalizedPhone) {
+            // Prefer direction column if present
+            if (Schema::hasColumn((new CallHistory())->getTable(), 'direction')) {
+                $q->where('direction', 'Outbound');
+            } else {
+                // Match by callerNumber = phone OR softphone client_name OR dotted softphone variants
+                if ($normalizedPhone) {
+                    // remove non-digits from callerNumber in SQL and match
+                    $q->whereRaw(
+                       "REPLACE(REPLACE(REPLACE(callerNumber, '+', ''), ' ', ''), '-', '') LIKE ?",
+                       ["%{$normalizedPhone}%"]
+                    );
+                }
+
+                if (!empty($user->client_name)) {
+                    // If a phone-match was already added, use OR for client_name matches
+                    $q->orWhere('callerNumber', $user->client_name)
+                      ->orWhere('callerNumber', 'like', "{$user->client_name}.%")
+                      ->orWhere('callerNumber', 'like', "%.{$user->client_name}");
+                    // Fallback: you could also do a generic like:
+                    // ->orWhere('callerNumber', 'like', "%{$user->client_name}%")
+                    // but that may be too broad in some datasets.
+                }
+            }
+        });
+
+    // Debug logging to inspect the eventually-built SQL / bindings & a sample
+    Log::info('Built outgoingQuery for agent', [
+        'user_id' => $user->id,
+        'phone_number' => $user->phone_number,
+        'client_name' => $user->client_name,
+        'query_sql' => $outgoingQuery->toSql(),
+        'bindings' => $outgoingQuery->getBindings(),
+    ]);
 
             Log::info('OutgoingQuery built', [
                 'query_sql' => $outgoingQuery->toSql(),
