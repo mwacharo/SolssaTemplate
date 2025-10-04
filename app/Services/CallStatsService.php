@@ -206,7 +206,10 @@ class CallStatsService
     {
         // Log::info('Fetching agent stats', ['user_id' => $user->id, 'date_range' => $dateRange]);
 
-        $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('SuperAdmin');
+        $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('Admin');
+
+                Log::info('User role check', ['user_id' => $user->id, 'is_admin' => $isAdmin]);
+
         $ivrOptions = IvrOption::all();
 
         if ($isAdmin) {
@@ -217,9 +220,14 @@ class CallStatsService
             }
 
             $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
-            $outgoingCalls = (clone $query)->whereNotNull('callerNumber')->count();
+            // $outgoingCalls = (clone $query)->whereNotNull('callerNumber')->count();
             $incomingDuration = (clone $query)->whereNotNull('user_id')->sum('durationInSeconds');
-            $outgoingDuration = (clone $query)->whereNotNull('callerNumber')->sum('durationInSeconds');
+            // $outgoingDuration = (clone $query)->whereNotNull('callerNumber')->sum('durationInSeconds');
+
+               $outgoingCalls = $this->scopeSoftphoneOutgoing(clone $query)->count();
+            $outgoingDuration = $this->scopeSoftphoneOutgoing(clone $query)->sum('durationInSeconds');
+
+
 
             $missedCalls = (clone $query)
                 ->whereIn('lastBridgeHangupCause', ['NO_ANSWER', 'SERVICE_UNAVAILABLE'])
@@ -312,6 +320,19 @@ class CallStatsService
             'peak_hours' => $peakHourStats,
             'updated_at' => $user->updated_at,
         ];
+    }
+
+
+
+
+    private function scopeSoftphoneOutgoing($query)
+    {
+        $softphonePatterns = ['%.%', 'client_%', '%client_%', 'BoxleoKenya.%'];
+        return $query->where(function ($q) use ($softphonePatterns) {
+            foreach ($softphonePatterns as $pattern) {
+                $q->orWhere('callerNumber', 'like', $pattern);
+            }
+        });
     }
 
 
