@@ -10,6 +10,8 @@ use Illuminate\Support\Collection;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+
 
 
 class CallStatsService
@@ -67,6 +69,14 @@ class CallStatsService
             $incomingQuery = CallHistory::query()
                 ->where('user_id', $user->id)
                 ->whereNull('deleted_at');
+
+
+                 // Define and normalize phone safely (before closure use)
+    $normalizedPhone = null;
+    if (!empty($user->phone_number)) {
+        // Keep digits only for consistent comparison
+        $normalizedPhone = preg_replace('/\D+/', '', $user->phone_number);
+    } 
 
             // Logging for debugging outgoingQuery
             Log::info('Building outgoingQuery for agent', [
