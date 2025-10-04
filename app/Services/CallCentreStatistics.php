@@ -21,7 +21,7 @@ class CallStatsService
     {
         Log::info('Fetching agent stats', ['user_id' => $user->id, 'date_range' => $dateRange]);
 
-        $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('SuperAdmin');
+        $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('Admin');
         $ivrOptions = IvrOption::all();
 
         if ($isAdmin) {
@@ -32,12 +32,15 @@ class CallStatsService
             }
 
             $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
-            
+
             // the outgoing call are made by users with client_name  as the callerNumber
             // $outgoingCalls = (clone $query)->where('callerNumber', $user->client_name)->count();
-            $outgoingCalls = (clone $query)->whereNotNull('callerNumber')->count();
+            // $outgoingCalls = (clone $query)->whereNotNull('callerNumber')->count();
+            $outgoingCalls = $this->scopeSoftphoneOutgoing(clone $query)->count();
+            $outgoingDuration = $this->scopeSoftphoneOutgoing(clone $query)->sum('durationInSeconds');
+
             $incomingDuration = (clone $query)->whereNotNull('user_id')->sum('durationInSeconds');
-            $outgoingDuration = (clone $query)->whereNotNull('callerNumber')->sum('durationInSeconds');
+            // $outgoingDuration = (clone $query)->whereNotNull('callerNumber')->sum('durationInSeconds');
 
             $missedCalls = (clone $query)
                 ->whereIn('lastBridgeHangupCause', ['NO_ANSWER', 'SERVICE_UNAVAILABLE'])
@@ -71,12 +74,12 @@ class CallStatsService
                 ->whereNull('deleted_at');
 
 
-                 // Define and normalize phone safely (before closure use)
-    $normalizedPhone = null;
-    if (!empty($user->phone_number)) {
-        // Keep digits only for consistent comparison
-        $normalizedPhone = preg_replace('/\D+/', '', $user->phone_number);
-    } 
+            // Define and normalize phone safely (before closure use)
+            $normalizedPhone = null;
+            if (!empty($user->phone_number)) {
+                // Keep digits only for consistent comparison
+                $normalizedPhone = preg_replace('/\D+/', '', $user->phone_number);
+            }
 
             // Logging for debugging outgoingQuery
             Log::info('Building outgoingQuery for agent', [
@@ -93,42 +96,42 @@ class CallStatsService
 
 
 
-                // Build outgoing query robustly:
-    $outgoingQuery = CallHistory::query()->whereNull('deleted_at')
-        ->where(function ($q) use ($user, $normalizedPhone) {
-            // Prefer direction column if present
-            if (Schema::hasColumn((new CallHistory())->getTable(), 'direction')) {
-                $q->where('direction', 'Outbound');
-            } else {
-                // Match by callerNumber = phone OR softphone client_name OR dotted softphone variants
-                if ($normalizedPhone) {
-                    // remove non-digits from callerNumber in SQL and match
-                    $q->whereRaw(
-                       "REPLACE(REPLACE(REPLACE(callerNumber, '+', ''), ' ', ''), '-', '') LIKE ?",
-                       ["%{$normalizedPhone}%"]
-                    );
-                }
+            // Build outgoing query robustly:
+            $outgoingQuery = CallHistory::query()->whereNull('deleted_at')
+                ->where(function ($q) use ($user, $normalizedPhone) {
+                    // Prefer direction column if present
+                    if (Schema::hasColumn((new CallHistory())->getTable(), 'direction')) {
+                        $q->where('direction', 'Outbound');
+                    } else {
+                        // Match by callerNumber = phone OR softphone client_name OR dotted softphone variants
+                        if ($normalizedPhone) {
+                            // remove non-digits from callerNumber in SQL and match
+                            $q->whereRaw(
+                                "REPLACE(REPLACE(REPLACE(callerNumber, '+', ''), ' ', ''), '-', '') LIKE ?",
+                                ["%{$normalizedPhone}%"]
+                            );
+                        }
 
-                if (!empty($user->client_name)) {
-                    // If a phone-match was already added, use OR for client_name matches
-                    $q->orWhere('callerNumber', $user->client_name)
-                      ->orWhere('callerNumber', 'like', "{$user->client_name}.%")
-                      ->orWhere('callerNumber', 'like', "%.{$user->client_name}");
-                    // Fallback: you could also do a generic like:
-                    // ->orWhere('callerNumber', 'like', "%{$user->client_name}%")
-                    // but that may be too broad in some datasets.
-                }
-            }
-        });
+                        if (!empty($user->client_name)) {
+                            // If a phone-match was already added, use OR for client_name matches
+                            $q->orWhere('callerNumber', $user->client_name)
+                                ->orWhere('callerNumber', 'like', "{$user->client_name}.%")
+                                ->orWhere('callerNumber', 'like', "%.{$user->client_name}");
+                            // Fallback: you could also do a generic like:
+                            // ->orWhere('callerNumber', 'like', "%{$user->client_name}%")
+                            // but that may be too broad in some datasets.
+                        }
+                    }
+                });
 
-    // Debug logging to inspect the eventually-built SQL / bindings & a sample
-    Log::info('Built outgoingQuery for agent', [
-        'user_id' => $user->id,
-        'phone_number' => $user->phone_number,
-        'client_name' => $user->client_name,
-        'query_sql' => $outgoingQuery->toSql(),
-        'bindings' => $outgoingQuery->getBindings(),
-    ]);
+            // Debug logging to inspect the eventually-built SQL / bindings & a sample
+            Log::info('Built outgoingQuery for agent', [
+                'user_id' => $user->id,
+                'phone_number' => $user->phone_number,
+                'client_name' => $user->client_name,
+                'query_sql' => $outgoingQuery->toSql(),
+                'bindings' => $outgoingQuery->getBindings(),
+            ]);
 
             Log::info('OutgoingQuery built', [
                 'query_sql' => $outgoingQuery->toSql(),
@@ -195,33 +198,44 @@ class CallStatsService
 
 
 
+    private function scopeSoftphoneOutgoing($query)
+    {
+        $softphonePatterns = ['%.%', 'client_%', '%client_%', 'BoxleoKenya.%'];
+        return $query->where(function ($q) use ($softphonePatterns) {
+            foreach ($softphonePatterns as $pattern) {
+                $q->orWhere('callerNumber', 'like', $pattern);
+            }
+        });
+    }
+
+
 
     protected function getAirtimeStatistics(User $user, bool $isAdmin, ?array $dateRange = null): array
     {
         $incomingQuery = CallHistory::query()->whereNull('deleted_at');
         $outgoingQuery = CallHistory::query()->whereNull('deleted_at');
-    
+
         if (!$isAdmin) {
             $incomingQuery->where('user_id', $user->id);
             $outgoingQuery->where('callerNumber', $user->phone_number);
         }
-    
+
         if ($dateRange) {
             $incomingQuery->whereBetween('created_at', $dateRange);
             $outgoingQuery->whereBetween('created_at', $dateRange);
-    
+
             $incomingAmount = $incomingQuery->sum('amount');
             $outgoingAmount = $outgoingQuery->sum('amount');
-    
+
             $incomingDuration = $incomingQuery->sum('durationInSeconds');
             $outgoingDuration = $outgoingQuery->sum('durationInSeconds');
-    
+
             return [
                 // Airtime (Amount)
                 'total_airtime_spent' => round($incomingAmount + $outgoingAmount, 2),
                 'incoming_airtime_spent' => round($incomingAmount, 2),
                 'outgoing_airtime_spent' => round($outgoingAmount, 2),
-    
+
                 // Duration
                 'total_airtime_seconds' => $incomingDuration + $outgoingDuration,
                 'incoming_airtime_seconds' => $incomingDuration,
@@ -229,43 +243,43 @@ class CallStatsService
                 'total_airtime_minutes' => round(($incomingDuration + $outgoingDuration) / 60, 2),
             ];
         }
-    
+
         // Group by day when no date range provided
         $incoming = $incomingQuery->selectRaw('DATE(created_at) as date, SUM(amount) as total_amount, SUM(durationInSeconds) as total_duration')
             ->groupByRaw('DATE(created_at)')
             ->orderBy('date')
             ->get();
-    
+
         $outgoing = $outgoingQuery->selectRaw('DATE(created_at) as date, SUM(amount) as total_amount, SUM(durationInSeconds) as total_duration')
             ->groupByRaw('DATE(created_at)')
             ->orderBy('date')
             ->get();
-    
+
         $dailyStats = [];
-    
+
         foreach ($incoming as $in) {
             $dailyStats[$in->date]['incoming_amount'] = $in->total_amount;
             $dailyStats[$in->date]['incoming_duration'] = $in->total_duration;
         }
-    
+
         foreach ($outgoing as $out) {
             $dailyStats[$out->date]['outgoing_amount'] = $out->total_amount;
             $dailyStats[$out->date]['outgoing_duration'] = $out->total_duration;
         }
-    
+
         $results = [];
         foreach ($dailyStats as $date => $values) {
             $inAmount = $values['incoming_amount'] ?? 0;
             $outAmount = $values['outgoing_amount'] ?? 0;
             $inDuration = $values['incoming_duration'] ?? 0;
             $outDuration = $values['outgoing_duration'] ?? 0;
-    
+
             $results[$date] = [
                 // Airtime (Amount)
                 'incoming_airtime_spent' => round($inAmount, 2),
                 'outgoing_airtime_spent' => round($outAmount, 2),
                 'total_airtime_spent' => round($inAmount + $outAmount, 2),
-    
+
                 // Duration
                 'incoming_airtime_seconds' => $inDuration,
                 'outgoing_airtime_seconds' => $outDuration,
@@ -273,73 +287,73 @@ class CallStatsService
                 'total_airtime_minutes' => round(($inDuration + $outDuration) / 60, 2),
             ];
         }
-    
+
         return $results;
     }
-    
+
 
 
     protected function getPeakHourStatistics(User $user, bool $isAdmin, ?array $dateRange = null): array
-{
-    $incomingQuery = CallHistory::query()
-        ->selectRaw('HOUR(created_at) as hour, COUNT(*) as total')
-        ->whereNull('deleted_at')
-        ->groupByRaw('HOUR(created_at)')
-        ->orderBy('hour');
+    {
+        $incomingQuery = CallHistory::query()
+            ->selectRaw('HOUR(created_at) as hour, COUNT(*) as total')
+            ->whereNull('deleted_at')
+            ->groupByRaw('HOUR(created_at)')
+            ->orderBy('hour');
 
-    $outgoingQuery = CallHistory::query()
-        ->selectRaw('HOUR(created_at) as hour, COUNT(*) as total')
-        ->whereNull('deleted_at')
-        ->groupByRaw('HOUR(created_at)')
-        ->orderBy('hour');
+        $outgoingQuery = CallHistory::query()
+            ->selectRaw('HOUR(created_at) as hour, COUNT(*) as total')
+            ->whereNull('deleted_at')
+            ->groupByRaw('HOUR(created_at)')
+            ->orderBy('hour');
 
-    if (!$isAdmin) {
-        $incomingQuery->where('user_id', $user->id);
-        $outgoingQuery->where('callerNumber', $user->phone_number);
-    }
-
-    if ($dateRange) {
-        $incomingQuery->whereBetween('created_at', $dateRange);
-        $outgoingQuery->whereBetween('created_at', $dateRange);
-    }
-
-    $incoming = $incomingQuery->get();
-    $outgoing = $outgoingQuery->get();
-
-    // Combine into a neat structure
-    $peakStats = [];
-
-    foreach ($incoming as $row) {
-        $hour = str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':00';
-        $peakStats[$hour]['incoming'] = $row->total;
-    }
-
-    foreach ($outgoing as $row) {
-        $hour = str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':00';
-        $peakStats[$hour]['outgoing'] = $row->total;
-    }
-
-    // Add total + identify peak
-    $busiestHour = null;
-    $maxCalls = 0;
-
-    foreach ($peakStats as $hour => &$stats) {
-        $stats['incoming'] = $stats['incoming'] ?? 0;
-        $stats['outgoing'] = $stats['outgoing'] ?? 0;
-        $stats['total'] = $stats['incoming'] + $stats['outgoing'];
-
-        if ($stats['total'] > $maxCalls) {
-            $maxCalls = $stats['total'];
-            $busiestHour = $hour;
+        if (!$isAdmin) {
+            $incomingQuery->where('user_id', $user->id);
+            $outgoingQuery->where('callerNumber', $user->phone_number);
         }
-    }
 
-    return [
-        'peak_hour_data' => $peakStats,
-        'busiest_hour' => $busiestHour,
-        'call_count' => $maxCalls,
-    ];
-}
+        if ($dateRange) {
+            $incomingQuery->whereBetween('created_at', $dateRange);
+            $outgoingQuery->whereBetween('created_at', $dateRange);
+        }
+
+        $incoming = $incomingQuery->get();
+        $outgoing = $outgoingQuery->get();
+
+        // Combine into a neat structure
+        $peakStats = [];
+
+        foreach ($incoming as $row) {
+            $hour = str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':00';
+            $peakStats[$hour]['incoming'] = $row->total;
+        }
+
+        foreach ($outgoing as $row) {
+            $hour = str_pad($row->hour, 2, '0', STR_PAD_LEFT) . ':00';
+            $peakStats[$hour]['outgoing'] = $row->total;
+        }
+
+        // Add total + identify peak
+        $busiestHour = null;
+        $maxCalls = 0;
+
+        foreach ($peakStats as $hour => &$stats) {
+            $stats['incoming'] = $stats['incoming'] ?? 0;
+            $stats['outgoing'] = $stats['outgoing'] ?? 0;
+            $stats['total'] = $stats['incoming'] + $stats['outgoing'];
+
+            if ($stats['total'] > $maxCalls) {
+                $maxCalls = $stats['total'];
+                $busiestHour = $hour;
+            }
+        }
+
+        return [
+            'peak_hour_data' => $peakStats,
+            'busiest_hour' => $busiestHour,
+            'call_count' => $maxCalls,
+        ];
+    }
 
 
     public function analyzeIvrStatistics(Collection $ivrOptions, Collection $ivrStats, ?array $dateRange = null, int $userId = null): Collection
