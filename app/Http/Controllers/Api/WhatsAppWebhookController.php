@@ -181,6 +181,7 @@ class WhatsAppWebhookController extends Controller
                     'text' => $text
                 ]);
                 $result = $ai->handleCustomerMessage($text, $recentOrders);
+                Log::info("🧠 AI response generated", $result);
             } else {
                 $result = [
                     'reply'   => "Sorry, I could not find your phone number in our system. Can you confirm your registered number?",

@@ -660,6 +660,7 @@ class IntelligentSupportService
         }
 
         // Use AI for complex reasoning with full context
+       // hybrid AI response with context and reasoning 
         $aiResponse = $this->getHybridAiResponse($text, $customer, $recentOrders, $company, $history, $policy, $attachments);
 
         if ($aiResponse) {
