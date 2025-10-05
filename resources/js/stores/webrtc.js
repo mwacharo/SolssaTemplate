@@ -228,61 +228,68 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
 
 
-    async function connectToRealtimeAI(phoneNumber) {
-        try {
-            const { data: order } = await axios.get(`https://app.boxleocourier.com/api/contact-search/${phoneNumber}`, {
-                timeout: 120000,
-            });
+   async function connectToRealtimeAI(phoneNumber) {
+    try {
+        console.log("🎧 Connecting AI for:", phoneNumber);
 
-            const { data: realtimeSession } = await axios.post('/api/v1/realtime/session', {
-                context: { phoneNumber, order }
-            });
+        // 1️⃣ Get recent order
+        const { data: order } = await axios.get(
+            `https://app.boxleocourier.com/api/contact-search/${phoneNumber}`, 
+            { timeout: 120000 }
+        );
 
-            console.log("🎙️ OpenAI Realtime Session:", realtimeSession);
+        // 2️⃣ Create a Realtime session from your Laravel backend
+        const { data: realtimeSession } = await axios.post('/api/v1/realtime/session', {
+            context: { phoneNumber, order }
+        });
 
-            // Setup a WebRTC connection
-            const pc = new RTCPeerConnection();
+        console.log("🎙️ OpenAI Realtime Session:", realtimeSession);
 
-            // Add local mic audio (the caller’s voice) to the connection
-            const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+        // 3️⃣ Create the WebRTC connection for AI voice
+        const pc = new RTCPeerConnection();
 
-            // Play AI’s audio response
-            const audioEl = document.createElement("audio");
-            audioEl.autoplay = true;
-            pc.ontrack = event => {
-                audioEl.srcObject = event.streams[0];
-            };
+        // Play the AI’s voice out loud
+        const audioEl = document.createElement("audio");
+        audioEl.autoplay = true;
+        pc.ontrack = event => {
+            audioEl.srcObject = event.streams[0];
+        };
 
-            // Create offer
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
+        // 4️⃣ Use your computer mic for the AI input
+        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-            // Send the offer SDP to OpenAI Realtime endpoint
-            const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${realtimeSession.client_secret.value}`,
-                    "Content-Type": "application/sdp"
-                },
-                body: offer.sdp
-            });
+        // 5️⃣ Create SDP offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
 
-            // Receive the AI’s answer and set remote description
-            const answer = {
-                type: "answer",
-                sdp: await response.text(),
-            };
-            await pc.setRemoteDescription(answer);
+        // 6️⃣ Send offer to OpenAI
+        const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${realtimeSession.client_secret.value}`,
+                "Content-Type": "application/sdp"
+            },
+            body: offer.sdp
+        });
 
-            console.log("✅ Connected to OpenAI Realtime voice session");
+        // 7️⃣ Set AI’s answer
+        const answer = {
+            type: "answer",
+            sdp: await response.text(),
+        };
+        await pc.setRemoteDescription(answer);
 
-        } catch (err) {
-            console.error("❌ Error connecting to Realtime AI:", err);
-        }
+        console.log("✅ Connected to OpenAI Realtime voice session");
+
+        // 8️⃣ (Optional) AI greeting for testing
+        const synth = new SpeechSynthesisUtterance("Hi there! I am Boxleo AI Assistant, ready to assist.");
+        window.speechSynthesis.speak(synth);
+
+    } catch (err) {
+        console.error("❌ Error connecting to Realtime AI:", err);
     }
-
-
+}
 
     return {
         afClient,
