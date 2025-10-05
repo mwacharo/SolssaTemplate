@@ -176,6 +176,10 @@ class WhatsAppWebhookController extends Controller
 
             // ✅ Adjust AI input depending on client presence
             if ($clientFound) {
+                Log::info("🧠 Client found, passing text and to handleCustomerMessage recent orders to AI", [
+                    'recentOrders' => $recentOrders,
+                    'text' => $text
+                ]);
                 $result = $ai->handleCustomerMessage($text, $recentOrders);
             } else {
                 $result = [
