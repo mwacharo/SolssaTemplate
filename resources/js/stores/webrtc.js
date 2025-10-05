@@ -181,9 +181,13 @@ export const useWebRTCStore = defineStore('webrtc', () => {
                 updateAgentStatus('busy');
 
                 try {
-                    await event.answer();
-                    console.log("✅ Auto-answered call from", event.from);
-                    connectToRealtimeAI(event.from);
+                    if (typeof event.answer === 'function') {
+                        await event.answer();
+                        console.log("✅ Auto-answered call from", event.from);
+                        connectToRealtimeAI(event.from);
+                    } else {
+                        console.error("❌ No valid method to answer the call on event object:", event);
+                    }
                 } catch (err) {
                     console.error("❌ Could not auto-answer:", err);
                 }
