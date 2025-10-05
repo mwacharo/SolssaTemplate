@@ -446,7 +446,7 @@ Route::get('/customers/phone/{phone}', [CustomerController::class, 'findByPhone'
 
 
 // realtime open ai api 
-Route::post('/realtime/session', [RealtimeController::class, 'createSession']);
+Route::post('/v1/realtime/session', [RealtimeController::class, 'createSession']);
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
