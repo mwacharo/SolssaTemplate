@@ -60,7 +60,7 @@ class HandleFailedCallsJob
                 continue;
             }
 
-            $userId = $call->userId ?? 35;
+            $userId = $call->userId ?? 1;
             $chatId = $phone . '@c.us';
 
             Log::info('Dispatching SendWhatsAppMessageJob', compact('chatId','userId'));

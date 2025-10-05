@@ -205,7 +205,7 @@ class WhatsAppWebhookController extends Controller
         // 🔹 Send reply
         if ($reply) {
             try {
-                $this->whatsAppService->sendMessage($chatId, $reply, 35);
+                $this->whatsAppService->sendMessage($chatId, $reply, 1);
                 Log::info("📤 Reply sent to {$chatId}");
             } catch (\Throwable $e) {
                 Log::error("❌ WhatsAppService error: " . $e->getMessage());
