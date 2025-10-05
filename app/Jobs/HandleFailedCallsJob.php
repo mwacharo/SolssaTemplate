@@ -66,6 +66,7 @@ class HandleFailedCallsJob
             Log::info('Dispatching SendWhatsAppMessageJob', compact('chatId','userId'));
             SendWhatsAppMessageJob::dispatch(
                 chatId: $chatId,
+                // pass the order details in the and come with messageContent
                 messageContent: "We tried calling you about your order. Please call us back.",
                 userId: $userId
             );

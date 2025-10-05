@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
+use App\Http\Controllers\Api\RealtimeController;
 use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
@@ -441,6 +442,11 @@ Route::put('/customers/{id}', [CustomerController::class, 'update']);
 Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
 // find customer by phone number
 Route::get('/customers/phone/{phone}', [CustomerController::class, 'findByPhone']);
+
+
+
+// realtime open ai api 
+Route::post('/realtime/session', [RealtimeController::class, 'createSession']);
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
