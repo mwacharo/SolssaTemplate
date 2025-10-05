@@ -174,27 +174,23 @@ export const useWebRTCStore = defineStore('webrtc', () => {
             // });
 
 
-             client.on('incomingcall', async (event) => {
-                console.log("📞 Incoming call from", event.from);
+    client.on('incomingcall', async (event) => {
+    console.log("📞 Incoming call from", event.from);
+    updateAgentStatus('busy');
 
-                console.log("you clicked me");
-                updateAgentStatus('busy');
-
-                try {
-                    if (typeof event.answer === 'function') {
-                        await event.answer();
-                        console.log("✅ Auto-answered call from", event.from);
-                        connectToRealtimeAI(event.from);
-                    } else {
-                        console.error("❌ No valid method to answer the call on event object:", event);
-                    }
-                } catch (err) {
-                    console.error("❌ Could not auto-answer:", err);
-                }
-
-           
-
-            });
+    try {
+        // make sure client exists and is connected
+        if (webrtcStore.afClient) {
+            webrtcStore.afClient.answer();
+            console.log("✅ Auto-answered call from", event.from);
+            connectToRealtimeAI(event.from);
+        } else {
+            console.error("❌ No active Africastalking WebRTC client instance");
+        }
+    } catch (err) {
+        console.error("❌ Could not auto-answer:", err);
+    }
+});
 
             client.on('hangup', (event) => {
                 console.log("☎️ Call hung up:", event.reason);
