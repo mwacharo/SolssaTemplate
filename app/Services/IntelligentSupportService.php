@@ -49,7 +49,7 @@ class IntelligentSupportService
         }
 
         // Example: count past "uncollected" orders
-        $uncollectedCount = Order::whereHas('client', function ($q) use ($customerId) {
+        $uncollectedCount = Order::whereHas('customer', function ($q) use ($customerId) {
             $q->where('id', $customerId);
             })
             ->whereIn('status', ['Uncollected', 'Returned', 'Delivery Failed'])
@@ -402,7 +402,7 @@ class IntelligentSupportService
         if (!$customerId) return collect();
         
         return Order::where('customer_id', $customerId)
-            ->with(['vendor', 'rider', 'agent', 'client', 'orderItems.product'])
+            ->with(['vendor', 'rider', 'agent', 'customer', 'orderItems.product'])
             ->latest('created_at')
             ->limit($limit)
             ->get();
@@ -488,7 +488,7 @@ class IntelligentSupportService
     {
         $orderNo = $entities['order_no'] ?? null;
         if ($orderNo) {
-            return Order::where('order_no', $orderNo)->with(['vendor', 'rider', 'agent', 'client', 'orderItems.product'])->first();
+            return Order::where('order_no', $orderNo)->with(['vendor', 'rider', 'agent', 'customer', 'orderItems.product'])->first();
         }
         return collect($recentOrders)->first();
     }
@@ -630,7 +630,7 @@ class IntelligentSupportService
             ];
         }
 
-        $customer = $this->getOrderProp($recentOrders[0], 'client') ?? null; 
+        $customer = $this->getOrderProp($recentOrders[0], 'customer') ?? null;
         Log::info('IntelligentSupportService: Extracted customer from recentOrders', [
             'customer' => $customer,
         ]);
@@ -770,7 +770,7 @@ class IntelligentSupportService
                 'vendor' => $this->normalizeRelationshipData($this->getOrderProp($order, 'vendor')),
                 'rider' => $this->normalizeRelationshipData($this->getOrderProp($order, 'rider')),
                 'agent' => $this->normalizeRelationshipData($this->getOrderProp($order, 'agent')),
-                'client' => $this->normalizeRelationshipData($this->getOrderProp($order, 'client')),
+                'customer' => $this->normalizeRelationshipData($this->getOrderProp($order, 'customer')),
                 'items' => $this->normalizeOrderItems($this->getOrderProp($order, 'order_items')),
                 'tracking_info' => $this->getOrderProp($order, 'tracking_info'),
                 'notes' => $this->getOrderProp($order, 'notes'),
@@ -1170,7 +1170,7 @@ PROMPT;
         $customerId = is_array($customer) ? ($customer['id'] ?? null) : ($customer->id ?? null);
         if (!$customerId) return 0;
 
-        return Order::whereHas('client', function ($q) use ($customerId) {
+        return Order::whereHas('customer', function ($q) use ($customerId) {
             $q->where('id', $customerId);
         })->count();
     }
@@ -1181,7 +1181,7 @@ PROMPT;
         $customerId = is_array($customer) ? ($customer['id'] ?? null) : ($customer->id ?? null);
         if (!$customerId) return 0.0;
 
-        return Order::whereHas('client', function ($q) use ($customerId) {
+        return Order::whereHas('customer', function ($q) use ($customerId) {
             $q->where('id', $customerId);
         })->avg('total_price') ?? 0.0;
     }
