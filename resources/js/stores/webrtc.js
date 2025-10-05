@@ -158,36 +158,36 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
             });
 
-            // client.on('incomingcall', (event) => {
-            //     console.log("📞 Incoming call from", event.from);
-
-            //     console.log("you clicked me");
-            //     updateAgentStatus('busy');
-
-
-
-            //     setIncomingCall({
-            //         from: event.from,
-            //         duration: 'Connecting...',
-            //     });
-
-            // });
-
-
-            client.on('incomingcall', async (event) => {
+            client.on('incomingcall', (event) => {
                 console.log("📞 Incoming call from", event.from);
+
+                console.log("you clicked me");
                 updateAgentStatus('busy');
 
-                try {
-                    // make sure client exists and is connected
-                    client.answer();
-                    console.log("✅ Auto-answered call from", event.from);
-                    connectToRealtimeAI(event.from);
 
-                } catch (err) {
-                    console.error("❌ Could not auto-answer:", err);
-                }
+
+                setIncomingCall({
+                    from: event.from,
+                    duration: 'Connecting...',
+                });
+
             });
+
+
+            // client.on('incomingcall', async (event) => {
+            //     console.log("📞 Incoming call from", event.from);
+            //     updateAgentStatus('busy');
+
+            //     try {
+            //         // make sure client exists and is connected
+            //         client.answer();
+            //         console.log("✅ Auto-answered call from", event.from);
+            //         connectToRealtimeAI(event.from);
+
+            //     } catch (err) {
+            //         console.error("❌ Could not auto-answer:", err);
+            //     }
+            // });
 
             client.on('hangup', (event) => {
                 console.log("☎️ Call hung up:", event.reason);
