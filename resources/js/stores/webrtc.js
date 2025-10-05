@@ -158,36 +158,36 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
             });
 
-            client.on('incomingcall', (event) => {
-                console.log("📞 Incoming call from", event.from);
-
-                console.log("you clicked me");
-                updateAgentStatus('busy');
-
-
-
-                setIncomingCall({
-                    from: event.from,
-                    duration: 'Connecting...',
-                });
-
-            });
-
-
-            // client.on('incomingcall', async (event) => {
+            // client.on('incomingcall', (event) => {
             //     console.log("📞 Incoming call from", event.from);
+
+            //     console.log("you clicked me");
             //     updateAgentStatus('busy');
 
-            //     try {
-            //         // make sure client exists and is connected
-            //         client.answer();
-            //         console.log("✅ Auto-answered call from", event.from);
-            //         connectToRealtimeAI(event.from);
 
-            //     } catch (err) {
-            //         console.error("❌ Could not auto-answer:", err);
-            //     }
+
+            //     setIncomingCall({
+            //         from: event.from,
+            //         duration: 'Connecting...',
+            //     });
+
             // });
+
+
+            client.on('incomingcall', async (event) => {
+                console.log("📞 Incoming call from", event.from);
+                updateAgentStatus('busy');
+
+                try {
+                    // make sure client exists and is connected
+                    client.answer();
+                    console.log("✅ Auto-answered call from", event.from);
+                    connectToRealtimeAI(event.from);
+
+                } catch (err) {
+                    console.error("❌ Could not auto-answer:", err);
+                }
+            });
 
             client.on('hangup', (event) => {
                 console.log("☎️ Call hung up:", event.reason);
@@ -204,13 +204,101 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
 
 
+async function connectToRealtimeAI(phoneNumber) {
+    try {
+        console.log("🎧 Starting AI Realtime session for:", phoneNumber);
+
+        // 1️⃣ Fetch order info
+        const { data: order } = await axios.get(`https://app.boxleocourier.com/api/contact-search/${phoneNumber}`, {
+            timeout: 120000,
+        });
+
+        // 2️⃣ Create a Realtime session on your backend (Laravel)
+        const { data: realtimeSession } = await axios.post('/api/v1/realtime/session', {
+            context: { phoneNumber, order }
+        });
+
+        console.log("🧠 OpenAI Realtime Session Created:", realtimeSession);
+
+        // 3️⃣ Create WebRTC connection
+        const pc = new RTCPeerConnection();
+
+        // 4️⃣ Add local microphone (agent’s mic)
+        const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+        // 5️⃣ Create audio element for AI voice output
+        const audioEl = document.createElement("audio");
+        audioEl.autoplay = true;
+        audioEl.controls = true; // helpful during debugging
+        audioEl.style.position = "fixed";
+        audioEl.style.bottom = "10px";
+        audioEl.style.right = "10px";
+        document.body.appendChild(audioEl);
+
+        // Handle AI audio track
+        pc.ontrack = event => {
+            console.log("🎵 AI audio track received");
+            const [stream] = event.streams;
+            const [track] = stream.getAudioTracks();
+
+            track.onunmute = () => {
+                console.log("✅ AI started speaking...");
+            };
+
+            audioEl.srcObject = stream;
+        };
+
+        // 6️⃣ Create an SDP offer
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        // 7️⃣ Send the offer to OpenAI Realtime API
+        const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${realtimeSession.client_secret.value}`,
+                "Content-Type": "application/sdp"
+            },
+            body: offer.sdp
+        });
+
+        const answerSdp = await response.text();
+
+        // Check if AI response includes audio
+        if (!answerSdp.includes("m=audio")) {
+            console.warn("⚠️ AI response did not contain audio. Check OpenAI session config.");
+        }
+
+        // 8️⃣ Apply AI answer to local connection
+        await pc.setRemoteDescription({
+            type: "answer",
+            sdp: answerSdp
+        });
+
+        console.log("✅ Connected to OpenAI Realtime AI session successfully");
+
+        // 9️⃣ Handle autoplay block
+        try {
+            await audioEl.play();
+        } catch (err) {
+            console.warn("⚠️ Autoplay blocked by browser. Click anywhere to allow audio.");
+            document.body.addEventListener("click", async () => {
+                await audioEl.play();
+                console.log("🔊 Audio playback resumed after user gesture");
+            }, { once: true });
+        }
+
+    } catch (err) {
+        console.error("❌ Error connecting to Realtime AI:", err);
+    }
+}
+
+
+
+
     // async function connectToRealtimeAI(phoneNumber) {
     //     try {
-    //         // const { data: order } = await axios.get(`/api/v1/orders/recent?phone=${phoneNumber}`);
-
-    //         // retunrs orders 
-
-
     //         const { data: order } = await axios.get(`https://app.boxleocourier.com/api/contact-search/${phoneNumber}`, {
     //             timeout: 120000,
     //         });
@@ -220,67 +308,48 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     //         });
 
     //         console.log("🎙️ OpenAI Realtime Session:", realtimeSession);
-    //         // later: use this to connect WebRTC audio
+
+    //         // Setup a WebRTC connection
+    //         const pc = new RTCPeerConnection();
+
+    //         // Add local mic audio (the caller’s voice) to the connection
+    //         const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    //         localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+    //         // Play AI’s audio response
+    //         const audioEl = document.createElement("audio");
+    //         audioEl.autoplay = true;
+    //         pc.ontrack = event => {
+    //             audioEl.srcObject = event.streams[0];
+    //         };
+
+    //         // Create offer
+    //         const offer = await pc.createOffer();
+    //         await pc.setLocalDescription(offer);
+
+    //         // Send the offer SDP to OpenAI Realtime endpoint
+    //         const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
+    //             method: "POST",
+    //             headers: {
+    //                 Authorization: `Bearer ${realtimeSession.client_secret.value}`,
+    //                 "Content-Type": "application/sdp"
+    //             },
+    //             body: offer.sdp
+    //         });
+
+    //         // Receive the AI’s answer and set remote description
+    //         const answer = {
+    //             type: "answer",
+    //             sdp: await response.text(),
+    //         };
+    //         await pc.setRemoteDescription(answer);
+
+    //         console.log("✅ Connected to OpenAI Realtime voice session");
+
     //     } catch (err) {
     //         console.error("❌ Error connecting to Realtime AI:", err);
     //     }
     // }
-
-
-
-    async function connectToRealtimeAI(phoneNumber) {
-        try {
-            const { data: order } = await axios.get(`https://app.boxleocourier.com/api/contact-search/${phoneNumber}`, {
-                timeout: 120000,
-            });
-
-            const { data: realtimeSession } = await axios.post('/api/v1/realtime/session', {
-                context: { phoneNumber, order }
-            });
-
-            console.log("🎙️ OpenAI Realtime Session:", realtimeSession);
-
-            // Setup a WebRTC connection
-            const pc = new RTCPeerConnection();
-
-            // Add local mic audio (the caller’s voice) to the connection
-            const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-
-            // Play AI’s audio response
-            const audioEl = document.createElement("audio");
-            audioEl.autoplay = true;
-            pc.ontrack = event => {
-                audioEl.srcObject = event.streams[0];
-            };
-
-            // Create offer
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-
-            // Send the offer SDP to OpenAI Realtime endpoint
-            const response = await fetch("https://api.openai.com/v1/realtime?model=gpt-realtime", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${realtimeSession.client_secret.value}`,
-                    "Content-Type": "application/sdp"
-                },
-                body: offer.sdp
-            });
-
-            // Receive the AI’s answer and set remote description
-            const answer = {
-                type: "answer",
-                sdp: await response.text(),
-            };
-            await pc.setRemoteDescription(answer);
-
-            console.log("✅ Connected to OpenAI Realtime voice session");
-
-        } catch (err) {
-            console.error("❌ Error connecting to Realtime AI:", err);
-        }
-    }
 
 
 
