@@ -71,7 +71,7 @@ class WhatsAppWebhookController extends Controller
     }
 
 
-        protected function handleIncomingMessage(array $payload)
+    protected function handleIncomingMessage(array $payload)
     {
         $chatId    = data_get($payload, 'senderData.chatId');
         $senderId  = data_get($payload, 'senderData.senderId');
@@ -89,10 +89,29 @@ class WhatsAppWebhookController extends Controller
 
         try {
             // 🔹 Extract & normalize phone
-            $phone = preg_replace('/@.*/', '', $chatId);
-            if (Str::startsWith($phone, '254')) {
-                $phone = '0' . substr($phone, 3);
+            // $phone = preg_replace('/@.*/', '', $chatId);
+            // if (Str::startsWith($phone, '254')) {
+            //     $phone = '0' . substr($phone, 3);
+            // }
+
+
+            // 🔹 Extract and normalize phone number
+            $phone = preg_replace('/@.*/', '', $chatId); // remove @c.us etc.
+
+            // Remove any non-digit characters just in case
+            $phone = preg_replace('/\D/', '', $phone);
+
+            // Normalize to international format (254...)
+            if (Str::startsWith($phone, '0')) {
+                $phone = '254' . substr($phone, 1); // convert 07... → 2547...
+            } elseif (Str::startsWith($phone, '7')) {
+                $phone = '254' . $phone; // convert 7... → 2547...
+            } elseif (Str::startsWith($phone, '+254')) {
+                $phone = str_replace('+', '', $phone); // +254... → 254...
             }
+
+            // ✅ Now $phone will always be in the format: 254XXXXXXXXX
+
 
             Log::info("📞 Normalized phone number: {$phone}");
 
@@ -103,7 +122,7 @@ class WhatsAppWebhookController extends Controller
 
             if (!$response->successful()) {
                 Log::warning("🚫 Boxleo API call not successful for {$phone}. Status: " . $response->status(), [
-                'body' => $response->body()
+                    'body' => $response->body()
                 ]);
                 throw new \Exception("API error for {$phone}, status: " . $response->status());
             }
@@ -113,7 +132,7 @@ class WhatsAppWebhookController extends Controller
                 Log::warning("🚫 No client found for phone: {$phone}");
             } else {
                 Log::info("✅ Boxleo API returned clients for {$phone}", [
-                'clients' => $clients
+                    'clients' => $clients
                 ]);
             }
 
@@ -198,7 +217,6 @@ class WhatsAppWebhookController extends Controller
             $actions = $result['actions'] ?? [];
 
             Log::info("🤖 AI reply ready", ['reply' => $reply, 'actions' => $actions]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error handling message: " . $e->getMessage());
             return [
@@ -256,7 +274,7 @@ class WhatsAppWebhookController extends Controller
 
     //     Log::info("🔍 Looking up client by chatId: {$chatId}");
     //     // $user = $this->identifyClient($chatId);
-        
+
 
     //     // given client details and order come from a different system 
 
@@ -369,163 +387,163 @@ class WhatsAppWebhookController extends Controller
 
 
 
-//     protected function handleIncomingMessage(array $payload)
-// {
-//     $chatId   = data_get($payload, 'senderData.chatId');
-//     $senderId = data_get($payload, 'senderData.senderId');
-//     $text     = data_get($payload, 'messageData.textMessageData.textMessage');
-//     $quoted   = data_get($payload, 'messageData.quotedMessage.message');
-//     $quotedId = data_get($payload, 'messageData.quotedMessage.stanzaId');
-//     $type     = data_get($payload, 'messageData.typeMessage', 'textMessage');
-//     $timestamp = now();
+    //     protected function handleIncomingMessage(array $payload)
+    // {
+    //     $chatId   = data_get($payload, 'senderData.chatId');
+    //     $senderId = data_get($payload, 'senderData.senderId');
+    //     $text     = data_get($payload, 'messageData.textMessageData.textMessage');
+    //     $quoted   = data_get($payload, 'messageData.quotedMessage.message');
+    //     $quotedId = data_get($payload, 'messageData.quotedMessage.stanzaId');
+    //     $type     = data_get($payload, 'messageData.typeMessage', 'textMessage');
+    //     $timestamp = now();
 
-//     Log::info("🔍 Looking up client by chatId: {$chatId}");
+    //     Log::info("🔍 Looking up client by chatId: {$chatId}");
 
-//     $recentOrders = [];
-//     $reply = null;
+    //     $recentOrders = [];
+    //     $reply = null;
 
-//     try {
-//         // 🔹 Extract phone number from chatId (e.g., "254751458911@s.whatsapp.net")
-//         $phone = preg_replace('/@.*/', '', $chatId);
+    //     try {
+    //         // 🔹 Extract phone number from chatId (e.g., "254751458911@s.whatsapp.net")
+    //         $phone = preg_replace('/@.*/', '', $chatId);
 
-//         // 🔹 Normalize phone (convert 2547... → 07...)
-//         if (Str::startsWith($phone, '254')) {
-//             $phone = '0' . substr($phone, 3);
-//         }
+    //         // 🔹 Normalize phone (convert 2547... → 07...)
+    //         if (Str::startsWith($phone, '254')) {
+    //             $phone = '0' . substr($phone, 3);
+    //         }
 
-//         Log::info("📞 Normalized phone number from chatId: {$phone}");
+    //         Log::info("📞 Normalized phone number from chatId: {$phone}");
 
-//         // 🔹 Call external API
-//         $response = Http::get("https://app.boxleocourier.com/api/contact-search/{$phone}");
+    //         // 🔹 Call external API
+    //         $response = Http::get("https://app.boxleocourier.com/api/contact-search/{$phone}");
 
-//         Log::info("📡 Boxleo response for {$phone}: ", [
-//             'response' => $response->json()
-//         ]);
+    //         Log::info("📡 Boxleo response for {$phone}: ", [
+    //             'response' => $response->json()
+    //         ]);
 
-//         if ($response->ok() && count($response->json()) > 0) {
-//             $clients = $response->json();
+    //         if ($response->ok() && count($response->json()) > 0) {
+    //             $clients = $response->json();
 
-//             // Pick first client with sales, or fallback to first record
-//             $client = collect($clients)->first(function ($c) {
-//                 return !empty($c['sales']);
-//             }) ?? $clients[0];
+    //             // Pick first client with sales, or fallback to first record
+    //             $client = collect($clients)->first(function ($c) {
+    //                 return !empty($c['sales']);
+    //             }) ?? $clients[0];
 
-//             Log::info("✅ Client chosen: {$client['id']} - {$client['name']}");
+    //             Log::info("✅ Client chosen: {$client['id']} - {$client['name']}");
 
-//             // 🔹 Format recent orders (max 5)
-//             $recentOrders = collect($client['sales'] ?? [])
-//                 ->sortByDesc('created_at')
-//                 ->take(5)
-//                 ->map(function ($order) {
-//                     return [
-//                         'order_id'        => $order['id'],
-//                         'order_no'        => $order['order_no'],
-//                         'status'          => $order['status'],
-//                         'delivery_status' => $order['delivery_status'],
-//                         'total'           => $order['total_price'],
-//                         'sub_total'       => $order['sub_total'],
-//                         'payment_method'  => $order['payment_method'],
-//                         'paid'            => $order['paid'],
-//                         'delivery_date'   => $order['delivery_date'],
-//                         'dispatched_on'   => $order['dispatched_on'],
-//                         'customer_notes'  => $order['customer_notes'],
-//                         'products'        => collect($order['products'] ?? [])->map(function ($product) {
-//                             return [
-//                                 'product_id'    => $product['id'],
-//                                 'product_name'  => $product['product_name'],
-//                                 'sku'           => $product['sku_no'],
-//                                 'vendor_id'     => $product['vendor_id'],
-//                                 'vendor_name'   => $product['user_id'], // If you want vendor name, you may need to fetch it separately
-//                                 'quantity'      => $product['pivot']['quantity'] ?? 0,
-//                                 'price'         => $product['pivot']['price'] ?? 0,
-//                                 'total_price'   => $product['pivot']['total_price'] ?? 0,
-//                                 'delivered'     => $product['pivot']['delivered'] ?? 0,
-//                                 'bin'           => collect($product['bins'] ?? [])->map(function ($bin) {
-//                                     return [
-//                                         'bin_id'    => $bin['id'],
-//                                         'code'      => $bin['code'],
-//                                         'name'      => $bin['name'],
-//                                         'onhand'    => $bin['pivot']['onhand'] ?? null,
-//                                         'available' => $bin['pivot']['available_for_sale'] ?? null,
-//                                         'commited'  => $bin['pivot']['commited'] ?? null,
-//                                         'delivered' => $bin['pivot']['delivered'] ?? null,
-//                                     ];
-//                                 })->toArray(),
-//                             ];
-//                         })->toArray(),
-//                         'client' => [
-//                             'id'      => $order['client']['id'] ?? null,
-//                             'name'    => $order['client']['name'] ?? null,
-//                             'phone'   => $order['client']['phone'] ?? null,
-//                             'address' => $order['client']['address'] ?? null,
-//                             'city'    => $order['client']['city'] ?? null,
-//                         ],
-//                     ];
-//                 })
-//                 ->values()
-//                 ->toArray();
+    //             // 🔹 Format recent orders (max 5)
+    //             $recentOrders = collect($client['sales'] ?? [])
+    //                 ->sortByDesc('created_at')
+    //                 ->take(5)
+    //                 ->map(function ($order) {
+    //                     return [
+    //                         'order_id'        => $order['id'],
+    //                         'order_no'        => $order['order_no'],
+    //                         'status'          => $order['status'],
+    //                         'delivery_status' => $order['delivery_status'],
+    //                         'total'           => $order['total_price'],
+    //                         'sub_total'       => $order['sub_total'],
+    //                         'payment_method'  => $order['payment_method'],
+    //                         'paid'            => $order['paid'],
+    //                         'delivery_date'   => $order['delivery_date'],
+    //                         'dispatched_on'   => $order['dispatched_on'],
+    //                         'customer_notes'  => $order['customer_notes'],
+    //                         'products'        => collect($order['products'] ?? [])->map(function ($product) {
+    //                             return [
+    //                                 'product_id'    => $product['id'],
+    //                                 'product_name'  => $product['product_name'],
+    //                                 'sku'           => $product['sku_no'],
+    //                                 'vendor_id'     => $product['vendor_id'],
+    //                                 'vendor_name'   => $product['user_id'], // If you want vendor name, you may need to fetch it separately
+    //                                 'quantity'      => $product['pivot']['quantity'] ?? 0,
+    //                                 'price'         => $product['pivot']['price'] ?? 0,
+    //                                 'total_price'   => $product['pivot']['total_price'] ?? 0,
+    //                                 'delivered'     => $product['pivot']['delivered'] ?? 0,
+    //                                 'bin'           => collect($product['bins'] ?? [])->map(function ($bin) {
+    //                                     return [
+    //                                         'bin_id'    => $bin['id'],
+    //                                         'code'      => $bin['code'],
+    //                                         'name'      => $bin['name'],
+    //                                         'onhand'    => $bin['pivot']['onhand'] ?? null,
+    //                                         'available' => $bin['pivot']['available_for_sale'] ?? null,
+    //                                         'commited'  => $bin['pivot']['commited'] ?? null,
+    //                                         'delivered' => $bin['pivot']['delivered'] ?? null,
+    //                                     ];
+    //                                 })->toArray(),
+    //                             ];
+    //                         })->toArray(),
+    //                         'client' => [
+    //                             'id'      => $order['client']['id'] ?? null,
+    //                             'name'    => $order['client']['name'] ?? null,
+    //                             'phone'   => $order['client']['phone'] ?? null,
+    //                             'address' => $order['client']['address'] ?? null,
+    //                             'city'    => $order['client']['city'] ?? null,
+    //                         ],
+    //                     ];
+    //                 })
+    //                 ->values()
+    //                 ->toArray();
 
-//             Log::info("📦 Recent orders formatted", $recentOrders);
-//             Log::warning("🚫 No client found for chatId: {$chatId}");
-//         }
+    //             Log::info("📦 Recent orders formatted", $recentOrders);
+    //             Log::warning("🚫 No client found for chatId: {$chatId}");
+    //         }
 
-//         // 🔹 AI Service
-//         $ai = new IntelligentSupportService();
+    //         // 🔹 AI Service
+    //         $ai = new IntelligentSupportService();
 
-//         if (!is_string($text) || trim($text) === '') {
-//             throw new \Exception('Incoming message text is empty or invalid');
-//         }
+    //         if (!is_string($text) || trim($text) === '') {
+    //             throw new \Exception('Incoming message text is empty or invalid');
+    //         }
 
-//         $result = $ai->handleCustomerMessage($text, $recentOrders);
-//         $reply  = $result['reply'] ?? '[no reply]';
-//         $actions = $result['actions'] ?? [];
+    //         $result = $ai->handleCustomerMessage($text, $recentOrders);
+    //         $reply  = $result['reply'] ?? '[no reply]';
+    //         $actions = $result['actions'] ?? [];
 
-//         Log::info("🤖 IntelligentSupportService reply: {$reply}", [
-//             'actions' => $actions
-//         ]);
-//     } catch (\Throwable $e) {
-//         Log::error("❌ Error handling message: " . $e->getMessage());
-//         return [
-//             'reply' => 'Sorry, I encountered an error processing your request. Please try again.',
-//             'actions' => []
-//         ];
-//     }
+    //         Log::info("🤖 IntelligentSupportService reply: {$reply}", [
+    //             'actions' => $actions
+    //         ]);
+    //     } catch (\Throwable $e) {
+    //         Log::error("❌ Error handling message: " . $e->getMessage());
+    //         return [
+    //             'reply' => 'Sorry, I encountered an error processing your request. Please try again.',
+    //             'actions' => []
+    //         ];
+    //     }
 
     // 🔹 Send reply back to customer (if available)
-//     if ($reply) {
-//         Log::info("📤 Sending AI reply to {$chatId}: {$reply}");
-//         try {
-//             $this->whatsAppService->sendMessage($chatId, $reply, 35);
-//         } catch (\Throwable $e) {
-//             Log::error("❌ WhatsAppService error: " . $e->getMessage());
-//         }
-//     } else {
-//         Log::info("ℹ️ No reply generated by AI for {$chatId}");
-//     }
+    //     if ($reply) {
+    //         Log::info("📤 Sending AI reply to {$chatId}: {$reply}");
+    //         try {
+    //             $this->whatsAppService->sendMessage($chatId, $reply, 35);
+    //         } catch (\Throwable $e) {
+    //             Log::error("❌ WhatsAppService error: " . $e->getMessage());
+    //         }
+    //     } else {
+    //         Log::info("ℹ️ No reply generated by AI for {$chatId}");
+    //     }
 
-//     // 🔹 Save incoming message
-//     try {
-//         Message::create([
-//             'chat_id' => $chatId,
-//             'from' => $chatId,
-//             'to' => 'system',
-//             'content' => $text,
-//             'wa_message_id' => data_get($payload, 'idMessage'),
-//             'quoted_message_id' => $quotedId,
-//             'quoted_message_text' => $quoted,
-//             'type' => $type,
-//             'timestamp' => $timestamp,
-//             'messageable_type' => \App\Models\User::class,
-//             'messageable_id' => 1,
-//         ]);
+    //     // 🔹 Save incoming message
+    //     try {
+    //         Message::create([
+    //             'chat_id' => $chatId,
+    //             'from' => $chatId,
+    //             'to' => 'system',
+    //             'content' => $text,
+    //             'wa_message_id' => data_get($payload, 'idMessage'),
+    //             'quoted_message_id' => $quotedId,
+    //             'quoted_message_text' => $quoted,
+    //             'type' => $type,
+    //             'timestamp' => $timestamp,
+    //             'messageable_type' => \App\Models\User::class,
+    //             'messageable_id' => 1,
+    //         ]);
 
-//         Log::info("💬 Message stored from {$chatId} at {$timestamp}");
-//     } catch (\Throwable $e) {
-//         Log::error("❌ Failed to store message: " . $e->getMessage());
-//     }
+    //         Log::info("💬 Message stored from {$chatId} at {$timestamp}");
+    //     } catch (\Throwable $e) {
+    //         Log::error("❌ Failed to store message: " . $e->getMessage());
+    //     }
 
-//     return response()->json(['status' => 'stored']);
-// }
+    //     return response()->json(['status' => 'stored']);
+    // }
 
     protected function handleOutgoing(array $payload)
     {
@@ -566,7 +584,7 @@ class WhatsAppWebhookController extends Controller
 
         }
     }
-    
+
 
     // protected function handleStatusUpdate(array $payload)
     // {
@@ -692,8 +710,7 @@ class WhatsAppWebhookController extends Controller
     {
 
         // log the payload
-        Log::info('📞 Incoming WhatsApp call received', $payload)
-        ;
+        Log::info('📞 Incoming WhatsApp call received', $payload);
         $from = $payload['from'] ?? null;
 
         if ($from) {
