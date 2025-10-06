@@ -17,7 +17,7 @@ class HandleFailedCallsJob
 
     public function handle()
     {
-        Log::info('HandleFailedCallsJob started: Checking for failed calls...');
+        // Log::info('HandleFailedCallsJob started: Checking for failed calls...');
 
         $failedStatuses = [
             'NO_ANSWER','USER_BUSY','CALL_REJECTED','SUBSCRIBER_ABSENT',
