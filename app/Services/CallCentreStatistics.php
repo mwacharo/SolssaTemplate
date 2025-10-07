@@ -71,7 +71,7 @@ class CallStatsService
             $airtimeStats = $this->getAirtimeStatistics($user, true, $dateRange);
             $peakHourStats = $this->getPeakHourStatistics($user, true, $dateRange);
 
-            Log::info('Returning stats for admin', ['user_id' => $user->id]);
+            // Log::info('Returning stats for admin', ['user_id' => $user->id]);
         } else {
             // Agent-specific
             $incomingQuery = CallHistory::query()
