@@ -660,10 +660,10 @@ class CallStatsService
                 return $createdAt->between($dateRange[0], $dateRange[1]);
             });
 
-            Log::info('Filtered IVR stats for overall report', [
-                'dateRange' => $dateRange,
-                'filtered_count' => $ivrStats->count(),
-            ]);
+            // Log::info('Filtered IVR stats for overall report', [
+            //     'dateRange' => $dateRange,
+            //     'filtered_count' => $ivrStats->count(),
+            // ]);
         }
 
         $totalSelections = $ivrStats->count();
