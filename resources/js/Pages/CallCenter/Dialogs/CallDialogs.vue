@@ -730,7 +730,7 @@ const callClient = async () => {
     emit('call-made', newCallForm.value)
     // closeDialog()
   // } catch (error) {
-    notify.error('Failed to make call')
+    // notify.error('Failed to make call')
   } finally {
     makingCall.value = false
   }
