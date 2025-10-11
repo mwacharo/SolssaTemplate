@@ -187,6 +187,29 @@
 
       <!-- Call History Container -->
       <div class="call-history-container">
+
+
+         <!-- Search Bar -->
+    <v-card class="mb-4">
+      <v-card-text>
+        <v-text-field
+          v-model="searchQuery"
+          label="Search call history"
+          placeholder="Search by phone number, hangup cause..."
+          prepend-icon="mdi-magnify"
+          clearable
+          @input="onSearchInput"
+          @keyup.enter="performSearch"
+          hint="Search: caller number, destination, dialed number, or hangup cause"
+        />
+        <div class="mt-2 text-caption text-medium-emphasis">
+          <span v-if="searchQuery">
+            Searching for: <strong>{{ searchQuery }}</strong>
+          </span>
+        </div>
+      </v-card-text>
+    </v-card>
+
         <!-- Table Controls -->
         <div class="table-controls mb-4">
           <div class="controls-left">
@@ -207,31 +230,12 @@
         </div>
 
         <!-- Data Table -->
-        <!-- <v-data-table-server
-          v-model:items-per-page="itemsPerPage"
-          v-model:page="currentPage"
-          v-model:sort-by="sortBy"
-          :headers="headers"
-          :items="agentStore.callHistory"
-          :items-length="totalItems"
-          :loading="agentStore.loading"
-          :search="search"
-          class="call-history-table"
-          density="comfortable"
-          @update:options="loadItems"
-        > -->
 
 
-        <v-data-table-server
-  v-model:items-per-page="itemsPerPage"
-  v-model:page="currentPage"
-  v-model:sort-by="sortBy"
-  :headers="headers"
-  :items="agentStore.callHistory"
-  :items-length="totalItems"  
-  :loading="agentStore.loading"
-  @update:options="loadItems"  
->
+
+        <v-data-table-server v-model:items-per-page="itemsPerPage" v-model:page="currentPage" v-model:sort-by="sortBy"
+          :headers="headers" :items="agentStore.callHistory" :items-length="totalItems" :loading="agentStore.loading"
+          @update:options="loadItems">
           <!-- Date Column -->
           <template #item.created_at="{ item }">
             <div class="date-cell">
@@ -284,7 +288,8 @@
           <template #item.lastBridgeHangupCause="{ item }">
             <v-tooltip :text="getHangupCauseDescription(item.lastBridgeHangupCause)">
               <template #activator="{ props }">
-                <v-chip v-bind="props" :color="getHangupCauseColor(item.lastBridgeHangupCause)" size="small" variant="outlined">
+                <v-chip v-bind="props" :color="getHangupCauseColor(item.lastBridgeHangupCause)" size="small"
+                  variant="outlined">
                   {{ item.lastBridgeHangupCause }}
                 </v-chip>
               </template>
@@ -354,7 +359,7 @@
                     <v-list-item-title>Send SMS</v-list-item-title>
                   </v-list-item>
 
-                  
+
                 </v-list>
               </v-menu>
             </div>
@@ -384,9 +389,7 @@
     <!-- call analysis  -->
 
 
-      <div 
-      v-if="showDialog" 
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div v-if="showDialog" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg overflow-hidden">
         <!-- Header -->
         <div class="flex justify-between items-center bg-gray-100 px-4 py-2">
@@ -433,7 +436,7 @@
       </div>
     </div>
 
-  <CallDialogs v-model="callStore.dialogType" />
+    <CallDialogs v-model="callStore.dialogType" />
 
     <!-- Call Dialogs -->
     <!-- <CallDialogs v-model:dialogType="dialogType" v-model:isSmsDialog="isSmsDialog" v-model:callData="callData"
@@ -455,14 +458,14 @@ import CallDialogs from './Dialogs/CallDialogs.vue';
 import { usePage } from '@inertiajs/vue3';
 
 
-    const page = usePage();
+const page = usePage();
 
-        const userId = computed(() => {
-            const id = page.props.auth?.user?.id;
-            // console.debug("✅ Computed userId:", id);
-            return id;
-        });
-    
+const userId = computed(() => {
+  const id = page.props.auth?.user?.id;
+  // console.debug("✅ Computed userId:", id);
+  return id;
+});
+
 
 const webrtc = useWebRTCStore()
 const props = defineProps({
@@ -492,6 +495,12 @@ const itemsPerPage = ref(15)
 const sortBy = ref([])
 const totalItems = ref(0)
 
+
+// Search state
+const searchQuery = ref('')
+const searchTimeout = ref(null)
+
+
 const itemsPerPageOptions = [10, 15, 25, 50, 100]
 
 
@@ -500,20 +509,46 @@ const selectedCall = ref({})
 
 
 
+// Debounced search handler
+const onSearchInput = () => {
+  // Clear previous timeout
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
 
+  // Reset to page 1 when searching
+  currentPage.value = 1
 
-  const fetchAgentStats = () => {
-      axios.get(`/api/v1/agent-stats/${userId.value}`)
+  // Debounce search by 500ms to avoid too many requests
+  searchTimeout.value = setTimeout(() => {
+    performSearch()
+  }, 500)
+}
 
-        .then(response => {
-          stats.value = response.data;
-          console.log('Agent stats:', stats.value);
+const performSearch = async () => {
+  try {
+    await loadItems({
+      page: 1,
+      itemsPerPage: itemsPerPage.value,
+      sortBy: sortBy.value,
+    })
+  } catch (error) {
+    console.error('Search failed:', error)
+  }
+}
 
-        })
-        .catch(error => {
-          console.error('Error fetching agent stats:', error);
-        });
-    };
+const fetchAgentStats = () => {
+  axios.get(`/api/v1/agent-stats/${userId.value}`)
+
+    .then(response => {
+      stats.value = response.data;
+      console.log('Agent stats:', stats.value);
+
+    })
+    .catch(error => {
+      console.error('Error fetching agent stats:', error);
+    });
+};
 
 
 // Table headers
@@ -521,7 +556,7 @@ const headers = [
   // { title: 'Date', value: 'created_at', width: '140px' },
   { title: 'Call Start', value: 'callStartTime', width: '140px' },
   // { title: 'Direction', value: 'direction', width: '100px' },
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          { title: 'Caller', value: 'callerNumber', width: '130px' },
+  { title: 'Caller', value: 'callerNumber', width: '130px' },
   { title: 'Caller Carrier', value: 'callerCarrierName', width: '120px' },
   { title: 'Caller Country', value: 'callerCountryCode', width: '100px' },
   // { title: 'Destination', value: 'destinationNumber', width: '130px' },
@@ -555,17 +590,19 @@ const headers = [
 
 
 const loadItems = async (options) => {
-    try {
-        const result = await agentStore.fetchCallHistory({
-            page: options.page,
-            itemsPerPage: options.itemsPerPage,
-            sortBy: options.sortBy,
-            search: props.search,
-        })
-        totalItems.value = result.total
-    } catch (error) {
-        console.error('Failed to load call history:', error)
-    }
+  try {
+    const result = await agentStore.fetchCallHistory({
+      page: options.page,
+      itemsPerPage: options.itemsPerPage,
+      sortBy: options.sortBy,
+      // search: props.search,
+            search: searchQuery.value,  // ✅ ADD THIS LINE - Pass searchQuery instead of props.search
+
+    })
+    totalItems.value = result.total
+  } catch (error) {
+    console.error('Failed to load call history:', error)
+  }
 }
 
 const refreshData = () => {
@@ -573,7 +610,7 @@ const refreshData = () => {
     page: currentPage.value,
     itemsPerPage: itemsPerPage.value,
     sortBy: sortBy.value,
-    search: props.search
+    // search: props.search
   })
   emit('refresh')
 }
@@ -732,7 +769,7 @@ const callBack = (item) => {
 const viewDetails = (item) => {
   console.log('View details for:', item)
 
-    selectedCall.value = item
+  selectedCall.value = item
   showDialog.value = true
   // Open details modal or navigate to details page
 }

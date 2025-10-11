@@ -442,42 +442,42 @@ class AfricasTalkingService
     //         'agent' => $order->agent,
     //     ];
     // }
-    
+
 
     private function getOrderAndAgent(string $callerNumber): array|null
-{
-    if (!class_exists(Order::class)) {
-        return null;
-    }
+    {
+        if (!class_exists(Order::class)) {
+            return null;
+        }
 
-    // Get the most recent order by caller
-    $order = Order::whereHas('customer', function ($query) use ($callerNumber) {
+        // Get the most recent order by caller
+        $order = Order::whereHas('customer', function ($query) use ($callerNumber) {
             $query->where('phone', $callerNumber);
         })
-        ->with(['customer', 'orderAssignments.user' => function ($query) {
-            $query->where('role', 'CallAgent');
-        }])
-        ->latest()
-        ->first();
+            ->with(['customer', 'orderAssignments.user' => function ($query) {
+                $query->where('role', 'CallAgent');
+            }])
+            ->latest()
+            ->first();
 
-    if (!$order) {
-        return null;
+        if (!$order) {
+            return null;
+        }
+
+        // Find the agent from assignments
+        $agentAssignment = $order->orderAssignments
+            ->where('role', 'CallAgent')
+            ->first();
+
+        if (!$agentAssignment || !$agentAssignment->user || $agentAssignment->user->status !== 'available') {
+            return null;
+        }
+
+        return [
+            'order' => $order,
+            'agent' => $agentAssignment->user,
+        ];
     }
-
-    // Find the agent from assignments
-    $agentAssignment = $order->orderAssignments
-        ->where('role', 'CallAgent')
-        ->first();
-
-    if (!$agentAssignment || !$agentAssignment->user || $agentAssignment->user->status !== 'available') {
-        return null;
-    }
-
-    return [
-        'order' => $order,
-        'agent' => $agentAssignment->user,
-    ];
-}
 
 
     /**
@@ -1092,7 +1092,7 @@ class AfricasTalkingService
 
             // $customer = Customer::where('phone', $payload['clientDialedNumber'] ?? null)->first();
 
-        $customer = Customer::where('phone', 'like', $payload['clientDialedNumber'] ?? null)->first();
+            $customer = Customer::where('phone', 'like', $payload['clientDialedNumber'] ?? null)->first();
 
 
             $order = $customer?->orders()->latest()->first();
@@ -1594,55 +1594,55 @@ class AfricasTalkingService
 
 
     // BACKEND - Controller
-public function fetchCallHistory()
-{
-    try {
-        $perPage = request()->get('per_page', 15);
-        $page = request()->get('page', 1);
-        $search = request()->get('search', null);
-        $sortBy = request()->get('sort_by', 'created_at');
-        $sortDesc = request()->get('sort_desc', true);
+    public function fetchCallHistory()
+    {
+        try {
+            $perPage = request()->get('per_page', 15);
+            $page = request()->get('page', 1);
+            $search = request()->get('search', null);
+            $sortBy = request()->get('sort_by', 'created_at');
+            $sortDesc = request()->get('sort_desc', true);
 
-        $query = CallHistory::with('agent', 'ivrOption', 'calltranscripts');
+            $query = CallHistory::with('agent', 'ivrOption', 'calltranscripts');
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('lastBridgeHangupCause', 'like', "%{$search}%")
-                    ->orWhere('callerNumber', 'like', "%{$search}%")
-                    ->orWhere('clientDialedNumber', 'like', "%{$search}%")
-                    ->orWhere('destinationNumber', 'like', "%{$search}%");
-            });
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('lastBridgeHangupCause', 'like', "%{$search}%")
+                        ->orWhere('callerNumber', 'like', "%{$search}%")
+                        ->orWhere('clientDialedNumber', 'like', "%{$search}%")
+                        ->orWhere('destinationNumber', 'like', "%{$search}%");
+                });
+            }
+
+            // Handle sort parameter (format: "field" or "-field" for desc)
+            $sortField = $sortBy;
+            $sortDirection = 'asc';
+
+            if (str_starts_with($sortBy, '-')) {
+                $sortField = substr($sortBy, 1);
+                $sortDirection = 'desc';
+            } elseif ($sortDesc === 'true' || $sortDesc === true) {
+                $sortDirection = 'desc';
+            }
+
+            $query->orderBy($sortField, $sortDirection);
+
+            $callHistories = $query->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json([
+                'success' => true,
+                'data' => $callHistories->toArray()
+            ]);
+        } catch (Exception $e) {
+            Log::error("Error fetching call history: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch call history',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // Handle sort parameter (format: "field" or "-field" for desc)
-        $sortField = $sortBy;
-        $sortDirection = 'asc';
-        
-        if (str_starts_with($sortBy, '-')) {
-            $sortField = substr($sortBy, 1);
-            $sortDirection = 'desc';
-        } elseif ($sortDesc === 'true' || $sortDesc === true) {
-            $sortDirection = 'desc';
-        }
-
-        $query->orderBy($sortField, $sortDirection);
-
-        $callHistories = $query->paginate($perPage, ['*'], 'page', $page);
-
-        return response()->json([
-            'success' => true,
-            'data' => $callHistories->toArray()
-        ]);
-    } catch (Exception $e) {
-        Log::error("Error fetching call history: " . $e->getMessage());
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch call history',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
 
     /**
      * Generate comprehensive call summary report
