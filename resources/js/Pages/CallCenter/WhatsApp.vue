@@ -10,7 +10,7 @@ import WhatsAppConversation from '@/Pages/CallCenter/WhatsAppConversation.vue'
 import Sms from '@/Pages/CallCenter/Sms.vue'
 import AssignDialog from './AssignDialog.vue';
 import { useOrderStore } from '@/stores/orderStore' // Adjust path as needed
-import {useSmsStore} from '@/stores/smsStore' // Adjust path as needed
+import { useSmsStore } from '@/stores/smsStore' // Adjust path as needed
 import { storeToRefs } from 'pinia'
 
 import OrderDialogs from './Dialogs/OrderDialogs.vue';
@@ -23,7 +23,10 @@ const conversationStore = useConversationStore()
 const smsStore = useSmsStore()
 const orderStore = useOrderStore()
 // Use a computed property to safely access tableItems from the store
-const tableItems = computed(() => orderStore.tableItems || [])
+// const tableItems = computed(() => orderStore.tableItems || [])
+
+const tableItems = computed(() => orderStore.orders || [])
+
 
 const dialogMode = ref(null);
 const showDialog = ref(false);
@@ -77,21 +80,59 @@ const openDialog = (mode, selectedOrders = []) => {
 }
 
 // FIXED: Update your openNewMessageDialog function
-const openNewMessageDialog = (selectedOrders = []) => {
-  console.log('📨 openNewMessageDialog called')
+// const openNewMessageDialog = (selectedOrders = [] ) => {
+//   console.log('📨 openNewMessageDialog called')
 
-  const ordersToUse = selectedOrders.length > 0 ? selectedOrders : getSelectedOrders.value
 
-  if (ordersToUse.length === 0) {
-    console.warn('⚠️ No orders selected for messaging')
-    // Optionally show a notification
-    notify.warning('Please select at least one order to send messages.')
-    return
+
+//   store.openNewMessageDialog()
+// }
+const openNewMessageDialog = async (selectedOrderIds = []) => {
+  console.log('📨 openNewMessageDialog called with IDs:', selectedOrderIds)
+
+  let contactsFromOrders = []
+
+  // 🔹 Case 1: Selected orders are provided (IDs)
+  if (Array.isArray(selectedOrderIds) && selectedOrderIds.length > 0) {
+    // Find the actual order objects in your store
+    const selectedOrders = orderStore.orders.filter(order =>
+      selectedOrderIds.includes(order.id)
+    )
+
+    // Extract contacts from those orders
+    contactsFromOrders = selectedOrders
+      .map(order => order.customer || order.contact)
+      .filter(c => c && c.phone)
+
+    // Map contacts to v-select format
+    store.selectedContacts = contactsFromOrders.map(c => ({
+      id: c.id,
+      name: c.name || c.full_name || c.phone,
+      phone: c.phone,
+    }))
+  } else {
+    // 🔹 Case 2: No selected orders → show all contacts
+    if ((!Array.isArray(store.contacts) || store.contacts.length === 0) && !store.loading.contacts) {
+      await store.loadContacts()
+    }
+    store.selectedContacts = []
   }
 
-  console.log('📨 Opening message dialog for', ordersToUse.length, 'orders')
-  store.openNewMessageDialog(ordersToUse)
+  // 🔹 Load templates if needed
+  if ((!Array.isArray(store.templates) || store.templates.length === 0) && !store.loading.templates) {
+    await store.loadTemplates()
+  }
+
+  // 🔹 Reset dialog data
+  store.errorMessage = ''
+  store.messageText = ''
+  store.selectedTemplate = null
+
+  // 🔹 Open dialog
+  store.showNewMessageDialog = true
 }
+
+
 
 // OPTIONAL: Add a debug computed property to track selection state
 const selectionDebug = computed(() => ({
@@ -171,10 +212,10 @@ console.log('User ID:', userId.value)
 
 const orderHeaders = [
   { title: 'Order #', key: 'order_no' },
-  { title: 'Customer', key: 'client' },
+  { title: 'Customer', key: 'customer' },
   { title: 'Vendor', key: 'vendor' },
   { title: 'Status', key: 'status' },
-  { title: 'Delivery Status', key: 'delivery_status' },
+  // { title: 'Delivery Status', key: 'status' },
   { title: 'Items', key: 'order_items' },
   { title: 'Total Price', key: 'total_price' },
   { title: 'Date Created', key: 'created_at' },
@@ -191,21 +232,12 @@ const contactTypes = [
 ];
 
 // Status options
-const statusOptions = [
-  { title: 'All Statuses', value: 'all' },
-  { title: 'Active', value: 1 },
-  { title: 'Inactive', value: 0 }
-];
+// const statusOptions = [
+//   { title: 'All Statuses', value: 'all' },
+//   { title: 'Active', value: 1 },
+//   { title: 'Inactive', value: 0 }
+// ];
 
-// Order status options
-const orderStatusOptions = [
-  { title: 'All Orders', value: 'all' },
-  { title: 'Pending', value: 'pending' },
-  { title: 'Processing', value: 'processing' },
-  { title: 'Shipped', value: 'shipped' },
-  { title: 'Delivered', value: 'delivered' },
-  { title: 'Cancelled', value: 'cancelled' }
-];
 
 // Computed properties from store
 const orderDateRangeText = computed(() => {
@@ -337,7 +369,7 @@ const formatDate = (dateString) => {
   });
 }
 
-const openSendMessage = (isBulk = false, contact = null) => {
+const f = (isBulk = false, contact = null) => {
   store.errorMessage = ''
   store.messageText = ''
 
@@ -360,7 +392,7 @@ const openSendMessage = (isBulk = false, contact = null) => {
 const sendSms = (item) => {
   console.log('sendSms called with:', JSON.stringify(item))
   console.log('store methods:', Object.keys(store)) // Debug: check available methods
-  
+
   if (item && item.client?.phone_number) {
     console.log('Calling openDialog with:', item.client.phone_number)
     // Call the store's openDialog method
@@ -543,31 +575,81 @@ function openFilterDialog() {
 
 
 
+// async function f({ page, itemsPerPage, sortBy, search }) {
+//   // Keep page position when changing itemsPerPage
+//   if (itemsPerPage !== orderStore.pagination.itemsPerPage) {
+//     const firstItemIndex = (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1;
+//     orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage);
+//   } else {
+//     orderStore.pagination.page = page;
+//   }
+
+//   orderStore.pagination.itemsPerPage = itemsPerPage;
+//   orderStore.search = search;
+
+//   if (sortBy && sortBy.length > 0) {
+//     orderStore.sort = sortBy[0];
+//   }
+
+//   // Merge any existing filters with pagination & search
+//   const filters = {
+//     ...orderStore.activeFilters, // existing filters from your UI
+//     search: orderStore.search
+//   };
+
+//   // Fetch data from API
+//   // if (typeof orderStore.loadOrdersWithFilters === 'function')
+//     if (typeof orderStore.loadOrdersWithFilters === 'function')
+
+//    {
+//     await orderStore.fetchOrders(filters);
+//   } 
+//   // else if (typeof orderStore.loadOrders === 'function') {
+//   //   await orderStore.loadOrders(filters);
+//   // } 
+  
+//   else {
+//     console.error('No suitable method found to load orders with filters.');
+//   }
+// }
+
+
+/**
+ * Unified data loader for pagination / sorting / filter / search
+ */
 async function loadItems({ page, itemsPerPage, sortBy, search }) {
-  // Keep page position when changing itemsPerPage
+  // ✅ Maintain current page when changing page size
   if (itemsPerPage !== orderStore.pagination.itemsPerPage) {
-    const firstItemIndex = (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1;
-    orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage);
+    const firstItemIndex =
+      (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1
+    orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage)
   } else {
-    orderStore.pagination.page = page;
+    orderStore.pagination.page = page
   }
 
-  orderStore.pagination.itemsPerPage = itemsPerPage;
-  orderStore.search = search;
+  // ✅ Update pagination state
+  orderStore.pagination.itemsPerPage = itemsPerPage
+  orderStore.search = search || ''
 
+  // ✅ Handle sorting
   if (sortBy && sortBy.length > 0) {
-    orderStore.sort = sortBy[0];
+    orderStore.sort = sortBy[0]
   }
 
-  // Merge any existing filters with pagination & search
+  // ✅ Merge all active filters, pagination, sorting, and search
   const filters = {
-    ...orderStore.activeFilters, // existing filters from your UI
-    search: orderStore.search
-  };
+    ...orderStore.activeFilters,
+    search: orderStore.search,
+    page: orderStore.pagination.page,
+    per_page: orderStore.pagination.itemsPerPage,
+    sort: orderStore.sort?.key,
+    direction: orderStore.sort?.order,
+  }
 
-  // Fetch data from API
-  await orderStore.loadOrdersWithFilters(filters);
+  // ✅ Fetch fresh data from API
+  await orderStore.fetchOrders(filters)
 }
+
 
 // Component mount - UPDATED with debug info
 onMounted(async () => {
@@ -849,7 +931,7 @@ onMounted(async () => {
                 <!-- Orders Table -->
                 <v-card-text>
                   <v-progress-linear v-if="orderStore.loading.orders" indeterminate color="primary"></v-progress-linear>
-            
+
                   <v-data-table-server v-model="orderStore.selectedOrders"
                     v-model:items-per-page="orderStore.pagination.itemsPerPage" :headers="orderHeaders"
                     :items="tableItems" :items-length="orderStore.pagination.totalItems"
@@ -863,15 +945,14 @@ onMounted(async () => {
                       </div>
                     </template>
 
-                    <template #item.client="{ item }">
-                      <div>{{ item.client?.name || 'N/A' }}</div>
+
+                    <template #item.customer="{ item }">
+                      <div>{{ item.customer?.full_name || 'N/A' }}</div>
                       <div class="text-caption text-grey">
-                        {{ formatPhoneNumber(item.client?.phone_number) }}
-                      </div>
-                      <div v-if="item.client?.city" class="text-caption text-grey">
-                        {{ item.client.city }}
+                        {{ formatPhoneNumber(item.customer?.phone) }}
                       </div>
                     </template>
+
 
                     <template #item.vendor="{ item }">
                       <div>{{ item.vendor?.name || 'N/A' }}</div>
@@ -881,26 +962,39 @@ onMounted(async () => {
                     </template>
 
                     <template #item.status="{ item }">
-                      <v-chip :color="statusColor(item.status)" small>
-                        {{ item.status || 'Unknown' }}
+                      <v-chip
+                      :color="item.latest_status?.status?.color || statusColor(item.latest_status?.status?.name)"
+                      small
+                      >
+                      {{ item.latest_status?.status?.name || 'Unknown' }}
                       </v-chip>
                     </template>
 
                     <template #item.delivery_status="{ item }">
-                      <v-chip :color="deliveryStatusColor(item.delivery_status)" small>
-                        {{ item.delivery_status || 'Unknown' }}
+                      <v-chip
+                      :color="item.latest_status?.status?.color || deliveryStatusColor(item.latest_status?.status?.status_category)"
+                      small
+                      >
+                      {{ item.delivery_status || 'Unknown' }}
                       </v-chip>
                     </template>
 
                     <template #item.order_items="{ item }">
-                      <div v-if="item.orderItems?.length">
-                        {{ item.orderItems.length }} item(s)
-                        <div class="text-caption text-grey">
-                          Qty: {{ getTotalQuantity(item.orderItems) }}
-                        </div>
-                        <div v-for="orderItem in item.orderItems" :key="orderItem.id" class="text-caption text-grey">
-                          {{ orderItem.product?.product_name || 'Product' }} (x{{ orderItem.quantity }})
-                        </div>
+                      <div v-if="item.order_items?.length">
+                      {{ item.order_items.length }} item(s)
+                      <div class="text-caption text-grey">
+                        Qty: {{ getTotalQuantity(item.order_items) }}
+                      </div>
+                      <div v-for="orderItem in item.order_items" :key="orderItem.id" class="text-caption text-grey">
+                        <!-- Show product name fallback logic -->
+                        {{ 
+                        orderItem.name 
+                        || orderItem.product?.product_name 
+                        || orderItem.product_name 
+                        || orderItem.sku 
+                        || 'Product' 
+                        }} (x{{ orderItem.quantity }})
+                      </div>
                       </div>
                       <div v-else class="text-grey">No items</div>
                     </template>
@@ -1026,11 +1120,11 @@ onMounted(async () => {
           <v-card-text>
             <div class="d-flex flex-column gap-2">
               <!-- Status Filter -->
-              <v-select v-model="orderStore.orderFilterStatus" :items="orderStore.orderStatusOptions" item-title="title"
-                item-value="value" label="Status" hide-details density="compact" clearable class="mb-2"
+              <v-select v-model="orderStore.orderFilterStatus" :items="orderStore.statusOptions" item-title="name"
+                item-value="id" label="Status" hide-details density="compact" clearable class="mb-2"
                 @update:model-value="handleFilterChange" />
               <!-- Product Filter -->
-              <v-select v-model="orderStore.orderFilterProduct" :items="orderStore.productOptions" item-title="name"
+              <v-select v-model="orderStore.orderFilterProduct" :items="orderStore.productOptions" item-title="product_name"
                 item-value="id" label="Product" hide-details density="compact" clearable class="mb-2"
                 @update:model-value="handleFilterChange" />
               <!-- Zone Filter -->
@@ -1416,7 +1510,7 @@ onMounted(async () => {
         @confirmed="handleConfirm" />
 
       <WhatsAppConversation />
-      <Sms/>
+      <Sms />
       <OrderDialogs />
 
     </v-container>

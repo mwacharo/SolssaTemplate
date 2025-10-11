@@ -661,7 +661,8 @@ class OrderController extends Controller
             'assignments',
             'payments',
             'latestStatus.status',
-            'customer'
+            'customer',
+            'vendor'
         ]);
 
         // Apply filters

@@ -798,22 +798,22 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     },
 
     // Dialog actions
-    // async openNewMessageDialog() {
-    //   this.errorMessage = ''
-    //   this.messageText = ''
-    //   this.selectedContacts = []
-    //   this.selectedTemplate = null
+    async openNewMessageDialog() {
+      this.errorMessage = ''
+      this.messageText = ''
+      this.selectedContacts = []
+      this.selectedTemplate = null
 
-    //   if ((!Array.isArray(this.contacts) || this.contacts.length === 0) && !this.loading.contacts) {
-    //     await this.loadContacts()
-    //   }
+      if ((!Array.isArray(this.contacts) || this.contacts.length === 0) && !this.loading.contacts) {
+        await this.loadContacts()
+      }
 
-    //   if ((!Array.isArray(this.templates) || this.templates.length === 0) && !this.loading.templates) {
-    //     await this.loadTemplates()
-    //   }
+      if ((!Array.isArray(this.templates) || this.templates.length === 0) && !this.loading.templates) {
+        await this.loadTemplates()
+      }
 
-    //   this.showNewMessageDialog = true
-    // },
+      this.showNewMessageDialog = true
+    },
 
 
 

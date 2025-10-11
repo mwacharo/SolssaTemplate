@@ -526,36 +526,74 @@ export const useOrderStore = defineStore('order', {
     },
 
     // Helper method to process orders response
+    // processOrdersResponse(response) {
+    //   if (!response || typeof response !== 'object') {
+    //     this.handleOrdersLoadError()
+    //     return
+    //   }
+
+    //   let orders = []
+    //   let totalItems = 0
+
+    //   if (response.data && Array.isArray(response.data)) {
+    //     // Laravel pagination format
+    //     orders = response.data
+    //     totalItems = response.meta?.total || response.total || orders.length
+    //   } else if (Array.isArray(response)) {
+    //     // Direct array response
+    //     orders = response
+    //     totalItems = orders.length
+    //   } else {
+    //     console.warn('[OrderStore] Unexpected response format:', response)
+    //     this.handleOrdersLoadError()
+    //     return
+    //   }
+
+    //   // Normalize order data
+    //   this.orders = orders.map(this.normalizeOrderData)
+    //   this.filteredOrders = [...this.orders]
+    //   this.pagination.totalItems = totalItems
+
+    //   console.log('[OrderStore] Successfully loaded orders:', this.orders.length)
+    // },
+
+
     processOrdersResponse(response) {
-      if (!response || typeof response !== 'object') {
-        this.handleOrdersLoadError()
-        return
-      }
+  if (!response || typeof response !== 'object') {
+    this.handleOrdersLoadError()
+    return
+  }
 
-      let orders = []
-      let totalItems = 0
+  let orders = []
+  let totalItems = 0
 
-      if (response.data && Array.isArray(response.data)) {
-        // Laravel pagination format
-        orders = response.data
-        totalItems = response.meta?.total || response.total || orders.length
-      } else if (Array.isArray(response)) {
-        // Direct array response
-        orders = response
-        totalItems = orders.length
-      } else {
-        console.warn('[OrderStore] Unexpected response format:', response)
-        this.handleOrdersLoadError()
-        return
-      }
+  // ✅ Matches your backend structure
+  if (response.data?.data && Array.isArray(response.data.data.data)) {
+    orders = response.data.data.data
+    totalItems = response.data.data.total || orders.length
+  }
+  // Laravel-style fallback
+  else if (response.data && Array.isArray(response.data.data)) {
+    orders = response.data.data
+    totalItems = response.data.total || orders.length
+  }
+  // Direct array fallback
+  else if (Array.isArray(response)) {
+    orders = response
+    totalItems = orders.length
+  } else {
+    console.warn('[OrderStore] Unexpected response format:', response)
+    this.handleOrdersLoadError()
+    return
+  }
 
-      // Normalize order data
-      this.orders = orders.map(this.normalizeOrderData)
-      this.filteredOrders = [...this.orders]
-      this.pagination.totalItems = totalItems
+  this.orders = orders.map(this.normalizeOrderData)
+  this.filteredOrders = [...this.orders]
+  this.pagination.totalItems = totalItems
 
-      console.log('[OrderStore] Successfully loaded orders:', this.orders.length)
-    },
+  console.log('[OrderStore] ✅ Loaded orders:', this.orders.length)
+  console.log('[OrderStore] Sample order:', this.orders[0])
+},
 
     // Helper method to normalize order data
     normalizeOrderData(order) {

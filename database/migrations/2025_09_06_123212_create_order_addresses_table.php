@@ -17,7 +17,9 @@ return new class extends Migration
             $table->enum('type', ['pickup', 'drop', 'shipping', 'billing', 'return']);
             $table->string('full_name', 191)->nullable();
             $table->string('address', 300)->nullable();
-            $table->string('city', 100)->nullable();
+            // $table->string('city', 100)->nullable();
+            $table->foreignId('city_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('zone_id')->nullable()->constrained()->nullOnDelete();
             $table->string('region', 100)->nullable();
             $table->char('country', 2)->nullable();
             $table->string('zipcode', 32)->nullable();
