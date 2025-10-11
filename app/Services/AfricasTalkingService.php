@@ -1554,43 +1554,95 @@ class AfricasTalkingService
     /**
      * Fetch call history with pagination and filters
      */
-    public function fetchCallHistory(array $filters = []): array
-    {
-        try {
-            $perPage = $filters['per_page'] ?? 15;
-            $page = $filters['page'] ?? 1;
-            $search = $filters['search'] ?? null;
-            $sortBy = $filters['sort_by'] ?? 'created_at';
-            $sortDesc = $filters['sort_desc'] ?? true;
+    // public function fetchCallHistory(array $filters = []): array
+    // {
+    //     try {
+    //         $perPage = $filters['per_page'] ?? 15;
+    //         $page = $filters['page'] ?? 1;
+    //         $search = $filters['search'] ?? null;
+    //         $sortBy = $filters['sort_by'] ?? 'created_at';
+    //         $sortDesc = $filters['sort_desc'] ?? true;
 
-            $query = CallHistory::with('agent', 'ivrOption', 'calltranscripts');
+    //         $query = CallHistory::with('agent', 'ivrOption', 'calltranscripts');
 
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('lastBridgeHangupCause', 'like', "%{$search}%")
-                        ->orWhere('callerNumber', 'like', "%{$search}%")
-                        ->orWhere('clientDialedNumber', 'like', "%{$search}%");
-                });
-            }
+    //         if ($search) {
+    //             $query->where(function ($q) use ($search) {
+    //                 $q->where('lastBridgeHangupCause', 'like', "%{$search}%")
+    //                     ->orWhere('callerNumber', 'like', "%{$search}%")
+    //                     ->orWhere('clientDialedNumber', 'like', "%{$search}%");
+    //             });
+    //         }
 
-            $query->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
+    //         $query->orderBy($sortBy, $sortDesc ? 'desc' : 'asc');
 
-            $callHistories = $query->paginate($perPage, ['*'], 'page', $page);
+    //         $callHistories = $query->paginate($perPage, ['*'], 'page', $page);
 
-            return [
-                'success' => true,
-                'data' => $callHistories
-            ];
-        } catch (Exception $e) {
-            Log::error("Error fetching call history: " . $e->getMessage());
+    //         return [
+    //             'success' => true,
+    //             'data' => $callHistories
+    //         ];
+    //     } catch (Exception $e) {
+    //         Log::error("Error fetching call history: " . $e->getMessage());
 
-            return [
-                'success' => false,
-                'message' => 'Failed to fetch call history',
-                'error' => $e->getMessage()
-            ];
+    //         return [
+    //             'success' => false,
+    //             'message' => 'Failed to fetch call history',
+    //             'error' => $e->getMessage()
+    //         ];
+    //     }
+    // }
+
+
+    // BACKEND - Controller
+public function fetchCallHistory()
+{
+    try {
+        $perPage = request()->get('per_page', 15);
+        $page = request()->get('page', 1);
+        $search = request()->get('search', null);
+        $sortBy = request()->get('sort_by', 'created_at');
+        $sortDesc = request()->get('sort_desc', true);
+
+        $query = CallHistory::with('agent', 'ivrOption', 'calltranscripts');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('lastBridgeHangupCause', 'like', "%{$search}%")
+                    ->orWhere('callerNumber', 'like', "%{$search}%")
+                    ->orWhere('clientDialedNumber', 'like', "%{$search}%")
+                    ->orWhere('destinationNumber', 'like', "%{$search}%");
+            });
         }
+
+        // Handle sort parameter (format: "field" or "-field" for desc)
+        $sortField = $sortBy;
+        $sortDirection = 'asc';
+        
+        if (str_starts_with($sortBy, '-')) {
+            $sortField = substr($sortBy, 1);
+            $sortDirection = 'desc';
+        } elseif ($sortDesc === 'true' || $sortDesc === true) {
+            $sortDirection = 'desc';
+        }
+
+        $query->orderBy($sortField, $sortDirection);
+
+        $callHistories = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'success' => true,
+            'data' => $callHistories->toArray()
+        ]);
+    } catch (Exception $e) {
+        Log::error("Error fetching call history: " . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch call history',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Generate comprehensive call summary report

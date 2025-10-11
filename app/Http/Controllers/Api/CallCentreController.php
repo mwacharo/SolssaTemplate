@@ -104,10 +104,15 @@ class CallCentreController extends Controller
 
             $result = $africasTalkingService->fetchCallHistory();
 
-            return response()->json([
-                'success' => true,
-                'data' => $result
-            ]);
+            // return response()->json([
+            //     'success' => true,
+            //     'data' => $result
+            //     // 'data' => $result['data'] ?? []
+
+            // ]);
+        
+
+            return $result;
         } catch (\Exception $e) {
             Log::error('Fetch call history failed: ' . $e->getMessage());
 
@@ -146,8 +151,8 @@ class CallCentreController extends Controller
 
             $agent->update([
                 'status' => trim($validated['status']),
-                   'last_seen_at' => now()
-                
+                'last_seen_at' => now()
+
             ]);
 
             Log::debug('Agent status updated', [
@@ -156,7 +161,7 @@ class CallCentreController extends Controller
             ]);
 
 
-                broadcast(new AgentStatusUpdated($agent))->toOthers();
+            broadcast(new AgentStatusUpdated($agent))->toOthers();
 
             return response()->json([
                 'success' => true,

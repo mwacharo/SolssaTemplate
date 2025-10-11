@@ -207,7 +207,7 @@
         </div>
 
         <!-- Data Table -->
-        <v-data-table-server
+        <!-- <v-data-table-server
           v-model:items-per-page="itemsPerPage"
           v-model:page="currentPage"
           v-model:sort-by="sortBy"
@@ -219,7 +219,19 @@
           class="call-history-table"
           density="comfortable"
           @update:options="loadItems"
-        >
+        > -->
+
+
+        <v-data-table-server
+  v-model:items-per-page="itemsPerPage"
+  v-model:page="currentPage"
+  v-model:sort-by="sortBy"
+  :headers="headers"
+  :items="agentStore.callHistory"
+  :items-length="totalItems"  
+  :loading="agentStore.loading"
+  @update:options="loadItems"  
+>
           <!-- Date Column -->
           <template #item.created_at="{ item }">
             <div class="date-cell">
@@ -530,16 +542,31 @@ const headers = [
 ]
 
 // Methods
-const loadItems = async (options) => {
-  try {
-    const result = await agentStore.fetchCallHistory(options)
-    totalItems.value = result.total
-  } catch (error) {
-    console.error('Error loading call history:', error)
-    notify.error('Failed to load call history', 'error')
-  }
-}
+// const loadItems = async (options) => {
+//   try {
+//     const result = await agentStore.fetchCallHistory(options)
+//     totalItems.value = result.total
+//   } catch (error) {
+//     console.error('Error loading call history:', error)
+//     notify.error('Failed to load call history', 'error')
+//   }
+// }
 
+
+
+const loadItems = async (options) => {
+    try {
+        const result = await agentStore.fetchCallHistory({
+            page: options.page,
+            itemsPerPage: options.itemsPerPage,
+            sortBy: options.sortBy,
+            search: props.search,
+        })
+        totalItems.value = result.total
+    } catch (error) {
+        console.error('Failed to load call history:', error)
+    }
+}
 
 const refreshData = () => {
   loadItems({
