@@ -192,7 +192,8 @@ export const useCallCenterStore = defineStore('callCenter', () => {
     // Hangup the call
     function hangupCall() {
         if (afClient.value) {
-            afClient.value.hangup()
+            // afClient.value.hangup()
+            webrtcStore.hangupCall()
             console.log('call ended')
             notify.error("Call ended.")
             // Note: incomingCallDialog should be managed by WebRTC store

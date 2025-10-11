@@ -502,6 +502,15 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useCallCenterStore } from '@/stores/callCenter'
 import { notify } from '@/utils/toast'
+import { useWebRTCStore } from '@/stores/webrtc'
+
+
+
+const webrtcStore = useWebRTCStore()
+
+
+
+
 
 const callCenterStore = useCallCenterStore()
 
@@ -743,12 +752,21 @@ const muteCall = async () => {
     notify.error('Failed to mute call')
   }
 }
+
+
 const hangupCall = async () => {
   try {
-    await callCenterStore.hangup()
-    notify.success('Call ended')
+    // End the call using AfricasTalking client
+    if (webrtcStore.afClient) {
+      await webrtcStore.afClient.hangup()
+    }
+    
+ 
+    
+   
+    
   } catch (error) {
-    notify.error('Failed to end call')
+    console.error('Failed to hangup call:', error)
   }
 }
 
