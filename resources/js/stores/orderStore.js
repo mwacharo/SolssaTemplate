@@ -713,9 +713,34 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
-  const deleteOrders = async (orders) => {
-    // Make API call to delete orders
-    console.log('Deleting orders:', orders)
+  const deleteOrders = async (orderIds = []) => {
+    if (!orderIds.length) {
+      throw new Error('No orders selected for deletion')
+    }
+    try {
+      await axios.post('/api/v1/orders/bulk-delete', {
+        order_ids: orderIds
+      }, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      })
+      // Remove deleted orders from local state
+      if (Array.isArray(orders.value)) {
+        orderIds.forEach(id => {
+          const index = orders.value.findIndex(order => order.id === id)
+          if (index !== -1) {
+            orders.value.splice(index, 1)
+            pagination.value.total -= 1
+          }
+        })
+      }
+      console.log('Deleted orders:', orderIds)
+    } catch (err) {
+      console.error('Failed to bulk delete orders:', err)
+      throw err
+    }
   }
 
   // Return all state, getters, and actions

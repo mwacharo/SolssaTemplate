@@ -104,6 +104,17 @@ class OrderController extends Controller
     }
 
 
+    // bulk delete orders
+    public function bulkDelete(BulkOrderActionRequest $request)
+    {
+        Log::info('Bulk deleting orders', ['data' => $request->validated()]);
+        $this->orderService->bulkDelete(
+            $request->validated('order_ids')
+        );
+        Log::info('Orders deleted successfully');
+        return response()->json(['message' => 'Orders deleted successfully']);
+    }
+
 
     /**
      * Print waybill(s) for orders - Returns PDF stream

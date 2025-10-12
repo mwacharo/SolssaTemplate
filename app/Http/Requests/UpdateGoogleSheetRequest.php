@@ -30,7 +30,7 @@ class UpdateGoogleSheetRequest extends FormRequest
             'sync_all' => 'sometimes|boolean',
             'sync_interval' => 'sometimes|integer|min:5|max:1440',
             'order_prefix' => 'nullable|string|max:50',
-            'vendor_id' => 'sometimes|integer|exists:vendors,id',
+            'vendor_id' => 'sometimes|integer|exists:users,id',
             'is_current' => 'sometimes|boolean',
             'country_id' => 'sometimes|integer|exists:countries,id',
         ];

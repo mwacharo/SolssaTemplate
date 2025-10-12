@@ -120,6 +120,9 @@ Route::prefix('v1')->group(function () {
     // update status
     Route::post('/orders/update-status', [OrderController::class, 'updateStatus']);    
 
+    // bulk delete 
+    Route::post('/orders/bulk-delete', [OrderController::class, 'bulkDelete']);
+
 
 
 

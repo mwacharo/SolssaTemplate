@@ -222,6 +222,16 @@ class OrderBulkActionService
     }
 
 
+    // bulk delete orders
+
+    public function bulkDelete(array $orderIds): int
+    {
+        // Soft delete orders by IDs
+        $deletedCount = Order::whereIn('id', $orderIds)->delete();
+
+        return $deletedCount;
+    }
+
 
 
     /**

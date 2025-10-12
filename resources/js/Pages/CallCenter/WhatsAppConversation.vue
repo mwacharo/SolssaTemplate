@@ -362,8 +362,13 @@ const getStatusColor = () => {
   }
 }
 
-const isIncomingMessage = (msg) => msg.direction === 'incoming' || msg.from !== 'system'
-const isOutgoingMessage = (msg) => msg.direction === 'outgoing' || msg.from === 'system'
+
+const isIncomingMessage = (msg) => msg.from !== 'system' 
+const isOutgoingMessage = (msg) => msg.from === 'system' || msg.direction === 'outgoing'
+
+
+// const isIncomingMessage = (msg) => msg.direction === 'incoming' || msg.from !== 'system'
+// const isOutgoingMessage = (msg) => msg.direction === 'outgoing' || msg.from === 'system'
 const getMessageAlignment = (msg) => isOutgoingMessage(msg) ? 'outgoing' : 'incoming'
 const getMessageBubbleClass = (msg) => isOutgoingMessage(msg) ? 'outgoing' : 'incoming'
 
@@ -486,27 +491,38 @@ watch(dialog, (val) => {
 </script>
 
 
+
+
+
 <style scoped>
 .conversation-dialog {
   height: 90vh;
   display: flex;
   flex-direction: column;
+  background: #ece5dd; /* WhatsApp-like background */
 }
 
+/* HEADER */
 .conversation-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   color: white;
 }
 
+/* MAIN CONTAINER */
 .messages-container {
-  height: calc(90vh - 200px);
+  flex: 1;
   overflow-y: auto;
-  scroll-behavior: smooth;
+  padding: 16px;
+  background: #ece5dd;
+  background-image: url('https://i.ibb.co/vz8msV1/chat-bg-light.png');
+  background-size: cover;
 }
 
+/* MESSAGE WRAPPER */
 .message-wrapper {
   display: flex;
-  width: 100%;
+  margin-bottom: 8px;
+  animation: slideInFromBottom 0.3s ease-out;
 }
 
 .message-wrapper.outgoing {
@@ -517,63 +533,65 @@ watch(dialog, (val) => {
   justify-content: flex-start;
 }
 
+/* MESSAGE BUBBLE */
 .message-bubble {
-  max-width: 70%;
-  padding: 12px 16px;
+  max-width: 75%;
+  padding: 10px 14px;
   border-radius: 18px;
-  position: relative;
   word-wrap: break-word;
-  transition: all 0.2s ease;
-}
-
-.message-bubble:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  position: relative;
+  line-height: 1.4;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
 }
 
 .message-bubble.outgoing {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #dcf8c6; /* light green */
+  color: #000;
   border-bottom-right-radius: 4px;
 }
 
 .message-bubble.incoming {
-  background: #f5f5f5;
-  color: #333;
+  background: #fff;
+  color: #000;
   border-bottom-left-radius: 4px;
 }
 
-.message-content {
-  line-height: 1.4;
-  white-space: pre-wrap;
+/* MESSAGE META (timestamp + icon) */
+.message-meta {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 11px;
+  margin-top: 4px;
+  color: #777;
 }
 
 .message-sender {
+  font-size: 11px;
   color: #666;
-  font-size: 11px;
+  margin-bottom: 4px;
 }
 
-.message-meta {
-  margin-top: 4px;
-  font-size: 11px;
-}
-
+/* REPLY SECTION */
 .reply-section {
-  background: #fafafa;
-  border-top: 1px solid #e0e0e0;
+  background: #f0f0f0;
+  border-top: 1px solid #ddd;
 }
 
 .message-input-container {
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .attachment-preview {
   border: 1px dashed #ccc;
   border-radius: 8px;
-  padding: 8px;
-  background: #f9f9f9;
+  padding: 6px;
+  background: #fafafa;
 }
 
+/* EMOJI PICKER */
 .emoji-picker {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -583,12 +601,12 @@ watch(dialog, (val) => {
 
 .emoji-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
   gap: 4px;
 }
 
 .emoji-btn {
-  min-width: 40px !important;
+  min-width: 36px !important;
   font-size: 18px;
   transition: transform 0.1s ease;
 }
@@ -597,24 +615,7 @@ watch(dialog, (val) => {
   transform: scale(1.2);
 }
 
-.audio-container {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  min-width: 120px;
-}
-
-.empty-state {
-  height: 300px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Typing indicator animation */
+/* TYPING INDICATOR */
 .typing-indicator {
   display: flex;
   justify-content: flex-start;
@@ -622,7 +623,6 @@ watch(dialog, (val) => {
 
 .typing-dots {
   display: flex;
-  align-items: center;
   gap: 4px;
   padding: 8px 12px;
 }
@@ -635,95 +635,30 @@ watch(dialog, (val) => {
   animation: typing 1.4s infinite ease-in-out both;
 }
 
-.typing-dots span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.typing-dots span:nth-child(2) {
-  animation-delay: -0.16s;
-}
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
 
 @keyframes typing {
-  0%, 80%, 100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
-/* Connection status indicator */
-.v-chip.success {
-  background-color: #4caf50 !important;
+/* ANIMATION */
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.v-chip.warning {
-  background-color: #ff9800 !important;
-}
-
-/* Scrollbar styling */
-.messages-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-  transition: background 0.2s ease;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Mobile responsiveness */
+/* MOBILE */
 @media (max-width: 600px) {
   .conversation-dialog {
     height: 100vh;
-    margin: 0;
     border-radius: 0;
   }
-  
   .message-bubble {
     max-width: 85%;
   }
-  
-  .messages-container {
-    height: calc(100vh - 180px);
-  }
-}
-
-/* Animation for new messages */
-@keyframes slideInFromBottom {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.message-wrapper {
-  animation: slideInFromBottom 0.3s ease-out;
-}
-
-/* Failed message styling */
-.message-bubble.outgoing[data-status="failed"] {
-  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-  opacity: 0.8;
-}
-
-/* Sending message styling */
-.message-bubble.outgoing[data-status="sending"] {
-  opacity: 0.7;
 }
 </style>
+
+

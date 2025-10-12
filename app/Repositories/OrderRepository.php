@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Models\Client;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -14,10 +14,6 @@ class OrderRepository implements OrderRepositoryInterface
 {
     /**
      * Get orders by vendor ID and status
-     *
-     * @param int $vendorId
-     * @param array $statuses
-     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getOrdersByVendorAndStatus($vendorId, $statuses = ['pending', 'picked', 'delivered'])
     {
@@ -28,187 +24,204 @@ class OrderRepository implements OrderRepositoryInterface
 
     /**
      * Save order data from Google Sheets
-     *
-     * @param array $orderData
-     * @param int $userId
-     * @param GoogleSheet $sheet
-     * @return int
      */
+    // public function saveOrderData(array $orderData, int $userId, $sheet): int
+
     public function saveOrderData($orderData, $userId, $sheet)
     {
+
         $syncedCount = 0;
 
         DB::beginTransaction();
 
         try {
-            foreach ($orderData as $data) {
-                $client = $this->createOrUpdateClient($data, $userId, $sheet);
-                $order = $this->createOrder($data, $client, $userId, $sheet);
-                $this->createOrderProducts($data['products'], $order, $sheet);
+            foreach ($orderData as $row) {
+                // Skip invalid rows
+                if (empty($row['order_no']) || empty($row['phone'])) {
+                    Log::warning('Skipping invalid row', ['row' => $row]);
+                    continue;
+                }
+
+                // 1️⃣ Create or update customer
+                $customer = $this->createOrUpdateCustomer($row, $userId, $sheet);
+
+                // 2️⃣ Create or find order
+                $order = $this->createOrder($row, $customer, $userId, $sheet);
+
+                // 3️⃣ Create related order products
+                if (!empty($row['products'])) {
+                    $this->createOrderProducts($row['products'], $order, $sheet);
+                }
+
+                // 4️⃣ Add initial status record (if new)
+                if ($order->wasRecentlyCreated) {
+                    $order->statusTimestamps()->create([
+                        'status_id' => 2, // Example: Scheduled
+                        'status_notes' => 'Imported via Google Sheet',
+                    ]);
+                }
 
                 $syncedCount++;
-                // Optional: Dispatch geocoding job or other post-processing
-                // GeocodeAddress::dispatch($order);
             }
 
             DB::commit();
+            Log::info("✅ Successfully synced {$syncedCount} orders from Google Sheet");
+
             return $syncedCount;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Error saving order data: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('❌ Order import failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             throw $e;
         }
     }
 
     /**
-     * Create or update client from order data
-     *
-     * @param array $data
-     * @param int $userId
-     * @param GoogleSheet $sheet
-     * @return Client
+     * Create or update customer
      */
-    private function createOrUpdateClient($data, $userId, $sheet)
+    private function createOrUpdateCustomer(array $data, int $userId, $sheet): Customer
     {
-        try {
-            Log::info('Attempting to create or update client', [
-                'phone_number' => $data['phone'],
+        return Customer::updateOrCreate(
+            ['phone' => $data['phone']],
+            [
                 'user_id' => $userId,
                 'branch_id' => $sheet->branch_id,
                 'vendor_id' => $sheet->vendor_id,
-                'name' => $data['client_name'],
-            ]);
-
-            $client = Client::updateOrCreate(
-                ['phone_number' => $data['phone']],
-                [
-                    'user_id' => $userId,
-                    'branch_id' => $sheet->branch_id,
-                    'vendor_id' => $sheet->vendor_id,
-                    'name' => $data['client_name'],
-                    'email' => $data['email'] ?? null,
-                    'alt_phone' => $data['alt phone'] ?? null,
-                    'address' => $data['address'],
-                    'city' => $data['city'] ?? null,
-                ]
-            );
-
-            Log::info('Client created or updated successfully', [
-                'client_id' => $client->id,
-                'phone_number' => $client->phone_number,
-            ]);
-
-            return $client;
-        } catch (\Exception $e) {
-            Log::error('Error creating or updating client', [
-                'error' => $e->getMessage(),
-                'data' => $data,
-            ]);
-            throw $e;
-        }
+                'name' => $data['client_name'] ?? 'Unknown',
+                'email' => $data['email'] ?? null,
+                'alt_phone' => $data['alt_phone'] ?? null,
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'zone_id' => $data['zone_id'] ?? null,
+                'country_id' => $sheet->country_id,
+            ]
+        );
     }
 
     /**
-     * Create order if it doesn't exist
-     *
-     * @param array $data
-     * @param Client $client
-     * @param int $userId
-     * @param GoogleSheet $sheet
-     * @return Order
+     * Create or return existing order
      */
-    private function createOrder($data, $client, $userId, $sheet)
+    private function createOrder(array $data, Customer $customer, int $userId, $sheet): Order
     {
+        // Fast lookup for existing order
         $existingOrder = Order::where('order_no', $data['order_no'])->first();
-
         if ($existingOrder) {
             return $existingOrder;
         }
 
         return Order::create([
-            'order_no' => $data['order_no'],
-            'client_id' => $client->id,
-            'client_name' => $data['client_name'],
-            'cod_amount' => $data['cod_amount'],
-            'total_price' => $data['cod_amount'],
-            'address' => $data['address'],
-            'country' => $data['country'],
-            'phone' => $data['phone'],
-            'city' => $data['city'],
-            'status' => $data['status'],
-            'delivery_date' => $data['delivery_date'],
-            'special_instruction' => $data['special_instruction'],
-            'distance' => $data['distance'],
-            'invoice_value' => $data['invoice_value'],
-            'pod_returned' => $data['pod_returned'],
-            'user_id' => $userId,
-            'branch_id' => $sheet->branch_id,
-            'vendor_id' => $sheet->vendor_id,
-            'country_id' => $sheet->country_id,
+            'order_no'          => $data['order_no'],
+            'customer_id'       => $customer->id,
+            'vendor_id'         => $sheet->vendor_id,
+            'country_id'        => $sheet->country_id,
+            'warehouse_id'      => $sheet->warehouse_id ?? 1,
+            'user_id'           => $userId,
+            'platform'          => 'sheets_import',
+            'source'            => 'google_sheet',
+            'total_price'       => $data['cod_amount'] ?? 0,
+            'sub_total'         => $data['cod_amount'] ?? 0,
+            'shipping_charges'  => $data['shipping_charges'] ?? 0,
+            'delivery_date'     => $data['delivery_date'] ?? null,
+            'customer_notes'    => $data['special_instruction'] ?? null,
+            'distance'          => $data['distance'] ?? null,
+            'currency'          => $data['currency'] ?? 'KSH',
+            'paid'              => false,
         ]);
     }
 
     /**
-     * Create order products
-     * 
-     * @param array $products
-     * @param Order $order
-     * @param GoogleSheet $sheet
-     * @return void
+     * Create related order products efficiently
      */
-    private function createOrderProducts($products, $order, $sheet)
-    {
-        $orderProducts = [];
+    private function createOrderProducts(array $products, Order $order, $sheet): void
+{
+    if (empty($products)) {
+        return;
+    }
 
-        foreach ($products as $productData) {
-            try {
-                $product = Product::updateOrCreate(
-                    [
-                        'product_name' => $productData['product_name'],
-                        'sku_no' => $productData['sku_number'],
-                        'vendor_id' => $sheet->vendor_id,
-                        'country_id' => $sheet->country_id,
-                    ]
-                );
+    // Group products by name or SKU to avoid duplicates
+    $grouped = collect($products)
+        ->groupBy(fn($p) => $p['sku_number'] ?? strtolower(trim($p['product_name'])))
+        ->map(function ($items) {
+            $first = $items->first();
+            $quantity = $items->sum(fn($i) => (int)($i['quantity'] ?? 1));
+            $price = (float)($first['price'] ?? 0);
 
-                // $weight = !empty($productData['weight']) && is_numeric($productData['weight'])
-                //     ? intval($productData['weight'])
-                //     : 0;
+            return [
+                'product_name' => trim($first['product_name']),
+                'sku_number' => $first['sku_number'] ?? null,
+                'quantity' => $quantity,
+                'price' => $price,
+            ];
+        })
+        ->values();
 
-                $quantity = !empty($productData['quantity']) && is_numeric($productData['quantity'])
-                    ? intval($productData['quantity'])
-                    : 1;
+    $orderItems = [];
 
-                $orderProducts[] = [
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    'price' => 0,
-                    // 'weight' => $weight,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                    'vendor_id' => $sheet->vendor_id,
-                ];
+    foreach ($grouped as $p) {
+        try {
+            // 1️⃣ Try to find existing product by SKU first
+            $product = null;
 
-                Log::info('Prepared OrderProduct', [
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    // 'weight' => $weight,
-                    'vendor_id' => $sheet->vendor_id,
+            if (!empty($p['sku_number'])) {
+                $product = Product::where('sku', $p['sku_number'])
+                    ->where('vendor_id', $sheet->vendor_id)
+                    ->first();
+            }
 
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Error preparing OrderProduct', [
-                    'error' => $e->getMessage(),
-                    'product_data' => $productData,
+            // 2️⃣ If no SKU or product not found, try by product name
+            if (!$product) {
+                $product = Product::where('product_name', $p['product_name'])
+                    ->where('vendor_id', $sheet->vendor_id)
+                    ->first();
+            }
+
+            // 3️⃣ If still not found, create a new one with auto-generated SKU
+            if (!$product) {
+                $newSku = $p['sku_number'] ?? $this->generateSku($p['product_name'], $sheet->vendor_id);
+
+                $product = Product::create([
+                    'sku'          => $newSku,
+                    'vendor_id'    => $sheet->vendor_id,
+                    'product_name' => $p['product_name'],
                 ]);
             }
-        }
 
-        if (!empty($orderProducts)) {
-            OrderItem::insert($orderProducts);
-            Log::info('Inserted OrderProducts', ['count' => count($orderProducts)]);
+            // 4️⃣ Build order item
+            $orderItems[] = [
+                'order_id'    => $order->id,
+                'product_id'  => $product->id,
+                'quantity'    => $p['quantity'],
+                'unit_price'  => $p['price'],
+                'total_price' => $p['quantity'] * $p['price'],
+                'currency'    => 'KSH',
+                // 'vendor_id'   => $sheet->vendor_id,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Failed to prepare order product', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
+
+    if ($orderItems) {
+        OrderItem::insert($orderItems);
+        Log::info("Inserted " . count($orderItems) . " items for Order #{$order->order_no}");
+    }
+}
+
+/**
+ * 🔢 Helper: Generate a SKU based on product name + vendor
+ */
+private function generateSku(string $productName, int $vendorId): string
+{
+    $prefix = strtoupper(substr(preg_replace('/\s+/', '', $productName), 0, 3)); // first 3 letters
+    $random = strtoupper(substr(md5(uniqid()), 0, 5)); // random 5 chars
+    return "{$prefix}-{$vendorId}-{$random}";
+}
+
 }

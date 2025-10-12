@@ -659,6 +659,15 @@ class AfricasTalkingService
         // No agents available - record voicemail
         // Africa's Talking expects plain XML, not a Laravel response object
         $xml = $this->createVoicemailResponse();
+
+
+           // 🔒 Clean output buffers to avoid stray whitespace/newlines
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    // 🔒 Ensure clean, trimmed XML
+    $xml = ltrim($xml);
         header('Content-Type: application/xml');
         echo $xml;
         exit;
@@ -808,30 +817,7 @@ class AfricasTalkingService
     }
 
 
-    /**
-     * Generate dial response for outgoing calls
-     */
-    private function generateDialResponsex(string $clientDialedNumber): string
-    {
-        // Ensure number starts with +254... format
-        $cleanNumber = ltrim(trim($clientDialedNumber));
 
-        if (!str_starts_with($cleanNumber, '+')) {
-            $cleanNumber = '+' . $cleanNumber;
-        }
-
-        $response  = '<?xml version="1.0" encoding="UTF-8"?>';
-        $response .= '<Response>';
-        $response .= '<Dial record="true" sequential="true" phoneNumbers="' . $cleanNumber . '"></Dial>';
-        $response .= '</Response>';
-
-        Log::info("Generated outgoing dial response", [
-            'clientDialedNumber' => $clientDialedNumber,
-            'cleanNumber' => $cleanNumber
-        ]);
-
-        return $response;
-    }
 
 
     private function generateDialResponse(string $clientDialedNumber, string $callerNumber): string
@@ -921,7 +907,7 @@ class AfricasTalkingService
         $response = '<?xml version="1.0" encoding="UTF-8"?>';
         $response .= '<Response>';
         $response .= '<Say>' . $this->config['messages']['voicemail_prompt'] . '</Say>';
-        $response .= '<Record finishOnKey="#" maxLength="" trimSilence="true" playBeep="true" ';
+        $response .= '<Record finishOnKey="#" maxLength="10" trimSilence="true" playBeep="true" ';
         $response .= 'callbackUrl="' . $this->config['urls']['voicemail_callback'] . '">';
         $response .= '</Record>';
         $response .= '</Response>';
@@ -1090,9 +1076,9 @@ class AfricasTalkingService
 
 
 
-            // $customer = Customer::where('phone', $payload['clientDialedNumber'] ?? null)->first();
+            $customer = Customer::where('phone', $payload['clientDialedNumber'] ?? null)->first();
 
-            $customer = Customer::where('phone', 'like', $payload['clientDialedNumber'] ?? null)->first();
+            // $customer = Customer::where('phone', 'like', $payload['clientDialedNumber'] ?? null)->first();
 
 
             $order = $customer?->orders()->latest()->first();

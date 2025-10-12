@@ -357,7 +357,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
         } else {
           console.error('Unexpected API response format:', response.data)
           this.orders = []
-          this.showError('Invalid order data format received from server')
+          // this.showError('Invalid order data format received from server')
         }
       } catch (error) {
         console.error('Error loading orders:', error)
