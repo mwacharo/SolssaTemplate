@@ -849,14 +849,18 @@ onMounted(async () => {
                     <template #item.sent_at="{ item }">
                       {{ item.sent_at || item.created_at?.split('T')[0] || '-' }}
                     </template>
+
+
                     <template #item.actions="{ item }">
-                      <v-btn icon size="small" @click="viewMessageDetails(item)">
+                      <v-btn variant="text" color="primary" size="large" @click="viewMessageDetails(item)">
                         <v-icon>mdi-eye</v-icon>
                       </v-btn>
-                      <v-btn icon size="small" color="error" @click="deleteMessage(item.id)">
+                      <v-btn variant="text" size="large" color="error" @click="deleteMessage(item.id)">
                         <v-icon>mdi-delete</v-icon>
                       </v-btn>
                     </template>
+
+
                   </v-data-table>
                 </v-card-text>
               </v-window-item>
@@ -1017,18 +1021,18 @@ onMounted(async () => {
                     </template>
 
                     <template #item.actions="{ item }">
-                      <v-btn icon size="small" @click="viewOrderDetails(item)">
+                      <v-btn  variant="text" size="large" color="primary" @click="viewOrderDetails(item)">
                         <v-icon>mdi-eye</v-icon>
                       </v-btn>
-                      <v-btn icon size="small" color="primary" @click="sendOrderMessage([item])">
+                      <v-btn variant="text" size="large" color="success" @click="sendOrderMessage([item])">
                         <v-icon>mdi-whatsapp</v-icon>
                       </v-btn>
-                      <v-btn icon size="small" color="info" @click="openOrderPrint(item.id)">
+                      <v-btn variant="text" size="large" color="info" @click="openOrderPrint(item.id)">
                         <v-icon>mdi-printer</v-icon>
                       </v-btn>
 
                       <!-- add sms  -->
-                      <v-btn icon size="small" @click="sendSms(item)">
+                      <v-btn variant="text" size="large" @click="sendSms(item)">
                         <v-icon>mdi-message-text</v-icon>
                       </v-btn>
                     </template>
