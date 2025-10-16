@@ -179,14 +179,21 @@
                   {{ formatPrice(getProductPrice(product)) }} <span class="text-xs text-gray-500">KES</span>
                 </td>
 
-                <td class="px-4 py-4">
-                  <button class="text-blue-600 hover:text-blue-800">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
-                  </button>
-                </td>
+              <td class="px-4 py-4">
+  <button 
+    @click="openImage(product.images?.[0]?.image_path || '/storage/products/default.png')" 
+    class="text-blue-600 hover:text-blue-800"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+      </path>
+    </svg>
+  </button>
+</td>
+
+
+
 
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-2">
@@ -218,9 +225,10 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 12H5"></path>
                       </svg>
                     </button> -->
-                    <button @click="openStockDialog(product)" class="text-indigo-600 hover:text-indigo-800 p-1" title="Edit Stock">
+                    <button @click="openStockDialog(product)" class="text-indigo-600 hover:text-indigo-800 p-1"
+                      title="Edit Stock">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m4-4H8"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m4-4H8"></path>
                       </svg>
                     </button>
                     <!-- <button @click="adjustStock(product, 1)" class="text-green-600 hover:text-green-800 p-1" title="Add Stock">
@@ -228,7 +236,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
                     </button> -->
-                    <button @click="openMoveStockModal(product)" class="text-yellow-600 hover:text-yellow-800 p-1" title="Move Stock">
+                    <button @click="openMoveStockModal(product)" class="text-yellow-600 hover:text-yellow-800 p-1"
+                      title="Move Stock">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
@@ -404,17 +413,21 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
-                  <input type="file" accept="image/*" multiple @change="handleImageUpload" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  <input type="file" accept="image/*" multiple @change="handleImageUpload"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md" />
                   <div class="flex flex-wrap gap-2 mt-2">
-                    <img v-for="(img, idx) in form.images" :key="idx" :src="img.preview" class="w-16 h-16 object-cover rounded" />
+                    <img v-for="(img, idx) in form.images" :key="idx" :src="img.preview"
+                      class="w-16 h-16 object-cover rounded" />
                   </div>
                   <div v-if="formErrors.images" class="text-red-600 text-xs mt-1">{{ formErrors.images[0] }}</div>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Product Videos</label>
-                  <input type="file" accept="video/*" multiple @change="handleVideoUpload" class="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  <input type="file" accept="video/*" multiple @change="handleVideoUpload"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md" />
                   <div class="flex flex-wrap gap-2 mt-2">
-                    <video v-for="(vid, idx) in form.videos" :key="idx" :src="vid.preview" controls class="w-24 h-16 rounded"></video>
+                    <video v-for="(vid, idx) in form.videos" :key="idx" :src="vid.preview" controls
+                      class="w-24 h-16 rounded"></video>
                   </div>
                   <div v-if="formErrors.videos" class="text-red-600 text-xs mt-1">{{ formErrors.videos[0] }}</div>
                 </div>
@@ -444,41 +457,43 @@
                         class="w-full px-2 py-1 border rounded" />
                     </div>
                   </div>
-                  <button type="button" @click="removePriceOffer(idx)" class="text-red-600 text-xs mt-2">Remove Offer</button>
+                  <button type="button" @click="removePriceOffer(idx)" class="text-red-600 text-xs mt-2">Remove
+                    Offer</button>
                 </div>
-                <button type="button" @click="addPriceOffer" class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs mt-2">
+                <button type="button" @click="addPriceOffer"
+                  class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs mt-2">
                   Add Price Offer
                 </button>
 
                 <!-- Product Offers Table -->
                 <div v-if="form.price_offers && form.price_offers.length" class="mt-4">
                   <table class="min-w-full divide-y divide-gray-200 border rounded">
-                  <thead class="bg-gray-100">
-                    <tr>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-700">Amount</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-700">Currency</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-700">Label</th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <tr v-for="(offer, idx) in form.price_offers" :key="idx">
-                    <td class="px-4 py-2 text-sm text-gray-900">{{ offer.amount }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-900">{{ offer.currency }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-900">{{ offer.label }}</td>
-                    </tr>
-                  </tbody>
+                    <thead class="bg-gray-100">
+                      <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-700">Amount</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-700">Currency</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-700">Label</th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr v-for="(offer, idx) in form.price_offers" :key="idx">
+                        <td class="px-4 py-2 text-sm text-gray-900">{{ offer.amount }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-900">{{ offer.currency }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-900">{{ offer.label }}</td>
+                      </tr>
+                    </tbody>
                   </table>
                 </div>
               </div>
 
-          
+
 
               <div class="flex justify-end space-x-3 mt-6">
                 <button type="button" @click="closeModal"
                   class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                   Cancel
                 </button>
-                <button type="submit" :disabled="isLoading" 
+                <button type="submit" :disabled="isLoading"
                   class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
                   {{ isEditing ? 'Update' : 'Create' }}
                 </button>
@@ -542,20 +557,12 @@
       </div>
     </div>
 
-      <!-- Stock Dialog -->
-    <StockEditDialog
-      :isOpen="showDialog"
-      :productId="selectedProduct.id"
-      :productName="selectedProduct.name"
-      :warehouseId="selectedProduct.warehouse_id"
-      :currentStock="selectedProduct.current_stock"
-      :committedStock="selectedProduct.committed_stock"
-      :defectedStock="selectedProduct.defected_stock"
-      :historicalStock="selectedProduct.historical_stock"
-      :warehouses="availableWarehouses"
-      @close="closeDialog"
-      @save="handleSave"
-    />
+    <!-- Stock Dialog -->
+    <StockEditDialog :isOpen="showDialog" :productId="selectedProduct.id" :productName="selectedProduct.name"
+      :warehouseId="selectedProduct.warehouse_id" :currentStock="selectedProduct.current_stock"
+      :committedStock="selectedProduct.committed_stock" :defectedStock="selectedProduct.defected_stock"
+      :historicalStock="selectedProduct.historical_stock" :warehouses="availableWarehouses" @close="closeDialog"
+      @save="handleSave" />
   </AppLayout>
 </template>
 
@@ -655,6 +662,39 @@ const filters = ref({
   category: ''
 })
 
+
+
+const handleImageUpload = (event) => {
+  const files = event.target.files
+  form.value.images = []
+
+  for (let file of files) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      form.value.images.push({
+        file,
+        preview: e.target.result
+      })
+    }
+    reader.readAsDataURL(file)
+  }
+}
+const handleVideoUpload = (event) => {
+  const files = event.target.files
+  form.value.videos = []
+
+  for (let file of files) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      form.value.videos.push({
+        file,
+        preview: e.target.result
+      })
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
 // Pagination
 const pagination = ref({
   current_page: 1,
@@ -707,7 +747,7 @@ const visiblePages = computed(() => {
 
 // Helper methods for data extraction
 const getProductImage = (product) => {
-  const primaryImage = product.media?.find(m => m.media_type === 'image' && m.is_primary) 
+  const primaryImage = product.media?.find(m => m.media_type === 'image' && m.is_primary)
     || product.media?.find(m => m.media_type === 'image')
   return primaryImage?.url || '/api/placeholder/50/50'
 }
@@ -774,25 +814,25 @@ const handleSave = (payload) => {
 const fetchProducts = async (page = 1) => {
   try {
     isLoading.value = true
-    
+
     // Build query parameters
     const params = {
       page: page,
       per_page: pagination.value.per_page
     }
-    
+
     if (searchQuery.value) {
       params.search = searchQuery.value
     }
-    
+
     if (filters.value.vendor) {
       params.vendor_id = filters.value.vendor
     }
-    
+
     if (filters.value.category) {
       params.category_id = filters.value.category
     }
-    
+
     if (filters.value.date) {
       params.created_date = filters.value.date
     }
@@ -831,12 +871,12 @@ const fetchProducts = async (page = 1) => {
 
   } catch (error) {
     console.error('Error fetching products:', error)
-    
+
     // Handle different types of errors
     if (error.response) {
       const status = error.response.status
       const message = error.response.data?.message || 'Failed to load products'
-      
+
       if (status === 401) {
         alert('Please log in to continue')
         // Redirect to login if needed
@@ -960,40 +1000,93 @@ const closeModal = () => {
     vendor_id: '',
     initial_quantity: 0,
     stock_threshold: 0,
-    base_price: 0
+    base_price: 0,
+    images: [] // 👈 added for image uploads
+
   }
 }
+
+// const saveProduct = async () => {
+//   try {
+//     isModalLoading.value = true
+//     formErrors.value = {}
+
+//     const endpoint = isEditing.value 
+//       ? `/products/${currentProduct.value.id}` 
+//       : '/products'
+
+//     const method = isEditing.value ? 'put' : 'post'
+
+//     const response = await apiClient[method](endpoint, form.value)
+
+//     // Show success message
+//     const message = isEditing.value ? 'Product updated successfully' : 'Product created successfully'
+//     alert(message)
+
+//     closeModal()
+//     fetchProducts(pagination.value.current_page)
+
+//   } catch (error) {
+//     console.error('Error saving product:', error)
+
+//     if (error.response?.status === 422) {
+//       // Validation errors
+//       formErrors.value = error.response.data.errors || {}
+//       const firstError = Object.values(formErrors.value)[0]?.[0]
+//       if (firstError) {
+//         alert('Validation error: ' + firstError)
+//       }
+//     } else {
+//       const message = error.response?.data?.message || 'Error saving product'
+//       alert(message)
+//     }
+//   } finally {
+//     isModalLoading.value = false
+//   }
+// }
+
+
+
 
 const saveProduct = async () => {
   try {
     isModalLoading.value = true
     formErrors.value = {}
-    
-    const endpoint = isEditing.value 
-      ? `/products/${currentProduct.value.id}` 
+
+    const formData = new FormData()
+    formData.append('sku', form.value.sku)
+    formData.append('product_name', form.value.product_name)
+    formData.append('description', form.value.description)
+    formData.append('category_id', form.value.category_id)
+    formData.append('vendor_id', form.value.vendor_id)
+    formData.append('initial_quantity', form.value.initial_quantity)
+    formData.append('stock_threshold', form.value.stock_threshold)
+    formData.append('base_price', form.value.base_price)
+
+    // 👇 append each image file
+    form.value.images.forEach((img, index) => {
+      formData.append(`images[${index}]`, img.file)
+    })
+
+    const endpoint = isEditing.value
+      ? `/products/${currentProduct.value.id}`
       : '/products'
-    
-    const method = isEditing.value ? 'put' : 'post'
+    const method = isEditing.value ? 'post' : 'post' // Laravel update can still accept POST with _method=PUT
+    if (isEditing.value) formData.append('_method', 'PUT')
 
-    const response = await apiClient[method](endpoint, form.value)
+    const response = await apiClient.post(endpoint, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
 
-    // Show success message
-    const message = isEditing.value ? 'Product updated successfully' : 'Product created successfully'
-    alert(message)
-    
+    alert(isEditing.value ? 'Product updated successfully' : 'Product created successfully')
     closeModal()
     fetchProducts(pagination.value.current_page)
-
   } catch (error) {
     console.error('Error saving product:', error)
-    
     if (error.response?.status === 422) {
-      // Validation errors
       formErrors.value = error.response.data.errors || {}
       const firstError = Object.values(formErrors.value)[0]?.[0]
-      if (firstError) {
-        alert('Validation error: ' + firstError)
-      }
+      if (firstError) alert('Validation error: ' + firstError)
     } else {
       const message = error.response?.data?.message || 'Error saving product'
       alert(message)
@@ -1003,16 +1096,17 @@ const saveProduct = async () => {
   }
 }
 
+
 const deleteProduct = async (product) => {
   if (confirm(`Are you sure you want to delete "${product.product_name}"?`)) {
     try {
       isDeletingProduct.value = product.id
-      
+
       await apiClient.delete(`/products/${product.id}`)
-      
+
       alert('Product deleted successfully')
       fetchProducts(pagination.value.current_page)
-      
+
     } catch (error) {
       console.error('Error deleting product:', error)
       const message = error.response?.data?.message || 'Error deleting product'
@@ -1083,11 +1177,11 @@ const saveStockAdjustment = async () => {
   try {
     isStockLoading.value = true
     stockFormErrors.value = {}
-    
+
     // await apiClient.post(`/products/${stockForm.value.product.id}/adjust-stock`, {
     await apiClient.put(`/products/${stockForm.value.product.id}`, {
 
-    current_stock: stockForm.value.quantity,
+      current_stock: stockForm.value.quantity,
       reason: stockForm.value.reason,
       warehouse_id: 1 // Assuming default warehouse
     })
@@ -1095,10 +1189,10 @@ const saveStockAdjustment = async () => {
     alert('Stock adjusted successfully')
     closeStockModal()
     fetchProducts(pagination.value.current_page)
-    
+
   } catch (error) {
     console.error('Error adjusting stock:', error)
-    
+
     if (error.response?.status === 422) {
       // Validation errors
       stockFormErrors.value = error.response.data.errors || {}
@@ -1133,6 +1227,16 @@ const goToPage = (page) => {
   }
 }
 
+
+const openImage = (imageUrl) => {
+  if (imageUrl) {
+    window.open(imageUrl, '_blank')
+  } else {
+    alert('Image not available')
+  }
+}
+
+
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
@@ -1162,7 +1266,7 @@ const initializeCsrfToken = async () => {
 // Lifecycle
 onMounted(async () => {
   await initializeCsrfToken()
-  
+
   await Promise.all([
     fetchCategories(),
     fetchVendors(),

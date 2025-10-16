@@ -98,4 +98,5 @@ class Product extends Model
 
 
 // product belongs to a warehouse
+// product belongs to a country 
 }

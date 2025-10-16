@@ -21,6 +21,11 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
+                // product belongs to a country
+                // $table->foreignId('country_id')
+                //     ->constrained('countries')
+                //     ->cascadeOnDelete();
+
             $table->string('product_name');
             $table->text('description')->nullable();
             $table->timestamps();
