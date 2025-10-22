@@ -75,45 +75,45 @@ class HandleFailedCallsJob
             $userId = $call->userId ?? 1;
             $chatId = $phone . '@c.us';
 
-            Log::info('Dispatching SendWhatsAppMessageJob', compact('chatId', 'userId'));
-            SendWhatsAppMessageJob::dispatch(
-                chatId: $chatId,
-                // pass the order details in the and come with messageContent
-                messageContent: "We tried calling you about your order. Please call us back.",
-                // dynamic message 
-                // pass the phone number to message template service 
-                // the message template service will fetch the message template from the databas
-                // find appropriate orders of client using phone number
-
-
-
-                userId: $userId
-            );
-
-
-
-            // $messageTemplateService = app(MessageTemplateService::class);
-
-
-            // // Generate personalized message using template service
-            // $result = $messageTemplateService->generateMessage(
-            //     phone: $phone, // e.g., '254712345678' or '0712345678'
-            //     templateId: 3, // Optional: specific template ID
-            //     templateSlug: 'order_followup', // Template slug like 'order_followup', 'delivery_reminder'
-            //     additionalData: [] // Optional: extra data to merge
-            // );
-
+            // Log::info('Dispatching SendWhatsAppMessageJob', compact('chatId', 'userId'));
             // SendWhatsAppMessageJob::dispatch(
             //     chatId: $chatId,
-            //     messageContent: $result['message'], // Personalized message with all placeholders replaced
+            //     // pass the order details in the and come with messageContent
+            //     messageContent: "We tried calling you about your order. Please call us back.",
+            //     // dynamic message 
+            //     // pass the phone number to message template service 
+            //     // the message template service will fetch the message template from the databas
+            //     // find appropriate orders of client using phone number
+
+
+
             //     userId: $userId
             // );
 
-            // Log::info('Message dispatched with template', [
-            //     'phone' => $phone,
-            //     'template_used' => $result['template']->name,
-            //     'message_preview' => ($result['message'])
-            // ]);
+
+
+            $messageTemplateService = app(MessageTemplateService::class);
+
+
+            // Generate personalized message using template service
+            $result = $messageTemplateService->generateMessage(
+                phone: $phone, // e.g., '254712345678' or '0712345678'
+                templateId: 3, // Optional: specific template ID
+                templateSlug: 'order_followup', // Template slug like 'order_followup', 'delivery_reminder'
+                additionalData: [] // Optional: extra data to merge
+            );
+
+            SendWhatsAppMessageJob::dispatch(
+                chatId: $chatId,
+                messageContent: $result['message'], // Personalized message with all placeholders replaced
+                userId: $userId
+            );
+
+            Log::info('Message dispatched with template', [
+                'phone' => $phone,
+                'template_used' => $result['template']->name,
+                'message_preview' => ($result['message'])
+            ]);
 
 
             // Schedule conditional SMS fallback (job will check WA status before sending)

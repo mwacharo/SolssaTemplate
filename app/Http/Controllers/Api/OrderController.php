@@ -715,18 +715,43 @@ class OrderController extends Controller
             // log auth user details
             Log::info('Auth user details', ['user' => Auth::user()]);
 
+            // $user = Auth::user();
+            // if ($user && $user->hasRole('Vendor')) {
+            //     $validated['vendor_id'] = $user->id;
+            // } else {
+            //     if (empty($validated['vendor_id'])) {
+            //         return response()->json([
+            //             'success' => false,
+            //             'message' => 'Vendor ID is required'
+            //         ], 422);
+            //     }
+            //     $validated['vendor_id'] = $validated['vendor_id'] ?? null;
+            // }
+
+
+
+            // ✅ Get authenticated user from Bearer token
             $user = Auth::user();
-            if ($user && $user->hasRole('Vendor')) {
-                $validated['vendor_id'] = $user->id;
-            } else {
-                if (empty($validated['vendor_id'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Vendor ID is required'
-                    ], 422);
-                }
-                $validated['vendor_id'] = $validated['vendor_id'] ?? null;
+            Log::info('Authenticated user', ['user' => $user]);
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated. Please provide a valid vendor token.'
+                ], 401);
             }
+
+            // ✅ Check if user is a vendor
+            if ($user->hasRole('Vendor')) {
+                $validated['vendor_id'] = $user->id;
+                Log::info('Vendor identified from Bearer token', ['vendor_id' => $user->id]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is not authorized as a vendor'
+                ], 403);
+            }
+
 
             /**
              * Step 1: Handle customer
