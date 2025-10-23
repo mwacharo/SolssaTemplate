@@ -42,7 +42,7 @@ return new class extends Migration
             $table->index(['status', 'priority']);
             $table->index(['assigned_user_id', 'status']);
             $table->index(['category', 'created_at']);
-            $table->index('client_email');
+            $table->index('customer_email');
         });
     }
 
