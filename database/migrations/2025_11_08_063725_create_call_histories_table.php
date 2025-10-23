@@ -16,8 +16,11 @@ return new class extends Migration
 
             // Relationships
             $table->foreignId('order_id')->constrained()->cascadeOnDelete(); // link to order
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // who made the call (agent)
+            // $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // who made the call (agent)
+            $table->foreignId('order_id')->nullable()->change();
+
             $table->foreignId('ivr_option_id')->nullable()->constrained('ivr_options')->nullOnDelete();
+
 
             // Call metadata
             $table->string('lastBridgeHangupCause')->nullable();
