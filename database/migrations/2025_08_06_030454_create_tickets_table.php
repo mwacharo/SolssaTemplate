@@ -15,15 +15,15 @@ return new class extends Migration
             $table->id();
             
             // Foreign key relationships
-            $table->foreignId('client_id')->nullable()->constrained('clients')->onDelete('set null');
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->onDelete('set null');
             $table->foreignId('contact_id')->nullable()->constrained('contacts')->onDelete('set null');
             $table->foreignId('vendor_id')->nullable()->constrained('vendors')->onDelete('set null');
             $table->foreignId('assigned_user_id')->nullable()->constrained('users')->onDelete('set null');
             
             // Client information (can be stored directly or come from related models)
-            $table->string('client_name');
-            $table->string('client_phone')->nullable();
-            $table->string('client_email')->nullable();
+            $table->string('customer_name');
+            $table->string('customer_phone')->nullable();
+            $table->string('customer_email')->nullable();
             
             // Ticket details
             $table->string('subject');
