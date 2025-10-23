@@ -737,7 +737,7 @@ class OrderController extends Controller
             if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated. Please provide a valid vendor token.'
+                    'message' => 'allowed_origins. Please provide a valid vendor token.'
                 ], 401);
             }
 
