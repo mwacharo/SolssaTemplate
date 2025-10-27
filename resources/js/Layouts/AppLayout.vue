@@ -10,6 +10,7 @@ import { useWebRTCStore } from '@/stores/webrtc';
 import IncomingCallDialog from '@/Pages/CallCenter/Dialogs/IncomingCallDialog.vue'
 
 import {  usePage } from '@inertiajs/vue3';
+import { watch} from 'vue';
 
 
 defineProps({
@@ -140,6 +141,19 @@ onMounted(async () => {
 
 });
 
+// Load from localStorage on startup
+onMounted(() => {
+  const savedMode = localStorage.getItem('darkMode')
+  if (savedMode !== null) {
+    darkMode.value = savedMode === 'true'
+  }
+})
+
+// Watch for changes and save automatically
+watch(darkMode, (newValue) => {
+  localStorage.setItem('darkMode', newValue)
+})
+
 
 </script>
 
@@ -236,9 +250,9 @@ onMounted(async () => {
       <v-spacer></v-spacer>
 
       <!-- Development Mode Indicator -->
-      <v-chip color="warning" variant="outlined" size="small" class="mr-2">
+      <!-- <v-chip color="warning" variant="outlined" size="small" class="mr-2">
         DEV MODE
-      </v-chip>
+      </v-chip> -->
 
       <!-- Dark Mode Toggle -->
       <v-btn icon @click="toggleDarkMode">
