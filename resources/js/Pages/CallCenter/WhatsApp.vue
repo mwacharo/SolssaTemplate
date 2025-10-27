@@ -617,18 +617,21 @@ function openFilterDialog() {
 /**
  * Unified data loader for pagination / sorting / filter / search
  */
-async function loadItems({ page, itemsPerPage, sortBy, search }) {
+/**
+ * Unified data loader for pagination / sorting / filter / search
+ */
+async function loadItems({ page, per_page, sortBy, search }) {
   // ✅ Maintain current page when changing page size
-  if (itemsPerPage !== orderStore.pagination.itemsPerPage) {
+  if (per_page !== orderStore.pagination.per_page) {
     const firstItemIndex =
-      (orderStore.pagination.page - 1) * orderStore.pagination.itemsPerPage + 1
-    orderStore.pagination.page = Math.ceil(firstItemIndex / itemsPerPage)
+      (orderStore.pagination.page - 1) * orderStore.pagination.per_page + 1
+    orderStore.pagination.page = Math.ceil(firstItemIndex / per_page)
   } else {
     orderStore.pagination.page = page
   }
 
   // ✅ Update pagination state
-  orderStore.pagination.itemsPerPage = itemsPerPage
+  orderStore.pagination.per_page = per_page
   orderStore.search = search || ''
 
   // ✅ Handle sorting
@@ -641,7 +644,7 @@ async function loadItems({ page, itemsPerPage, sortBy, search }) {
     ...orderStore.activeFilters,
     search: orderStore.search,
     page: orderStore.pagination.page,
-    per_page: orderStore.pagination.itemsPerPage,
+    per_page: orderStore.pagination.per_page,
     sort: orderStore.sort?.key,
     direction: orderStore.sort?.order,
   }
@@ -937,10 +940,18 @@ onMounted(async () => {
                   <v-progress-linear v-if="orderStore.loading.orders" indeterminate color="primary"></v-progress-linear>
 
                   <v-data-table-server v-model="orderStore.selectedOrders"
-                    v-model:items-per-page="orderStore.pagination.itemsPerPage" :headers="orderHeaders"
-                    :items="tableItems" :items-length="orderStore.pagination.totalItems"
-                    :loading="orderStore.loading.orders" :search="orderStore.search" show-select item-value="id"
+
+                    v-model:items-per-page="orderStore.pagination.itemsPerPage" 
+                    :headers="orderHeaders"
+                    :items="tableItems"
+                     :items-length="orderStore.pagination.total"
+                    :loading="orderStore.loading.orders" 
+                    :search="orderStore.search" show-select item-value="id"
                     class="elevation-1" @update:options="loadItems">
+
+
+
+
                     <!-- Custom Columns -->
                     <template #item.order_no="{ item }">
                       <strong>{{ item.order_no }}</strong>

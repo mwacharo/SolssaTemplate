@@ -158,7 +158,7 @@ export const useOrderStore = defineStore('orders', () => {
       pagination.value = {
         current_page: data.current_page || 1,
         last_page: data.last_page || 1,
-        per_page: data.per_page || 15,
+      itemsPerPage: data.per_page || 15,
         total: data.total || 0,
         from: data.from || 0,
         to: data.to || 0

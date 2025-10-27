@@ -340,33 +340,33 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       }
     },
 
-    async loadOrders(page = 1) {
-      try {
-        this.loading.orders = true
-        const response = await axios.get('/api/v1/orders', {
-          params: {
-            page: page,
-            per_page: this.perPage
-          }
-        })
+    // async loadOrders(page = 1) {
+    //   try {
+    //     this.loading.orders = true
+    //     const response = await axios.get('/api/v1/orders', {
+    //       params: {
+    //         page: page,
+    //         per_page: this.perPage
+    //       }
+    //     })
 
-        if (Array.isArray(response.data.data)) {
-          this.orders = response.data.data
-          this.totalOrders = response.data.meta?.total || this.orders.length
-          this.calculateOrderStats()
-        } else {
-          console.error('Unexpected API response format:', response.data)
-          this.orders = []
-          // this.showError('Invalid order data format received from server')
-        }
-      } catch (error) {
-        console.error('Error loading orders:', error)
-        this.showError(`Failed to load orders: ${error.response?.data?.message || error.message}`)
-        this.orders = []
-      } finally {
-        this.loading.orders = false
-      }
-    },
+    //     if (Array.isArray(response.data.data)) {
+    //       this.orders = response.data.data
+    //       this.totalOrders = response.data.meta?.total || this.orders.length
+    //       this.calculateOrderStats()
+    //     } else {
+    //       console.error('Unexpected API response format:', response.data)
+    //       this.orders = []
+    //       // this.showError('Invalid order data format received from server')
+    //     }
+    //   } catch (error) {
+    //     console.error('Error loading orders:', error)
+    //     this.showError(`Failed to load orders: ${error.response?.data?.message || error.message}`)
+    //     this.orders = []
+    //   } finally {
+    //     this.loading.orders = false
+    //   }
+    // },
 
     async loadTemplates() {
       try {
@@ -717,7 +717,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
         setTimeout(() => {
           this.loadMessages(1)
-          this.loadOrders(1)
+          // this.loadOrders(1)
         }, 1000)
 
       } catch (error) {
@@ -783,7 +783,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
         if (response.data && response.data.success) {
           this.showSuccess(`Successfully imported ${response.data.imported || 'multiple'} orders`)
-          await this.loadOrders()
+          // await this.loadOrders()
           this.showOrderImportDialog = false
           this.orderFile = null
         } else {
@@ -880,7 +880,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       this.selectedTemplate = null
 
       if ((!Array.isArray(this.orders) || this.orders.length === 0) && !this.loading.orders) {
-        await this.loadOrders()
+        // await this.loadOrders()
       }
 
       if ((!Array.isArray(this.templates) || this.templates.length === 0) && !this.loading.templates) {
@@ -925,7 +925,7 @@ export const useWhatsAppStore = defineStore('whatsapp', {
       await Promise.all([
         this.loadMessages(1),
         this.loadContacts(),
-        this.loadOrders(1),
+        // this.loadOrders(1),
         this.loadTemplates(),
         this.loadRiders(),
         this.loadAgents(),
