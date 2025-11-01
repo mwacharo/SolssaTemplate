@@ -258,7 +258,54 @@ class AfricasTalkingService
     /**
      * Handle incoming call routing
      */
+
+
+
     private function handleIncomingCall(Request $request, string $sessionId, string $callerNumber): string
+    {
+        // Handle DTMF input (if any)
+        if ($request->has('dtmfDigits')) {
+            Log::info('Processing DTMF input', [
+                'dtmfDigits' => $request->input('dtmfDigits'),
+                'callerNumber' => $callerNumber
+            ]);
+
+            return $this->handleDtmfSelection(
+                $request->input('dtmfDigits'),
+                $callerNumber,
+                $sessionId
+            );
+        }
+
+        // 🔹 Try to assign available agent based on priority routing
+        $assignedAgentNumber = $this->getAvailableAgent($callerNumber, $sessionId);
+
+        if ($assignedAgentNumber) {
+            Log::info("✅ Routing call directly to agent", ['agentNumber' => $assignedAgentNumber]);
+            $this->createDialResponse($assignedAgentNumber);
+            // createDialResponse() handles XML output and exit
+        }
+
+        // 🔹 If no agent is available, play fallback message or hang up
+        Log::warning("⚠️ No available agent found, ending call gracefully.");
+
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            . "<Response>\n"
+            . "  <Say>All our agents are currently busy. Please call again later.</Say>\n"
+            . "</Response>";
+
+        // Clean and send XML response manually
+        while (@ob_end_clean());
+        ini_set('display_errors', '0');
+        http_response_code(200);
+        header('Content-Type: application/xml');
+        header('Content-Length: ' . strlen($xml));
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        echo $xml;
+        die();
+    }
+
+    private function handleIncomingCallx(Request $request, string $sessionId, string $callerNumber): string
     {
         // Handle DTMF input first
         if ($request->has('dtmfDigits')) {
@@ -661,13 +708,13 @@ class AfricasTalkingService
         $xml = $this->createVoicemailResponse();
 
 
-           // 🔒 Clean output buffers to avoid stray whitespace/newlines
-    while (ob_get_level() > 0) {
-        ob_end_clean();
-    }
+        // 🔒 Clean output buffers to avoid stray whitespace/newlines
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
 
-    // 🔒 Ensure clean, trimmed XML
-    $xml = ltrim($xml);
+        // 🔒 Ensure clean, trimmed XML
+        $xml = ltrim($xml);
         header('Content-Type: application/xml');
         echo $xml;
         exit;
@@ -796,25 +843,40 @@ class AfricasTalkingService
      * Create dial response for outgoing calls
      */
 
-    private function createDialResponse(string $phoneNumber): void
-    {
-        $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-        $ringbackAttr = $this->config['urls']['ringback_tone']
-            ? ' ringbackTone="' . $this->config['urls']['ringback_tone'] . '"'
-            : '';
+   /**
+ * Create dial response for outgoing calls
+ */
+private function createDialResponse(string $phoneNumber): void
+{
+    // Prepare optional attributes with safe spacing
+    $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
+    $ringbackAttr = '';
 
-        // Add space before each attribute if it’s not empty to avoid malformed tags
-        $attributes = trim("$recordAttr$ringbackAttr");
-
-        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            . "<Response>\n"
-            . "  <Dial $attributes sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
-            . "</Response>";
-
-        header('Content-Type: application/xml');
-        echo $xml;
-        exit;
+    if (!empty($this->config['urls']['ringback_tone'])) {
+        $ringbackTone = trim($this->config['urls']['ringback_tone']);
+        $ringbackAttr = 'ringbackTone="' . htmlspecialchars($ringbackTone, ENT_QUOTES) . '"';
     }
+
+    // ✅ Join attributes cleanly with a single space between non-empty parts
+    $attrParts = array_filter([$recordAttr, $ringbackAttr]);
+    $attrString = implode(' ', $attrParts);
+
+    // ✅ Build final XML string (proper spacing guaranteed)
+    $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+         . "<Response>\n"
+         . "  <Dial $attrString sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
+         . "</Response>";
+
+    // Optional: log the generated XML for debugging
+    Log::info('Generated Dial XML', ['xml' => $xml]);
+
+    // Send to Africa’s Talking
+    while (@ob_end_clean());
+    header('Content-Type: application/xml');
+    echo $xml;
+    exit;
+}
+
 
 
 

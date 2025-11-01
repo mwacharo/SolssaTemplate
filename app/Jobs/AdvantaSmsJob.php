@@ -39,7 +39,6 @@ class AdvantaSmsJob implements ShouldQueue
         $this->recipients     = $recipients;
         $this->messageContent = $messageContent;
         $this->userId         = $userId;
-
     }
 
     public function handle()
@@ -82,7 +81,12 @@ class AdvantaSmsJob implements ShouldQueue
 
             // Decide endpoint: single or bulk
             if (count($this->recipients) === 1) {
-                $endpoint = "{$apiUrl}/sendsms";
+                // $endpoint = "{$apiUrl}/sendsms";
+                $endpoint = rtrim($apiUrl, '/');
+                if (!str_ends_with($endpoint, 'sendsms')) {
+                    $endpoint .= '/sendsms';
+                }
+
                 $payload = [
                     'partnerID'   => $partnerId,
                     'apikey'      => $apiKey,
@@ -165,32 +169,31 @@ class AdvantaSmsJob implements ShouldQueue
                     ]);
                 }
             }
-
         } catch (\Exception $e) {
             Log::error('AvantaSmsJob: Exception during send', [
-            'error' => $e->getMessage(),
-            'file'  => $e->getFile(),
-            'line'  => $e->getLine(),
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
             ]);
 
             foreach ($this->recipients as $number) {
-            Message::create([
-                'chat_id'             => $number,
-                // 'from'                => $this->defaultSenderId ?? null,
-               'from'                => $this->SenderId ?? null,
-                'to'                  => $number,
-                'content'             => $this->messageContent,
-                'message_type'        => 'sms',
-                'direction'           => 'outgoing',
-                'message_status'      => 'failed',
-                'error_message'       => $e->getMessage(),
-                'messageable_id'      => $user->id ?? null,
-                'messageable_type'    => isset($user) ? get_class($user) : null,
-                'timestamp'           => now(),
-            ]);
+                Message::create([
+                    'chat_id'             => $number,
+                    // 'from'                => $this->defaultSenderId ?? null,
+                    'from'                => $this->SenderId ?? null,
+                    'to'                  => $number,
+                    'content'             => $this->messageContent,
+                    'message_type'        => 'sms',
+                    'direction'           => 'outgoing',
+                    'message_status'      => 'failed',
+                    'error_message'       => $e->getMessage(),
+                    'messageable_id'      => $user->id ?? null,
+                    'messageable_type'    => isset($user) ? get_class($user) : null,
+                    'timestamp'           => now(),
+                ]);
             }
         }
 
         Log::info('AvantaSmsJob finished');
-        }
+    }
 }

@@ -7,6 +7,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
+use App\Services\MessageTemplateService;
+
+
 class SendSmsIfWhatsAppFailedJob implements ShouldQueue
 {
     use Queueable;
@@ -37,13 +40,31 @@ class SendSmsIfWhatsAppFailedJob implements ShouldQueue
                 'recipients' => $this->phone,
                 'userId' => $this->userId,
             ]);
+
+
+            $messageTemplateService = app(MessageTemplateService::class);
+
+
+            // Generate personalized message using template service
+            $result = $messageTemplateService->generateMessage(
+                phone: $this->phone, // e.g., '254712345678' or '0712345678'
+                templateId: 3, // Optional: specific template ID
+                templateSlug: 'order_followup', // Template slug like 'order_followup', 'delivery_reminder'
+                additionalData: [] // Optional: extra data to merge
+            );
+
             AdvantaSmsJob::dispatch(
                 recipients: $this->phone,
-                messageContent: "We tried calling you about your order. Please call us back.",
+                // messageContent: "We tried calling you about your order. Please call us back.",
+                messageContent: $result['message'], // Personalized message with all placeholders replaced
+
                 userId: $this->userId
             );
             Log::info("SMS fallback sent to {$this->phone}");
-        } else {
+        } 
+        
+        
+        else {
             Log::info("WhatsApp delivered to {$this->phone}, SMS fallback skipped.");
         }
     }
