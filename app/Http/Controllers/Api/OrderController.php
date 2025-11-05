@@ -198,7 +198,10 @@ class OrderController extends Controller
             // 'refunds',
             // 'remittances'
         ])
-            ->find($id);
+            ->where('id', $id)
+            ->orWhere('order_no', $id)
+            ->first();
+        // ->find($id);
 
         if (!$order) {
             return response()->json([

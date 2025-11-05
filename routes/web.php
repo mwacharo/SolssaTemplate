@@ -18,6 +18,24 @@ use App\Jobs\SendWhatsAppMessageJob;
 */
 
 // Public home
+
+
+// Dynamic online form route
+// Route::get('/online-form/{order_no}', [OrderConfirmationController::class, 'showForm'])
+//     ->name('online-form.show');
+Route::get('/online-form/{order_no}', function ($order_no) {
+    return Inertia::render('OnlineForm', [
+        'order_no' => $order_no,
+    ]);
+})->name('online-form.show');
+
+// tracking page route
+Route::get('/track/{tracking_number}', function ($tracking_number) {
+    return Inertia::render('TrackingPage', [
+        'tracking_number' => $tracking_number,
+    ]);
+})->name('tracking.page');
+
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),

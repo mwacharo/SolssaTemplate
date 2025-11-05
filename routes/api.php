@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
+use App\Http\Controllers\Api\OrderConfirmationController;
 use App\Http\Controllers\Api\RealtimeController;
 use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\VendorAuthController;
@@ -71,6 +72,12 @@ Route::post('/webrtc/token', function () {
 
 Route::post('/v1/get-vendor-token', [VendorAuthController::class, 'getToken']);
 
+
+Route::post('/form/{order_no}', [OrderConfirmationController::class, 'submit']);
+Route::get('/v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
+
+
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -97,7 +104,6 @@ Route::prefix('v1')->group(function () {
     // Order APIs
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
     Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
-    Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
     Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']); 
     // delete 
     Route::delete('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']);
