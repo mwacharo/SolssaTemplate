@@ -22,9 +22,9 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
                 // product belongs to a country
-                // $table->foreignId('country_id')
-                //     ->constrained('countries')
-                //     ->cascadeOnDelete();
+                $table->foreignId('country_id')
+                    ->constrained('countries')
+                    ->cascadeOnDelete();
 
             $table->string('product_name');
             $table->text('description')->nullable();

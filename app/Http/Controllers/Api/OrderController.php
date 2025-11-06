@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Services\StockService;
 
 class OrderController extends Controller
 {
@@ -32,7 +33,11 @@ class OrderController extends Controller
 
         protected OrderBulkActionService $orderService,
 
-    ) {
+        protected StockService $stockService
+
+    ) 
+    
+    {
 
         // Apply middleware for API authentication/authorization
         // $this->middleware('auth:sanctum');
@@ -748,12 +753,14 @@ class OrderController extends Controller
             if ($user->hasRole('Vendor')) {
                 $validated['vendor_id'] = $user->id;
                 Log::info('Vendor identified from Bearer token', ['vendor_id' => $user->id]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User is not authorized as a vendor'
-                ], 403);
-            }
+            } 
+            
+            // else {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'User is not authorized as a vendor'
+            //     ], 403);
+            // }
 
 
             /**
@@ -835,13 +842,16 @@ class OrderController extends Controller
 
                         $orderItem = $order->orderItems()->create($item);
 
-                        InventoryReservation::create([
-                            'sku'        => $item['sku'],
-                            'order_id'   => $order->id,
-                            'quantity'   => $item['quantity'],
-                            'reserved_at' => now(),
-                            'reason'     => 'Order created',
-                        ]);
+                        // InventoryReservation::create([
+                        //     'sku'        => $item['sku'],
+                        //     'order_id'   => $order->id,
+                        //     'quantity'   => $item['quantity'],
+                        //     'reserved_at' => now(),
+                        //     'reason'     => 'Order created',
+                        // ]);
+
+                        // $this->stockService->reserveStock($item['sku'], $item['quantity'], $order->id);
+                        // inventory is reseerved when an order is already created
                     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                         Log::error('Product not found for order item', [
                             'sku' => $item['sku'],

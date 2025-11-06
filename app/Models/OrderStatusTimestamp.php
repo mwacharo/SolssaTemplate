@@ -19,4 +19,9 @@ class OrderStatusTimestamp extends Model
     {
         return $this->belongsTo(Status::class);
     }
+
+    public function order()
+{
+    return $this->belongsTo(Order::class);
+}
 }

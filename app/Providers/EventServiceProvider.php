@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\OrderStatusTimestamp;
 use Illuminate\Support\ServiceProvider;
+use App\Observers\OrderStatusTimestampObserver;
+
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -20,5 +23,8 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+
+                OrderStatusTimestamp::observe(OrderStatusTimestampObserver::class);
+
     }
 }

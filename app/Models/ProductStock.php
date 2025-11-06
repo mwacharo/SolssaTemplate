@@ -11,12 +11,14 @@ class ProductStock extends Model
 
     protected $fillable = [
         'product_id',
+        'country_id',
         'warehouse_id',
         'current_stock',
         'committed_stock',
         'defected_stock',
         'historical_stock',
         'stock_threshold',
+        'stock_delivered',
     ];
 
     /*
