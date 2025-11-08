@@ -194,6 +194,10 @@ Route::middleware([
         Route::get('/webhooks', fn() => Inertia::render('Integrations/Webhooks'))->name('webhooks');
         Route::get('/apps', fn() => Inertia::render('Integrations/ThirdPartyApps'))->name('apps');
         Route::get('/marketplace', fn() => Inertia::render('Integrations/Marketplace'))->name('marketplace');
+        Route::get('/shopify', fn() => Inertia::render('Integrations/Shopifty'))->name('shopify');
+
+
+
     });
 
     // Billing

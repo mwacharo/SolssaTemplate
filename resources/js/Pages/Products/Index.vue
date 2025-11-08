@@ -1064,9 +1064,31 @@ const saveProduct = async () => {
     formData.append('base_price', form.value.base_price)
 
     // 👇 append each image file
-    form.value.images.forEach((img, index) => {
-      formData.append(`images[${index}]`, img.file)
-    })
+    // append images (new files) and preserve existing image ids when editing
+    if (form.value.images && form.value.images.length) {
+      form.value.images.forEach((img) => {
+        if (img?.file) {
+          formData.append('images[]', img.file)
+        } else if (img?.id) {
+          // send existing image ids so backend can keep them
+          formData.append('existing_images[]', img.id)
+        }
+      })
+    }
+
+    // append videos (new uploads)
+    if (form.value.videos && form.value.videos.length) {
+      form.value.videos.forEach((vid) => {
+        if (vid?.file) {
+          formData.append('videos[]', vid.file)
+        }
+      })
+    }
+
+    // append price offers as JSON payload
+    if (form.value.price_offers && form.value.price_offers.length) {
+      formData.append('price_offers', JSON.stringify(form.value.price_offers))
+    }
 
     const endpoint = isEditing.value
       ? `/products/${currentProduct.value.id}`

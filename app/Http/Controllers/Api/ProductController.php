@@ -749,7 +749,9 @@ class ProductController extends Controller
             'stock'                    => 'sometimes|array',
             'stock.type'               => 'sometimes|string|in:in,out,adjust',
             'stock.stock_type'         => 'sometimes|string|in:current,committed,defected',
-            'stock.quantity'           => 'sometimes|integer|min:0',
+            // 'stock.quantity'           => 'sometimes|integer|min:0',
+            'stock.current_stock'=> 'sometimes|integer|min:0',
+
             'stock.warehouse_id'       => 'sometimes|integer|exists:warehouses,id',
 
             'offers'      => 'sometimes|array',

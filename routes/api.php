@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
 use App\Http\Controllers\Api\OrderConfirmationController;
 use App\Http\Controllers\Api\RealtimeController;
+use App\Http\Controllers\Api\ShopifyOrderController;
 use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
@@ -129,6 +130,10 @@ Route::prefix('v1')->group(function () {
     // bulk delete 
     Route::post('/orders/bulk-delete', [OrderController::class, 'bulkDelete']);
 
+
+    // shopifty 
+
+    Route::post('/shopify/orders/webhook', [ShopifyOrderController::class, 'handleWebhook']); // Handle Shopify order webhook
 
 
 
