@@ -62,54 +62,111 @@ class CredentialController extends Controller
     }
 
 
+    // public function getOwnersByType(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'type' => 'required|string',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'message' => 'Type parameter is required',
+    //             'errors' => $validator->errors()
+    //         ], 422);
+    //     }
+
+    //     $type = $request->type;
+
+    //     try {
+    //         $owners = [];
+
+    //         switch ($type) {
+    //             case 'App\\Models\\Vendor':
+    //                 $owners = Vendor::select('id', 'name')->get();
+    //                 break;
+
+    //             // case 'App\\Models\\Team':
+    //             //     $owners = Team::select('id', 'name')->get();
+    //             //     break;
+
+    //             case 'App\\Models\\User':
+    //                 $owners = User::select('id', 'name')->get();
+    //                 break;
+
+    //             default:
+    //                 return response()->json([
+    //                     'message' => 'Invalid credentialable type'
+    //                 ], 400);
+    //         }
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'owners' => $owners
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Failed to retrieve owners',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
     public function getOwnersByType(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required|string',
+{
+    $validator = Validator::make($request->all(), [
+        'type' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Type parameter is required',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    $type = $request->type;
+    $user = Auth::user();
+
+    try {
+        $owners = collect(); // Start with empty collection
+
+        switch ($type) {
+            case 'App\\Models\\Vendor':
+                $owners = Vendor::select('id', 'name')->get();
+                break;
+
+            case 'App\\Models\\User':
+                if ($user && $user->hasRole('Vendor')) {
+                    // ✅ Vendor should only see themselves
+                    $owners = User::select('id', 'name')
+                        ->where('id', $user->id)
+                        ->get();
+                } else {
+                    // ✅ Admins or other roles can see all users
+                    $owners = User::select('id', 'name')->get();
+                }
+                break;
+
+            default:
+                return response()->json([
+                    'message' => 'Invalid credentialable type'
+                ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'owners' => $owners
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Type parameter is required',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $type = $request->type;
-
-        try {
-            $owners = [];
-
-            switch ($type) {
-                case 'App\\Models\\Vendor':
-                    $owners = Vendor::select('id', 'name')->get();
-                    break;
-
-                // case 'App\\Models\\Team':
-                //     $owners = Team::select('id', 'name')->get();
-                //     break;
-
-                case 'App\\Models\\User':
-                    $owners = User::select('id', 'name')->get();
-                    break;
-
-                default:
-                    return response()->json([
-                        'message' => 'Invalid credentialable type'
-                    ], 400);
-            }
-
-            return response()->json([
-                'success' => true,
-                'owners' => $owners
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to retrieve owners',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Failed to retrieve owners',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     public function fetchCredentials(Request $request)
     {
@@ -149,7 +206,9 @@ class CredentialController extends Controller
     {
 
 
-        $credentials = ChannelCredential::all();
+        // $credentials = ChannelCredential::all();
+            $credentials = ChannelCredential::visibleToCurrentUser()->get();
+
 
 
         return response()->json([

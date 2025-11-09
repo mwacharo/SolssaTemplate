@@ -80,6 +80,7 @@ export const ROUTES = {
     // WEBHOOKS: 'integrations.webhooks',
     // APPS: 'integrations.apps',
     MARKETPLACE: 'integrations.marketplace',
+    SHOPIFY: 'integrations.shopify',
   },
   BILLING: {
     PLANS: 'billing.plans',
@@ -273,6 +274,7 @@ export const useNavStore = defineStore('nav', {
         permissions: ['integrations_view', 'integrations_manage', 'api_manage', 'webhooks_manage'],
         children: [
           { title: 'Marketplace', route: ROUTES.INTEGRATIONS.MARKETPLACE, icon: 'mdi-storefront-outline', permission: 'integrations_view' },
+          { title: 'Shopify', route: ROUTES.INTEGRATIONS.SHOPIFY, icon: 'mdi-api', permission: 'api_manage' },
         ],
       },
 

@@ -5,10 +5,17 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+
+
+// use App\Traits\BelongsToVendor; 
+
 
 class ChannelCredential extends Model
 {
     use HasFactory;
+        // use BelongsToVendor;
+
 
     protected $fillable = [
         'channel',
@@ -85,4 +92,17 @@ class ChannelCredential extends Model
     {
         return $date->format('Y-m-d H:i:s');
     }
+
+    public function scopeVisibleToCurrentUser($query)
+{
+    $user = Auth::user();
+
+    if ($user && $user->hasRole('Vendor')) {
+        return $query->where('credentialable_type', \App\Models\User::class)
+                     ->where('credentialable_id', $user->id);
+    }
+
+    return $query;
+}
+
 }

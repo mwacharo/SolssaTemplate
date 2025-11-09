@@ -696,6 +696,8 @@ const exportOrders = () => {
 
 const bulkUpdateStatus = () => {
   orderStore.openBulkStatusDialog(selectedOrders.value)
+    refreshOrders()
+
 }
 
 const bulkDelete = () => {

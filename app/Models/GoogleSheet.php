@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Traits\BelongsToUserAndCountry;
+use App\Traits\BelongsToVendor; 
+
+
 
 
 class GoogleSheet extends Model
@@ -16,6 +19,8 @@ class GoogleSheet extends Model
     ,SoftDeletes;
 
     use BelongsToUserAndCountry;
+        use BelongsToVendor;
+
 
 
       protected static function booted()

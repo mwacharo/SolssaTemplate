@@ -842,13 +842,7 @@ class OrderController extends Controller
 
                         $orderItem = $order->orderItems()->create($item);
 
-                        // InventoryReservation::create([
-                        //     'sku'        => $item['sku'],
-                        //     'order_id'   => $order->id,
-                        //     'quantity'   => $item['quantity'],
-                        //     'reserved_at' => now(),
-                        //     'reason'     => 'Order created',
-                        // ]);
+                      
 
                         // $this->stockService->reserveStock($item['sku'], $item['quantity'], $order->id);
                         // inventory is reseerved when an order is already created

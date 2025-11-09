@@ -642,7 +642,7 @@ class ProductController extends Controller
                 'is_active' => true,
             ]);
 
-             // 5. Stock
+            // 5. Stock
             // Ensure warehouse_id exists, otherwise return error
             if (!empty($validated['stock']) && is_array($validated['stock'])) {
                 $warehouseId = $validated['stock']['warehouse_id'] ?? 1;
@@ -750,7 +750,7 @@ class ProductController extends Controller
             'stock.type'               => 'sometimes|string|in:in,out,adjust',
             'stock.stock_type'         => 'sometimes|string|in:current,committed,defected',
             // 'stock.quantity'           => 'sometimes|integer|min:0',
-            'stock.current_stock'=> 'sometimes|integer|min:0',
+            'stock.current_stock' => 'sometimes|integer|min:0',
 
             'stock.warehouse_id'       => 'sometimes|integer|exists:warehouses,id',
 
@@ -877,7 +877,11 @@ class ProductController extends Controller
             // Handle advanced stock operations (in/out/adjust)
             elseif (isset($validated['stock'])) {
                 $stockType = $validated['stock']['type'] ?? null;
-                $operationQuantity = $validated['stock']['quantity'] ?? 0;
+                // $operationQuantity = $validated['stock']['quantity'] ?? 0;
+                $operationQuantity = $validated['stock']['quantity']
+                    ?? $validated['stock']['current_stock']
+                    ?? 0;
+
                 $stockTypeField = $validated['stock']['stock_type'] ?? 'current';
 
                 $currentStock = $stockRecord ? $stockRecord->current_stock : 0;

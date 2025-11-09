@@ -164,20 +164,7 @@ class Order extends Model
     }
 
 
-    // public function  replacementOrders()
-    // {
-    //     return $this->hasMany(Order::class, 'replacement_for_order_id');
-    // }
-    // public function refunds()
-    // {
-    //     return $this->hasMany(Refund::class);
-    // }
-    // public function events() { return $this->hasMany(OrderEvent::class); }
-    // public function remittances()
-    // {
-    //     return $this->hasMany(Remittance::class);
-    // }
-    // public function client() { return $this->belongsTo(User::class,'client_id'); }
+  
     public function vendor()
     {
         return $this->belongsTo(User::class, 'vendor_id');
@@ -198,4 +185,21 @@ class Order extends Model
 {
     return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
 }
+
+
+
+  // public function  replacementOrders()
+    // {
+    //     return $this->hasMany(Order::class, 'replacement_for_order_id');
+    // }
+    // public function refunds()
+    // {
+    //     return $this->hasMany(Refund::class);
+    // }
+    // public function events() { return $this->hasMany(OrderEvent::class); }
+    // public function remittances()
+    // {
+    //     return $this->hasMany(Remittance::class);
+    // }
+    // public function client() { return $this->belongsTo(User::class,'client_id'); }
 }

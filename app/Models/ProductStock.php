@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToUserAndCountry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ProductStock extends Model
 {
     use HasFactory;
+        use BelongsToUserAndCountry;
+
 
     protected $fillable = [
         'product_id',
