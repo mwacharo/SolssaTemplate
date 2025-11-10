@@ -844,9 +844,10 @@ class OrderController extends Controller
 
                       
 
-                        // $this->stockService->reserveStock($item['sku'], $item['quantity'], $order->id);
-                        // inventory is reseerved when an order is already created
-                    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                    }
+                    
+                    
+                    catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                         Log::error('Product not found for order item', [
                             'sku' => $item['sku'],
                             'order_id' => $order->id,

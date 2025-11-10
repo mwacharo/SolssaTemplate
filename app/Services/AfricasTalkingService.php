@@ -261,7 +261,7 @@ class AfricasTalkingService
 
 
 
-    private function handleIncomingCall(Request $request, string $sessionId, string $callerNumber): string
+    private function handleIncomingCallx(Request $request, string $sessionId, string $callerNumber): string
     {
         // Handle DTMF input (if any)
         if ($request->has('dtmfDigits')) {
@@ -305,7 +305,7 @@ class AfricasTalkingService
         die();
     }
 
-    private function handleIncomingCallx(Request $request, string $sessionId, string $callerNumber): string
+    private function handleIncomingCall(Request $request, string $sessionId, string $callerNumber): string
     {
         // Handle DTMF input first
         if ($request->has('dtmfDigits')) {
