@@ -7,16 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use App\Traits\BelongsToVendor;
+use App\Traits\BelongsToUserAndCountry;
+
 
 class Product extends Model
 {
     use HasFactory, LogsActivity,SoftDeletes;
         use BelongsToVendor;
+            use BelongsToUserAndCountry;
+
 
 
     protected $fillable = [
         'sku',
         'category_id',
+        'country_id',
         'vendor_id',
         'product_name',
         'description',

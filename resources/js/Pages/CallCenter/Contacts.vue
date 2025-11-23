@@ -84,6 +84,7 @@
         
         <v-data-table
           :headers="headers"
+          show-select
           :loading="contactsStore.loading"
           :items="contactsStore.filteredContacts"
           :sort-by="[{ key: 'name', order: 'asc' }]"

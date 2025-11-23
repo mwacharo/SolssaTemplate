@@ -72,6 +72,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             'vendor_id'   => 'required|exists:users,id',
             'category_id' => 'required|exists:categories,id',
+            // 'country_id' => 'required|exists:countries,id',
             'product_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sku'         => 'required|string|max:100|unique:products,sku',
@@ -545,6 +546,9 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'vendor_id'   => 'required|exists:users,id',
+            // NEW LINE
+            'country_id' => 'sometimes|exists:countries,id',
+
             'category_id' => 'required|exists:categories,id',
             'product_name' => 'required|string|max:255',
             'description' => 'nullable|string',

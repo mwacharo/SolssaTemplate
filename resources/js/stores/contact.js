@@ -21,15 +21,15 @@ export const useContactsStore = defineStore('contacts', {
     filteredContacts: (state) => {
       let contactsArray = Array.isArray(state.contacts) ? state.contacts : []
       let result = [...contactsArray]
-      
+
       if (state.filterType && state.filterType !== 'All') {
         result = result.filter(contact => contact.type === state.filterType)
       }
-      
+
       if (state.filterStatus !== null && state.filterStatus !== 'All') {
         result = result.filter(contact => contact.status === Number(state.filterStatus))
       }
-      
+
       return result
     },
 
@@ -44,18 +44,19 @@ export const useContactsStore = defineStore('contacts', {
     async fetchContacts(params = {}) {
       this.loading = true
       try {
-      const response = await axios.get('/api/v1/contacts', { params })
-      const data = response.data.data || {}
-      this.contacts = Array.isArray(data.data) ? data.data : []
-      this.totalContacts = data.total || this.contacts.length
-      this.currentPage = data.current_page || 1
-      this.lastPage = data.last_page || 1
-      this.perPage = data.per_page || 10
+        const response = await axios.get('/api/v1/contacts', { params })
+        const data = response.data.data || {}
+        this.contacts = Array.isArray(data.data) ? data.data : []
+        this.totalContacts = data.total || this.contacts.length
+        this.currentPage = data.current_page || 1
+        this.lastPage = data.last_page || 1
+        this.perPage = data.per_page || 10
       } catch (error) {
-      console.error('Failed to fetch contacts:', error)
-      throw error
+        console.error('Failed to fetch contacts:', error)
+        // console.log('Response contact:', this.contacts)
+        throw error
       } finally {
-      this.loading = false
+        this.loading = false
       }
     },
 

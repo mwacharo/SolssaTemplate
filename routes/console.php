@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Artisan;
 // new 
 use Illuminate\Support\Facades\Schedule;
 
+use App\Jobs\GenerateDailyTokensJob;
+
+
 
 
 
@@ -16,6 +19,17 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:mark-agents-offline')->everyMinute();
 Schedule::command('app:process-failed-calls-command')->everyMinute();
+
+
+
+// Your NEW scheduled job (Laravel 11)
+Schedule::job(new GenerateDailyTokensJob())
+    // ->dailyAt('00:00');
+    // ->everyMinute();
+        ->everyTwoMinutes();
+
+
+
 
 // Artisan::command('app:mark-agents-offline', function () {
 //     $this->call('app:mark-agents-offline');

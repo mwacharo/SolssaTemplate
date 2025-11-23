@@ -237,7 +237,9 @@
                   <th class="px-4 py-3 text-left font-medium">ORDER MERCHANT ID</th>
                   <th class="px-4 py-3 text-left font-medium">ORDER NO</th>
                   <th class="px-4 py-3 text-left font-medium">SELLER</th>
-                  <th class="px-4 py-3 text-left font-medium">SOURCE</th>
+                  <!-- <th class="px-4 py-3 text-left font-medium">SOURCE</th> -->
+                  <th class="px-4 py-3 text-left font-medium">Delivery Date</th>
+
                   <th class="px-4 py-3 text-left font-medium">CUSTOMER</th>
                   <th class="px-4 py-3 text-left font-medium">DETAILS</th>
                   <th class="px-4 py-3 text-left font-medium">ADDRESS</th>
@@ -268,7 +270,9 @@
                   <td class="px-4 py-3 text-sm">{{ getVendorName(order.vendor_id) }}</td>
                   <td class="px-4 py-3">
                     <span class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs">
-                      {{ order.source || 'Unknown' }}
+                      <!-- {{ order.source || 'Unknown' }} -->
+                                              {{ order.delivery_date || 'Unknown' }}
+
                     </span>
                   </td>
                   <td class="px-4 py-3">
@@ -362,6 +366,18 @@
                         </svg>
                       </button>
 
+                      <button
+                        @click="handleOpenCallDialog(order.shipping_address?.phone)"
+                        :disabled="!order.shipping_address?.phone"
+                        class="p-1 text-indigo-600 hover:bg-indigo-100 rounded disabled:opacity-50"
+                        title="Call Customer"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 5a2 2 0 012-2h1.5a1 1 0 01.95.68l.7 2.1a1 1 0 01-.27 1L6.6 8.9a12 12 0 005 5l1.1-.58a1 1 0 011 .27l2.1.7A1 1 0 0119 16.5V18a2 2 0 01-2 2C9.163 20 4 14.837 4 6a2 2 0 00-.999-.999z"/>
+                        </svg>
+                      </button>
+
 
                         <!-- add whatsapp button-->
                         <button @click="sendWhatsAppMessage(order)" class="p-1 text-green-600 hover:bg-green-100 rounded"
@@ -371,6 +387,19 @@
                           d="M20.52 3.48A11.36 11.36 0 0012.03.5C6.18.5 1.4 5.28 1.4 11.13c0 1.96.51 3.87 1.48 5.54L.5 23l6.43-2.06a11.6 11.6 0 005.1 1.17h.01c5.85 0 10.63-4.78 10.63-10.63 0-2.83-1.1-5.49-3.05-7.46zM12.03 20.9h-.01a9.42 9.42 0 01-4.8-1.3l-.34-.2-3.8 1.22 1.28-3.7-.22-.36a9.15 9.15 0 01-1.4-4.74c0-5.04 4.1-9.14 9.14-9.14 2.44 0 4.73.95 6.45 2.67a9.07 9.07 0 012.67 6.47c0 5.04-4.1 9.14-9.14 9.14zm5-6.41c-.27-.14-1.6-.79-1.85-.88-.25-.09-.43-.14-.61.14-.18.27-.7.88-.86 1.06-.16.18-.32.2-.59.07-.27-.14-1.13-.42-2.15-1.32-.8-.71-1.34-1.58-1.5-1.85-.16-.27-.02-.42.12-.56l.1-.1c.09-.09.27-.23.41-.35.14-.12.18-.2.27-.33.09-.14.05-.27.02-.38-.05-.11-.61-1.47-.84-2.01-.22-.53-.45-.46-.61-.47-.16-.01-.34-.01-.52-.01a1 1 0 00-.73.31c-.25.25-.97.95-.97 2.31 0 1.36.99 2.68 1.13 2.87.14.18 1.94 2.97 4.74 4.05.66.23 1.18.37 1.58.48.66.17 1.26.15 1.73.09.53-.07 1.6-.65 1.83-1.28.23-.63.23-1.17.16-1.28-.07-.11-.25-.18-.52-.32z"
                           />
                         </svg>
+                        </button>
+
+
+                        <button @click="sendSms(order)" class="p-1 text-blue-600 hover:bg-blue-100 rounded" title="Send SMS">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+
+                        <button @click="stkPush(order)" class="p-1 text-yellow-600 hover:bg-yellow-100 rounded" title="Initiate STK Push (M-Pesa)">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
                         </button>
 
                       <!-- <button @click="duplicateOrder(order)" class="p-1 text-green-600 hover:bg-green-100 rounded"
