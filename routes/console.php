@@ -24,9 +24,9 @@ Schedule::command('app:process-failed-calls-command')->everyMinute();
 
 // Your NEW scheduled job (Laravel 11)
 Schedule::job(new GenerateDailyTokensJob())
-    // ->dailyAt('00:00');
+    ->dailyAt('00:00');
     // ->everyMinute();
-        ->everyTwoMinutes();
+        // ->everyTwoMinutes();
 
 
 
