@@ -77,7 +77,7 @@ class UpdateOrderRequest extends FormRequest
             'customer' => 'nullable|array',
             'customer.full_name' => 'nullable|string|max:255',
             'customer.phone' => 'nullable|string|max:20',
-            'customer.city' => 'nullable|string|max:100',
+            'customer.city_id' => 'nullable|string|max:100',
             'customer.zone_id' => 'nullable|exists:zones,id',
             'customer.address' => 'nullable|string|max:255',
             'customer.region' => 'nullable|string|max:100',

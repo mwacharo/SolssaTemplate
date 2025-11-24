@@ -117,8 +117,8 @@
                       :rules="[rules.required, rules.phone]" class="mb-3" />
                     <v-text-field v-model="orderEdit.pickup_address.email" label="Email" prepend-inner-icon="mdi-email"
                       variant="outlined" density="comfortable" class="mb-3" />
-                    <v-select v-model="orderEdit.pickup_address.city" :items="cityOptions" item-title="name"
-                      item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                    <v-select v-model="orderEdit.pickup_address.city_id" :items="cityOptions" item-title="name"
+                      item-value="id" label="City" prepend-inner-icon="mdi-city" variant="outlined"
                       density="comfortable" :rules="[rules.required]" class="mb-3" />
                     <v-select v-model="orderEdit.pickup_address.zone_id" :items="zoneOptions" item-title="name"
                       item-value="id" label="Zone" prepend-inner-icon="mdi-map-marker-radius" variant="outlined"
@@ -148,7 +148,7 @@
                       :rules="[rules.required, rules.phone]" class="mb-3" />
                     <v-text-field v-model="orderEdit.dropoff_address.email" label="Email" prepend-inner-icon="mdi-email"
                       variant="outlined" density="comfortable" class="mb-3" />
-                    <v-select v-model="orderEdit.dropoff_address.city" :items="cityOptions" item-title="name"
+                    <v-select v-model="orderEdit.dropoff_address.city_id" :items="cityOptions" item-title="name"
                       item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
                       density="comfortable" :rules="[rules.required]" class="mb-3" />
                     <v-select v-model="orderEdit.dropoff_address.zone_id" :items="zoneOptions" item-title="name"
@@ -185,8 +185,8 @@
                 </v-col>
 
                 <v-col cols="12" md="6">
-                  <v-select v-model="orderEdit.customer_address.city" :items="cityOptions" item-title="name"
-                    item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                  <v-select v-model="orderEdit.customer_address.city_id" :items="cityOptions" item-title="name"
+                    item-value="id" label="City" prepend-inner-icon="mdi-city" variant="outlined"
                     density="comfortable" :rules="[rules.required]" />
                 </v-col>
 
@@ -364,7 +364,9 @@ const platformOptions = [
   { title: 'Mobile App', value: 'mobile' },
   { title: 'WhatsApp', value: 'whatsapp' },
   { title: 'Facebook', value: 'facebook' },
-  { title: 'Instagram', value: 'instagram' }
+  { title: 'Instagram', value: 'instagram' },
+    { title: 'Tiktok', value: 'tiktok' }
+
 ]
 
 const sourceOptions = [
@@ -417,7 +419,7 @@ const orderEdit = ref({
   customer_address: {
     full_name: '',
     phone: '',
-    city: '',
+    city_id: '',
     zone_id: null,
     address: '',
     region: '',
@@ -427,7 +429,7 @@ const orderEdit = ref({
   pickup_address: {
     full_name: '',
     phone: '',
-    city: '',
+    city_id: '',
     zone_id: null,
     address: '',
     region: '',
@@ -437,7 +439,7 @@ const orderEdit = ref({
   dropoff_address: {
     full_name: '',
     phone: '',
-    city: '',
+    city_id: '',
     zone_id: null,
     address: '',
     region: '',
@@ -510,7 +512,7 @@ const initializeEditForm = (orderData) => {
     customer_address: {
       full_name: customer.full_name ?? '',
       phone: customer.phone ?? '',
-      city: customer.city ?? '',
+      city: customer.city_id ?? '',
       zone_id: customer.zone_id ?? null,
       address: customer.address ?? '',
       region: customer.region ?? '',
@@ -520,7 +522,7 @@ const initializeEditForm = (orderData) => {
     pickup_address: {
       full_name: pickup.full_name ?? '',
       phone: pickup.phone ?? '',
-      city: pickup.city ?? '',
+      city: pickup.city_id ?? '',
       zone_id: pickup.zone_id ?? null,
       address: pickup.address ?? '',
       region: pickup.region ?? '',
@@ -530,7 +532,7 @@ const initializeEditForm = (orderData) => {
     dropoff_address: {
       full_name: dropoff.full_name ?? '',
       phone: dropoff.phone ?? '',
-      city: dropoff.city ?? '',
+      city: dropoff.city_id ?? '',
       zone_id: dropoff.zone_id ?? null,
       address: dropoff.address ?? '',
       region: dropoff.region ?? '',
@@ -560,7 +562,7 @@ const initializeCreateForm = () => {
     customer_address: {
       full_name: '',
       phone: '',
-      city: '',
+      city_id: '',
       zone_id: null,
       address: '',
       region: '',
@@ -570,7 +572,7 @@ const initializeCreateForm = () => {
     pickup_address: {
       full_name: '',
       phone: '',
-      city: '',
+      city_id: '',
       zone_id: null,
       address: '',
       region: '',
@@ -580,7 +582,7 @@ const initializeCreateForm = () => {
     dropoff_address: {
       full_name: '',
       phone: '',
-      city: '',
+      city_id: '',
       zone_id: null,
       address: '',
       region: '',
@@ -624,7 +626,7 @@ const onAddressTypeChange = (type) => {
     orderEdit.value.customer_address = {
       full_name: '',
       phone: '',
-      city: '',
+      city_id: '',
       zone_id: null,
       address: ''
     }

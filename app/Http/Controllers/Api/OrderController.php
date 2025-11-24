@@ -244,6 +244,15 @@ class OrderController extends Controller
      */
     public function update(UpdateOrderRequest $request, $id): JsonResponse
     {
+
+        Log::info('Update order request received', [
+            'order_id' => $id,
+            'user_id' => Auth::id(),
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'ip' => $request->ip(),
+            'payload' => $request->all(),
+        ]);
         $order = Order::find($id);
 
         if (!$order) {
@@ -266,7 +275,7 @@ class OrderController extends Controller
                     [
                         'full_name' => $customerData['full_name'] ?? null,
                         'email' => $customerData['email'] ?? null,
-                        'city' => $customerData['city'] ?? null,
+                        'city_id' => $customerData['city_id'] ?? null,
                         'zone_id' => $customerData['zone_id'] ?? null,
                         'address' => $customerData['address'] ?? null,
                         'region' => $customerData['region'] ?? null,
@@ -777,7 +786,9 @@ class OrderController extends Controller
                     [
                         'name' => $validated['pickup_address']['full_name'] ?? null,
                         'email' => $validated['pickup_address']['email'] ?? null,
-                        'city' => $validated['pickup_address']['city'] ?? null,
+                        // 'city' => $validated['pickup_address']['city'] ?? null,
+                        'city_id' => $validated['pickup_address']['city_id'] ?? null,
+
                         'zone_id' => $validated['pickup_address']['zone_id'] ?? null,
                         'address' => $validated['pickup_address']['address'] ?? null,
                         'region' => $validated['pickup_address']['region'] ?? null,
@@ -790,7 +801,9 @@ class OrderController extends Controller
                     [
                         'name' => $validated['dropoff_address']['full_name'] ?? null,
                         'email' => $validated['dropoff_address']['email'] ?? null,
-                        'city' => $validated['dropoff_address']['city'] ?? null,
+                        // 'city' => $validated['dropoff_address']['city'] ?? null,
+                        'city_id' => $validated['pickup_address']['city_id'] ?? null,
+
                         'zone_id' => $validated['dropoff_address']['zone_id'] ?? null,
                         'address' => $validated['dropoff_address']['address'] ?? null,
                         'region' => $validated['dropoff_address']['region'] ?? null,
