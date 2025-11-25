@@ -2,34 +2,42 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\BulkOrderActionRequest;
 use App\Http\Requests\StoreOrderRequest;
+
+use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Customer;
+use App\Models\InventoryReservation;
 use App\Models\Order;
+use App\Models\OrderAddress;
+use App\Models\OrderEvent;
 use App\Models\OrderItem;
 use App\Models\OrderStatusTimestamp;
 use App\Models\Product;
-use App\Services\Order\OrderBulkActionService;
-use App\Services\StockService;
-// app/Services/Order/OrderBulkActionService.php
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Services\Order\OrderBulkActionService;
+use Illuminate\Auth\Events\Validated;
+// app/Services/Order/OrderBulkActionService.php
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Services\StockService;
 
 class OrderController extends Controller
 {
+
     public function __construct(
 
         protected OrderBulkActionService $orderService,
 
         protected StockService $stockService
 
-    ) {
+    ) 
+    
+    {
 
         // Apply middleware for API authentication/authorization
         // $this->middleware('auth:sanctum');
@@ -46,18 +54,20 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $timeline,
+                'data' => $timeline
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching order timeline: '.$e->getMessage());
+            Log::error('Error fetching order timeline: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch order timeline',
-                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
     }
+
+
 
     public function assignRider(BulkOrderActionRequest $request)
     {
@@ -65,12 +75,11 @@ class OrderController extends Controller
         $this->orderService->assignRider(
             $request->validated('order_ids'),
             $request->validated('rider_id'),
-            // role
+            // role 
             'Delivery Agent'
         );
 
         Log::info('Rider assigned successfully');
-
         return response()->json(['message' => 'Rider assigned successfully']);
     }
 
@@ -85,7 +94,6 @@ class OrderController extends Controller
 
         );
         Log::info('Agent assigned successfully');
-
         return response()->json(['message' => 'Agent assigned successfully']);
     }
 
@@ -97,9 +105,9 @@ class OrderController extends Controller
             $request->validated('status')
         );
         Log::info('Order status updated successfully');
-
         return response()->json(['message' => 'Status updated successfully']);
     }
+
 
     // bulk delete orders
     public function bulkDelete(BulkOrderActionRequest $request)
@@ -109,14 +117,14 @@ class OrderController extends Controller
             $request->validated('order_ids')
         );
         Log::info('Orders deleted successfully');
-
         return response()->json(['message' => 'Orders deleted successfully']);
     }
+
 
     /**
      * Print waybill(s) for orders - Returns PDF stream
      */
-    public function printWaybill(Request $request, ?string $id = null)
+    public function printWaybill(Request $request, string $id = null)
     {
         try {
             // Accept either a single ID from route or multiple from request
@@ -135,7 +143,7 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to generate waybill(s)',
-                'message' => $e->getMessage(),
+                'message' => $e->getMessage()
             ], 500);
         }
     }
@@ -159,10 +167,13 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to generate bulk waybill',
-                'message' => $e->getMessage(),
+                'message' => $e->getMessage()
             ], 500);
         }
     }
+
+
+
 
     /**
      * Display the specified order.
@@ -197,16 +208,16 @@ class OrderController extends Controller
             ->first();
         // ->find($id);
 
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Order not found'
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $order,
+            'data' => $order
         ]);
     }
 
@@ -215,16 +226,16 @@ class OrderController extends Controller
     {
         $order = Order::with(['events.user'])->find($id);
 
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Order not found'
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $order->events,
+            'data' => $order->events
         ]);
     }
 
@@ -244,10 +255,10 @@ class OrderController extends Controller
         ]);
         $order = Order::find($id);
 
-        if (! $order) {
+        if (!$order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Order not found'
             ], 404);
         }
 
@@ -275,28 +286,30 @@ class OrderController extends Controller
             //     unset($validated['customer']);
             // }
 
+
             if (isset($validated['customer']) && is_array($validated['customer'])) {
-                $customerData = $validated['customer'];
+    $customerData = $validated['customer'];
 
-                // Find existing customer or create new one
-                $customer = Customer::firstOrCreate(
-                    ['phone' => $customerData['phone']]
-                );
+    // Find existing customer or create new one
+    $customer = Customer::firstOrCreate(
+        ['phone' => $customerData['phone']]
+    );
 
-                // Update fields
-                $customer->update([
-                    'full_name' => $customerData['full_name'] ?? $customer->full_name,
-                    'email' => $customerData['email'] ?? $customer->email,
-                    'city_id' => $customerData['city_id'] ?? $customer->city_id,
-                    'zone_id' => $customerData['zone_id'] ?? $customer->zone_id,
-                    'address' => $customerData['address'] ?? $customer->address,
-                    'region' => $customerData['region'] ?? $customer->region,
-                    'zipcode' => $customerData['zipcode'] ?? $customer->zipcode,
-                ]);
+    // Update fields
+    $customer->update([
+        'full_name' => $customerData['full_name'] ?? $customer->full_name,
+        'email' => $customerData['email'] ?? $customer->email,
+        'city_id' => $customerData['city_id'] ?? $customer->city_id,
+        'zone_id' => $customerData['zone_id'] ?? $customer->zone_id,
+        'address' => $customerData['address'] ?? $customer->address,
+        'region' => $customerData['region'] ?? $customer->region,
+        'zipcode' => $customerData['zipcode'] ?? $customer->zipcode,
+    ]);
 
-                $validated['customer_id'] = $customer->id;
-                unset($validated['customer']);
-            }
+    $validated['customer_id'] = $customer->id;
+    unset($validated['customer']);
+}
+
 
             // Update the order fields except order_items
             $order->update(collect($validated)->except(['order_items'])->toArray());
@@ -323,7 +336,7 @@ class OrderController extends Controller
                     ];
 
                     // Try to resolve product_id by SKU if not provided
-                    if (empty($itemData['product_id']) && ! empty($itemData['sku'])) {
+                    if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
                         $product = Product::where('sku', $itemData['sku'])->first();
                         if ($product) {
                             $itemData['product_id'] = $product->id;
@@ -339,14 +352,14 @@ class OrderController extends Controller
                 OrderStatusTimestamp::create([
                     'order_id' => $order->id,
                     'status_id' => $validated['status_id'],
-                    'created_at' => now(),
+                    'created_at' => now()
                 ]);
             }
 
             $order->events()->create([
                 'event_type' => 'order_updated',
                 'event_data' => json_encode($validated),
-                'user_id' => Auth::id(),
+                'user_id'    => Auth::id(),
             ]);
 
             DB::commit();
@@ -359,18 +372,19 @@ class OrderController extends Controller
                     'addresses',
                     'statusTimestamps',
                     'customer',
-                ]),
+                ])
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update order',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
+
+
 
     public function restore(string $id): JsonResponse
     {
@@ -379,10 +393,10 @@ class OrderController extends Controller
 
             $order = Order::withTrashed()->findOrFail($id);
 
-            if (! $order->trashed()) {
+            if (!$order->trashed()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Order is not deleted',
+                    'message' => 'Order is not deleted'
                 ], 422);
             }
 
@@ -391,7 +405,7 @@ class OrderController extends Controller
             Log::info('Order restored successfully', [
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id()
             ]);
 
             DB::commit();
@@ -399,16 +413,16 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order restored successfully',
-                'data' => new OrderResource($order),
+                'data' => new OrderResource($order)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error restoring order: '.$e->getMessage());
+            Log::error('Error restoring order: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to restore order',
-                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
     }
@@ -422,7 +436,7 @@ class OrderController extends Controller
             'action' => 'required|in:assign_rider,assign_agent,update_status,delete',
             'order_ids' => 'required|array|min:1',
             'order_ids.*' => 'exists:orders,id',
-            'value' => 'required_unless:action,delete',
+            'value' => 'required_unless:action,delete'
         ]);
 
         try {
@@ -458,7 +472,7 @@ class OrderController extends Controller
                 'action' => $action,
                 'order_ids' => $orderIds,
                 'value' => $value,
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id()
             ]);
 
             DB::commit();
@@ -466,16 +480,16 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'affected_orders' => count($orderIds),
+                'affected_orders' => count($orderIds)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error performing bulk action: '.$e->getMessage());
+            Log::error('Error performing bulk action: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to perform bulk action',
-                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
     }
@@ -511,20 +525,20 @@ class OrderController extends Controller
                     ->groupBy('date')
                     ->orderBy('date')
                     ->take(30)
-                    ->pluck('count', 'date'),
+                    ->pluck('count', 'date')
             ];
 
             return response()->json([
                 'success' => true,
-                'data' => $stats,
+                'data' => $stats
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching order statistics: '.$e->getMessage());
+            Log::error('Error fetching order statistics: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch statistics',
-                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
     }
@@ -626,7 +640,7 @@ class OrderController extends Controller
         $sortDirection = $request->get('sort_direction', 'desc');
 
         // Validate sort direction
-        if (! in_array(strtolower($sortDirection), ['asc', 'desc'])) {
+        if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
             $sortDirection = 'desc';
         }
 
@@ -638,7 +652,7 @@ class OrderController extends Controller
             'status',
             'delivery_status',
             'delivery_date',
-            'total_amount',
+            'total_amount'
         ];
 
         if (in_array($sortBy, $allowedSortFields)) {
@@ -661,7 +675,7 @@ class OrderController extends Controller
 
         $sequence = $lastOrder ? (int) substr($lastOrder->order_no, -4) + 1 : 1;
 
-        return $prefix.$date.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -670,9 +684,14 @@ class OrderController extends Controller
     private function canDeleteOrder(Order $order): bool
     {
         $nonDeletableStatuses = ['processing', 'completed', 'delivered'];
-
-        return ! in_array($order->status, $nonDeletableStatuses);
+        return !in_array($order->status, $nonDeletableStatuses);
     }
+
+
+
+
+
+
 
     /**
      * Display a listing of orders.
@@ -692,11 +711,11 @@ class OrderController extends Controller
             'addresses',
             'shippingAddress',
             'pickupAddress',
-            'assignments',
+            'assignments.user',
             'payments',
             'latestStatus.status',
             'customer',
-            'vendor',
+            'vendor'
         ]);
 
         // Apply filters
@@ -722,9 +741,10 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $orders,
+            'data' => $orders
         ]);
     }
+
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
@@ -750,14 +770,16 @@ class OrderController extends Controller
             //     $validated['vendor_id'] = $validated['vendor_id'] ?? null;
             // }
 
+
+
             // ✅ Get authenticated user from Bearer token
             $user = Auth::user();
             Log::info('Authenticated user', ['user' => $user]);
 
-            if (! $user) {
+            if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'allowed_origins. Please provide a valid vendor token.',
+                    'message' => 'allowed_origins. Please provide a valid vendor token.'
                 ], 401);
             }
 
@@ -765,14 +787,15 @@ class OrderController extends Controller
             if ($user->hasRole('Vendor')) {
                 $validated['vendor_id'] = $user->id;
                 Log::info('Vendor identified from Bearer token', ['vendor_id' => $user->id]);
-            }
-
+            } 
+            
             // else {
             //     return response()->json([
             //         'success' => false,
             //         'message' => 'User is not authorized as a vendor'
             //     ], 403);
             // }
+
 
             /**
              * Step 1: Handle customer
@@ -781,7 +804,7 @@ class OrderController extends Controller
             $customerId = $validated['customer_id'] ?? null;
 
             // If both pickup and dropoff addresses exist, create customers for both
-            if (! empty($validated['pickup_address']) && ! empty($validated['dropoff_address'])) {
+            if (!empty($validated['pickup_address']) && !empty($validated['dropoff_address'])) {
                 // Create pickup customer
                 $pickupCustomer = Customer::firstOrCreate(
                     ['phone' => $validated['pickup_address']['phone']],
@@ -814,7 +837,7 @@ class OrderController extends Controller
                 $customerId = $pickupCustomer->id;
                 // Optionally, you can store dropoff_customer_id in the order if your schema supports it
                 $validated['dropoff_customer_id'] = $dropoffCustomer->id;
-            } elseif (! $customerId && ! empty($validated['customer']['phone'])) {
+            } elseif (!$customerId && !empty($validated['customer']['phone'])) {
                 $customer = Customer::firstOrCreate(
                     ['phone' => $validated['customer']['phone']],
                     $validated['customer']
@@ -825,24 +848,25 @@ class OrderController extends Controller
             $validated['customer_id'] = $customerId ?? null;
             unset($validated['customer']);
 
+
             // ✅ REMOVE NESTED DATA BEFORE CREATING ORDER
-            unset($validated['customer']);
-            unset($validated['pickup_address']);
-            unset($validated['dropoff_address']);
-            unset($validated['from_address']);
-            unset($validated['to_address']);
-            unset($validated['order_items']);
-            unset($validated['addresses']);
+unset($validated['customer']);
+unset($validated['pickup_address']);
+unset($validated['dropoff_address']);
+unset($validated['from_address']);
+unset($validated['to_address']);
+// unset($validated['order_items']);
+unset($validated['addresses']);
 
             /**
              * Step 2: Check duplicate order number
              */
-            if (! empty($validated['order_no'])) {
+            if (!empty($validated['order_no'])) {
                 $existingOrder = Order::where('order_no', $validated['order_no'])->first();
                 if ($existingOrder) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Order number already exists',
+                        'message' => 'Order number already exists'
                     ], 422);
                 }
             }
@@ -856,7 +880,7 @@ class OrderController extends Controller
             /**
              * Step 4: Create Order Items + Inventory Reservation
              */
-            if (! empty($validated['order_items'])) {
+            if (!empty($validated['order_items'])) {
                 foreach ($validated['order_items'] as $item) {
                     try {
                         $product = Product::where('sku', $item['sku'])->firstOrFail();
@@ -864,12 +888,17 @@ class OrderController extends Controller
 
                         $orderItem = $order->orderItems()->create($item);
 
-                    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                      
+
+                    }
+                    
+                    
+                    catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                         Log::error('Product not found for order item', [
                             'sku' => $item['sku'],
                             'order_id' => $order->id,
                             'error' => $e->getMessage(),
-                            'item' => $item,
+                            'item' => $item
                         ]);
                         throw $e;
                     } catch (\Exception $e) {
@@ -877,7 +906,7 @@ class OrderController extends Controller
                             'sku' => $item['sku'] ?? null,
                             'order_id' => $order->id,
                             'error' => $e->getMessage(),
-                            'item' => $item,
+                            'item' => $item
                         ]);
                         throw $e;
                     }
@@ -887,7 +916,7 @@ class OrderController extends Controller
             /**
              * Step 5: Create Addresses
              */
-            if (! empty($validated['addresses'])) {
+            if (!empty($validated['addresses'])) {
                 foreach ($validated['addresses'] as $address) {
                     $order->addresses()->create($address);
                 }
@@ -896,14 +925,14 @@ class OrderController extends Controller
             /**
              * Step 6: Create Payment Record (if paid)
              */
-            if (! empty($validated['paid']) && $validated['paid'] === true) {
+            if (!empty($validated['paid']) && $validated['paid'] === true) {
                 $payment = $order->payments()->create([
-                    'amount' => $validated['total_price'],
-                    'method' => $validated['payment_method'] ?? 'unknown',
-                    'status' => 'completed',
+                    'amount'       => $validated['total_price'],
+                    'method'       => $validated['payment_method'] ?? 'unknown',
+                    'status'       => 'completed',
                     'transaction_reference' => $validated['payment_id'] ?? null,
-                    'currency' => $validated['currency'] ?? 'USD',
-                    'user_id' => Auth::id(),
+                    'currency'     => $validated['currency'] ?? 'USD',
+                    'user_id'      => Auth::id(),
                 ]);
                 Log::info('Payment recorded', ['payment_id' => $payment->id]);
             }
@@ -912,9 +941,9 @@ class OrderController extends Controller
              * Step 7: Log Status Timestamp
              */
             OrderStatusTimestamp::create([
-                'order_id' => $order->id,
-                'status_id' => $order->status_id ?? 1,
-                'created_at' => now(),
+                'order_id'   => $order->id,
+                'status_id'     => $order->status_id ?? 1,
+                'created_at' => now()
             ]);
 
             /**
@@ -923,7 +952,7 @@ class OrderController extends Controller
             $order->events()->create([
                 'event_type' => 'order_created',
                 'event_data' => json_encode($validated),
-                'user_id' => Auth::id(),
+                'user_id'    => Auth::id(),
             ]);
 
             DB::commit();
@@ -931,14 +960,14 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order created successfully',
-                'data' => $order->load([
+                'data'    => $order->load([
                     'orderItems',
                     'addresses',
                     'statusTimestamps',
                     'events',
                     'customer',
                     'payments',
-                ]),
+                ])
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -947,7 +976,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create order',
-                'error' => $e->getMessage(),
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
@@ -976,13 +1005,13 @@ class OrderController extends Controller
                 // },
                 // 'statusTimestamps.status',
                 'latestStatus.status',
-                'customer',
+                'customer'
             ])->find($id);
 
-            if (! $order) {
+            if (!$order) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Order not found',
+                    'message' => 'Order not found'
                 ], 404);
             }
 
@@ -1003,15 +1032,14 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order and all its details deleted successfully',
+                'message' => 'Order and all its details deleted successfully'
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete order',
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
