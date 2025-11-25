@@ -22,7 +22,7 @@ class GoogleSheetService
             $this->client = new Client();
             
             // Check if credentials file exists
-            $credentialsPath = storage_path('credentials/arcane-indexer-459514-h9-b1fc704e692d.json');
+            $credentialsPath = storage_path('credentials/credentials.json');
             if (!file_exists($credentialsPath)) {
                 Log::error('Google API credentials file not found at: ' . $credentialsPath);
                 throw new \Exception('Google API credentials file not found');

@@ -149,7 +149,7 @@
                     <v-text-field v-model="orderEdit.dropoff_address.email" label="Email" prepend-inner-icon="mdi-email"
                       variant="outlined" density="comfortable" class="mb-3" />
                     <v-select v-model="orderEdit.dropoff_address.city_id" :items="cityOptions" item-title="name"
-                      item-value="name" label="City" prepend-inner-icon="mdi-city" variant="outlined"
+                      item-value="id" label="City" prepend-inner-icon="mdi-city" variant="outlined"
                       density="comfortable" :rules="[rules.required]" class="mb-3" />
                     <v-select v-model="orderEdit.dropoff_address.zone_id" :items="zoneOptions" item-title="name"
                       item-value="id" label="Zone" prepend-inner-icon="mdi-map-marker-radius" variant="outlined"
@@ -472,8 +472,8 @@ const initializeEditForm = (orderData) => {
 
   // Always use the most recent status if available
   let status_id = ''
-  if (orderData.status_timestamps && orderData.status_timestamps.status_id) {
-    status_id = orderData.status_timestamps.status_id
+  if (orderData.latest_status && orderData.latest_status.status_id) {
+    status_id = orderData.latest_status.status_id
   } else if (orderData.status_id) {
     status_id = orderData.status_id
   }
@@ -512,7 +512,7 @@ const initializeEditForm = (orderData) => {
     customer_address: {
       full_name: customer.full_name ?? '',
       phone: customer.phone ?? '',
-      city: customer.city_id ?? '',
+      city_id: customer.city_id ?? '',
       zone_id: customer.zone_id ?? null,
       address: customer.address ?? '',
       region: customer.region ?? '',
@@ -522,7 +522,7 @@ const initializeEditForm = (orderData) => {
     pickup_address: {
       full_name: pickup.full_name ?? '',
       phone: pickup.phone ?? '',
-      city: pickup.city_id ?? '',
+      city_id: pickup.city_id ?? '',
       zone_id: pickup.zone_id ?? null,
       address: pickup.address ?? '',
       region: pickup.region ?? '',
@@ -532,7 +532,7 @@ const initializeEditForm = (orderData) => {
     dropoff_address: {
       full_name: dropoff.full_name ?? '',
       phone: dropoff.phone ?? '',
-      city: dropoff.city_id ?? '',
+      city_id: dropoff.city_id ?? '',
       zone_id: dropoff.zone_id ?? null,
       address: dropoff.address ?? '',
       region: dropoff.region ?? '',
