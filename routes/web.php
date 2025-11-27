@@ -8,9 +8,43 @@ use Laravel\Horizon\Horizon;
 
 
 use App\Jobs\SendWhatsAppMessageJob;
+use App\Services\Zoho\ZohoAuthService;
+
+use App\Services\Zoho\ZohoMailService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 
 
+// Route::get('/zoho/callback', function (Request $request) {
+//     // Display all query parameters for now
+//     dd($request->all());
+// });
+
+
+Route::get('/zoho/callback', function (Request $request) {
+    $code = $request->query('code');
+
+    $response = Http::asForm()->post('https://accounts.zoho.com/oauth/v2/token', [
+        'grant_type' => 'authorization_code',
+        'client_id' => env('ZOHO_CLIENT_ID'),
+        'client_secret' => env('ZOHO_CLIENT_SECRET'),
+        'redirect_uri' => 'http://127.0.0.1:8000/zoho/callback',
+        'code' => $code,
+    ]);
+
+    $data = $response->json();
+
+    dd($data); // Shows access_token & refresh_token
+});
+
+Route::get('/test-zoho', function (App\Services\Zoho\ZohoMailService $zoho) {
+    return $zoho->sendEmail(
+        "your-email@example.com",
+        "Zoho API Test",
+        "This email is from Zoho API!"
+    );
+});
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -23,6 +57,10 @@ use App\Jobs\SendWhatsAppMessageJob;
 // Dynamic online form route
 // Route::get('/online-form/{order_no}', [OrderConfirmationController::class, 'showForm'])
 //     ->name('online-form.show');
+
+
+
+
 Route::get('/online-form/{order_no}', function ($order_no) {
     return Inertia::render('OnlineForm', [
         'order_no' => $order_no,

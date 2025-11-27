@@ -24,6 +24,7 @@ return [
        'allowed_origins' => [
         'https://mwamkoherbs.com',
         'https://mwamkoherbs.vercel.app',
+        'https://shoebucket.vercel.app',
 
         'http://localhost:5174',
         'http://127.0.0.1:5174',
