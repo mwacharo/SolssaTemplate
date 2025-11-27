@@ -650,13 +650,15 @@
                                             <div>
                                                 {{
                                                     order.shipping_address
-                                                        ?.full_name || "-"
+                                                        ?.full_name ||
+                                                    order.customer?.full_name
                                                 }}
                                             </div>
                                             <div class="text-gray-500">
                                                 {{
                                                     order.shipping_address
-                                                        ?.phone || "-"
+                                                        ?.phone ||
+                                                    order.customer?.phone
                                                 }}
                                             </div>
                                         </div>
@@ -679,8 +681,24 @@
 
                                     <td class="px-4 py-3 text-sm">
                                         <div>
-                                            {{
+                                            <!-- {{
                                                 order.shipping_address?.city ||
+                                                "-" ||
+                                                order.customer?.city_id ||
+                                                order.customer?.zone_id
+                                            }} -->
+
+                                            {{
+                                                order.shipping_address?.city
+                                                    ?.name ||
+                                                order.customer?.city?.name ||
+                                                order.customer?.zone?.name ||
+                                                "-"
+                                            }}
+                                            {{
+                                                order.shipping_address
+                                                    ?.address ||
+                                                order.customer?.address ||
                                                 "-"
                                             }}
                                         </div>
@@ -689,7 +707,8 @@
                                         >
                                             {{
                                                 order.shipping_address
-                                                    ?.address || "-"
+                                                    ?.address ||
+                                                order.customer?.address
                                             }}
                                         </div>
                                     </td>

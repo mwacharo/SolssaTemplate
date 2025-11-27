@@ -26,8 +26,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Services\StockService;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
+
+
 class OrderController extends Controller
 {
+
+
+    use AuthorizesRequests;
+
+
+
+
 
     public function __construct(
 
@@ -35,9 +46,7 @@ class OrderController extends Controller
 
         protected StockService $stockService
 
-    ) 
-    
-    {
+    ) {
 
         // Apply middleware for API authentication/authorization
         // $this->middleware('auth:sanctum');
@@ -288,27 +297,27 @@ class OrderController extends Controller
 
 
             if (isset($validated['customer']) && is_array($validated['customer'])) {
-    $customerData = $validated['customer'];
+                $customerData = $validated['customer'];
 
-    // Find existing customer or create new one
-    $customer = Customer::firstOrCreate(
-        ['phone' => $customerData['phone']]
-    );
+                // Find existing customer or create new one
+                $customer = Customer::firstOrCreate(
+                    ['phone' => $customerData['phone']]
+                );
 
-    // Update fields
-    $customer->update([
-        'full_name' => $customerData['full_name'] ?? $customer->full_name,
-        'email' => $customerData['email'] ?? $customer->email,
-        'city_id' => $customerData['city_id'] ?? $customer->city_id,
-        'zone_id' => $customerData['zone_id'] ?? $customer->zone_id,
-        'address' => $customerData['address'] ?? $customer->address,
-        'region' => $customerData['region'] ?? $customer->region,
-        'zipcode' => $customerData['zipcode'] ?? $customer->zipcode,
-    ]);
+                // Update fields
+                $customer->update([
+                    'full_name' => $customerData['full_name'] ?? $customer->full_name,
+                    'email' => $customerData['email'] ?? $customer->email,
+                    'city_id' => $customerData['city_id'] ?? $customer->city_id,
+                    'zone_id' => $customerData['zone_id'] ?? $customer->zone_id,
+                    'address' => $customerData['address'] ?? $customer->address,
+                    'region' => $customerData['region'] ?? $customer->region,
+                    'zipcode' => $customerData['zipcode'] ?? $customer->zipcode,
+                ]);
 
-    $validated['customer_id'] = $customer->id;
-    unset($validated['customer']);
-}
+                $validated['customer_id'] = $customer->id;
+                unset($validated['customer']);
+            }
 
 
             // Update the order fields except order_items
@@ -589,7 +598,7 @@ class OrderController extends Controller
         $query->where(function ($q) use ($search) {
             $q->where('order_no', 'like', "%{$search}%")
                 ->orWhereHas('customer', function ($customerQuery) use ($search) {
-                    $customerQuery->where('name', 'like', "%{$search}%")
+                    $customerQuery->where('full_name', 'like', "%{$search}%")
                         ->orWhere('phone', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 })
@@ -693,13 +702,82 @@ class OrderController extends Controller
 
 
 
+//     /**
+//      * Display a listing of orders.
+//      */
+//     public function index(Request $request): JsonResponse
+//     {
+
+//           // 1. Apply policy
+//     // $this->authorize('viewAny', Order::class);
+
+//     $user = $request->user();
+//     $perPage = $request->input('per_page', 15);
+
+//         $query = Order::with([
+//             'warehouse',
+//             'country',
+//             'agent',
+//             'createdBy',
+//             'rider',
+//             'zone',
+//             'orderItems',
+//             'addresses',
+//             'shippingAddress',
+//             'pickupAddress',
+//             'assignments.user',
+//             'payments',
+//             'latestStatus.status',
+//             'customer',
+//             'vendor'
+//         ]);
+
+
+//    $userRole = $user->role;
+
+
+
+
+//         // Apply filters
+//         $this->applyFilters($query, $request);
+
+//         // Filter by product_id if provided
+//         if ($request->filled('product_id')) {
+//             $productId = $request->input('product_id');
+//             $query->whereHas('orderItems', function ($q) use ($productId) {
+//                 $q->where('product_id', $productId);
+//             });
+//         }
+
+//         // Apply search if provided
+//         if ($request->filled('search')) {
+//             $this->applySearch($query, $request->input('search'));
+//         }
+
+//         // Apply sorting
+//         $this->applySorting($query, $request);
+
+//         $orders = $query->paginate($perPage);
+
+//         return response()->json([
+//             'success' => true,
+//             'data' => $orders
+//         ]);
+//     }
+
+
     /**
      * Display a listing of orders.
      */
     public function index(Request $request): JsonResponse
     {
+        // 1. Apply policy (uncomment when ready)
+        // $this->authorize('viewAny', Order::class);
+
+        $user = $request->user();
         $perPage = $request->input('per_page', 15);
 
+        // Build base query with relationships
         $query = Order::with([
             'warehouse',
             'country',
@@ -714,11 +792,38 @@ class OrderController extends Controller
             'assignments.user',
             'payments',
             'latestStatus.status',
-            'customer',
+            // 'customer',
+            'customer.city',      // Add this
+            'customer.zone',      // Add this
+
             'vendor'
         ]);
 
-        // Apply filters
+        // Get user role
+        // Get user role using Spatie (supports multiple roles)
+        $userRole = $user ? $user->getRoleNames()->first() : null;
+
+        // Debug logs (remove in production)
+        \Log::info('Current User Role: ' . $userRole);
+        \Log::info('Current User ID: ' . $user->id);
+
+        // Apply role-based filtering
+        if (in_array($userRole, ['Delivery Agent', 'Delivery Man', 'DeliveryAgent'])) {
+            $query->whereHas('assignments', function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent']);
+            });
+            \Log::info('Applied Delivery Agent filter');
+        } elseif (in_array($userRole, ['CallAgent', 'Call Agent', 'call_agent'])) {
+            $query->whereHas('assignments', function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                    ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent']);
+            });
+            \Log::info('Applied Call Agent filter');
+        }
+        // If role is Admin, Vendor, or other - show all orders (no filter applied)
+
+        // Apply additional filters
         $this->applyFilters($query, $request);
 
         // Filter by product_id if provided
@@ -737,7 +842,15 @@ class OrderController extends Controller
         // Apply sorting
         $this->applySorting($query, $request);
 
+        // Debug: Log the SQL query
+        \Log::info('Generated SQL: ' . $query->toSql());
+        \Log::info('Query Bindings: ' . json_encode($query->getBindings()));
+
+        // Paginate results
         $orders = $query->paginate($perPage);
+
+        // Debug: Log result count
+        \Log::info('Orders returned: ' . $orders->count());
 
         return response()->json([
             'success' => true,
@@ -850,13 +963,13 @@ class OrderController extends Controller
 
 
             // ✅ REMOVE NESTED DATA BEFORE CREATING ORDER
-unset($validated['customer']);
-unset($validated['pickup_address']);
-unset($validated['dropoff_address']);
-unset($validated['from_address']);
-unset($validated['to_address']);
-// unset($validated['order_items']);
-unset($validated['addresses']);
+            unset($validated['customer']);
+            unset($validated['pickup_address']);
+            unset($validated['dropoff_address']);
+            unset($validated['from_address']);
+            unset($validated['to_address']);
+            // unset($validated['order_items']);
+            unset($validated['addresses']);
 
             /**
              * Step 2: Check duplicate order number
@@ -887,13 +1000,7 @@ unset($validated['addresses']);
                         $item['product_id'] = $product->id;
 
                         $orderItem = $order->orderItems()->create($item);
-
-                      
-
-                    }
-                    
-                    
-                    catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                         Log::error('Product not found for order item', [
                             'sku' => $item['sku'],
                             'order_id' => $order->id,

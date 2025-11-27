@@ -1,6 +1,7 @@
 <template>
-  <div>Page Content Here</div>
+    <AppLayout> </AppLayout>
 </template>
 
 <script setup>
+import AppLayout from "@/Layouts/AppLayout.vue";
 </script>

@@ -67,9 +67,9 @@ class Customer extends Model
 
 
     public function vendor()
-{
-    return $this->belongsTo(\App\Models\User::class, 'vendor_id');
-}
+    {
+        return $this->belongsTo(\App\Models\User::class, 'vendor_id');
+    }
 
 
     /**
@@ -78,5 +78,10 @@ class Customer extends Model
     public function zone()
     {
         return $this->belongsTo(Zone::class);
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
     }
 }
