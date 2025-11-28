@@ -186,7 +186,7 @@ Route::middleware([
         Route::get('/', fn() => Inertia::render('Users/Users'))->name('index');
 
         Route::get('/roles', fn() => Inertia::render('Users/Roles'))->name('roles');
-        
+
         Route::get('/permissions', fn() => Inertia::render('Users/Permissions'))->name('permissions');
         Route::get('/teams', fn() => Inertia::render('Users/Teams'))->name('teams');
         Route::get('/invitations', fn() => Inertia::render('Users/Invitations'))->name('invitations');
@@ -233,9 +233,6 @@ Route::middleware([
         Route::get('/apps', fn() => Inertia::render('Integrations/ThirdPartyApps'))->name('apps');
         Route::get('/marketplace', fn() => Inertia::render('Integrations/Marketplace'))->name('marketplace');
         Route::get('/shopify', fn() => Inertia::render('Integrations/Shopifty'))->name('shopify');
-
-
-
     });
 
     // Billing
@@ -280,7 +277,7 @@ Route::middleware([
     // warehousing 
 
 
-        Route::prefix('warehouse')->name('warehouse.')->group(function () {
+    Route::prefix('warehouse')->name('warehouse.')->group(function () {
         Route::get('/', fn() => Inertia::render('Warehouse/Index'))->name('index');
         Route::get('/products', fn() => Inertia::render('Products/Index'))->name('products');
         Route::get('/inventory', fn() => Inertia::render('Stock/Index'))->name('inventory');
@@ -301,6 +298,22 @@ Route::middleware([
         Route::get('/orders', fn() => Inertia::render('Vendor/Orders'))->name('orders');
         Route::get('/invoices', fn() => Inertia::render('Vendor/Invoices'))->name('invoices');
         Route::get('/settings', fn() => Inertia::render('Vendor/Settings'))->name('settings');
+    });
+
+
+    // Expedition
+    Route::prefix('expedition')->name('expedition.')->group(function () {
+        Route::get('/', fn() => Inertia::render('Expedition/Index'))->name('index');
+    });
+
+    // Seller Expenses
+    Route::prefix('seller-expenses')->name('seller-expenses.')->group(function () {
+        Route::get('/', fn() => Inertia::render('SellerExpenses/Index'))->name('index');
+    });
+
+    // Remittances
+    Route::prefix('remittances')->name('remittances.')->group(function () {
+        Route::get('/', fn() => Inertia::render('Remittances/Index'))->name('index');
     });
 });
 

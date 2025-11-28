@@ -10,7 +10,7 @@ use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use App\Traits\BelongsToUserAndCountry;
-use App\Traits\BelongsToVendor; 
+use App\Traits\BelongsToVendor;
 
 
 
@@ -112,13 +112,13 @@ class Order extends Model
         return $this->belongsTo(Country::class);
     }
 
-   
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-     public function agent()
+    public function agent()
     {
         return $this->belongsTo(User::class, 'agent_id');
     }
@@ -164,7 +164,7 @@ class Order extends Model
     }
 
 
-  
+
     public function vendor()
     {
         return $this->belongsTo(User::class, 'vendor_id');
@@ -182,13 +182,20 @@ class Order extends Model
 
 
     public function latestStatus()
-{
-    return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
-}
+    {
+        return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
+    }
+
+
+    // belongs to remittance
+    public function remittance()
+    {
+        return $this->belongsTo(Remittance::class);
+    }
 
 
 
-  // public function  replacementOrders()
+    // public function  replacementOrders()
     // {
     //     return $this->hasMany(Order::class, 'replacement_for_order_id');
     // }

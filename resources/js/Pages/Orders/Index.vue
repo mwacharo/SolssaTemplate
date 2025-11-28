@@ -826,56 +826,6 @@
                                                     )
                                                 }}
                                             </div>
-
-                                            <!-- Assigned Call Agent -->
-                                            <!-- <div
-                                                v-if="getCallAgent(order)"
-                                                class="text-xs text-blue-600 font-semibold text-center"
-                                            >
-                                                Call Agent:
-                                                <img
-                                                    :src="
-                                                        getCallAgent(order)
-                                                            .profile_photo_url ||
-                                                        '/default-avatar.png'
-                                                    "
-                                                    :alt="
-                                                        getCallAgent(order).name
-                                                    "
-                                                    class="w-6 h-6 rounded-full mx-auto mt-1"
-                                                />
-                                                <div>
-                                                    {{
-                                                        getCallAgent(order).name
-                                                    }}
-                                                </div>
-                                            </div> -->
-
-                                            <!-- Assigned Delivery Agent -->
-                                            <!-- <div
-                                                v-if="getDeliveryAgent(order)"
-                                                class="text-xs text-green-600 font-semibold text-center mt-3"
-                                            >
-                                                Delivery Agent:
-                                                <img
-                                                    :src="
-                                                        getDeliveryAgent(order)
-                                                            .profile_photo_url ||
-                                                        '/default-avatar.png'
-                                                    "
-                                                    :alt="
-                                                        getDeliveryAgent(order)
-                                                            .name
-                                                    "
-                                                    class="w-6 h-6 rounded-full mx-auto mt-1"
-                                                />
-                                                <div>
-                                                    {{
-                                                        getDeliveryAgent(order)
-                                                            .name
-                                                    }}
-                                                </div>
-                                            </div> -->
                                         </div>
                                     </td>
 

@@ -8,6 +8,21 @@ export const ROUTES = {
     // ACTIVITY: 'dashboard.activity',
     // STATUS: 'dashboard.status',
   },
+
+  // Expedition 
+  EXPEDITION: {
+    INDEX: 'expedition.index',
+  },
+
+
+  SELLEREXPENSES:{
+
+    INDEX: 'seller-expenses.index',
+  },
+
+  REMITTANCES: {
+    INDEX: 'remittances.index',
+  },
   CALL_CENTRE: {
     INDEX: 'call-centre.index',
     TICKETS: 'call-centre.tickets',
@@ -148,6 +163,49 @@ export const useNavStore = defineStore('nav', {
           { title: 'Overview', route: ROUTES.DASHBOARD.INDEX, icon: 'mdi-view-dashboard-outline', permission: 'dashboard_view' },
           { title: 'Metrics', route: ROUTES.DASHBOARD.METRICS, icon: 'mdi-chart-line', permission: 'dashboard_view' },
         ],
+      },
+
+
+      {
+
+        title: 'Expedition',
+        icon: 'mdi-truck-fast',
+        route: ROUTES.EXPEDITION.INDEX,
+        roles: ['Admin', 'Manager', 'Vendor'],
+        plans: ['Free', 'Pro', 'Enterprise'],
+        features: ['expedition'],
+        permissions: ['expedition_view', 'expedition_manage'],
+        children: [
+          { title: 'Expedition ', route: ROUTES.EXPEDITION.INDEX, icon: 'mdi-truck-fast-outline', permission: 'expedition_view' },
+        ],
+      },
+
+
+
+      {
+
+        title: 'Seller Expenses',        icon: 'mdi-cash-multiple',
+        route: ROUTES.SELLEREXPENSES.INDEX,
+        roles: ['Admin', 'Manager', 'Vendor'],
+        plans: ['Free', 'Pro', 'Enterprise'],
+        features: ['seller-expenses'],
+        permissions: ['seller_expenses_view', 'seller_expenses_manage'],
+        children: [
+          { title: 'Seller Expenses ', route: ROUTES.SELLEREXPENSES.INDEX, icon: 'mdi-cash-multiple-outline', permission: 'seller_expenses_view' },
+        ],
+      },
+
+      {
+        title: 'Remittances',
+        icon: 'mdi-bank-transfer',
+        route: ROUTES.REMITTANCES.INDEX,
+        roles: ['Admin', 'Manager', 'Vendor'],
+        plans: ['Free', 'Pro', 'Enterprise'],
+        features: ['remittances'],
+        permissions: ['remittances_view', 'remittances_manage'],
+        children: [
+          { title: 'Remittances', route: ROUTES.REMITTANCES.INDEX, icon: 'mdi-bank-transfer-outline', permission: 'remittances_view' },
+        ],    
       },
 
       {
