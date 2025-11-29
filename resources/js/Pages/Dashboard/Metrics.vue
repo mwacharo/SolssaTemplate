@@ -118,6 +118,8 @@ onMounted(async () => {
     orderChart.value = data.orderChart;
     inventory.value = data.inventory;
     // statusData.value = Object.values(data.statusData); // for chart
+    statusData.value = data.statusData; // for chart
+
     wallet.value = data.wallet;
     topAgents.value = data.topAgents;
     topProducts.value = data.topProducts;

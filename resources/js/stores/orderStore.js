@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, reactive } from 'vue'
 import axios from 'axios'
+import { notify } from '@/utils/toast'
 
 export const useOrderStore = defineStore('orders', () => {
   // State
@@ -204,7 +205,11 @@ export const useOrderStore = defineStore('orders', () => {
       document.body.appendChild(link)
       link.click()
       link.remove()
+        notify.success('Waybills printed successfully')
+
     } catch (err) {
+            notify.error('Failed to print waybills')
+
       error.value = err.response?.data?.message || err.message || 'Failed to print waybill'
       throw err
     }
@@ -248,7 +253,9 @@ export const useOrderStore = defineStore('orders', () => {
 
       // addNotification({ type: 'success', message: 'Order created successfully' })
       return result.data
+      notify.success('Order created successfully')
     } catch (err) {
+      notify.error('Failed to create order')
       error.value = err.response?.data?.message || err.message || 'Failed to create order'
       // addNotification({ type: 'error', message: error.value })
       throw err
@@ -285,8 +292,10 @@ export const useOrderStore = defineStore('orders', () => {
       }
 
       // addNotification({ type: 'success', message: 'Order updated successfully' })
-      return result.data
+      return result.data  
+      notify.success('Order updated successfully')
     } catch (err) {
+      notify.error('Failed to update order')
       error.value = err.response?.data?.message || err.message || 'Failed to update order'
       // addNotification({ type: 'error', message: error.value })
       throw err
@@ -316,12 +325,15 @@ export const useOrderStore = defineStore('orders', () => {
         orders.value.splice(index, 1)
         pagination.value.total -= 1
       }
+      notify.success('Order deleted successfully')
 
       // addNotification({ type: 'success', message: 'Order deleted successfully' })
     } catch (err) {
+      notify.error('Failed to delete order')
       error.value = err.response?.data?.message || err.message || 'Failed to delete order'
       // addNotification({ type: 'error', message: error.value })
       throw err
+
     } finally {
       loading.value.deleting = false
     }
@@ -665,7 +677,9 @@ export const useOrderStore = defineStore('orders', () => {
         }
       })
       console.log('Assigned delivery person:', deliveryPersonId, 'to orders:', orders)
+      notify.success('Rider assigned successfully')
     } catch (err) {
+      notify.error('Failed to assign rider')
       console.error('Failed to assign rider:', err)
       throw err
     }
@@ -686,7 +700,9 @@ export const useOrderStore = defineStore('orders', () => {
         }
       })
       console.log('Assigned call centre agent:', agentId, 'to orders:', orders)
+      notify.success('Call centre agent assigned successfully')
     } catch (err) {
+      notify.error('Failed to assign call centre agent')
       console.error('Failed to assign agent:', err)
       throw err
     }
@@ -707,7 +723,9 @@ export const useOrderStore = defineStore('orders', () => {
         }
       })
       console.log('Updated status for orders:', orders, 'to status:', status)
+      notify.success('Order status updated successfully')
     } catch (err) {
+      notify.error('Failed to update order status')
       console.error('Failed to update status:', err)
       throw err
     }
@@ -737,7 +755,9 @@ export const useOrderStore = defineStore('orders', () => {
         })
       }
       console.log('Deleted orders:', orderIds)
+      notify.success('Orders deleted successfully')
     } catch (err) {
+      notify.error('Failed to bulk delete orders')
       console.error('Failed to bulk delete orders:', err)
       throw err
     }

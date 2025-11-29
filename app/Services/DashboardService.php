@@ -201,11 +201,14 @@ class DashboardService
             ->countBy();
 
         return [
-            'pending'   => $statuses['pending'] ?? 0,
-            'shipped'   => $statuses['shipped'] ?? 0,
-            'delivered' => $statuses['delivered'] ?? 0,
-            'returned'  => $statuses['returned'] ?? 0,
-            'cancelled' => $statuses['cancelled'] ?? 0,
+            'pending'   => $statuses['Pending'] ?? 0,
+            'shipped'   => $statuses['Shipped'] ?? 0,
+            'delivered' => $statuses['Delivered'] ?? 0,
+            'returned'  => $statuses['Returned'] ?? 0,
+            'cancelled' => $statuses['Cancelled'] ?? 0,
+            // 'new'     => $statuses['New'] ?? 0,
+            // 'scheduled' => $statuses['Scheduled'] ?? 0,
+            ''
         ];
     }
 

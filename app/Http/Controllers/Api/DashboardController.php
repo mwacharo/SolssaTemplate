@@ -24,7 +24,7 @@ class DashboardController extends Controller
             'orderStats'     => $this->service->getOrderStats(),
             'orderChart'     => $this->service->getOrderAnalytics(),
             'inventory'      => $this->service->getInventoryStats(),
-            // 'statusData'     => $this->service->getStatusOverview(),
+            'statusData'     => $this->service->getStatusOverview(),
             // 'topAgents'      => $this->service->getTopAgents(),
             // 'deliveryRate'   => $this->service->getDeliveryRate(),
             // 'topProducts'    => $this->service->getTopProducts(),
