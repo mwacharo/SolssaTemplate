@@ -40,8 +40,11 @@ class StoreExpeditionRequest extends FormRequest
 
             'shipment_items'                     => 'required|array|min:1',
             'shipment_items.*.product'           => 'required|array',
-            'shipment_items.*.product.name'      => 'required|string|max:255',
-            'shipment_items.*.product.sku'       => 'required|string|max:255',
+            // 'shipment_items.*.product.name'      => 'required|string|max:255',
+            // 'shipment_items.*.product.sku'       => 'required|string|max:255',
+            'shipment_items.*.product.id'     => 'required|integer|min:1',
+
+
             'shipment_items.*.quantity_sent'     => 'required|integer|min:1',
         ];
     }

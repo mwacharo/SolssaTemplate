@@ -173,7 +173,7 @@ watch(darkMode, (newValue) => {
                     </template>
                     <v-list-item-title class="text-h6"> CRM </v-list-item-title>
                     <v-list-item-subtitle>
-                        Lets your business better
+                        We tailor your coat
                     </v-list-item-subtitle>
                 </v-list-item>
 

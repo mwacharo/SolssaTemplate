@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreExpeditionRequest;
 use App\Http\Requests\UpdateExpeditionRequest;
 use App\Models\Expedition;
+use Illuminate\Support\Facades\DB;
+
 
 class ExpeditionController extends Controller
 {
@@ -17,7 +19,7 @@ class ExpeditionController extends Controller
         //
 
 
-        $expeditions = Expedition::with('shipmentItems')->orderByDesc('id')->paginate(20);
+        $expeditions = Expedition::with('shipmentItems.product', 'warehouse', 'vendor')->orderByDesc('id')->paginate(20);
 
         return response()->json([
             'success'     => true,
@@ -25,47 +27,57 @@ class ExpeditionController extends Controller
         ]);
     }
 
-
-
-
     public function store(StoreExpeditionRequest $request)
     {
-
-
         $data = $request->validated();
 
-        // Create expedition record
-        $expedition = Expedition::create([
-            'source_country'   => $data['source_country'],
-            // 'destination'      => $data['destination'],
-            'warehouse_id'     => $data['warehouse_id'],
-            'shipment_status'  => 'pending',
-            'approval_status'   => 'pending',
-            'transporter_reimbursement_status' => 'pending',
-            'shipment_date'    => $data['shipment_date'],
-            'arrival_date'     => $data['arrival_date'],
-            'transporter_name' => $data['transporter_name'],
-            'tracking_number'  => $data['tracking_number'],
-            'packages_number'  => $data['packages_number'],
-            'weight'           => $data['weight'],
-            'shipment_fees'    => $data['shipment_fees'],
-            'vendor_id'        => $data['vendor_id'] ?? null,
-        ]);
+        try {
+            DB::beginTransaction();
 
-        // Save shipment items
-        foreach ($data['shipment_items'] as $item) {
-            $expedition->shipmentItems()->create([
-                'product_name'   => $item['product']['name'],
-                'product_sku'    => $item['product']['sku'],
-                'quantity_sent'  => $item['quantity_sent'],
+            // Create expedition record
+            $expedition = Expedition::create([
+                'source_country'   => $data['source_country'],
+                'warehouse_id'     => $data['warehouse_id'],
+                'shipment_status'  => 'pending',
+                'approval_status'   => 'pending',
+                'transporter_reimbursement_status' => 'pending',
+                'shipment_date'    => $data['shipment_date'],
+                'arrival_date'     => $data['arrival_date'],
+                'transporter_name' => $data['transporter_name'],
+                'tracking_number'  => $data['tracking_number'],
+                'packages_number'  => $data['packages_number'],
+                'weight'           => $data['weight'],
+                'shipment_fees'    => $data['shipment_fees'],
+                'vendor_id'        => $data['vendor_id'] ?? null,
             ]);
-        }
 
-        return response()->json([
-            'success'    => true,
-            'message'    => 'Expedition created successfully.',
-            'expedition' => $expedition->load('items'),
-        ], 201);
+            // Save shipment items
+            foreach ($data['shipment_items'] as $item) {
+                $expedition->shipmentItems()->create([
+                    // 'product_name'   => $item['product']['name'],
+                    // 'product_sku'    => $item['product']['sku'],
+                    'quantity_sent'  => $item['quantity_sent'],
+                    'expedition_id' => $expedition->id,
+                    'product_id' => $item['product']['id'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Expedition created successfully.',
+                'expedition' => $expedition->load('shipmentItems', 'vendor', 'warehouse'),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create expedition.',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
     }
 
 

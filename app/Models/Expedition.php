@@ -28,13 +28,17 @@ class Expedition extends Model
         'tracking_number',
     ];
 
+
+
     protected $casts = [
         'weight' => 'decimal:2',
         'packages_number' => 'integer',
         'shipment_fees' => 'decimal:2',
-        'shipment_date' => 'date',
-        'arrival_date' => 'datetime',
+
+        'shipment_date' => 'datetime:Y-m-d',
+        'arrival_date'   => 'datetime:Y-m-d',
     ];
+
 
     // Relationships
     public function  vendor()

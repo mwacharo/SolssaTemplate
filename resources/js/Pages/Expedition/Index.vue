@@ -60,7 +60,7 @@
                             <thead class="bg-blue-600 text-white">
                                 <tr>
                                     <th class="px-4 py-3 text-left">ID</th>
-                                    <th class="px-4 py-3 text-left">Seller</th>
+                                    <th class="px-4 py-3 text-left">Vendor</th>
                                     <th class="px-4 py-3 text-left">Weight</th>
                                     <th class="px-4 py-3 text-left">
                                         Packages
@@ -106,13 +106,10 @@
                                                 class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm"
                                             >
                                                 {{
-                                                    expedition.seller
-                                                        .first_name[0]
+                                                    expedition.vendor?.name ||
+                                                    "N/A"
                                                 }}
                                             </div>
-                                            <span class="text-sm">{{
-                                                expedition.seller.username
-                                            }}</span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
@@ -144,7 +141,7 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        {{ expedition.warehouse.name }}
+                                        {{ expedition.warehouse?.name }}
                                     </td>
                                     <td class="px-4 py-3">
                                         {{ expedition.shipment_date }}
@@ -196,7 +193,7 @@
                                         <span class="text-sm">{{
                                             expedition.transporter_reimbursement_status ===
                                             "paid"
-                                                ? "Paid by seller"
+                                                ? "Paid by vendor"
                                                 : "Not paid"
                                         }}</span>
                                     </td>
@@ -310,12 +307,6 @@
                                 <label class="block text-sm font-medium mb-2"
                                     >Destination</label
                                 >
-                                <!-- <input
-                                    type="text"
-                                    required
-                                    class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                                    v-model="formData.destination"
-                                /> -->
 
                                 <v-select
                                     v-model="formData.warehouse_id"
@@ -429,27 +420,6 @@
                         <!-- add shipment items table  -->
 
                         <div class="bg-gray-50 rounded-lg p-4">
-                            <!-- Product selector for adding new product -->
-                            <!-- <v-autocomplete
-                                v-model="selectedProduct"
-                                :items="orderStore.productOptions"
-                                item-title="product_name"
-                                item-value="sku"
-                                placeholder="Search product to add"
-                                density="compact"
-                                hide-details
-                                variant="outlined"
-                            /> -->
-                            <!-- 
-                            <button
-                                type="button"
-                                class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                @click="addItem()"
-                                :disabled="!selectedProduct"
-                            >
-                                + Add Product
-                            </button> -->
-
                             <div class="overflow-x-auto mt-4">
                                 <table class="w-full text-sm">
                                     <thead>
@@ -477,12 +447,12 @@
                                             <!-- Product Selector Per Row -->
                                             <td class="px-3 py-2">
                                                 <v-autocomplete
-                                                    v-model="item.product.sku"
+                                                    v-model="item.product.id"
                                                     :items="
                                                         orderStore.productOptions
                                                     "
                                                     item-title="product_name"
-                                                    item-value="sku"
+                                                    item-value="id"
                                                     placeholder="Select product"
                                                     density="compact"
                                                     hide-details
@@ -536,13 +506,15 @@
                             <div class="pt-4 flex justify-between items-center">
                                 <button
                                     type="button"
-                                    class="px-4 py-2 border rounded-lg bg-white hover:bg-gray-50"
+                                    class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                                     @click="
                                         formData.shipment_items =
                                             formData.shipment_items || [];
                                         formData.shipment_items.push({
                                             product: { name: '' },
                                             quantity_sent: 1,
+                                            product: { sku: '' },
+                                            product: { id: '' },
                                         });
                                     "
                                 >
@@ -585,7 +557,7 @@
             <!-- Details Modal -->
             <div
                 v-if="showDetailsModal && selectedExpedition"
-                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+                class="fixed inset-0 bg-grey bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
                 <div
                     class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto"
@@ -642,11 +614,9 @@
                                         Destination
                                     </p>
                                     <p class="font-semibold">
-                                        {{ selectedExpedition.warehouse.name }},
                                         {{
-                                            selectedExpedition.warehouse.country
-                                                .name
-                                        }}
+                                            selectedExpedition.warehouse?.name
+                                        }},
                                     </p>
                                 </div>
                                 <div>
@@ -724,7 +694,7 @@
                                 >
                                     <div>
                                         <p class="font-medium">
-                                            {{ item.product.name }}
+                                            {{ item.product.product_name }}
                                         </p>
                                         <p class="text-sm text-gray-600">
                                             Quantity:
@@ -739,28 +709,18 @@
                         <!-- Seller Info -->
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="font-semibold text-lg mb-4">
-                                Seller Information
+                                Vendor Information
                             </h3>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <p class="text-sm text-gray-600">Name</p>
                                     <p class="font-semibold">
-                                        {{
-                                            selectedExpedition.seller.first_name
-                                        }}
-                                        {{
-                                            selectedExpedition.seller.last_name
-                                        }}
+                                        {{ selectedExpedition.vendor.name }}
                                     </p>
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">
                                         Username
-                                    </p>
-                                    <p class="font-semibold">
-                                        @{{
-                                            selectedExpedition.seller.username
-                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -862,6 +822,7 @@ const formData = ref({
     shipment_fees: 0,
     vendor_id: null,
     shipment_items: [],
+    // name: "",
 });
 
 // Fetch vendors + expeditions
