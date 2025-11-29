@@ -188,11 +188,15 @@
                     <div class="details">
                         {{ $order->customer->phone ?? 'N/A' }}<br>
                         {{ $order->delivery_address ?? $order->customer->address ?? 'Delivery Address' }}
-                    </div>
-                    @if(isset($order->customer->city))
-                        <div class="city-tag">{{ $order->customer->city }}</div>
-                    @endif
-                </div>
+
+
+<div >
+    {{ optional($order->customer->city)->name }} - 
+    {{ optional($order->customer->zone)->name }}
+</div>
+
+
+            
             </div>
             <!-- Order Summary -->
             <div class="order-summary">

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\DashboardService;
@@ -28,7 +29,7 @@ class DashboardController extends Controller
             // 'deliveryRate'   => $this->service->getDeliveryRate(),
             // 'topProducts'    => $this->service->getTopProducts(),
             // 'topSellers'     => $this->service->getTopSellers(),
-            // 'wallet'         => $this->service->getWalletEarnings(),
+            'wallet'         => $this->service->getWalletEarnings(),
             'placeholder'    => null,
         ]);
     }

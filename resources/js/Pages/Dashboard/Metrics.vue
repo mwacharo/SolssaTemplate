@@ -1,69 +1,67 @@
 <template>
-  <AppLayout>
-    <div class="p-6">
-      <!-- Grid with 5 rows and 2 columns -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <!-- Component 1 -->
-        <div class="card">
-          <OrderStats :stats="orderStats" />
-        </div>
+    <AppLayout>
+        <div class="p-6">
+            <!-- Grid with 5 rows and 2 columns -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Component 1 -->
+                <div class="card">
+                    <OrderStats :stats="orderStats" />
+                </div>
 
-        <!-- Component 2 -->
-        <div class="card">
-          <OrderAnalytics :chartData="orderChart" />
-        </div>
+                <!-- Component 2 -->
+                <div class="card">
+                    <OrderAnalytics :chartData="orderChart" />
+                </div>
 
-        <!-- Component 3 -->
-        <div class="card">
-          <InventoryStats :inventory="inventory" />
-        </div>
+                <!-- Component 3 -->
+                <div class="card">
+                    <InventoryStats :inventory="inventory" />
+                </div>
 
-        <!-- Component 4 -->
-        <div class="card">
-          <StatusOverview :status="statusData" />
-        </div>
+                <!-- Component 4 -->
+                <div class="card">
+                    <StatusOverview :status="statusData" />
+                </div>
 
-        <!-- Component 5 -->
-        <div class="card">
-            <TopAgents />
-        </div>
+                <!-- Component 5 -->
+                <div class="card">
+                    <TopAgents />
+                </div>
 
-        <!-- Component 6 -->
-        <div class="card">
-          <DeliveryRate />
-        </div>
+                <!-- Component 6 -->
+                <div class="card">
+                    <DeliveryRate />
+                </div>
 
-        <!-- Component 7 -->
-        <div class="card">
-          <TopProducts />
-        </div>
+                <!-- Component 7 -->
+                <div class="card">
+                    <TopProducts />
+                </div>
 
-        <!-- Component 8 -->
-        <div class="card">
-          <TopSellers />
-        </div>
+                <!-- Component 8 -->
+                <div class="card">
+                    <TopSellers />
+                </div>
 
-        <!-- Component 9 -->
-        <div class="card">
-                   <WalletEarnings :wallet="wallet" />
+                <!-- Component 9 -->
+                <div class="card">
+                    <WalletEarnings :wallet="wallet" />
+                </div>
 
+                <!-- Component 10 -->
+                <div
+                    class="card flex items-center justify-center text-gray-500"
+                >
+                    Placeholder / Future Component
+                </div>
+            </div>
         </div>
-
-        <!-- Component 10 -->
-        <div class="card flex items-center justify-center text-gray-500">
-          Placeholder / Future Component
-        </div>
-      </div>
-    </div>
-  </AppLayout>
+    </AppLayout>
 </template>
-
-
 
 <script setup>
 import { ref, onMounted } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-
 
 import OrderStats from "@/Pages/Dashboard/components/OrderStats.vue";
 import OrderAnalytics from "@/Pages/Dashboard/components/OrderAnalytics.vue";
@@ -103,8 +101,6 @@ import TopAgents from "@/Pages/Dashboard/components/TopAgents.vue";
 //   progress: 75 // payout progress
 // };
 
-
-
 const orderStats = ref({});
 const orderChart = ref([]);
 const inventory = ref({});
@@ -116,16 +112,16 @@ const topSellers = ref([]);
 const deliveryRate = ref({});
 
 onMounted(async () => {
-  const { data } = await axios.get("/api/v1/dashboard");
+    const { data } = await axios.get("/api/v1/dashboard");
 
-  orderStats.value = data.orderStats;
-  orderChart.value = data.orderChart;
-  inventory.value = data.inventory;
-  statusData.value = Object.values(data.statusData); // for chart
-  wallet.value = data.wallet;
-  topAgents.value = data.topAgents;
-  topProducts.value = data.topProducts;
-  topSellers.value = data.topSellers;
-  deliveryRate.value = data.deliveryRate;
+    orderStats.value = data.orderStats;
+    orderChart.value = data.orderChart;
+    inventory.value = data.inventory;
+    // statusData.value = Object.values(data.statusData); // for chart
+    wallet.value = data.wallet;
+    topAgents.value = data.topAgents;
+    topProducts.value = data.topProducts;
+    topSellers.value = data.topSellers;
+    deliveryRate.value = data.deliveryRate;
 });
 </script>

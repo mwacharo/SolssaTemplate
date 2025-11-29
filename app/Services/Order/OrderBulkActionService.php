@@ -190,7 +190,7 @@ class OrderBulkActionService
         }
     }
 
-    public function assignAgent(array $orderIds, int $agentId , string $role = 'CallAgent'): void
+    public function assignAgent(array $orderIds, int $agentId, string $role = 'CallAgent'): void
     {
         foreach ($orderIds as $orderId) {
             // Create or update assignment record for this order and agent
@@ -216,7 +216,7 @@ class OrderBulkActionService
                 'order_id' => $orderId,
                 'status_id' => $statusId,
                 'status_notes' => $statusNotes,
-            
+
             ]);
         }
     }
@@ -349,6 +349,8 @@ class OrderBulkActionService
     {
         $orders = Order::with([
             'customer',
+            'customer.city',
+            'customer.zone',
             'orderItems.product',
             'vendor',
             'rider',
@@ -483,8 +485,4 @@ class OrderBulkActionService
             'company' => $company
         ];
     }
-
-
-
-
 }

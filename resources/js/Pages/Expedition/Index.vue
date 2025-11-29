@@ -209,6 +209,7 @@
                                                     class="text-gray-600"
                                                 />
                                             </button>
+
                                             <button
                                                 class="p-2 hover:bg-gray-100 rounded-lg"
                                                 title="Edit"
@@ -216,6 +217,21 @@
                                                 <Edit
                                                     :size="18"
                                                     class="text-gray-600"
+                                                />
+                                            </button>
+
+                                            <!-- delete -->
+
+                                            <button
+                                                @click="
+                                                    handleDelete(expedition.id)
+                                                "
+                                                class="p-2 hover:bg-gray-100 rounded-lg transition"
+                                                title="Delete"
+                                            >
+                                                <Trash2
+                                                    :size="18"
+                                                    class="text-red-600"
                                                 />
                                             </button>
                                         </div>
@@ -735,7 +751,6 @@
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref, computed, watch, onMounted } from "vue";
-import axios from "axios"; // <-- IMPORTANT
 import { useOrderStore } from "@/stores/orderStore";
 
 import {
@@ -756,6 +771,12 @@ import {
 const orderStore = useOrderStore();
 
 const selectedProduct = ref(null);
+
+const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this expense?")) {
+        expenses.value = expenses.value.filter((exp) => exp.id !== id);
+    }
+};
 
 // Add item to list
 const addItem = () => {
