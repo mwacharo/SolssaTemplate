@@ -281,7 +281,7 @@ class DashboardService
                     ->join('statuses', 'statuses.id', '=', 'delivered.status_id')
                     ->where('statuses.name', 'Delivered');
             })
-            ->whereNNull('orders.deleted_at') // only orders with deleted_at set
+            ->whereNull('orders.deleted_at') // only orders with deleted_at set
 
             ->select(
                 'users.id',
