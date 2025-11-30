@@ -241,41 +241,41 @@ class DashboardService
         ];
     }
 
-    // public function getTopProducts()
-    // {
-    //     return DB::table('order_items')
-    //         ->join('products', 'order_items.product_id', '=', 'products.id')
-    //         ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
-    //         ->select(
-    //             'products.product_name as name',
-    //             DB::raw('SUM(order_items.quantity) as sales'),
-    //             'categories.name as category'
-    //         )
-    //         ->groupBy('products.product_name', 'categories.name')
-    //         ->orderByDesc('sales')
-    //         ->take(5)
-    //         ->get();
-    // }
-
     public function getTopProducts()
     {
-        return Product::query()
-            ->with('category')
+        return DB::table('order_items')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->select(
-                'products.id',
                 'products.product_name as name',
-                'categories.name as category',
-                DB::raw('SUM(order_items.quantity) as total_sales')
+                DB::raw('SUM(order_items.quantity) as sales'),
+                'categories.name as category'
             )
-            ->join('order_items', 'order_items.product_id', '=', 'products.id')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
-            ->whereColumn('orders.vendor_id', 'products.vendor_id')
-            ->groupBy('products.id', 'products.product_name', 'categories.name')
-            ->orderByDesc('total_sales')
-            ->limit(5)
+            ->groupBy('products.product_name', 'categories.name')
+            ->orderByDesc('sales')
+            ->take(5)
             ->get();
     }
+
+    // public function getTopProducts()
+    // {
+    //     return Product::query()
+    //         ->with('category')
+    //         ->select(
+    //             'products.id',
+    //             'products.product_name as name',
+    //             'categories.name as category',
+    //             DB::raw('SUM(order_items.quantity) as total_sales')
+    //         )
+    //         ->join('order_items', 'order_items.product_id', '=', 'products.id')
+    //         ->join('orders', 'orders.id', '=', 'order_items.order_id')
+    //         ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+    //         ->whereColumn('orders.vendor_id', 'products.vendor_id')
+    //         ->groupBy('products.id', 'products.product_name', 'categories.name')
+    //         ->orderByDesc('total_sales')
+    //         ->limit(5)
+    //         ->get();
+    // }
 
 
 
