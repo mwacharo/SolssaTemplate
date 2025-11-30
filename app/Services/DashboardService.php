@@ -272,27 +272,289 @@ class DashboardService
     // }
 
 
+    // public function getTopSellers()
+    // {
+    //     return DB::table('users')
+    //         ->join('orders', 'orders.vendor_id', '=', 'users.id')
+    //         ->leftJoin('order_status_timestamps as delivered', function ($join) {
+    //             $join->on('delivered.order_id', '=', 'orders.id')
+    //                 ->join('statuses', 'statuses.id', '=', 'delivered.status_id')
+    //                 ->where('statuses.name', 'Delivered');
+    //         })
+    //         ->whereNull('orders.deleted_at') // only orders with deleted_at set
+
+    //         ->select(
+    //             'users.id',
+    //             'users.name',
+    //             DB::raw('COUNT(orders.id) as deliveries'),
+    //             DB::raw('ROUND(COUNT(delivered.id)/COUNT(orders.id) * 100, 2) as successRate'),
+    //         )
+    //         ->groupBy('users.id', 'users.name')
+    //         ->orderByDesc('deliveries')
+    //         ->take(5)
+    //         ->get();
+    // }
+
+
+
+
+    public function getDashboardData()
+    {
+        $vendorId = auth()->id(); // or however you get the current vendor ID
+
+        // Get all orders for the vendor
+        $orders = Order::where('vendor_id', $vendorId)
+            ->whereNull('deleted_at')
+            ->with('latestStatus.status')
+            ->get();
+
+        // Total orders
+        $totalOrders = $orders->count();
+
+        // Count deliveries (orders with latest status = "Delivered")
+        $deliveries = $orders->filter(function ($order) {
+            return $order->latestStatus
+                && $order->latestStatus->status
+                && $order->latestStatus->status->name === 'Delivered';
+        })->count();
+
+        // Delivery rate
+        $deliveryRate = $totalOrders > 0 ? round(($deliveries / $totalOrders) * 100, 2) : 0;
+
+        // Count orders by status
+        $statusCounts = [];
+        foreach ($orders as $order) {
+            if ($order->latestStatus && $order->latestStatus->status) {
+                $statusName = $order->latestStatus->status->name;
+                if (!isset($statusCounts[$statusName])) {
+                    $statusCounts[$statusName] = 0;
+                }
+                $statusCounts[$statusName]++;
+            }
+        }
+
+        // Count pending (assuming "New" or "Scheduled" = pending)
+        $pending = ($statusCounts['New'] ?? 0) + ($statusCounts['Scheduled'] ?? 0);
+
+        // Order chart data - last 6 periods (days/weeks/months)
+        $orderChart = $this->getOrderChartData($vendorId);
+
+        // Status data for pie chart
+        $statusData = [
+            'pending' => $statusCounts['New'] ?? 0,
+            'shipped' => $statusCounts['Scheduled'] ?? 0, // or whatever your "shipped" status is
+            'delivered' => $statusCounts['Delivered'] ?? 0,
+            'returned' => $statusCounts['Returned'] ?? 0,
+            'cancelled' => $statusCounts['Cancelled'] ?? 0,
+        ];
+
+        return [
+            'orderStats' => [
+                'totalOrders' => $totalOrders,
+                'deliveries' => $deliveries,
+                'pending' => $pending,
+                'deliveryRate' => $deliveryRate,
+                'orderGrowth' => $this->calculateOrderGrowth($vendorId),
+                'monthlyTarget' => 150, // This should come from settings
+                'orderProgress' => $totalOrders, // or calculate based on target
+                'averageDeliveryTime' => $this->calculateAverageDeliveryTime($vendorId),
+                'statusCounts' => $statusCounts,
+            ],
+            'orderChart' => $orderChart,
+            'inventory' => $this->getInventoryStats($vendorId),
+            'statusData' => $statusData,
+            'topProducts' => $this->getTopProducts($vendorId),
+            'topSellers' => $this->getTopSellers(),
+            'wallet' => $this->getWalletData($vendorId),
+        ];
+    }
+
+    // Get order chart data for the last 6 periods
+    private function getOrderChartData($vendorId)
+    {
+        // Get last 6 days of orders grouped by status
+        $startDate = now()->subDays(6)->startOfDay();
+
+        $orders = Order::where('vendor_id', $vendorId)
+            ->whereNull('deleted_at')
+            ->where('created_at', '>=', $startDate)
+            ->with('latestStatus.status')
+            ->get()
+            ->groupBy(function ($order) {
+                return $order->created_at->format('Y-m-d');
+            });
+
+        // Initialize data structure
+        $chartData = [];
+        $dates = [];
+
+        // Get last 6 days
+        for ($i = 5; $i >= 0; $i--) {
+            $dates[] = now()->subDays($i)->format('Y-m-d');
+        }
+
+        // Get all unique statuses
+        $allStatuses = Order::where('vendor_id', $vendorId)
+            ->whereNull('deleted_at')
+            ->with('latestStatus.status')
+            ->get()
+            ->pluck('latestStatus.status.name')
+            ->filter()
+            ->unique()
+            ->values();
+
+        // Initialize chart data for each status
+        foreach ($allStatuses as $status) {
+            $chartData[$status] = array_fill(0, 6, 0);
+        }
+
+        // Fill in the actual counts
+        foreach ($dates as $index => $date) {
+            if (isset($orders[$date])) {
+                foreach ($orders[$date] as $order) {
+                    if ($order->latestStatus && $order->latestStatus->status) {
+                        $statusName = $order->latestStatus->status->name;
+                        if (isset($chartData[$statusName])) {
+                            $chartData[$statusName][$index]++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Convert to required format
+        $result = [];
+        foreach ($chartData as $statusName => $data) {
+            $result[] = [
+                'name' => $statusName,
+                'data' => $data,
+            ];
+        }
+
+        return $result;
+    }
+
+    // Calculate order growth percentage
+    private function calculateOrderGrowth($vendorId)
+    {
+        $currentMonth = Order::where('vendor_id', $vendorId)
+            ->whereNull('deleted_at')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        $lastMonth = Order::where('vendor_id', $vendorId)
+            ->whereNull('deleted_at')
+            ->whereMonth('created_at', now()->subMonth()->month)
+            ->whereYear('created_at', now()->subMonth()->year)
+            ->count();
+
+        if ($lastMonth == 0) {
+            return $currentMonth > 0 ? 100 : 0;
+        }
+
+        return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 2);
+    }
+
+    // Calculate average delivery time
+    private function calculateAverageDeliveryTime($vendorId)
+    {
+        $deliveredOrders = Order::where('vendor_id', $vendorId)
+            ->whereNull('deleted_at')
+            ->whereHas('latestStatus.status', function ($query) {
+                $query->where('name', 'Delivered');
+            })
+            ->with('latestStatus')
+            ->get();
+
+        if ($deliveredOrders->isEmpty()) {
+            return '0h';
+        }
+
+        $totalHours = 0;
+        foreach ($deliveredOrders as $order) {
+            $createdAt = $order->created_at;
+            $deliveredAt = $order->latestStatus->created_at;
+            $hours = $createdAt->diffInHours($deliveredAt);
+            $totalHours += $hours;
+        }
+
+        $averageHours = $totalHours / $deliveredOrders->count();
+
+        return round($averageHours, 1) . 'h';
+    }
+
+    // Get top sellers with correct delivery count
+    // public function getTopSellers()
+    // {
+    //     return DB::table('users')
+    //         ->join('orders', 'orders.vendor_id', '=', 'users.id')
+    //         ->whereNull('orders.deleted_at')
+    //         ->select(
+    //             'users.id',
+    //             'users.name',
+    //             DB::raw('COUNT(DISTINCT orders.id) as deliveries'),
+    //             DB::raw('ROUND(
+    //             (COUNT(DISTINCT CASE 
+    //                 WHEN (
+    //                     SELECT s.name 
+    //                     FROM order_status_timestamps ost
+    //                     JOIN statuses s ON s.id = ost.status_id
+    //                     WHERE ost.order_id = orders.id
+    //                     ORDER BY ost.created_at DESC
+    //                     LIMIT 1
+    //                 ) = "Delivered" 
+    //                 THEN orders.id 
+    //             END) / COUNT(DISTINCT orders.id)) * 100, 2
+    //         ) as successRate')
+    //         )
+    //         ->groupBy('users.id', 'users.name')
+    //         ->having('deliveries', '>', 0)
+    //         ->orderByDesc('deliveries')
+    //         ->limit(5)
+    //         ->get();
+    // }
+
+
+
+    // / Alternative using Eloquent relationships (recommended)
     public function getTopSellers()
     {
-        return DB::table('users')
-            ->join('orders', 'orders.vendor_id', '=', 'users.id')
-            ->leftJoin('order_status_timestamps as delivered', function ($join) {
-                $join->on('delivered.order_id', '=', 'orders.id')
-                    ->join('statuses', 'statuses.id', '=', 'delivered.status_id')
-                    ->where('statuses.name', 'Delivered');
-            })
-            ->whereNull('orders.deleted_at') // only orders with deleted_at set
-
-            ->select(
-                'users.id',
-                'users.name',
-                DB::raw('COUNT(orders.id) as deliveries'),
-                DB::raw('ROUND(COUNT(delivered.id)/COUNT(orders.id) * 100, 2) as successRate'),
-            )
-            ->groupBy('users.id', 'users.name')
-            ->orderByDesc('deliveries')
-            ->take(5)
+        $sellers = User::withCount([
+            'orders as total_orders' => function ($query) {
+                $query->whereNull('deleted_at');
+            }
+        ])
+            ->with(['orders' => function ($query) {
+                $query->whereNull('deleted_at')
+                    ->with('latestStatus.status');
+            }])
+            ->having('total_orders', '>', 0)
+            ->orderByDesc('total_orders')
+            ->limit(5)
             ->get();
+
+        return $sellers->map(function ($seller) {
+            $orders = $seller->orders;
+            $totalOrders = $orders->count();
+
+            $deliveredOrders = $orders->filter(function ($order) {
+                return $order->latestStatus
+                    && $order->latestStatus->status
+                    && $order->latestStatus->status->name === 'Delivered';
+            })->count();
+
+            $successRate = $totalOrders > 0
+                ? round(($deliveredOrders / $totalOrders) * 100, 2)
+                : 0.00;
+
+            return [
+                'id' => $seller->id,
+                'name' => $seller->name,
+                'deliveries' => $totalOrders,
+                'successRate' => $successRate,
+            ];
+        });
     }
 
 
