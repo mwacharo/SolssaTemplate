@@ -3,14 +3,14 @@
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3
-                    class="text-sm font-medium text-gray-500 uppercase tracking-wide"
+                    class="text-sm font-medium text-green-500 uppercase tracking-wide"
                 >
                     Wallet
                 </h3>
-                <p class="mt-1 text-3xl font-bold text-gray-900">
+                <p class="mt-1 text-3xl font-bold text-green-900">
                     KES {{ formatNumber(wallet.balance) }}
                 </p>
-                <p class="text-sm text-gray-500 mt-1">
+                <p class="text-sm text-green-500 mt-1">
                     Target: KES {{ formatNumber(wallet.target) }}
                 </p>
             </div>
@@ -37,17 +37,17 @@
                 class="absolute inset-0 flex items-center justify-center pointer-events-none"
             >
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
+                    <div class="text-2xl font-bold text-green-900">
                         {{ Math.round(wallet.progress) }}%
                     </div>
-                    <div class="text-xs text-gray-500 mt-1">Complete</div>
+                    <div class="text-xs text-green-500 mt-1">Complete</div>
                 </div>
             </div>
         </div>
 
         <div class="mt-4 flex items-center justify-between text-sm">
-            <span class="text-gray-500">Remaining</span>
-            <span class="font-medium text-gray-900">
+            <span class="text-green-500">Remaining</span>
+            <span class="font-medium text-green-900">
                 KES
                 {{
                     formatNumber(
@@ -87,7 +87,7 @@ const progressColor = computed(() => {
     if (progress >= 90) return "bg-green-100 text-green-800";
     if (progress >= 70) return "bg-blue-100 text-blue-800";
     if (progress >= 50) return "bg-yellow-100 text-yellow-800";
-    return "bg-gray-100 text-gray-800";
+    return "bg-green-100 text-green-800";
 });
 
 // Dynamic chart color based on progress
@@ -96,7 +96,7 @@ const chartColor = computed(() => {
     if (progress >= 90) return "#10b981"; // green-500
     if (progress >= 70) return "#3b82f6"; // blue-500
     if (progress >= 50) return "#f59e0b"; // yellow-500
-    return "#6b7280"; // gray-500
+    return "#6b7280"; // green-500
 });
 
 const chartOptions = computed(() => ({
