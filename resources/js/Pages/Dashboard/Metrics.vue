@@ -40,7 +40,7 @@
 
                 <!-- Component 8 -->
                 <div class="card">
-                    <TopSellers />
+                    <TopSellers :topSellers="topSellers" />
                 </div>
 
                 <!-- Component 9 -->

@@ -28,7 +28,7 @@ class DashboardController extends Controller
             // 'topAgents'      => $this->service->getTopAgents(),
             // 'deliveryRate'   => $this->service->getDeliveryRate(),
             'topProducts'    => $this->service->getTopProducts(),
-            // 'topSellers'     => $this->service->getTopSellers(),
+            'topSellers'     => $this->service->getTopSellers(),
             'wallet'         => $this->service->getWalletEarnings(),
             'placeholder'    => null,
         ]);

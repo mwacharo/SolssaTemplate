@@ -260,16 +260,42 @@ class DashboardService
     /**
      * Top 5 vendors by order count.
      */
+    // public function getTopSellers()
+    // {
+    //     return DB::table('orders')
+    //         ->join('users', 'orders.vendor_id', '=', 'users.id')
+    //         ->select('users.name', DB::raw('COUNT(orders.id) as total'))
+    //         ->groupBy('users.name')
+    //         ->orderByDesc('total')
+    //         ->take(5)
+    //         ->get();
+    // }
+
+
     public function getTopSellers()
     {
-        return DB::table('orders')
-            ->join('users', 'orders.vendor_id', '=', 'users.id')
-            ->select('users.name', DB::raw('COUNT(orders.id) as total'))
-            ->groupBy('users.name')
-            ->orderByDesc('total')
+        return DB::table('users')
+            ->join('orders', 'orders.vendor_id', '=', 'users.id')
+            ->leftJoin('order_status_timestamps as delivered', function ($join) {
+                $join->on('delivered.order_id', '=', 'orders.id')
+                    ->join('statuses', 'statuses.id', '=', 'delivered.status_id')
+                    ->where('statuses.name', 'Delivered');
+            })
+            ->whereNotNull('orders.deleted_at') // only orders with deleted_at set
+
+            ->select(
+                'users.id',
+                'users.name',
+                DB::raw('COUNT(orders.id) as deliveries'),
+                DB::raw('ROUND(COUNT(delivered.id)/COUNT(orders.id) * 100, 2) as successRate'),
+            )
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('deliveries')
             ->take(5)
             ->get();
     }
+
+
 
     /**
      * Wallet earnings (mocked).
