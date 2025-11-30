@@ -35,7 +35,7 @@
 
                 <!-- Component 7 -->
                 <div class="card">
-                    <TopProducts />
+                    <TopProducts :topProducts="topProducts" />
                 </div>
 
                 <!-- Component 8 -->
@@ -122,7 +122,11 @@ onMounted(async () => {
 
     wallet.value = data.wallet;
     topAgents.value = data.topAgents;
-    topProducts.value = data.topProducts;
+    // topProducts.value = data.topProducts;
+    topProducts.value = data.topProducts.map((product) => ({
+        ...product,
+        sales: Number(product.sales),
+    }));
     topSellers.value = data.topSellers;
     deliveryRate.value = data.deliveryRate;
 });

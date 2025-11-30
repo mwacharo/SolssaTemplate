@@ -240,18 +240,22 @@ class DashboardService
         ];
     }
 
-    /**
-     * Top 5 products by order frequency.
-     */
     public function getTopProducts()
     {
         return DB::table('order_items')
-            ->select('product_name', DB::raw('COUNT(*) as total'))
-            ->groupBy('product_name')
-            ->orderByDesc('total')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->select(
+                'products.product_name as name',
+                DB::raw('SUM(order_items.quantity) as sales'),
+                'categories.name as category'
+            )
+            ->groupBy('products.product_name', 'categories.name')
+            ->orderByDesc('sales')
             ->take(5)
             ->get();
     }
+
 
     /**
      * Top 5 vendors by order count.
