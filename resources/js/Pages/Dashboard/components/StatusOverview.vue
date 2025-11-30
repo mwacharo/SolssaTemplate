@@ -50,90 +50,140 @@
         <div class="relative">
             <apexchart
                 type="donut"
-                height="300"
+                height="320"
                 :options="chartOptions"
-                :series="status"
+                :series="safeStatus"
                 class="mx-auto"
             />
 
-            <!-- Chart overlay with additional info -->
+            <!-- Stats Overlay -->
             <div
-                class="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-gray-200"
+                class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200"
             >
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 font-medium">
-                        Success Rate
-                    </p>
-                    <p class="text-lg font-bold text-green-600">
-                        {{ successRate }}%
-                    </p>
+                <div class="space-y-3">
+                    <div class="text-center pb-3 border-b border-gray-200">
+                        <p
+                            class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                        >
+                            Success Rate
+                        </p>
+                        <p class="text-2xl font-bold text-green-600 mt-1">
+                            {{ successRate }}%
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <p
+                            class="text-xs text-gray-500 font-medium uppercase tracking-wide"
+                        >
+                            Total Orders
+                        </p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">
+                            {{ totalOrders.toLocaleString() }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Status Breakdown List -->
-        <div class="space-y-3 mt-6">
-            <h4 class="text-sm font-medium text-gray-700 mb-4">
-                Status Breakdown
-            </h4>
+        <div class="space-y-3 mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-gray-700">
+                    Detailed Status Breakdown
+                </h4>
+                <span
+                    class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full"
+                >
+                    {{ statusBreakdown.length }} Categories
+                </span>
+            </div>
 
             <div
                 v-for="(item, index) in statusBreakdown"
                 :key="item.label"
-                class="flex items-center justify-between p-3 rounded-xl border transition-all duration-200 hover:shadow-sm"
+                class="group relative flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
                 :class="item.bgClass"
             >
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-4 flex-1">
                     <!-- Status Icon -->
                     <div
                         :class="[
-                            'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200',
+                            'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110',
                             item.iconBgClass,
                         ]"
                     >
                         <component
                             :is="item.icon"
-                            :class="['w-5 h-5', item.iconColorClass]"
+                            :class="['w-6 h-6', item.iconColorClass]"
                         />
                     </div>
 
-                    <div>
-                        <p :class="['text-sm font-medium', item.textClass]">
-                            {{ item.label }}
-                        </p>
-                        <p :class="['text-xs', item.subTextClass]">
-                            {{ item.count }} orders
-                        </p>
+                    <!-- Status Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <p :class="['text-base font-bold', item.textClass]">
+                                {{ item.label }}
+                            </p>
+                            <div
+                                :class="[
+                                    'px-2 py-0.5 rounded-md text-xs font-semibold',
+                                    item.badgeClass,
+                                ]"
+                            >
+                                {{ item.count }} orders
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="flex items-center space-x-3">
+                            <div
+                                :class="[
+                                    'flex-1 rounded-full h-2 overflow-hidden',
+                                    item.progressBg,
+                                ]"
+                            >
+                                <div
+                                    :class="[
+                                        'h-2 rounded-full transition-all duration-1000 ease-out',
+                                        item.progressColor,
+                                    ]"
+                                    :style="{ width: item.percentage + '%' }"
+                                ></div>
+                            </div>
+                            <span
+                                :class="[
+                                    'text-xs font-medium min-w-[3rem] text-right',
+                                    item.subTextClass,
+                                ]"
+                            >
+                                {{ item.percentage }}%
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3">
-                    <!-- Percentage -->
+                <!-- Count & Percentage Display -->
+                <div class="flex items-center space-x-4 ml-4">
+                    <!-- Large Number Display -->
                     <div class="text-right">
-                        <p :class="['text-lg font-bold', item.textClass]">
-                            {{ item.percentage }}%
-                        </p>
-                        <div
+                        <p
                             :class="[
-                                'w-16 rounded-full h-1.5',
-                                item.progressBg,
+                                'text-3xl font-black leading-none',
+                                item.textClass,
                             ]"
                         >
-                            <div
-                                :class="[
-                                    'h-1.5 rounded-full transition-all duration-700',
-                                    item.progressColor,
-                                ]"
-                                :style="{ width: item.percentage + '%' }"
-                            ></div>
-                        </div>
+                            {{ item.count }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            of {{ totalOrders }}
+                        </p>
                     </div>
 
                     <!-- Trend Indicator -->
-                    <div :class="['p-1.5 rounded-lg', item.trendBg]">
+                    <div :class="['p-2 rounded-lg', item.trendBg]">
                         <svg
                             v-if="item.trend === 'up'"
-                            class="w-3 h-3 text-green-600"
+                            class="w-4 h-4 text-green-600"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                         >
@@ -145,7 +195,7 @@
                         </svg>
                         <svg
                             v-else-if="item.trend === 'down'"
-                            class="w-3 h-3 text-red-600"
+                            class="w-4 h-4 text-red-600"
                             fill="currentColor"
                             viewBox="0 0 20 20"
                         >
@@ -157,17 +207,47 @@
                         </svg>
                         <div
                             v-else
-                            class="w-3 h-3 rounded-full bg-gray-400"
-                        ></div>
+                            class="w-4 h-4 flex items-center justify-center"
+                        >
+                            <div
+                                class="w-3 h-0.5 rounded-full bg-gray-400"
+                            ></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Summary Stats Row -->
+        <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+            <div class="text-center p-3 bg-green-50 rounded-lg">
+                <p class="text-xs text-green-600 font-medium uppercase">
+                    Completed
+                </p>
+                <p class="text-2xl font-bold text-green-700 mt-1">
+                    {{ safeStatus[2] }}
+                </p>
+            </div>
+            <div class="text-center p-3 bg-amber-50 rounded-lg">
+                <p class="text-xs text-amber-600 font-medium uppercase">
+                    In Progress
+                </p>
+                <p class="text-2xl font-bold text-amber-700 mt-1">
+                    {{ safeStatus[0] + safeStatus[1] }}
+                </p>
+            </div>
+            <div class="text-center p-3 bg-red-50 rounded-lg">
+                <p class="text-xs text-red-600 font-medium uppercase">Failed</p>
+                <p class="text-2xl font-bold text-red-700 mt-1">
+                    {{ safeStatus[3] + safeStatus[4] }}
+                </p>
+            </div>
+        </div>
+
         <!-- Quick Actions -->
-        <div class="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-gray-100">
+        <div class="grid grid-cols-2 gap-3 mt-6">
             <button
-                class="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-md"
+                class="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
             >
                 <svg
                     class="w-4 h-4"
@@ -186,7 +266,7 @@
             </button>
 
             <button
-                class="flex items-center justify-center space-x-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium py-3 px-4 rounded-lg transition-all duration-200"
+                class="flex items-center justify-center space-x-2 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 text-gray-700 text-sm font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
             >
                 <svg
                     class="w-4 h-4"
@@ -218,7 +298,6 @@ const props = defineProps({
         default: () => [20, 15, 40, 10, 5], // [pending, shipped, delivered, returned, cancelled]
     },
 });
-console.log("status prop:", props.status, Array.isArray(props.status));
 
 // Reactive data
 const selectedPeriod = ref("7D");
@@ -229,12 +308,13 @@ const statusConfig = [
     {
         label: "Pending",
         color: "#F59E0B",
-        bgClass: "bg-amber-50 border-amber-200",
-        iconBgClass: "bg-amber-100",
+        bgClass: "bg-amber-50 border-amber-200 hover:border-amber-300",
+        iconBgClass: "bg-amber-100 group-hover:bg-amber-200",
         iconColorClass: "text-amber-600",
         textClass: "text-amber-800",
-        subTextClass: "text-amber-600",
-        progressBg: "bg-amber-200",
+        subTextClass: "text-amber-700",
+        badgeClass: "bg-amber-200 text-amber-800",
+        progressBg: "bg-amber-100",
         progressColor: "bg-amber-500",
         trendBg: "bg-amber-100",
         trend: "up",
@@ -243,12 +323,13 @@ const statusConfig = [
     {
         label: "Shipped",
         color: "#3B82F6",
-        bgClass: "bg-blue-50 border-blue-200",
-        iconBgClass: "bg-blue-100",
+        bgClass: "bg-blue-50 border-blue-200 hover:border-blue-300",
+        iconBgClass: "bg-blue-100 group-hover:bg-blue-200",
         iconColorClass: "text-blue-600",
         textClass: "text-blue-800",
-        subTextClass: "text-blue-600",
-        progressBg: "bg-blue-200",
+        subTextClass: "text-blue-700",
+        badgeClass: "bg-blue-200 text-blue-800",
+        progressBg: "bg-blue-100",
         progressColor: "bg-blue-500",
         trendBg: "bg-blue-100",
         trend: "up",
@@ -257,12 +338,13 @@ const statusConfig = [
     {
         label: "Delivered",
         color: "#10B981",
-        bgClass: "bg-green-50 border-green-200",
-        iconBgClass: "bg-green-100",
+        bgClass: "bg-green-50 border-green-200 hover:border-green-300",
+        iconBgClass: "bg-green-100 group-hover:bg-green-200",
         iconColorClass: "text-green-600",
         textClass: "text-green-800",
-        subTextClass: "text-green-600",
-        progressBg: "bg-green-200",
+        subTextClass: "text-green-700",
+        badgeClass: "bg-green-200 text-green-800",
+        progressBg: "bg-green-100",
         progressColor: "bg-green-500",
         trendBg: "bg-green-100",
         trend: "up",
@@ -271,12 +353,13 @@ const statusConfig = [
     {
         label: "Returned",
         color: "#8B5CF6",
-        bgClass: "bg-purple-50 border-purple-200",
-        iconBgClass: "bg-purple-100",
+        bgClass: "bg-purple-50 border-purple-200 hover:border-purple-300",
+        iconBgClass: "bg-purple-100 group-hover:bg-purple-200",
         iconColorClass: "text-purple-600",
         textClass: "text-purple-800",
-        subTextClass: "text-purple-600",
-        progressBg: "bg-purple-200",
+        subTextClass: "text-purple-700",
+        badgeClass: "bg-purple-200 text-purple-800",
+        progressBg: "bg-purple-100",
         progressColor: "bg-purple-500",
         trendBg: "bg-purple-100",
         trend: "stable",
@@ -285,18 +368,38 @@ const statusConfig = [
     {
         label: "Cancelled",
         color: "#EF4444",
-        bgClass: "bg-red-50 border-red-200",
-        iconBgClass: "bg-red-100",
+        bgClass: "bg-red-50 border-red-200 hover:border-red-300",
+        iconBgClass: "bg-red-100 group-hover:bg-red-200",
         iconColorClass: "text-red-600",
         textClass: "text-red-800",
-        subTextClass: "text-red-600",
-        progressBg: "bg-red-200",
+        subTextClass: "text-red-700",
+        badgeClass: "bg-red-200 text-red-800",
+        progressBg: "bg-red-100",
         progressColor: "bg-red-500",
         trendBg: "bg-red-100",
         trend: "down",
         icon: "XIcon",
     },
 ];
+
+// Filter out non-numeric values and ensure we only get the first 5 values
+const safeStatus = computed(() => {
+    if (!Array.isArray(props.status)) return [0, 0, 0, 0, 0];
+
+    // Filter only numeric values and take first 5
+    const filtered = props.status
+        .filter((val) => typeof val === "number" && !isNaN(val))
+        .slice(0, 5);
+
+    // Pad with zeros if needed
+    while (filtered.length < 5) {
+        filtered.push(0);
+    }
+
+    return filtered;
+});
+
+const totalOrders = computed(() => safeStatus.value.reduce((a, b) => a + b, 0));
 
 // Chart options
 const chartOptions = computed(() => ({
@@ -327,12 +430,12 @@ const chartOptions = computed(() => ({
     plotOptions: {
         pie: {
             donut: {
-                size: "70%",
+                size: "68%",
                 labels: {
                     show: true,
                     name: {
                         show: true,
-                        fontSize: "14px",
+                        fontSize: "15px",
                         fontWeight: 600,
                         color: "#374151",
                         offsetY: -10,
@@ -340,7 +443,7 @@ const chartOptions = computed(() => ({
                     },
                     value: {
                         show: true,
-                        fontSize: "28px",
+                        fontSize: "32px",
                         fontWeight: 700,
                         color: "#111827",
                         offsetY: 10,
@@ -350,15 +453,11 @@ const chartOptions = computed(() => ({
                         show: true,
                         showAlways: true,
                         label: "Total Orders",
-                        fontSize: "12px",
-                        fontWeight: 500,
+                        fontSize: "13px",
+                        fontWeight: 600,
                         color: "#6B7280",
                         formatter: () => {
-                            const total = props.status.reduce(
-                                (sum, val) => sum + val,
-                                0
-                            );
-                            return total.toLocaleString();
+                            return totalOrders.value.toLocaleString();
                         },
                     },
                 },
@@ -369,35 +468,35 @@ const chartOptions = computed(() => ({
     dataLabels: {
         enabled: true,
         formatter: (val, opt) => {
-            return Math.round(val) + "%";
+            const count = safeStatus.value[opt.seriesIndex];
+            return count > 0 ? `${count}\n${Math.round(val)}%` : "";
         },
         style: {
-            fontSize: "11px",
-            fontWeight: 600,
+            fontSize: "12px",
+            fontWeight: 700,
             colors: ["#FFFFFF"],
         },
         dropShadow: {
             enabled: true,
-            blur: 2,
-            opacity: 0.8,
+            blur: 3,
+            opacity: 0.9,
         },
     },
 
     legend: {
-        show: false, // We'll use custom legend below
+        show: false,
     },
 
     tooltip: {
         enabled: true,
         theme: "light",
         style: {
-            fontSize: "12px",
+            fontSize: "13px",
             fontFamily: "Inter, sans-serif",
         },
         y: {
             formatter: (val, { seriesIndex }) => {
-                const total = props.status.reduce((sum, val) => sum + val, 0);
-                const count = props.status[seriesIndex];
+                const count = safeStatus.value[seriesIndex];
                 return `${count} orders (${val.toFixed(1)}%)`;
             },
         },
@@ -405,8 +504,23 @@ const chartOptions = computed(() => ({
 
     stroke: {
         show: true,
-        width: 2,
+        width: 3,
         colors: ["#FFFFFF"],
+    },
+
+    states: {
+        hover: {
+            filter: {
+                type: "lighten",
+                value: 0.15,
+            },
+        },
+        active: {
+            filter: {
+                type: "darken",
+                value: 0.15,
+            },
+        },
     },
 
     responsive: [
@@ -414,7 +528,7 @@ const chartOptions = computed(() => ({
             breakpoint: 480,
             options: {
                 chart: {
-                    height: 250,
+                    height: 280,
                 },
                 plotOptions: {
                     pie: {
@@ -422,10 +536,10 @@ const chartOptions = computed(() => ({
                             size: "65%",
                             labels: {
                                 value: {
-                                    fontSize: "24px",
+                                    fontSize: "26px",
                                 },
                                 total: {
-                                    fontSize: "11px",
+                                    fontSize: "12px",
                                 },
                             },
                         },
@@ -436,61 +550,79 @@ const chartOptions = computed(() => ({
     ],
 }));
 
-const safeStatus = computed(() =>
-    Array.isArray(props.status) ? props.status : []
-);
-
-const totalOrders = computed(() => safeStatus.value.reduce((a, b) => a + b, 0));
-
-// Computed values
-// const totalOrders = computed(() => {
-//     return props.status.reduce((sum, val) => sum + val, 0);
-// });
-
 const successRate = computed(() => {
     if (totalOrders.value === 0) return 0;
-    const delivered = props.status[2] || 0; // Delivered is index 2
+    const delivered = safeStatus.value[2] || 0;
     return Math.round((delivered / totalOrders.value) * 100);
 });
 
 const statusBreakdown = computed(() => {
     return statusConfig.map((config, index) => ({
         ...config,
-        count: props.status[index] || 0,
+        count: safeStatus.value[index] || 0,
         percentage:
             totalOrders.value > 0
-                ? Math.round((props.status[index] / totalOrders.value) * 100)
+                ? Math.round(
+                      (safeStatus.value[index] / totalOrders.value) * 100
+                  )
                 : 0,
     }));
 });
 
-// Icon components (simplified SVG icons)
+// Icon components
 const ClockIcon = {
-    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
 };
 
 const TruckIcon = {
-    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>`,
 };
 
 const CheckIcon = {
-    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`,
+    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
 };
 
 const ArrowLeftIcon = {
-    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>`,
+    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>`,
 };
 
 const XIcon = {
-    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>`,
+    template: `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
 };
 </script>
 
 <style scoped>
-/* Custom hover effects */
-.hover\:shadow-md:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* Enhanced animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.group:nth-child(1) {
+    animation: slideIn 0.3s ease-out 0.1s both;
+}
+.group:nth-child(2) {
+    animation: slideIn 0.3s ease-out 0.2s both;
+}
+.group:nth-child(3) {
+    animation: slideIn 0.3s ease-out 0.3s both;
+}
+.group:nth-child(4) {
+    animation: slideIn 0.3s ease-out 0.4s both;
+}
+.group:nth-child(5) {
+    animation: slideIn 0.3s ease-out 0.5s both;
+}
+
+/* Enhanced hover effects */
+.group:hover {
+    transform: translateX(4px);
 }
 
 /* Progress bar animations */
@@ -498,26 +630,19 @@ const XIcon = {
     transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Button hover animations */
-button:hover {
-    transform: translateY(-1px);
-}
-
-button:active {
-    transform: translateY(0);
+/* Button animations */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ApexCharts custom styling */
 :deep(.apexcharts-tooltip) {
-    border-radius: 8px !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid #e5e7eb !important;
 }
 
-:deep(.apexcharts-datalabel-label) {
-    fill: #6b7280 !important;
-}
-
-:deep(.apexcharts-datalabel-value) {
-    fill: #111827 !important;
+:deep(.apexcharts-datalabel) {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 </style>
