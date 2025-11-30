@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\OrderStatusTimestamp;
 use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
@@ -257,43 +258,6 @@ class DashboardService
     }
 
 
-    /**
-     * Top 5 vendors by order count.
-     */
-    // public function getTopSellers()
-    // {
-    //     return DB::table('orders')
-    //         ->join('users', 'orders.vendor_id', '=', 'users.id')
-    //         ->select('users.name', DB::raw('COUNT(orders.id) as total'))
-    //         ->groupBy('users.name')
-    //         ->orderByDesc('total')
-    //         ->take(5)
-    //         ->get();
-    // }
-
-
-    // public function getTopSellers()
-    // {
-    //     return DB::table('users')
-    //         ->join('orders', 'orders.vendor_id', '=', 'users.id')
-    //         ->leftJoin('order_status_timestamps as delivered', function ($join) {
-    //             $join->on('delivered.order_id', '=', 'orders.id')
-    //                 ->join('statuses', 'statuses.id', '=', 'delivered.status_id')
-    //                 ->where('statuses.name', 'Delivered');
-    //         })
-    //         ->whereNull('orders.deleted_at') // only orders with deleted_at set
-
-    //         ->select(
-    //             'users.id',
-    //             'users.name',
-    //             DB::raw('COUNT(orders.id) as deliveries'),
-    //             DB::raw('ROUND(COUNT(delivered.id)/COUNT(orders.id) * 100, 2) as successRate'),
-    //         )
-    //         ->groupBy('users.id', 'users.name')
-    //         ->orderByDesc('deliveries')
-    //         ->take(5)
-    //         ->get();
-    // }
 
 
 
@@ -484,41 +448,12 @@ class DashboardService
         return round($averageHours, 1) . 'h';
     }
 
-    // Get top sellers with correct delivery count
-    // public function getTopSellers()
-    // {
-    //     return DB::table('users')
-    //         ->join('orders', 'orders.vendor_id', '=', 'users.id')
-    //         ->whereNull('orders.deleted_at')
-    //         ->select(
-    //             'users.id',
-    //             'users.name',
-    //             DB::raw('COUNT(DISTINCT orders.id) as deliveries'),
-    //             DB::raw('ROUND(
-    //             (COUNT(DISTINCT CASE 
-    //                 WHEN (
-    //                     SELECT s.name 
-    //                     FROM order_status_timestamps ost
-    //                     JOIN statuses s ON s.id = ost.status_id
-    //                     WHERE ost.order_id = orders.id
-    //                     ORDER BY ost.created_at DESC
-    //                     LIMIT 1
-    //                 ) = "Delivered" 
-    //                 THEN orders.id 
-    //             END) / COUNT(DISTINCT orders.id)) * 100, 2
-    //         ) as successRate')
-    //         )
-    //         ->groupBy('users.id', 'users.name')
-    //         ->having('deliveries', '>', 0)
-    //         ->orderByDesc('deliveries')
-    //         ->limit(5)
-    //         ->get();
-    // }
+
 
 
 
     // / Alternative using Eloquent relationships (recommended)
-    public function getTopSellers()
+    public function getTopSellersX()
     {
         $sellers = User::withCount([
             'orders as total_orders' => function ($query) {
@@ -594,5 +529,289 @@ class DashboardService
             'target'   => (float) $target,
             'progress' => $progress,
         ];
+    }
+
+
+
+    // RECOMMENDED SOLUTION - Simple and Reliable
+    // public function getTopSellers()
+    // {
+    //     $sellers = User::whereHas('orders', function ($query) {
+    //         $query->whereNull('deleted_at');
+    //     })
+    //         ->get();
+
+    //     $results = [];
+
+    //     foreach ($sellers as $seller) {
+    //         // Get all non-deleted orders for this seller
+    //         $orders = Order::where('vendor_id', $seller->id)
+    //             ->whereNull('deleted_at')
+    //             ->get();
+
+    //         $totalOrders = $orders->count();
+
+    //         if ($totalOrders === 0) {
+    //             continue; // Skip sellers with no orders
+    //         }
+
+    //         $deliveredCount = 0;
+
+    //         // Check each order's latest status
+    //         foreach ($orders as $order) {
+    //             // Get the latest status timestamp
+    //             $latestStatus = OrderStatusTimestamp::where('order_id', $order->id)
+    //                 ->with('status')
+    //                 ->orderBy('created_at', 'DESC')
+    //                 ->first();
+
+    //             // Check if the latest status is "Delivered"
+    //             if ($latestStatus && $latestStatus->status && $latestStatus->status->name === 'Delivered') {
+    //                 $deliveredCount++;
+    //             }
+    //         }
+
+    //         $successRate = round(($deliveredCount / $totalOrders) * 100, 2);
+
+    //         $results[] = [
+    //             'id' => $seller->id,
+    //             'name' => $seller->name,
+    //             'deliveries' => $totalOrders,
+    //             'successRate' => $successRate,
+    //         ];
+    //     }
+
+    //     // Sort by deliveries (total orders) descending
+    //     usort($results, function ($a, $b) {
+    //         return $b['deliveries'] <=> $a['deliveries'];
+    //     });
+
+    //     // Return top 5
+    //     return array_slice($results, 0, 5);
+    // }
+
+
+
+    public function getTopSellers()
+    {
+        // Load sellers with their orders and each order's latest status → super efficient
+        $sellers = User::whereHas('orders', function ($q) {
+            $q->whereNull('deleted_at');
+        })
+            ->with([
+                'orders' => function ($q) {
+                    $q->whereNull('deleted_at')
+                        ->with(['latestStatus.status']); // eager load latest status
+                }
+            ])
+            ->get();
+
+        $results = [];
+
+        foreach ($sellers as $seller) {
+
+            $orders = $seller->orders;
+            $totalOrders = $orders->count();
+
+            if ($totalOrders === 0) {
+                continue;
+            }
+
+            // Count only orders whose latest status is "Delivered"
+            $deliveredCount = $orders->filter(function ($order) {
+                return optional($order->latestStatus?->status)->name === 'Delivered';
+            })->count();
+
+            $successRate = $totalOrders > 0
+                ? round(($deliveredCount / $totalOrders) * 100, 2)
+                : 0;
+
+            $results[] = [
+                'id'          => $seller->id,
+                'name'        => $seller->name,
+                'deliveries'  => $deliveredCount,
+                'totalOrders' => $totalOrders,
+                'successRate' => $successRate,
+            ];
+        }
+
+        // Sort by number of delivered orders
+        usort($results, function ($a, $b) {
+            return $b['deliveries'] <=> $a['deliveries'];
+        });
+
+        return array_slice($results, 0, 5);
+    }
+
+
+    // ALTERNATIVE: Optimized with fewer queries
+    public function getTopSellersOptimized()
+    {
+        // Get all latest status timestamps in one query
+        $latestStatuses = OrderStatusTimestamp::select('order_status_timestamps.*')
+            ->join(
+                DB::raw('(SELECT order_id, MAX(created_at) as max_created_at 
+                      FROM order_status_timestamps 
+                      GROUP BY order_id) as latest'),
+                function ($join) {
+                    $join->on('order_status_timestamps.order_id', '=', 'latest.order_id')
+                        ->on('order_status_timestamps.created_at', '=', 'latest.max_created_at');
+                }
+            )
+            ->with('status')
+            ->get()
+            ->keyBy('order_id');
+
+        // Get all sellers with their orders
+        $sellers = User::whereHas('orders', function ($query) {
+            $query->whereNull('deleted_at');
+        })
+            ->with(['orders' => function ($query) {
+                $query->whereNull('deleted_at')
+                    ->select('id', 'vendor_id');
+            }])
+            ->get();
+
+        $results = [];
+
+        foreach ($sellers as $seller) {
+            $totalOrders = $seller->orders->count();
+
+            if ($totalOrders === 0) continue;
+
+            $deliveredCount = 0;
+
+            foreach ($seller->orders as $order) {
+                $latestStatus = $latestStatuses->get($order->id);
+
+                if (
+                    $latestStatus &&
+                    $latestStatus->status &&
+                    $latestStatus->status->name === 'Delivered'
+                ) {
+                    $deliveredCount++;
+                }
+            }
+
+            $successRate = round(($deliveredCount / $totalOrders) * 100, 2);
+
+            $results[] = [
+                'id' => $seller->id,
+                'name' => $seller->name,
+                'deliveries' => $totalOrders,
+                'successRate' => $successRate,
+            ];
+        }
+
+        usort($results, fn($a, $b) => $b['deliveries'] <=> $a['deliveries']);
+
+        return array_slice($results, 0, 5);
+    }
+
+    // PURE SQL APPROACH - Most Efficient
+    public function getTopSellersSql()
+    {
+        $results = DB::select("
+        SELECT 
+            u.id,
+            u.name,
+            COUNT(DISTINCT o.id) as deliveries,
+            ROUND(
+                COUNT(DISTINCT CASE 
+                    WHEN s.name = 'Delivered' THEN o.id 
+                END) * 100.0 / COUNT(DISTINCT o.id), 
+                2
+            ) as successRate
+        FROM users u
+        INNER JOIN orders o ON o.vendor_id = u.id AND o.deleted_at IS NULL
+        LEFT JOIN (
+            SELECT 
+                ost1.order_id,
+                ost1.status_id
+            FROM order_status_timestamps ost1
+            WHERE ost1.created_at = (
+                SELECT MAX(ost2.created_at)
+                FROM order_status_timestamps ost2
+                WHERE ost2.order_id = ost1.order_id
+            )
+        ) as latest_status ON latest_status.order_id = o.id
+        LEFT JOIN statuses s ON s.id = latest_status.status_id
+        GROUP BY u.id, u.name
+        HAVING deliveries > 0
+        ORDER BY deliveries DESC
+        LIMIT 5
+    ");
+
+        return collect($results)->map(fn($row) => [
+            'id' => $row->id,
+            'name' => $row->name,
+            'deliveries' => (int) $row->deliveries,
+            'successRate' => (float) $row->successRate,
+        ]);
+    }
+
+    // DEBUG FUNCTION - Use this to see what's happening
+    public function debugOrderStatuses()
+    {
+        $orders = Order::where('vendor_id', 3)
+            ->whereNull('deleted_at')
+            ->get();
+
+        echo "=== DEBUG: Order Statuses ===\n\n";
+        echo "Total Orders: " . $orders->count() . "\n\n";
+
+        foreach ($orders as $order) {
+            echo "Order #{$order->id} (No: {$order->order_no})\n";
+
+            // Get all statuses for this order
+            $statuses = OrderStatusTimestamp::where('order_id', $order->id)
+                ->with('status')
+                ->orderBy('created_at', 'DESC')
+                ->get();
+
+            echo "  Status History:\n";
+            foreach ($statuses as $st) {
+                $statusName = $st->status ? $st->status->name : 'NULL';
+                echo "    - {$statusName} at {$st->created_at}\n";
+            }
+
+            // Get latest
+            $latest = $statuses->first();
+            $latestName = $latest && $latest->status ? $latest->status->name : 'NULL';
+            echo "  Latest Status: {$latestName}\n";
+            echo "  Is Delivered? " . ($latestName === 'Delivered' ? 'YES' : 'NO') . "\n";
+            echo "\n";
+        }
+
+        // Summary
+        $deliveredCount = 0;
+        foreach ($orders as $order) {
+            $latest = OrderStatusTimestamp::where('order_id', $order->id)
+                ->with('status')
+                ->orderBy('created_at', 'DESC')
+                ->first();
+
+            if ($latest && $latest->status && $latest->status->name === 'Delivered') {
+                $deliveredCount++;
+            }
+        }
+
+        echo "=== SUMMARY ===\n";
+        echo "Total Orders: {$orders->count()}\n";
+        echo "Delivered Orders: {$deliveredCount}\n";
+        echo "Success Rate: " . round(($deliveredCount / $orders->count()) * 100, 2) . "%\n";
+    }
+
+    // TEST FUNCTION - Quick check
+    public function testTopSellers()
+    {
+        echo "Testing getTopSellers():\n";
+        $sellers = $this->getTopSellers();
+
+        foreach ($sellers as $seller) {
+            echo "\nSeller: {$seller['name']}\n";
+            echo "  Total Orders: {$seller['deliveries']}\n";
+            echo "  Success Rate: {$seller['successRate']}%\n";
+        }
     }
 }
