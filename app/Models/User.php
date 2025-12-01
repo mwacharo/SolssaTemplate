@@ -144,29 +144,44 @@ class User extends Authenticatable
     }
 
     // user who is vendor has many customers
-  
+
 
     public function products()
-{
-    return $this->hasMany(Product::class, 'vendor_id');
-}
+    {
+        return $this->hasMany(Product::class, 'vendor_id');
+    }
 
-public function customers()
-{
-    return $this->hasMany(Customer::class, 'vendor_id');
-}
+    public function customers()
+    {
+        return $this->hasMany(Customer::class, 'vendor_id');
+    }
 
-public function orders()
-{
-    return $this->hasMany(Order::class, 'vendor_id');
-}
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'vendor_id');
+    }
 
-// If you want to fetch all orders directly through customers:
-// public function orders()
-// {
-//     return $this->hasManyThrough(Order::class, Customer::class, 'vendor_id', 'customer_id');
-// }
+    // If you want to fetch all orders directly through customers:
+    // public function orders()
+    // {
+    //     return $this->hasManyThrough(Order::class, Customer::class, 'vendor_id', 'customer_id');
+    // }
 
- 
 
+    public function callHistories()
+    {
+        return $this->hasMany(CallHistory::class, 'user_id');
+    }
+
+
+
+    public function transcripts()
+    {
+        return $this->hasManyThrough(
+            CallTranscript::class,
+            CallHistory::class,
+            'user_id',       // foreign key on CallHistory
+            'call_history_id' // foreign key on CallTranscript
+        );
+    }
 }

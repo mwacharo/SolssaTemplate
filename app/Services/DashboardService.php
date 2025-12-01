@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\OrderStatusTimestamp;
 use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\CallAgentPerformanceService;
 
 class DashboardService
 {
@@ -216,13 +218,24 @@ class DashboardService
     /**
      * Top 5 agents by number of orders handled.
      */
+    // public function getTopAgents()
+    // {
+    //     return User::withCount('orders')
+    //         ->orderByDesc('orders_count')
+    //         ->take(5)
+    //         ->get();
+    // }
+
     public function getTopAgents()
     {
-        return User::withCount('orders')
-            ->orderByDesc('orders_count')
-            ->take(5)
-            ->get();
+        $metricsService = app(MetricsService::class);
+        $service = new CallAgentPerformanceService($metricsService);
+
+        $topAgents = $service->getTopAgentsPerformance(5);
+
+        return ['data' => $topAgents];
     }
+
 
     /**
      * Delivery success rate (%).
@@ -257,25 +270,8 @@ class DashboardService
             ->get();
     }
 
-    // public function getTopProducts()
-    // {
-    //     return Product::query()
-    //         ->with('category')
-    //         ->select(
-    //             'products.id',
-    //             'products.product_name as name',
-    //             'categories.name as category',
-    //             DB::raw('SUM(order_items.quantity) as total_sales')
-    //         )
-    //         ->join('order_items', 'order_items.product_id', '=', 'products.id')
-    //         ->join('orders', 'orders.id', '=', 'order_items.order_id')
-    //         ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
-    //         ->whereColumn('orders.vendor_id', 'products.vendor_id')
-    //         ->groupBy('products.id', 'products.product_name', 'categories.name')
-    //         ->orderByDesc('total_sales')
-    //         ->limit(5)
-    //         ->get();
-    // }
+
+
 
 
 
