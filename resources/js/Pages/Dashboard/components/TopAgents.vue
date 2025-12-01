@@ -246,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
 // Props for external data
 const props = defineProps({
@@ -256,80 +256,21 @@ const props = defineProps({
     },
 });
 
-// Enhanced agent data with additional metrics
-const defaultAgentData = [
-    {
-        name: "Agent A",
-        confirmationRate: 85,
-        deliveryRate: 78,
-        confirmationTrend: +3,
-        deliveryTrend: +2,
-        totalCalls: 245,
-        avgCallTime: 8.5,
-        rating: 4.8,
-        shift: "Morning",
-        experience: "2 years",
-    },
-    {
-        name: "Agent B",
-        confirmationRate: 72,
-        deliveryRate: 68,
-        confirmationTrend: -1,
-        deliveryTrend: +1,
-        totalCalls: 198,
-        avgCallTime: 9.2,
-        rating: 4.5,
-        shift: "Evening",
-        experience: "1.5 years",
-    },
-    {
-        name: "Agent C",
-        confirmationRate: 60,
-        deliveryRate: 55,
-        confirmationTrend: +2,
-        deliveryTrend: +3,
-        totalCalls: 167,
-        avgCallTime: 7.8,
-        rating: 4.2,
-        shift: "Night",
-        experience: "8 months",
-    },
-    {
-        name: "Agent D",
-        confirmationRate: 50,
-        deliveryRate: 45,
-        confirmationTrend: -2,
-        deliveryTrend: 0,
-        totalCalls: 134,
-        avgCallTime: 10.1,
-        rating: 3.9,
-        shift: "Morning",
-        experience: "6 months",
-    },
-];
-
-// Use props data if available, otherwise use default
-// const agentData = computed(() =>
-//     props.topAgents.length > 0 ? props.topAgents : defaultAgentData
-// );
-
 const agentData = computed(() =>
-    props.topAgents.length > 0
-        ? props.topAgents.map((agent) => ({
-              name: agent.name,
-              confirmationRate: agent.SchedulingRate,
-              deliveryRate: agent.DeliveryRate,
-              confirmationTrend: agent.confirmationTrend,
-              deliveryTrend: agent.deliveryTrend,
-              totalCalls: agent.totalCalls,
-              avgCallTime: agent.avgCallTime,
-              rating: agent.rating,
-              shift: agent.shift,
-              experience: agent.experience,
-              BuyoutRate: agent.BuyoutRate,
-              ReturnRate: agent.ReturnRate,
-          }))
-        : defaultAgentData
+    props.topAgents.map((agent) => ({
+        name: agent.name,
+        confirmationRate: agent.SchedulingRate,
+        deliveryRate: agent.DeliveryRate,
+        confirmationTrend: agent.confirmationTrend || 0,
+        deliveryTrend: agent.deliveryTrend || 0,
+        totalCalls: agent.totalCalls || 0,
+        avgCallTime: agent.avgCallTime || 0,
+        rating: agent.rating || 0,
+        shift: agent.shift || "N/A",
+        experience: agent.experience || "N/A",
+        BuyoutRate: agent.BuyoutRate,
+        ReturnRate: agent.ReturnRate,
+    }))
 );
 
 // Extract data for chart
@@ -341,32 +282,41 @@ const deliveries = computed(() =>
     agentData.value.map((agent) => agent.deliveryRate)
 );
 
-// Computed analytics
-const overallConfirmation = computed(() =>
-    Math.round(
+// Computed analytics with empty array protection
+const overallConfirmation = computed(() => {
+    if (confirmations.value.length === 0) return 0;
+    return Math.round(
         confirmations.value.reduce((sum, val) => sum + val, 0) /
             confirmations.value.length
-    )
-);
-const overallDelivery = computed(() =>
-    Math.round(
+    );
+});
+
+const overallDelivery = computed(() => {
+    if (deliveries.value.length === 0) return 0;
+    return Math.round(
         deliveries.value.reduce((sum, val) => sum + val, 0) /
             deliveries.value.length
-    )
-);
+    );
+});
+
 const teamAverage = computed(() =>
     Math.round((overallConfirmation.value + overallDelivery.value) / 2)
 );
-const totalCalls = computed(() =>
-    agentData.value.reduce((sum, agent) => sum + agent.totalCalls, 0)
-);
+
+const totalCalls = computed(() => {
+    if (agentData.value.length === 0) return 0;
+    return agentData.value.reduce((sum, agent) => sum + agent.totalCalls, 0);
+});
+
 const activeAgents = computed(() => agentData.value.length);
 
-const topPerformer = computed(() =>
-    agentData.value.reduce((top, agent) =>
+const topPerformer = computed(() => {
+    if (agentData.value.length === 0)
+        return { name: "N/A", confirmationRate: 0 };
+    return agentData.value.reduce((top, agent) =>
         agent.confirmationRate > top.confirmationRate ? agent : top
-    )
-);
+    );
+});
 
 const conversionGap = computed(() =>
     Math.round(overallConfirmation.value - overallDelivery.value)
@@ -407,11 +357,11 @@ const getPerformanceLabel = (agent) => {
 const series = ref([
     {
         name: "Confirmation Rate",
-        data: confirmations.value,
+        data: [],
     },
     {
         name: "Delivery Rate",
-        data: deliveries.value,
+        data: [],
     },
 ]);
 
@@ -454,7 +404,7 @@ const chartOptions = ref({
         },
     },
     xaxis: {
-        categories: agents.value,
+        categories: [],
         title: {
             text: "Performance Rate (%)",
             style: {
@@ -526,6 +476,7 @@ const chartOptions = ref({
         },
         y: {
             formatter: function (val, { seriesIndex, dataPointIndex }) {
+                if (!agentData.value[dataPointIndex]) return `${val}%`;
                 const agent = agentData.value[dataPointIndex];
                 const metric = seriesIndex === 0 ? "confirmation" : "delivery";
                 return `${val}% ${metric} rate<br/>Calls: ${agent.totalCalls}<br/>Rating: ${agent.rating}⭐`;
@@ -551,28 +502,50 @@ const chartOptions = ref({
 });
 
 // Watch for data changes
-import { watch } from "vue";
 watch(
-    () => props.data,
-    (newData) => {
-        if (newData.length > 0) {
+    () => props.topAgents,
+    (list) => {
+        if (!list || list.length === 0) {
             series.value = [
-                {
-                    name: "Confirmation Rate",
-                    data: newData.map((agent) => agent.confirmationRate),
-                },
-                {
-                    name: "Delivery Rate",
-                    data: newData.map((agent) => agent.deliveryRate),
-                },
+                { name: "Confirmation Rate", data: [] },
+                { name: "Delivery Rate", data: [] },
             ];
-
-            chartOptions.value.xaxis.categories = newData.map(
-                (agent) => agent.name
-            );
+            chartOptions.value = {
+                ...chartOptions.value,
+                xaxis: {
+                    ...chartOptions.value.xaxis,
+                    categories: [],
+                },
+            };
+            return;
         }
+
+        const mapped = list.map((agent) => ({
+            name: agent.name,
+            confirmationRate: agent.SchedulingRate || 0,
+            deliveryRate: agent.DeliveryRate || 0,
+        }));
+
+        series.value = [
+            {
+                name: "Confirmation Rate",
+                data: mapped.map((a) => a.confirmationRate),
+            },
+            {
+                name: "Delivery Rate",
+                data: mapped.map((a) => a.deliveryRate),
+            },
+        ];
+
+        chartOptions.value = {
+            ...chartOptions.value,
+            xaxis: {
+                ...chartOptions.value.xaxis,
+                categories: mapped.map((a) => a.name),
+            },
+        };
     },
-    { deep: true }
+    { deep: true, immediate: true }
 );
 </script>
 
