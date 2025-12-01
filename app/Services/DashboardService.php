@@ -215,16 +215,7 @@ class DashboardService
         ];
     }
 
-    /**
-     * Top 5 agents by number of orders handled.
-     */
-    // public function getTopAgents()
-    // {
-    //     return User::withCount('orders')
-    //         ->orderByDesc('orders_count')
-    //         ->take(5)
-    //         ->get();
-    // }
+
 
     public function getTopAgents()
     {
@@ -549,63 +540,6 @@ class DashboardService
     }
 
 
-
-    // RECOMMENDED SOLUTION - Simple and Reliable
-    // public function getTopSellers()
-    // {
-    //     $sellers = User::whereHas('orders', function ($query) {
-    //         $query->whereNull('deleted_at');
-    //     })
-    //         ->get();
-
-    //     $results = [];
-
-    //     foreach ($sellers as $seller) {
-    //         // Get all non-deleted orders for this seller
-    //         $orders = Order::where('vendor_id', $seller->id)
-    //             ->whereNull('deleted_at')
-    //             ->get();
-
-    //         $totalOrders = $orders->count();
-
-    //         if ($totalOrders === 0) {
-    //             continue; // Skip sellers with no orders
-    //         }
-
-    //         $deliveredCount = 0;
-
-    //         // Check each order's latest status
-    //         foreach ($orders as $order) {
-    //             // Get the latest status timestamp
-    //             $latestStatus = OrderStatusTimestamp::where('order_id', $order->id)
-    //                 ->with('status')
-    //                 ->orderBy('created_at', 'DESC')
-    //                 ->first();
-
-    //             // Check if the latest status is "Delivered"
-    //             if ($latestStatus && $latestStatus->status && $latestStatus->status->name === 'Delivered') {
-    //                 $deliveredCount++;
-    //             }
-    //         }
-
-    //         $successRate = round(($deliveredCount / $totalOrders) * 100, 2);
-
-    //         $results[] = [
-    //             'id' => $seller->id,
-    //             'name' => $seller->name,
-    //             'deliveries' => $totalOrders,
-    //             'successRate' => $successRate,
-    //         ];
-    //     }
-
-    //     // Sort by deliveries (total orders) descending
-    //     usort($results, function ($a, $b) {
-    //         return $b['deliveries'] <=> $a['deliveries'];
-    //     });
-
-    //     // Return top 5
-    //     return array_slice($results, 0, 5);
-    // }
 
 
 

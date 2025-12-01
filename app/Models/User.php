@@ -161,6 +161,16 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'vendor_id');
     }
 
+
+
+    // In App\Models\User.php
+    public function assignedOrders()
+    {
+        return $this->belongsToMany(Order::class, 'order_assignments', 'user_id', 'order_id')
+            ->wherePivot('role', 'CallAgent')
+            ->whereNull('order_assignments.deleted_at');
+    }
+
     // If you want to fetch all orders directly through customers:
     // public function orders()
     // {

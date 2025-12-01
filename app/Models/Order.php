@@ -194,6 +194,14 @@ class Order extends Model
     }
 
 
+    // In App\Models\User.php
+    public function assignedOrders()
+    {
+        return $this->belongsToMany(Order::class, 'order_assignments', 'user_id', 'order_id')
+            ->wherePivot('role', 'CallAgent')
+            ->whereNull('order_assignments.deleted_at');
+    }
+
 
     // public function  replacementOrders()
     // {
