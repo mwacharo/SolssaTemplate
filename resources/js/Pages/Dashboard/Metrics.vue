@@ -29,7 +29,7 @@
 
                 <!-- Component 6 -->
                 <div class="card">
-                    <DeliveryRate />
+                    <DeliveryRate :deliveryRate="deliveryRate" />
                 </div>
 
                 <!-- Component 7 -->
