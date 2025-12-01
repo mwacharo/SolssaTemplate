@@ -24,9 +24,8 @@
                 </div>
 
                 <!-- Component 5 -->
-                <div class="card">
-                    <TopAgents />
-                </div>
+                <!-- <div class="card"><TopAgents topAgents:="topAgents" /></div> -->
+                <TopAgents :topAgents="topAgents" />
 
                 <!-- Component 6 -->
                 <div class="card">

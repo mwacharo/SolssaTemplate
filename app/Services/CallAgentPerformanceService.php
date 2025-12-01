@@ -21,111 +21,31 @@ class CallAgentPerformanceService
     {
         return User::role(['CallAgent'])
             ->withCount([
-                'orders as total_orders' => function ($query) {
-                    $query->whereNull('deleted_at');
-                }
+                'assignedOrders as total_orders'
             ])
             ->orderByDesc('total_orders')
             ->take($limit)
             ->get();
     }
 
-
-
-
-
+    /**
+     * Calculate metrics for given agents
+     */
     public function calculateAgentMetrics($agents): array
     {
-        // \Log::info('Starting agent metrics calculation', ['agent_count' => count($agents)]);
+        \Log::info('Starting agent metrics calculation', ['agent_count' => count($agents)]);
 
         $agentMetrics = [];
 
         foreach ($agents as $agent) {
-            // \Log::info('Processing agent', [
-            //     'agent_id' => $agent->id,
-            //     'agent_name' => $agent->name
-            // ]);
-
-            // Debug: Check raw assignment data first
-            $rawAssignments = \DB::table('order_assignments')
-                ->where('user_id', $agent->id)
-                ->where('role', 'CallAgent')
+            // Load orders with their latest status using the relationship
+            $orders = $agent->assignedOrders()
+                ->with('latestStatus.status')
                 ->get();
 
-            // \Log::debug('Raw assignments for agent', [
-            //     'agent_id' => $agent->id,
-            //     'assignment_count' => $rawAssignments->count(),
-            //     'assignments' => $rawAssignments->toArray()
-            // ]);
+            $totalOrders = $orders->count();
 
-            // Debug: Check if orders relationship exists
-            try {
-                $relationshipTest = $agent->orders()->count();
-                // \Log::debug('Orders relationship test', [
-                //     'agent_id' => $agent->id,
-                //     'base_orders_count' => $relationshipTest
-                // ]);
-            } catch (\Exception $e) {
-                // \Log::error('Orders relationship error', [
-                //     'agent_id' => $agent->id,
-                //     'error' => $e->getMessage()
-                // ]);
-            }
-
-            // Original query with enhanced debugging
-            $ordersQuery = $agent->orders()
-                ->join('order_assignments', function ($join) use ($agent) {
-                    $join->on('orders.id', '=', 'order_assignments.order_id')
-                        ->where('order_assignments.user_id', '=', $agent->id)
-                        ->where('order_assignments.role', '=', 'CallAgent');
-                })
-                ->distinct();
-
-            // Log the SQL query
-            // \Log::debug('Orders query SQL', [
-            //     'agent_id' => $agent->id,
-            //     'sql' => $ordersQuery->toSql(),
-            //     'bindings' => $ordersQuery->getBindings()
-            // ]);
-
-            $totalOrders = $ordersQuery->count();
-            // \Log::debug('Total orders counted', [
-            //     'agent_id' => $agent->id,
-            //     'total_orders' => $totalOrders
-            // ]);
-
-            // Load orders with statuses
-            // $orders = $agent->orders()
-            //     ->join('order_assignments', function ($join) use ($agent) {
-            //         $join->on('orders.id', '=', 'order_assignments.order_id')
-            //             ->where('order_assignments.user_id', '=', $agent->id)
-            //             ->where('order_assignments.role', '=', 'CallAgent');
-            //     })
-            //     ->distinct()
-            //     ->with('latestStatus.status')
-            //     ->get();
-
-
-            $orders = $agent->assignedOrders()->with('latestStatus.status')->get();
-
-
-            // \Log::debug('Orders loaded with statuses', [
-            //     'agent_id' => $agent->id,
-            //     'orders_count' => $orders->count(),
-            //     'order_ids' => $orders->pluck('id')->toArray()
-            // ]);
-
-            // Debug: Check if orders exist without join
-            $ordersWithoutJoin = \DB::table('orders')
-                ->whereIn('id', $rawAssignments->pluck('order_id'))
-                ->get();
-
-            // \Log::debug('Orders without join check', [
-            //     'agent_id' => $agent->id,
-            //     'orders_exist' => $ordersWithoutJoin->count(),
-            //     'order_ids' => $ordersWithoutJoin->pluck('id')->toArray()
-            // ]);
-
+            // Initialize status counts with proper capitalization
             $statusCounts = [
                 'New' => 0,
                 'Pending' => 0,
@@ -136,31 +56,22 @@ class CallAgentPerformanceService
                 'Returned' => 0,
             ];
 
+            // Count statuses
             foreach ($orders as $order) {
-                // \Log::debug('Processing order', [
-                //     'agent_id' => $agent->id,
-                //     'order_id' => $order->id,
-                //     'has_latest_status' => isset($order->latestStatus),
-                //     'latest_status_data' => $order->latestStatus ?? null
-                // ]);
-
                 $statusName = optional($order->latestStatus->status)->name ?? null;
 
                 if ($statusName) {
-                    $key = $statusName;
+                    // Normalize status name to handle case variations
+                    $key = ucfirst(strtolower($statusName));
 
                     if (array_key_exists($key, $statusCounts)) {
                         $statusCounts[$key]++;
-                        // \Log::debug('Status counted', [
-                        //     'agent_id' => $agent->id,
-                        //     'order_id' => $order->id,
-                        //     'status' => $key
-                        // ]);
                     } else {
                         \Log::warning('Unknown status encountered', [
                             'agent_id' => $agent->id,
                             'order_id' => $order->id,
-                            'status' => $statusName
+                            'status' => $statusName,
+                            'normalized' => $key
                         ]);
                     }
                 } else {
@@ -171,23 +82,12 @@ class CallAgentPerformanceService
                 }
             }
 
-            \Log::info('Status counts calculated', [
-                'agent_id' => $agent->id,
-                'status_counts' => $statusCounts
-            ]);
-
             // Call metrics
             $totalCalls = $agent->callHistories()->count();
-            $avgCallTime = $agent->callHistories()->avg('durationInSeconds');
+            $avgCallTime = $agent->callHistories()->avg('durationInSeconds') ?? 0;
             $rating = $agent->transcripts()->avg('cs_rating') ?? 0;
 
-            \Log::debug('Call metrics calculated', [
-                'agent_id' => $agent->id,
-                'total_calls' => $totalCalls,
-                'avg_call_time' => $avgCallTime,
-                'rating' => $rating
-            ]);
-
+            // Prepare active statuses for metrics service
             $activeStatuses = [
                 'scheduled' => $statusCounts['Scheduled'],
                 'shipped' => $statusCounts['Shipped'],
@@ -195,11 +95,7 @@ class CallAgentPerformanceService
                 'returned' => $statusCounts['Returned'],
             ];
 
-            \Log::debug('Active statuses prepared', [
-                'agent_id' => $agent->id,
-                'active_statuses' => $activeStatuses
-            ]);
-
+            // Generate metrics
             try {
                 $metrics = $this->metricsService->generateMetrics('CallAgent', [
                     'totalOrders' => $totalOrders,
@@ -211,19 +107,20 @@ class CallAgentPerformanceService
                     'statuses' => $activeStatuses,
                 ]);
 
-                \Log::info('Metrics generated successfully', [
+                \Log::debug('Metrics generated', [
                     'agent_id' => $agent->id,
-                    'metrics' => $metrics
+                    'total_orders' => $totalOrders,
+                    'delivery_rate' => $metrics['DeliveryRate'] ?? 0
                 ]);
             } catch (\Exception $e) {
                 \Log::error('Failed to generate metrics', [
                     'agent_id' => $agent->id,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'error' => $e->getMessage()
                 ]);
                 throw $e;
             }
 
+            // Combine metrics with agent data
             $agentMetrics[] = array_merge($metrics, [
                 'name' => $agent->name,
                 'totalCalls' => $totalCalls,
@@ -234,14 +131,9 @@ class CallAgentPerformanceService
                 'confirmationTrend' => 0,
                 'deliveryTrend' => 0,
             ]);
-
-            \Log::info('Agent metrics completed', [
-                'agent_id' => $agent->id,
-                'agent_name' => $agent->name
-            ]);
         }
 
-        \Log::info('All agent metrics calculated', [
+        \Log::info('Agent metrics calculation completed', [
             'total_agents_processed' => count($agentMetrics)
         ]);
 

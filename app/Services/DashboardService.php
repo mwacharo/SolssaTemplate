@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\CallAgentPerformanceService;
+use App\Http\Resources\AgentPerformanceResource;
 
 class DashboardService
 {
@@ -217,6 +218,17 @@ class DashboardService
 
 
 
+    // public function getTopAgents()
+    // {
+    //     $metricsService = app(MetricsService::class);
+    //     $service = new CallAgentPerformanceService($metricsService);
+
+    //     $topAgents = $service->getTopAgentsPerformance(5);
+
+    //     return ['data' => $topAgents];
+    // }
+
+
     public function getTopAgents()
     {
         $metricsService = app(MetricsService::class);
@@ -224,7 +236,10 @@ class DashboardService
 
         $topAgents = $service->getTopAgentsPerformance(5);
 
-        return ['data' => $topAgents];
+        // Return transformed collection using Resource
+        // return AgentPerformanceResource::collection($topAgents);
+
+        return  $topAgents;
     }
 
 
