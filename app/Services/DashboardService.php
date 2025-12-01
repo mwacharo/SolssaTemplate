@@ -246,19 +246,49 @@ class DashboardService
     /**
      * Delivery success rate (%).
      */
+    // public function getDeliveryRate(): array
+    // {
+    //     $total = Order::count();
+
+    //     $delivered = Order::with('latestStatus.status')
+    //         ->get()
+    //         ->filter(fn($o) => $o->latestStatus?->status?->name === 'delivered')
+    //         ->count();
+
+    //     return [
+    //         'rate' => $total > 0 ? round(($delivered / $total) * 100, 2) : 0,
+    //     ];
+    // }
+
+
     public function getDeliveryRate(): array
     {
+        $today = now()->startOfDay();
+
+        // Total orders
         $total = Order::count();
 
+        // Delivered orders (success)
         $delivered = Order::with('latestStatus.status')
             ->get()
             ->filter(fn($o) => $o->latestStatus?->status?->name === 'delivered')
             ->count();
 
+        // Live orders (delivery_date not elapsed)
+        $live = Order::whereDate('delivery_date', '>=', $today)->count();
+
+        // Non-Live orders (delivery_date elapsed)
+        $nonLive = Order::whereDate('delivery_date', '<', $today)->count();
+
         return [
-            'rate' => $total > 0 ? round(($delivered / $total) * 100, 2) : 0,
+            'rate' => $total ? round(($delivered / $total) * 100, 2) : 0,
+            'total' => $total,
+            'delivered' => $delivered,
+            'live' => $live,
+            'non_live' => $nonLive,
         ];
     }
+
 
     public function getTopProducts()
     {
