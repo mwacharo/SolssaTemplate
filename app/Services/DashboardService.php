@@ -271,7 +271,7 @@ class DashboardService
         // Delivered orders (success)
         $delivered = Order::with('latestStatus.status')
             ->get()
-            ->filter(fn($o) => $o->latestStatus?->status?->name === 'delivered')
+            ->filter(fn($o) => $o->latestStatus?->status?->name === 'Delivered')
             ->count();
 
         // Live orders (delivery_date not elapsed)
