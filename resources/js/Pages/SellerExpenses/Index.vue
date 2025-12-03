@@ -7,7 +7,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <div>
                             <h1 class="text-3xl font-bold text-gray-800">
-                                Seller Expenses
+                                Vendor Expenses
                             </h1>
                             <p class="text-gray-600 mt-1">
                                 {{ filteredExpenses.length }} total expenses •
@@ -32,7 +32,7 @@
                             />
                             <input
                                 type="text"
-                                placeholder="Search by description, seller, or email..."
+                                placeholder="Search by description, vendor, or email..."
                                 class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 v-model="searchQuery"
                                 @input="currentPage = 1"
@@ -66,7 +66,37 @@
 
                 <!-- Expenses Table -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="overflow-x-auto">
+                    <!-- Loading State -->
+                    <div
+                        v-if="expenseStore.loading"
+                        class="flex items-center justify-center py-12"
+                    >
+                        <Loader
+                            class="animate-spin text-blue-600 mr-2"
+                            :size="24"
+                        />
+                        <span class="text-gray-600">Loading expenses...</span>
+                    </div>
+
+                    <!-- Error State -->
+                    <div v-else-if="expenseStore.error" class="p-6 text-center">
+                        <div class="text-red-600 mb-2">
+                            <AlertCircle class="inline-block mr-2" :size="20" />
+                            Error loading expenses
+                        </div>
+                        <p class="text-gray-600 mb-4">
+                            {{ expenseStore.error }}
+                        </p>
+                        <button
+                            @click="expenseStore.fetchExpenses()"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        >
+                            Retry
+                        </button>
+                    </div>
+
+                    <!-- Table Content -->
+                    <div v-else class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-blue-600 text-white">
                                 <tr>
@@ -76,7 +106,7 @@
                                     </th>
                                     <th class="px-4 py-3 text-left">Amount</th>
                                     <th class="px-4 py-3 text-left">Type</th>
-                                    <th class="px-4 py-3 text-left">Seller</th>
+                                    <th class="px-4 py-3 text-left">Vendor</th>
                                     <th class="px-4 py-3 text-left">Status</th>
                                     <th class="px-4 py-3 text-left">
                                         Created Date
@@ -162,19 +192,24 @@
                                                 class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm"
                                             >
                                                 {{
-                                                    expense.seller.first_name[0]
+                                                    expense.vendor
+                                                        ?.first_name?.[0] || "U"
                                                 }}
                                             </div>
                                             <div>
                                                 <p class="text-sm font-medium">
                                                     {{
-                                                        expense.seller.username
+                                                        expense.vendor
+                                                            ?.username || "N/A"
                                                     }}
                                                 </p>
                                                 <p
                                                     class="text-xs text-gray-500"
                                                 >
-                                                    {{ expense.seller.email }}
+                                                    {{
+                                                        expense.vendor?.email ||
+                                                        "N/A"
+                                                    }}
                                                 </p>
                                             </div>
                                         </div>
@@ -308,7 +343,7 @@
             <!-- Modal -->
             <div
                 v-if="showModal"
-                class="fixed inset-0 bg-grey bg-opacity-50 flex items-center justify-center z-50 p-4"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
                 <div
                     class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
@@ -413,28 +448,14 @@
                                 </div>
                                 <div class="col-span-2">
                                     <p class="text-sm text-gray-600 mb-2">
-                                        Seller Information
+                                        vendor Information
                                     </p>
                                     <div class="bg-gray-50 rounded-lg p-4">
                                         <p class="font-medium">
                                             {{
-                                                selectedExpense.seller
-                                                    .first_name
+                                                selectedExpense.vendor?.name ||
+                                                "N/A"
                                             }}
-                                            {{
-                                                selectedExpense.seller.last_name
-                                            }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            @{{
-                                                selectedExpense.seller.username
-                                            }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            {{ selectedExpense.seller.email }}
-                                        </p>
-                                        <p class="text-sm text-gray-600">
-                                            {{ selectedExpense.seller.phone }}
                                         </p>
                                     </div>
                                 </div>
@@ -475,6 +496,14 @@
                             "
                             class="space-y-4"
                         >
+                            <!-- Error Message -->
+                            <div
+                                v-if="errors.submit"
+                                class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+                            >
+                                {{ errors.submit }}
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium mb-2">
                                     Description
@@ -548,28 +577,18 @@
                                 <div>
                                     <label
                                         class="block text-sm font-medium mb-2"
-                                    >
-                                        Seller ID
-                                        <span class="text-red-500">*</span>
+                                        >Vendor
                                     </label>
-                                    <input
-                                        type="number"
-                                        :class="[
-                                            'w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none',
-                                            errors.seller_id
-                                                ? 'border-red-500'
-                                                : '',
-                                        ]"
-                                        v-model="formData.seller_id"
-                                        @input="clearError('seller_id')"
-                                        placeholder="Enter seller ID"
+                                    <v-select
+                                        v-model="formData.vendor_id"
+                                        :items="vendorOptions"
+                                        item-title="name"
+                                        item-value="id"
+                                        label="Vendor"
+                                        prepend-inner-icon="mdi-domain"
+                                        variant="outlined"
+                                        density="comfortable"
                                     />
-                                    <p
-                                        v-if="errors.seller_id"
-                                        class="text-red-500 text-sm mt-1"
-                                    >
-                                        {{ errors.seller_id }}
-                                    </p>
                                 </div>
 
                                 <div>
@@ -624,14 +643,23 @@
                                 <div>
                                     <label
                                         class="block text-sm font-medium mb-2"
-                                        >Invoice ID (Optional)</label
                                     >
-                                    <input
-                                        type="number"
-                                        class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        v-model="formData.invoice_id"
-                                        placeholder="Enter invoice ID"
+                                        Incurred On (Optional)
+                                    </label>
+                                    <v-text-field
+                                        v-model="formData.incurred_on"
+                                        label="Incurred On"
+                                        type="date"
+                                        prepend-inner-icon="mdi-calendar-clock"
+                                        variant="outlined"
+                                        density="comfortable"
                                     />
+                                    <p
+                                        v-if="errors.incurred_on"
+                                        class="text-red-500 text-sm mt-1"
+                                    >
+                                        {{ errors.incurred_on }}
+                                    </p>
                                 </div>
                             </div>
 
@@ -639,14 +667,21 @@
                                 <button
                                     type="button"
                                     @click="closeModal"
-                                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition"
+                                    :disabled="expenseStore.loading"
+                                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    :disabled="expenseStore.loading"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
+                                    <Loader
+                                        v-if="expenseStore.loading"
+                                        class="animate-spin"
+                                        :size="16"
+                                    />
                                     {{
                                         modalMode === "create"
                                             ? "Create Expense"
@@ -663,9 +698,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
-
+import { ref, computed, onMounted } from "vue";
+import { useVendorExpensesStore } from "@/stores/vendorExpenses";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import { useOrderStore } from "@/stores/orderStore";
 
 import {
     DollarSign,
@@ -682,32 +718,16 @@ import {
     CheckCircle,
     XCircle,
     AlertCircle,
+    Loader,
 } from "lucide-vue-next";
 
-// State
-const expenses = ref([
-    {
-        id: 1,
-        description: "Transportation cost",
-        amount: 1000,
-        expense_type: "expense",
-        invoice_id: null,
-        seller_id: 16626,
-        country_id: 15,
-        status: "not_applied",
-        created_at: "2025-09-11T09:58:00.000000Z",
-        updated_at: "2025-09-22T05:09:37.000000Z",
-        seller: {
-            id: 16626,
-            first_name: "FOD",
-            last_name: "VENTURES",
-            username: "FOD_VENTURES",
-            email: "yemight2033@gmail.com",
-            phone: "2348089519733",
-        },
-    },
-]);
+// Store
+const expenseStore = useVendorExpensesStore();
+const orderStore = useOrderStore();
 
+const vendorOptions = computed(() => orderStore.vendorOptions);
+
+// Local State
 const searchQuery = ref("");
 const filterStatus = ref("all");
 const filterType = ref("all");
@@ -721,25 +741,31 @@ const formData = ref({
     description: "",
     amount: "",
     expense_type: "expense",
-    seller_id: "",
+    vendor_id: "",
     country_id: "",
     status: "not_applied",
-    invoice_id: "",
+    incurred_on: "",
 });
 
 const errors = ref({});
 
+// Fetch expenses on mount
+onMounted(async () => {
+    await expenseStore.fetchExpenses();
+    await orderStore.fetchDropdownOptions();
+});
+
 // Computed
 const filteredExpenses = computed(() => {
-    let filtered = expenses.value;
+    let filtered = expenseStore.expenses;
 
     if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
         filtered = filtered.filter(
             (exp) =>
                 exp.description?.toLowerCase().includes(query) ||
-                exp.seller?.username?.toLowerCase().includes(query) ||
-                exp.seller?.email?.toLowerCase().includes(query)
+                exp.vendor?.username?.toLowerCase().includes(query) ||
+                exp.vendor?.email?.toLowerCase().includes(query)
         );
     }
 
@@ -782,8 +808,8 @@ const validateForm = () => {
         newErrors.amount = "Valid amount is required";
     }
 
-    if (!formData.value.seller_id) {
-        newErrors.seller_id = "Seller is required";
+    if (!formData.value.vendor_id) {
+        newErrors.vendor_id = "vendor is required";
     }
 
     if (!formData.value.country_id) {
@@ -794,48 +820,42 @@ const validateForm = () => {
     return Object.keys(newErrors).length === 0;
 };
 
-const handleCreate = () => {
+const handleCreate = async () => {
     if (!validateForm()) return;
 
-    const newExpense = {
-        id: Math.max(...expenses.value.map((e) => e.id), 0) + 1,
-        ...formData.value,
-        amount: parseFloat(formData.value.amount),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        seller: {
-            id: parseInt(formData.value.seller_id),
-            username: "NEW_USER",
-            first_name: "New",
-            last_name: "User",
-            email: "user@example.com",
-            phone: "000000000",
-        },
-    };
-
-    expenses.value = [newExpense, ...expenses.value];
-    closeModal();
+    try {
+        await expenseStore.createExpense(formData.value);
+        closeModal();
+    } catch (err) {
+        errors.value = {
+            submit: err.message || "Failed to create expense",
+        };
+    }
 };
 
-const handleUpdate = () => {
+const handleUpdate = async () => {
     if (!validateForm()) return;
 
-    expenses.value = expenses.value.map((exp) =>
-        exp.id === selectedExpense.value.id
-            ? {
-                  ...exp,
-                  ...formData.value,
-                  amount: parseFloat(formData.value.amount),
-                  updated_at: new Date().toISOString(),
-              }
-            : exp
-    );
-    closeModal();
+    try {
+        await expenseStore.updateExpense(
+            selectedExpense.value.id,
+            formData.value
+        );
+        closeModal();
+    } catch (err) {
+        errors.value = {
+            submit: err.message || "Failed to update expense",
+        };
+    }
 };
 
-const handleDelete = (id) => {
+const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
-        expenses.value = expenses.value.filter((exp) => exp.id !== id);
+        try {
+            await expenseStore.deleteExpense(id);
+        } catch (err) {
+            alert(err.message || "Failed to delete expense");
+        }
     }
 };
 
@@ -848,20 +868,20 @@ const openModal = (mode, expense = null) => {
             description: "",
             amount: "",
             expense_type: "expense",
-            seller_id: "",
+            vendor_id: "",
             country_id: "",
             status: "not_applied",
-            invoice_id: "",
+            incurred_on: "",
         };
     } else if (expense) {
         formData.value = {
             description: expense.description,
             amount: expense.amount.toString(),
             expense_type: expense.expense_type,
-            seller_id: expense.seller_id.toString(),
+            vendor_id: expense.vendor_id.toString(),
             country_id: expense.country_id.toString(),
             status: expense.status,
-            invoice_id: expense.invoice_id?.toString() || "",
+            incurred_on: expense.incurred_on ? expense.incurred_on : "",
         };
     }
 

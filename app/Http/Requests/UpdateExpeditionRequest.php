@@ -44,14 +44,17 @@ class UpdateExpeditionRequest extends FormRequest
             'weight'           => 'sometimes|numeric|min:0',
             'shipment_fees'    => 'sometimes|numeric|min:0',
 
-            'vendor_id'        => 'nullable|integer|exists:vendors,id',
+            'vendor_id'        => 'nullable|integer|exists:users,id',
 
             // Shipment items (optional but validated if present)
             'shipment_items'                     => 'sometimes|array|min:1',
             'shipment_items.*.product'           => 'required_with:shipment_items|array',
-            'shipment_items.*.product.name'      => 'required_with:shipment_items|string|max:255',
-            'shipment_items.*.product.sku'       => 'required_with:shipment_items|string|max:255',
+            // 'shipment_items.*.product.name'      => 'required_with:shipment_items|string|max:255',
+            // 'shipment_items.*.product.sku'       => 'required_with:shipment_items|string|max:255',
             'shipment_items.*.quantity_sent'     => 'required_with:shipment_items|integer|min:1',
+
+            'shipment_items.*.product.id'     => 'required|integer|min:1',
+
         ];
     }
 }

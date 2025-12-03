@@ -785,7 +785,7 @@ class OrderController extends Controller
             'createdBy',
             'rider',
             'zone',
-            'orderItems',
+            'orderItems.product',
             'addresses',
             'shippingAddress',
             'pickupAddress',

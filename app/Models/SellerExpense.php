@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\BelongsToUserAndCountry;
+
 
 class SellerExpense extends Model
 {
     /** @use HasFactory<\Database\Factories\SellerExpenseFactory> */
     use HasFactory;
     use SoftDeletes;
+    use BelongsToUserAndCountry;
 
 
     protected $fillable = [
@@ -19,7 +22,7 @@ class SellerExpense extends Model
         'description',
         'amount',
         'expense_type',
-        'invoice_id',
+        'remittacnce_id',
         'country_id',
         'status',
         'incurred_on',
@@ -35,5 +38,10 @@ class SellerExpense extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function remittance()
+    {
+        return $this->belongsTo(Remittance::class);
     }
 }

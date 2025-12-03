@@ -663,7 +663,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3">
+                                    <!-- <td class="px-4 py-3">
                                         <span
                                             class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs"
                                         >
@@ -677,6 +677,40 @@
                                                     : ""
                                             }}
                                         </span>
+                                    </td> -->
+
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 rounded text-xs"
+                                        >
+                                            <span
+                                                class="w-2 h-2 bg-red-500 rounded-full"
+                                            ></span>
+
+                                            {{ order.order_items?.length || 0 }}
+                                            product{{
+                                                (order.order_items?.length ||
+                                                    0) !== 1
+                                                    ? "s"
+                                                    : ""
+                                            }}
+                                        </span>
+
+                                        <div class="mt-1">
+                                            <div
+                                                v-for="item in order.order_items"
+                                                :key="item.id"
+                                                class="text-[11px] text-gray-700"
+                                            >
+                                                {{
+                                                    item.product
+                                                        ?.product_name ||
+                                                    item.name ||
+                                                    "Product"
+                                                }}
+                                                (x{{ item.quantity }})
+                                            </div>
+                                        </div>
                                     </td>
 
                                     <td class="px-4 py-3 text-sm">

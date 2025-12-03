@@ -243,22 +243,6 @@ class DashboardService
     }
 
 
-    /**
-     * Delivery success rate (%).
-     */
-    // public function getDeliveryRate(): array
-    // {
-    //     $total = Order::count();
-
-    //     $delivered = Order::with('latestStatus.status')
-    //         ->get()
-    //         ->filter(fn($o) => $o->latestStatus?->status?->name === 'delivered')
-    //         ->count();
-
-    //     return [
-    //         'rate' => $total > 0 ? round(($delivered / $total) * 100, 2) : 0,
-    //     ];
-    // }
 
 
     public function getDeliveryRate(): array

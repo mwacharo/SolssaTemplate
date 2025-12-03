@@ -51,9 +51,16 @@ class Expedition extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
+    // public function shipmentItems()
+    // {
+    //     return $this->hasMany(ShipmentItem::class);
+    // }
+
+
+    // In Expedition model
     public function shipmentItems()
     {
-        return $this->hasMany(ShipmentItem::class);
+        return $this->hasMany(ShipmentItem::class, 'expedition_id');
     }
 
     // Scopes

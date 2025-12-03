@@ -21,11 +21,16 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('amount', 15, 2)->default(0);
             $table->string('expense_type')->nullable();
-            $table->unsignedBigInteger('invoice_id')->nullable();
+            // $table->unsignedBigInteger('invoice_id')->nullable();
+            $table->foreignId('remittance_id')
+                ->nullable()
+                ->constrained('remittances')
+                ->nullOnDelete();
             $table->unsignedBigInteger('country_id')->nullable();
             $table->string('status')->default('pending');
             $table->date('incurred_on')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

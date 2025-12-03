@@ -15,7 +15,7 @@
                             </p>
                         </div>
                         <button
-                            @click="showAddModal = true"
+                            @click="openAddModal"
                             class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                         >
                             <Plus :size="20" />
@@ -106,24 +106,30 @@
                                                 class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm"
                                             >
                                                 {{
-                                                    expedition.vendor?.name ||
-                                                    "N/A"
+                                                    expedition.vendor?.name?.charAt(
+                                                        0
+                                                    ) || "N"
                                                 }}
                                             </div>
+                                            <span>{{
+                                                expedition.vendor?.name || "N/A"
+                                            }}</span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        {{ expedition.weight }}
+                                        {{ expedition.weight }} kg
                                     </td>
                                     <td class="px-4 py-3">
                                         {{ expedition.packages_number }}
                                     </td>
                                     <td class="px-4 py-3">
                                         <button
+                                            @click="viewDetails(expedition)"
                                             class="text-orange-600 hover:text-orange-700"
                                         >
                                             {{
-                                                expedition.shipment_items.length
+                                                expedition.shipment_items
+                                                    ?.length || 0
                                             }}
                                             products
                                         </button>
@@ -141,14 +147,16 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
-                                        {{ expedition.warehouse?.name }}
+                                        {{
+                                            expedition.warehouse?.name || "N/A"
+                                        }}
                                     </td>
                                     <td class="px-4 py-3">
                                         {{ expedition.shipment_date }}
                                     </td>
                                     <td class="px-4 py-3">
                                         {{
-                                            expedition.arrival_date.split(
+                                            expedition.arrival_date?.split(
                                                 " "
                                             )[0]
                                         }}
@@ -201,7 +209,7 @@
                                         <div class="flex gap-2">
                                             <button
                                                 @click="viewDetails(expedition)"
-                                                class="p-2 hover:bg-gray-100 rounded-lg"
+                                                class="p-2 hover:bg-gray-100 rounded-lg transition"
                                                 title="View Details"
                                             >
                                                 <Eye
@@ -211,7 +219,10 @@
                                             </button>
 
                                             <button
-                                                class="p-2 hover:bg-gray-100 rounded-lg"
+                                                @click="
+                                                    openEditModal(expedition)
+                                                "
+                                                class="p-2 hover:bg-gray-100 rounded-lg transition"
                                                 title="Edit"
                                             >
                                                 <Edit
@@ -219,8 +230,6 @@
                                                     class="text-gray-600"
                                                 />
                                             </button>
-
-                                            <!-- delete -->
 
                                             <button
                                                 @click="
@@ -294,16 +303,22 @@
                 </div>
             </div>
 
-            <!-- Add Modal -->
+            <!-- Add/Edit Modal -->
             <div
                 v-if="showAddModal"
-                class="fixed inset-0 bg-grey bg-opacity-50 flex items-center justify-center z-50 p-4"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
                 <div
                     class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
                 >
                     <div class="sticky top-0 bg-white border-b p-6">
-                        <h2 class="text-2xl font-bold">Add New Expedition</h2>
+                        <h2 class="text-2xl font-bold">
+                            {{
+                                isEditMode
+                                    ? "Edit Expedition"
+                                    : "Add New Expedition"
+                            }}
+                        </h2>
                     </div>
 
                     <form @submit.prevent="handleSubmit" class="p-6 space-y-4">
@@ -323,7 +338,6 @@
                                 <label class="block text-sm font-medium mb-2"
                                     >Destination</label
                                 >
-
                                 <v-select
                                     v-model="formData.warehouse_id"
                                     :items="orderStore.warehouseOptions"
@@ -433,9 +447,11 @@
                             </div>
                         </div>
 
-                        <!-- add shipment items table  -->
-
+                        <!-- Shipment Items Table -->
                         <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold text-lg mb-3">
+                                Shipment Items
+                            </h3>
                             <div class="overflow-x-auto mt-4">
                                 <table class="w-full text-sm">
                                     <thead>
@@ -523,16 +539,7 @@
                                 <button
                                     type="button"
                                     class="mt-3 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                    @click="
-                                        formData.shipment_items =
-                                            formData.shipment_items || [];
-                                        formData.shipment_items.push({
-                                            product: { name: '' },
-                                            quantity_sent: 1,
-                                            product: { sku: '' },
-                                            product: { id: '' },
-                                        });
-                                    "
+                                    @click="addShipmentItem"
                                 >
                                     + Add Product
                                 </button>
@@ -554,7 +561,7 @@
                         <div class="flex gap-3 justify-end pt-4">
                             <button
                                 type="button"
-                                @click="showAddModal = false"
+                                @click="closeModal"
                                 class="px-4 py-2 border rounded-lg hover:bg-gray-50"
                             >
                                 Cancel
@@ -563,7 +570,11 @@
                                 type="submit"
                                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                             >
-                                Create Expedition
+                                {{
+                                    isEditMode
+                                        ? "Update Expedition"
+                                        : "Create Expedition"
+                                }}
                             </button>
                         </div>
                     </form>
@@ -573,7 +584,7 @@
             <!-- Details Modal -->
             <div
                 v-if="showDetailsModal && selectedExpedition"
-                class="fixed inset-0 bg-grey bg-opacity-50 flex items-center justify-center z-50 p-4"
+                class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             >
                 <div
                     class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto"
@@ -630,9 +641,7 @@
                                         Destination
                                     </p>
                                     <p class="font-semibold">
-                                        {{
-                                            selectedExpedition.warehouse?.name
-                                        }},
+                                        {{ selectedExpedition.warehouse?.name }}
                                     </p>
                                 </div>
                                 <div>
@@ -697,7 +706,8 @@
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="font-semibold text-lg mb-4">
                                 Products ({{
-                                    selectedExpedition.shipment_items.length
+                                    selectedExpedition.shipment_items?.length ||
+                                    0
                                 }})
                             </h3>
                             <div class="space-y-3">
@@ -710,7 +720,10 @@
                                 >
                                     <div>
                                         <p class="font-medium">
-                                            {{ item.product.product_name }}
+                                            {{
+                                                item.product?.product_name ||
+                                                "N/A"
+                                            }}
                                         </p>
                                         <p class="text-sm text-gray-600">
                                             Quantity:
@@ -722,7 +735,7 @@
                             </div>
                         </div>
 
-                        <!-- Seller Info -->
+                        <!-- Vendor Info -->
                         <div class="bg-gray-50 rounded-lg p-4">
                             <h3 class="font-semibold text-lg mb-4">
                                 Vendor Information
@@ -731,12 +744,19 @@
                                 <div>
                                     <p class="text-sm text-gray-600">Name</p>
                                     <p class="font-semibold">
-                                        {{ selectedExpedition.vendor.name }}
+                                        {{
+                                            selectedExpedition.vendor?.name ||
+                                            "N/A"
+                                        }}
                                     </p>
                                 </div>
                                 <div>
-                                    <p class="text-sm text-gray-600">
-                                        Username
+                                    <p class="text-sm text-gray-600">Contact</p>
+                                    <p class="font-semibold">
+                                        {{
+                                            selectedExpedition.vendor?.email ||
+                                            "N/A"
+                                        }}
                                     </p>
                                 </div>
                             </div>
@@ -752,7 +772,7 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { ref, computed, watch, onMounted } from "vue";
 import { useOrderStore } from "@/stores/orderStore";
-// import { notify } from "@/utils/toast";
+import { notify } from "@/utils/toast";
 
 import {
     Truck,
@@ -767,54 +787,10 @@ import {
     CheckCircle,
     Clock,
     XCircle,
+    Trash2,
 } from "lucide-vue-next";
 
 const orderStore = useOrderStore();
-
-const selectedProduct = ref(null);
-
-const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-        expenses.value = expenses.value.filter((exp) => exp.id !== id);
-    }
-};
-
-// Add item to list
-const addItem = () => {
-    if (!formData.value.shipment_items) {
-        formData.value.shipment_items = [];
-    }
-
-    const prod = orderStore.productOptions.find(
-        (p) => p.sku === selectedProduct.value
-    );
-
-    if (!prod) return;
-
-    formData.value.shipment_items.push({
-        product: {
-            sku: prod.sku,
-            name: prod.product_name,
-        },
-        quantity_sent: 1,
-    });
-
-    selectedProduct.value = null;
-};
-
-// Update product name if SKU changes
-const updateProduct = (item) => {
-    const p = orderStore.productOptions.find((x) => x.sku === item.product.sku);
-
-    if (p) {
-        item.product.name = p.product_name;
-    }
-};
-
-// Remove shipment item
-const removeItem = (index) => {
-    formData.value.shipment_items.splice(index, 1);
-};
 
 // UI state
 const expeditions = ref([]);
@@ -825,13 +801,15 @@ const searchQuery = ref("");
 const filterStatus = ref("all");
 const currentPage = ref(1);
 const itemsPerPage = 6;
+const isEditMode = ref(false);
+const editingExpeditionId = ref(null);
 
 // Vendor dropdown
 const vendorOptions = computed(() => orderStore.vendorOptions);
 const vendor_id = ref(null);
 
 // FORM
-const formData = ref({
+const defaultFormData = () => ({
     source_country: "",
     destination: "",
     warehouse_id: null,
@@ -844,8 +822,9 @@ const formData = ref({
     shipment_fees: 0,
     vendor_id: null,
     shipment_items: [],
-    // name: "",
 });
+
+const formData = ref(defaultFormData());
 
 // Fetch vendors + expeditions
 onMounted(async () => {
@@ -925,8 +904,41 @@ const getCountryFlag = (country) => {
     const flags = {
         Nigeria: "🇳🇬",
         China: "🇨🇳",
+        USA: "🇺🇸",
+        UK: "🇬🇧",
+        Kenya: "🇰🇪",
     };
     return flags[country] || "🌍";
+};
+
+// Add shipment item
+const addShipmentItem = () => {
+    if (!formData.value.shipment_items) {
+        formData.value.shipment_items = [];
+    }
+
+    formData.value.shipment_items.push({
+        product: {
+            name: "",
+            sku: "",
+            id: "",
+        },
+        quantity_sent: 1,
+    });
+};
+
+// Update product details when product ID changes
+const updateProduct = (item) => {
+    const p = orderStore.productOptions.find((x) => x.id === item.product.id);
+    if (p) {
+        item.product.name = p.product_name;
+        item.product.sku = p.sku;
+    }
+};
+
+// Remove shipment item
+const removeItem = (index) => {
+    formData.value.shipment_items.splice(index, 1);
 };
 
 // Vendor select
@@ -934,42 +946,115 @@ const onVendorChange = (value) => {
     formData.value.vendor_id = value;
 };
 
-// CREATE EXPEDITION — AXIOS VERSION
+// Open modal for adding new expedition
+const openAddModal = () => {
+    isEditMode.value = false;
+    editingExpeditionId.value = null;
+    formData.value = defaultFormData();
+    vendor_id.value = null;
+    showAddModal.value = true;
+};
+
+// Open modal for editing existing expedition
+const openEditModal = (expedition) => {
+    isEditMode.value = true;
+    editingExpeditionId.value = expedition.id;
+
+    formData.value = {
+        source_country: expedition.source_country || "",
+        destination: expedition.warehouse?.name || "",
+        warehouse_id: expedition.warehouse?.id || null,
+        shipment_date: expedition.shipment_date || "",
+        arrival_date: expedition.arrival_date?.split(" ")[0] || "",
+        transporter_name: expedition.transporter_name || "",
+        tracking_number: expedition.tracking_number || "",
+        packages_number: expedition.packages_number || 1,
+        weight: expedition.weight || 0,
+        shipment_fees: expedition.shipment_fees || 0,
+        vendor_id: expedition.vendor?.id || null,
+        shipment_items:
+            expedition.shipment_items?.map((item) => ({
+                id: item.id,
+                product: {
+                    id: item.product?.id || "",
+                    name: item.product?.product_name || "",
+                    sku: item.product?.sku || "",
+                },
+                quantity_sent: item.quantity_sent || 1,
+            })) || [],
+    };
+
+    vendor_id.value = expedition.vendor?.id || null;
+    showAddModal.value = true;
+};
+
+// Close modal and reset state
+const closeModal = () => {
+    showAddModal.value = false;
+    isEditMode.value = false;
+    editingExpeditionId.value = null;
+    formData.value = defaultFormData();
+    vendor_id.value = null;
+};
+
+// CREATE OR UPDATE EXPEDITION
 const handleSubmit = async () => {
     try {
-        const response = await axios.post(
-            "/api/v1/expeditions",
-            formData.value
-        );
+        let response;
 
-        const newExpedition = response.data.expedition;
+        if (isEditMode.value && editingExpeditionId.value) {
+            // Update existing expedition
+            response = await axios.put(
+                `/api/v1/expeditions/${editingExpeditionId.value}`,
+                formData.value
+            );
 
-        expeditions.value = [newExpedition, ...expeditions.value];
-        showAddModal.value = false;
+            // Update in list
+            const index = expeditions.value.findIndex(
+                (exp) => exp.id === editingExpeditionId.value
+            );
+            if (index !== -1) {
+                expeditions.value[index] = response.data.expedition;
+            }
 
-        // Reset form
-        formData.value = {
-            source_country: "",
-            destination: "",
-            warehouse_id: null,
-            shipment_date: "",
-            arrival_date: "",
-            transporter_name: "",
-            tracking_number: "",
-            packages_number: 1,
-            weight: 0,
-            shipment_fees: 0,
-            vendor_id: null,
-            shipment_items: [],
-        };
+            notify.success("Expedition updated successfully");
+        } else {
+            // Create new expedition
+            response = await axios.post("/api/v1/expeditions", formData.value);
 
-        vendor_id.value = null;
+            expeditions.value = [
+                response.data.expedition,
+                ...expeditions.value,
+            ];
+            notify.success("Expedition created successfully");
+        }
+
+        closeModal();
     } catch (error) {
-        console.error("Failed to create expedition:", error);
+        console.error("Failed to save expedition:", error);
 
         if (error.response?.status === 422) {
             console.log("Validation Errors:", error.response.data.errors);
+            notify.error("Please check the form for errors.");
+        } else {
+            notify.error("Failed to save expedition");
         }
+    }
+};
+
+// DELETE EXPEDITION
+const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this expedition?")) {
+        return;
+    }
+
+    try {
+        await axios.delete(`/api/v1/expeditions/${id}`);
+        expeditions.value = expeditions.value.filter((exp) => exp.id !== id);
+        notify.success("Expedition deleted successfully");
+    } catch (error) {
+        console.error("Failed to delete expedition:", error);
+        notify.error("Failed to delete expedition");
     }
 };
 
