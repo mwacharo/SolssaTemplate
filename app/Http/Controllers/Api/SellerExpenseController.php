@@ -14,7 +14,7 @@ class SellerExpenseController extends Controller
      */
     public function index()
     {
-        $expenses = SellerExpense::latest()->paginate(20);
+        $expenses = SellerExpense::with('vendor')->latest()->paginate(20);
 
         return response()->json([
             'success' => true,

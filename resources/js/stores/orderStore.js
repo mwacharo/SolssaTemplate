@@ -127,7 +127,7 @@ export const useOrderStore = defineStore('orders', () => {
       // Add filters
       if (params.status) queryParams.append('status', params.status)
       if (params.vendor_id) queryParams.append('vendor_id', params.vendor_id)
-      if (params.city) queryParams.append('city', params.city)
+      if (params.city_id) queryParams.append('city', params.city_id)
       if (params.agent_id) queryParams.append('agent_id', params.agent_id)
       if (params.rider_id) queryParams.append('rider_id', params.rider_id)
       if (params.zone_id) queryParams.append('zone_id', params.zone_id)
@@ -526,7 +526,7 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderFilterAgent.value) filters.agent_id = orderFilterAgent.value
     if (orderFilterRider.value) filters.rider_id = orderFilterRider.value
     if (orderFilterVendor.value) filters.vendor_id = orderFilterVendor.value
-    if (orderFilterCity.value) filters.city = orderFilterCity.value
+    if (orderFilterCity.value) filters.city_id = orderFilterCity.value
     if (orderFilterCategory.value) filters.category_id = orderFilterCategory.value
     if (orderSearch.value) filters.search = orderSearch.value
 

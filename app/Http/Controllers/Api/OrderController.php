@@ -555,40 +555,98 @@ class OrderController extends Controller
     /**
      * Apply filters to the query
      */
+    // private function applyFilters($query, Request $request): void
+    // {
+    //     if ($request->filled('status')) {
+    //         $query->where('status', $request->get('status'));
+    //     }
+
+    //     if ($request->filled('delivery_status')) {
+    //         $query->where('delivery_status', $request->get('delivery_status'));
+    //     }
+
+    //     if ($request->filled('agent_id')) {
+    //         $query->where('agent_id', $request->get('agent_id'));
+    //     }
+
+    //     if ($request->filled('rider_id')) {
+    //         $query->where('rider_id', $request->get('rider_id'));
+    //     }
+
+    //     if ($request->filled('date_from')) {
+    //         $query->whereDate('created_at', '>=', $request->get('date_from'));
+    //     }
+
+    //     if ($request->filled('date_to')) {
+    //         $query->whereDate('created_at', '<=', $request->get('date_to'));
+    //     }
+
+    //     if ($request->filled('delivery_date_from')) {
+    //         $query->whereDate('delivery_date', '>=', $request->get('delivery_date_from'));
+    //     }
+
+    //     if ($request->filled('delivery_date_to')) {
+    //         $query->whereDate('delivery_date', '<=', $request->get('delivery_date_to'));
+    //     }
+    // }
+
+
+
     private function applyFilters($query, Request $request): void
     {
+
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->vendor_id);
+        }
+        // Filter by latest status (from order_status_timestamps table)
         if ($request->filled('status')) {
-            $query->where('status', $request->get('status'));
+            $query->whereHas('latestStatus', function ($q) use ($request) {
+                $q->where('status_id', $request->status);
+            });
         }
 
-        if ($request->filled('delivery_status')) {
-            $query->where('delivery_status', $request->get('delivery_status'));
+
+
+        if ($request->filled('delivery_date')) {
+            $query->whereDate('delivery_date', '>=', $request->get('delivery_date'));
         }
 
         if ($request->filled('agent_id')) {
-            $query->where('agent_id', $request->get('agent_id'));
+            $query->whereHas('assignments', function ($q) use ($request) {
+                $q->where('user_id', $request->agent_id)
+                    ->whereIn('role', ['CallAgent']);
+            });
         }
 
         if ($request->filled('rider_id')) {
-            $query->where('rider_id', $request->get('rider_id'));
+            $query->whereHas('assignments', function ($q) use ($request) {
+                $q->where('user_id', $request->rider_id)
+                    ->whereIn('role', ['Delivery Agent']);
+            });
         }
 
+        if ($request->filled('city_id')) {
+            $query->whereHas('customer', function ($q) use ($request) {
+                $q->where('city_id', $request->city_id);
+            });
+        }
+
+        if ($request->filled('zone_id')) {
+            $query->whereHas('customer', function ($q) use ($request) {
+                $q->where('zone_id', $request->zone_id);
+            });
+        }
+
+        // Date filters remain the same
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->get('date_from'));
+            $query->whereDate('created_at', '>=', $request->date_from);
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->get('date_to'));
-        }
-
-        if ($request->filled('delivery_date_from')) {
-            $query->whereDate('delivery_date', '>=', $request->get('delivery_date_from'));
-        }
-
-        if ($request->filled('delivery_date_to')) {
-            $query->whereDate('delivery_date', '<=', $request->get('delivery_date_to'));
+            $query->whereDate('created_at', '<=', $request->date_to);
         }
     }
+
 
     /**
      * Apply search to the query

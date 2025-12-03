@@ -448,7 +448,7 @@
                                 </div>
                                 <div class="col-span-2">
                                     <p class="text-sm text-gray-600 mb-2">
-                                        vendor Information
+                                        Vendor Information
                                     </p>
                                     <div class="bg-gray-50 rounded-lg p-4">
                                         <p class="font-medium">

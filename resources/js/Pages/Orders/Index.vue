@@ -107,7 +107,7 @@
                                 v-model="orderStore.orderFilterCity"
                                 :items="orderStore.cityOptions"
                                 item-title="name"
-                                item-value="name"
+                                item-value="id"
                                 clearable
                                 dense
                                 outlined
@@ -128,7 +128,7 @@
                                 v-model="orderStore.orderFilterZone"
                                 :items="orderStore.zoneOptions"
                                 item-title="name"
-                                item-value="name"
+                                item-value="id"
                                 clearable
                                 dense
                                 outlined
@@ -196,6 +196,21 @@
                                 outlined
                                 placeholder="Search statuses..."
                                 class="w-full"
+                            />
+                        </div>
+
+                        <!-- delivery date  -->
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-red-600 mb-1"
+                                >DELIVERY DATE
+                            </label>
+                            <input
+                                v-model="orderStore.orderDateRange[4]"
+                                type="date"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                placeholder="Filter by date"
                             />
                         </div>
 
