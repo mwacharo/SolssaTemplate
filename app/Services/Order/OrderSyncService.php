@@ -41,14 +41,16 @@ class OrderSyncService
             // Skip header row if orders already contain it
             $values = [];
             $hasHeader = false;
-            
+
             // Check if first row is a header
-            if (isset($orders[0]) && is_array($orders[0]) && 
-                (isset($orders[0][0]) && $orders[0][0] === 'Order Number' || 
-                 isset($orders[0]['Order Number']))) {
+            if (
+                isset($orders[0]) && is_array($orders[0]) &&
+                (isset($orders[0][0]) && $orders[0][0] === 'Order Number' ||
+                    isset($orders[0]['Order Number']))
+            ) {
                 $hasHeader = true;
             }
-            
+
             if (!$hasHeader) {
                 // Add headers if not present
                 $headers = ['Order Number', 'Date', 'Customer', 'Total', 'Status'];
@@ -61,7 +63,7 @@ class OrderSyncService
                     // Skip adding the header row again
                     continue;
                 }
-                
+
                 // Handle both array and object formats
                 if (is_array($order)) {
                     $values[] = $order;
@@ -77,7 +79,7 @@ class OrderSyncService
             }
 
             $range = 'Orders!A1:E' . (count($values) + 1);
-            
+
             Log::debug('Prepared values for update', [
                 'range' => $range,
                 'values_count' => count($values),
@@ -115,11 +117,11 @@ class OrderSyncService
     {
         try {
             $this->googleSheetService->setSpreadsheetId($sheet->post_spreadsheet_id);
-            
+
             $values = [];
             $headers = ['Product ID', 'Name', 'SKU', 'Price', 'Stock'];
             $values[] = $headers;
-            
+
             foreach ($products as $product) {
                 if (is_array($product)) {
                     $values[] = [
@@ -139,17 +141,17 @@ class OrderSyncService
                     ];
                 }
             }
-            
+
             $range = 'Products!A1:E' . (count($products) + 1);
-            
+
             // Update the sheet
             $result = $this->googleSheetService->updateSheetData($range, $values);
-            
+
             if ($result) {
                 // Update the last synced information
                 $this->googleSheetRepository->updateLastProductSync($sheet);
             }
-            
+
             return $result;
         } catch (\Exception $e) {
             Log::error('Product sync error: ' . $e->getMessage());
@@ -168,7 +170,7 @@ class OrderSyncService
     public function processSheetData($values, $headers, $sheet)
     {
         $headers = array_map('strtolower', array_map('trim', $headers));
-        $values = array_map(function($row) {
+        $values = array_map(function ($row) {
             return array_map('trim', $row);
         }, $values);
         $orderData = [];
@@ -229,7 +231,9 @@ class OrderSyncService
             'products' => [],
             'quantity' => $normalized['quantity'] ?? null,
             'status' => $normalized['status'] ?? null,
-            'delivery_date' => $normalized['delivery date'] ?? null,
+            // 'delivery_date' => $normalized['delivery date'] ?? null,
+            'delivery_date' => $this->normalizeDate($normalized['delivery date'] ?? null),
+
             'special_instruction' => $normalized['special instructiuons'] ?? null,
             'distance' => 0,
             'invoice_value' => 0,
@@ -240,7 +244,7 @@ class OrderSyncService
             // 'country_id' => optional(auth()->user())->country_id,
 
         ];
-    }               
+    }
 
     /**
      * Create product data from sheet row
@@ -279,5 +283,59 @@ class OrderSyncService
 
         Log::debug("Prepared update data for " . count($updateData) . " orders");
         return $updateData;
+    }
+
+
+    /**
+     * Convert Google Sheets date into MySQL Y-m-d format.
+     */
+    private function normalizeDate($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+
+        // If Google Sheets sends Excel serial number
+        // if (is_numeric($date)) {
+        //     try {
+        //         return \Carbon\Carbon::instance(
+        //             \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date)
+        //         )->format('Y-m-d');
+        //     } catch (\Exception $e) {
+        //         // fallback
+        //     }
+        // }
+
+
+        if (is_numeric($date)) {
+            try {
+                // Excel serial date → UNIX timestamp
+                $carbonDate = Carbon::createFromTimestampUTC(($date - 25569) * 86400);
+                return $carbonDate->format('Y-m-d');
+            } catch (\Exception $e) {
+                // fallback
+            }
+        }
+
+
+        // Try MM/DD/YYYY
+        try {
+            return Carbon::createFromFormat('n/j/Y', $date)->format('Y-m-d');
+        } catch (\Exception $e) {
+        }
+
+        // Try DD/MM/YYYY
+        try {
+            return Carbon::createFromFormat('d/m/Y', $date)->format('Y-m-d');
+        } catch (\Exception $e) {
+        }
+
+        // Try Carbon’s automatic parser
+        try {
+            return Carbon::parse($date)->format('Y-m-d');
+        } catch (\Exception $e) {
+        }
+
+        return null; // invalid or unrecognized date
     }
 }

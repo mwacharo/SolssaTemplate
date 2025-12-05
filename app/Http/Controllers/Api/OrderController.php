@@ -552,43 +552,7 @@ class OrderController extends Controller
         }
     }
 
-    /**
-     * Apply filters to the query
-     */
-    // private function applyFilters($query, Request $request): void
-    // {
-    //     if ($request->filled('status')) {
-    //         $query->where('status', $request->get('status'));
-    //     }
 
-    //     if ($request->filled('delivery_status')) {
-    //         $query->where('delivery_status', $request->get('delivery_status'));
-    //     }
-
-    //     if ($request->filled('agent_id')) {
-    //         $query->where('agent_id', $request->get('agent_id'));
-    //     }
-
-    //     if ($request->filled('rider_id')) {
-    //         $query->where('rider_id', $request->get('rider_id'));
-    //     }
-
-    //     if ($request->filled('date_from')) {
-    //         $query->whereDate('created_at', '>=', $request->get('date_from'));
-    //     }
-
-    //     if ($request->filled('date_to')) {
-    //         $query->whereDate('created_at', '<=', $request->get('date_to'));
-    //     }
-
-    //     if ($request->filled('delivery_date_from')) {
-    //         $query->whereDate('delivery_date', '>=', $request->get('delivery_date_from'));
-    //     }
-
-    //     if ($request->filled('delivery_date_to')) {
-    //         $query->whereDate('delivery_date', '<=', $request->get('delivery_date_to'));
-    //     }
-    // }
 
 
 

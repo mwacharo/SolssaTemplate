@@ -10,6 +10,9 @@ export const useOrderStore = defineStore('orders', () => {
   // Removed unused orderEdit to fix unused variable error
 
 
+
+
+
   const dialogType = ref('')
   const dialogTitle = ref('')
   const bulkActionForm = reactive({
@@ -46,7 +49,9 @@ export const useOrderStore = defineStore('orders', () => {
   const orderFilterVendor = ref(null)
   const orderFilterCity = ref(null)
   const orderFilterCategory = ref(null)
-  const orderDateRange = ref([])
+  // const orderDateRange = ref([])
+    const orderDateRange = ref([null, null])
+
   const orderSearch = ref('')
 
   // Options for dropdowns (populated from API)

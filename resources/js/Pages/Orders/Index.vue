@@ -198,10 +198,18 @@
                                 class="w-full"
                             />
                         </div>
+                        <!-- delivery date  -->
+
+                        <div class="space-y-4 p-4">
+                            <DatePickerInput
+                                v-model="orderStore.orderDateRange"
+                                label="DELIVERY DATE"
+                            />
+                        </div>
 
                         <!-- delivery date  -->
 
-                        <div>
+                        <!-- <div>
                             <label
                                 class="block text-sm font-medium text-red-600 mb-1"
                                 >DELIVERY DATE
@@ -212,7 +220,7 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                                 placeholder="Filter by date"
                             />
-                        </div>
+                        </div> -->
 
                         <!-- Status Date  -->
 
@@ -1220,7 +1228,7 @@ import OrderForm from "./OrderForm.vue";
 
 import BulkAction from "./BulkAction.vue";
 import CallDialogs from "@/Pages/CallCenter/Dialogs/CallDialogs.vue";
-
+import DatePickerInput from "@/Components/DatePickerInput.vue";
 // orderjourney
 
 // Initialize store
