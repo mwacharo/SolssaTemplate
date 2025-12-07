@@ -192,10 +192,7 @@ class Order extends Model
     {
         return $this->belongsTo(Remittance::class);
     }
-
-
-
-
+}
 
     // public function  replacementOrders()
     // {
@@ -211,4 +208,3 @@ class Order extends Model
     //     return $this->hasMany(Remittance::class);
     // }
     // public function client() { return $this->belongsTo(User::class,'client_id'); }
-}

@@ -200,27 +200,16 @@
                         </div>
                         <!-- delivery date  -->
 
-                        <div class="space-y-4 p-4">
-                            <DatePickerInput
-                                v-model="orderStore.orderDateRange"
-                                label="DELIVERY DATE"
-                            />
-                        </div>
-
-                        <!-- delivery date  -->
-
-                        <!-- <div>
+                        <div>
                             <label
                                 class="block text-sm font-medium text-red-600 mb-1"
-                                >DELIVERY DATE
-                            </label>
-                            <input
-                                v-model="orderStore.orderDateRange[4]"
-                                type="date"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                placeholder="Filter by date"
+                                >DELIVERY DATE</label
+                            >
+
+                            <DateRangePicker
+                                v-model="orderStore.deliveryDateRange"
                             />
-                        </div> -->
+                        </div>
 
                         <!-- Status Date  -->
 
@@ -229,11 +218,8 @@
                                 class="block text-sm font-medium text-red-600 mb-1"
                                 >STATUS DATE
                             </label>
-                            <input
-                                v-model="orderStore.orderDateRange[3]"
-                                type="date"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                placeholder="Filter by date"
+                            <DateRangePicker
+                                v-model="orderStore.statusDateRange"
                             />
                         </div>
 
@@ -241,27 +227,11 @@
                         <div>
                             <label
                                 class="block text-sm font-medium text-red-600 mb-1"
-                                >CREATED FROM</label
+                                >CREATED RANGE</label
                             >
-                            <input
-                                v-model="orderStore.orderDateRange[0]"
-                                type="date"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                placeholder="Filter by date"
-                            />
-                        </div>
 
-                        <!-- Created To -->
-                        <div>
-                            <label
-                                class="block text-sm font-medium text-red-600 mb-1"
-                                >CREATED TO</label
-                            >
-                            <input
-                                v-model="orderStore.orderDateRange[1]"
-                                type="date"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                placeholder="Filter by date"
+                            <DateRangePicker
+                                v-model="orderStore.createdDateRange"
                             />
                         </div>
                     </div>
@@ -1228,7 +1198,8 @@ import OrderForm from "./OrderForm.vue";
 
 import BulkAction from "./BulkAction.vue";
 import CallDialogs from "@/Pages/CallCenter/Dialogs/CallDialogs.vue";
-import DatePickerInput from "@/Components/DatePickerInput.vue";
+// import DatePickerInput from "@/Components/DatePickerInput.vue";
+import DateRangePicker from "@/Components/DualDatePicker.vue";
 // orderjourney
 
 // Initialize store

@@ -7,7 +7,13 @@
     <title>Bulk Waybills</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-size: 10px;
@@ -17,19 +23,21 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        
         .waybill-container {
-            width: 105mm;
-            height: 148mm;
-            margin: 0 auto 12px auto;
-            padding: 12px;
+            width: 80mm;
+            height: 110mm;
+            margin: 0 auto 6px auto;
+            padding: 3px;
             background: #fff;
-            border-radius: 6px;
+            border-radius: 3px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             position: relative;
             overflow: hidden;
             page-break-after: always;
+            break-after: page;
         }
-        .waybill-container:last-child { page-break-after: avoid; }
+        
         .header {
             display: flex;
             justify-content: space-between;
@@ -37,71 +45,229 @@
             margin-bottom: 12px;
             position: relative;
         }
-        .brand-section { display: flex; align-items: center; gap: 8px; }
+        
+        .brand-section { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        
         .logo {
-            width: 36px; height: 36px;
+            width: 36px; 
+            height: 36px;
             background: linear-gradient(135deg, #667eea 0%, #667eea 100%);
             border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: 700; font-size: 10px; letter-spacing: -0.3px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            color: white; 
+            font-weight: 700; 
+            font-size: 10px; 
+            letter-spacing: -0.3px;
             box-shadow: 0 2px 4px rgba(102,126,234,0.25);
         }
-        .brand-info h1 { font-size: 12px; font-weight: 700; color: #1a1a1a; margin-bottom: 1px; letter-spacing: -0.3px; }
-        .brand-tagline { font-size: 7px; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+        
+        .brand-info h1 { 
+            font-size: 12px; 
+            font-weight: 700; 
+            color: #1a1a1a; 
+            margin-bottom: 1px; 
+            letter-spacing: -0.3px; 
+        }
+        
+        .brand-tagline { 
+            font-size: 7px; 
+            color: #6b7280; 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+        }
+        
         .tracking-id {
-            position: absolute; top: 0; right: 0;
-            background: #f3f4f6; padding: 6px 8px; border-radius: 4px;
-            font-family: 'Courier New', monospace; font-size: 9px; font-weight: 600; color: #374151;
+            position: absolute; 
+            top: 0; 
+            right: 0;
+            background: #f3f4f6; 
+            padding: 6px 8px; 
+            border-radius: 4px;
+            font-family: 'Courier New', monospace; 
+            font-size: 9px; 
+            font-weight: 600; 
+            color: #374151;
             border: 1px solid #e5e7eb;
         }
+        
         .status-badge {
-            position: absolute; top: -8px; right: -8px;
+            position: absolute; 
+            top: -8px; 
+            right: -8px;
             background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-            color: white; padding: 4px 8px; border-radius: 4px;
-            font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            color: white; 
+            padding: 4px 8px; 
+            border-radius: 4px;
+            font-size: 8px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
             box-shadow: 0 2px 4px rgba(16,185,129,0.25);
         }
+        
         .content-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            margin-bottom: 12px;
         }
+        
         .info-card {
-            background: #f9fafb; border-radius: 6px; padding: 8px; border: 1px solid #f3f4f6;
+            background: #f9fafb; 
+            border-radius: 6px; 
+            padding: 8px; 
+            border: 1px solid #f3f4f6;
         }
+        
         .info-card h3 {
-            font-size: 8px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px;
+            font-size: 8px; 
+            font-weight: 600; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+            margin-bottom: 4px;
         }
-        .info-card .name { font-size: 9px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; line-height: 1.2; }
-        .info-card .details { font-size: 7px; color: #6b7280; line-height: 1.3; }
+        
+        .info-card .name { 
+            font-size: 9px; 
+            font-weight: 600; 
+            color: #1a1a1a; 
+            margin-bottom: 2px; 
+            line-height: 1.2; 
+        }
+        
+        .info-card .details { 
+            font-size: 7px; 
+            color: #6b7280; 
+            line-height: 1.3; 
+        }
+        
         .city-tag {
-            display: inline-block; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 3px;
-            font-size: 7px; font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.2px;
+            display: inline-block; 
+            background: #dbeafe; 
+            color: #1e40af; 
+            padding: 2px 6px; 
+            border-radius: 3px;
+            font-size: 7px; 
+            font-weight: 600; 
+            margin-top: 2px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.2px;
         }
+        
         .order-summary {
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-radius: 6px; padding: 10px; margin-bottom: 10px; border: 1px solid #e2e8f0;
+            border-radius: 6px; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            border: 1px solid #e2e8f0;
         }
-        .summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .summary-header h3 { font-size: 8px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.3px; }
-        .order-number { font-family: 'Courier New', monospace; font-size: 8px; font-weight: 600; color: #6b7280; }
-        .summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-        .summary-item { text-align: center; }
-        .summary-item .label { font-size: 7px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 1px; }
-        .summary-item .value { font-size: 9px; font-weight: 600; color: #1a1a1a; }
-        .product-section { margin-bottom: 10px; }
+        
+        .summary-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 8px; 
+        }
+        
+        .summary-header h3 { 
+            font-size: 8px; 
+            font-weight: 600; 
+            color: #374151; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+        }
+        
+        .order-number { 
+            font-family: 'Courier New', monospace; 
+            font-size: 8px; 
+            font-weight: 600; 
+            color: #6b7280; 
+        }
+        
+        .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3,1fr); 
+            gap: 8px; 
+        }
+        
+        .summary-item { 
+            text-align: center; 
+        }
+        
+        .summary-item .label { 
+            font-size: 7px; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+            margin-bottom: 1px; 
+        }
+        
+        .summary-item .value { 
+            font-size: 9px; 
+            font-weight: 600; 
+            color: #1a1a1a; 
+        }
+        
+        .product-section { 
+            margin-bottom: 10px; 
+        }
+        
         .section-title {
-            font-size: 8px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px;
-            margin-bottom: 6px; padding-bottom: 2px; border-bottom: 1px solid #f3f4f6;
+            font-size: 8px; 
+            font-weight: 600; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px;
+            margin-bottom: 6px; 
+            padding-bottom: 2px; 
+            border-bottom: 1px solid #f3f4f6;
         }
+        
         .product-item {
-            display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #f9fafb;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 6px 0; 
+            border-bottom: 1px solid #f9fafb;
         }
-        .product-item:last-child { border-bottom: none; }
-        .product-name { font-size: 8px; font-weight: 500; color: #374151; flex: 1; line-height: 1.2; }
+        
+        .product-item:last-child { 
+            border-bottom: none; 
+        }
+        
+        .product-name { 
+            font-size: 8px; 
+            font-weight: 500; 
+            color: #374151; 
+            flex: 1; 
+            line-height: 1.2; 
+        }
+        
         .product-qty {
-            font-size: 7px; color: #6b7280; background: #f3f4f6; padding: 2px 4px; border-radius: 3px;
-            margin: 0 6px; min-width: 18px; text-align: center;
+            font-size: 7px; 
+            color: #6b7280; 
+            background: #f3f4f6; 
+            padding: 2px 4px; 
+            border-radius: 3px;
+            margin: 0 6px; 
+            min-width: 18px; 
+            text-align: center;
         }
-        .product-service { font-size: 7px; color: #10b981; font-weight: 500; }
+        
+        .product-service { 
+            font-size: 7px; 
+            color: #10b981; 
+            font-weight: 500; 
+        }
+        
         .payment-section {
             background: #fef3c7;
             border: 1px solid #fbbf24;
@@ -110,28 +276,105 @@
             margin-bottom: 10px;
             text-align: center;
         }
-        .cod-label { font-size: 7px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px; }
-        .cod-amount { font-size: 12px; font-weight: 700; color: #92400e; margin-bottom: 2px; }
-        .payment-method { font-size: 6px; color: #a16207; }
+        
+        .cod-label { 
+            font-size: 7px; 
+            color: #92400e; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+            margin-bottom: 2px; 
+        }
+        
+        .cod-amount { 
+            font-size: 12px; 
+            font-weight: 700; 
+            color: #92400e; 
+            margin-bottom: 2px; 
+        }
+        
+        .payment-method { 
+            font-size: 6px; 
+            color: #a16207; 
+        }
+        
         .barcode-section {
-            text-align: center; margin-bottom: 10px; padding: 8px; background: #fff; border-radius: 6px; border: 1px solid #f3f4f6;
+            text-align: center; 
+            margin-bottom: 10px; 
+            padding: 8px; 
+            background: #fff; 
+            border-radius: 6px; 
+            border: 1px solid #f3f4f6;
         }
-        .barcode { margin: 4px 0; transform: scale(0.6); transform-origin: center; }
+        
+        .barcode { 
+            margin: 4px 0; 
+            transform: scale(0.6); 
+            transform-origin: center; 
+        }
+        
         .delivery-section {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 8px; margin-bottom: 10px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: #ecfdf5; 
+            border: 1px solid #a7f3d0; 
+            border-radius: 6px; 
+            padding: 8px; 
+            margin-bottom: 10px;
         }
-        .delivery-date { font-size: 8px; font-weight: 600; color: #065f46; }
-        .delivery-agent { font-size: 7px; color: #047857; }
+        
+        .delivery-date { 
+            font-size: 8px; 
+            font-weight: 600; 
+            color: #065f46; 
+        }
+        
+        .delivery-agent { 
+            font-size: 7px; 
+            color: #047857; 
+        }
+        
         .footer {
-            background: #f9fafb; border-radius: 6px; padding: 8px; border: 1px solid #f3f4f6;
+            background: #f9fafb; 
+            border-radius: 6px; 
+            padding: 8px; 
+            border: 1px solid #f3f4f6;
         }
-        .footer-title { font-size: 7px; font-weight: 600; color: #374151; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
-        .footer-content { font-size: 6px; color: #6b7280; line-height: 1.3; }
+        
+        .footer-title { 
+            font-size: 7px; 
+            font-weight: 600; 
+            color: #374151; 
+            margin-bottom: 4px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+        }
+        
+        .footer-content { 
+            font-size: 6px; 
+            color: #6b7280; 
+            line-height: 1.3; 
+        }
+        
         @media print {
-            body { margin: 0; padding: 0; }
-            .waybill-container { margin: 0; border-radius: 0; box-shadow: none; width: 105mm; height: 148mm; }
-            @page { size: A6; margin: 0; }
+            body { 
+                margin: 0; 
+                padding: 0; 
+            }
+            
+            .waybill-container { 
+                margin: 0; 
+                border-radius: 0; 
+                box-shadow: none; 
+                width: 105mm; 
+                height: 148mm; 
+            }
+            
+            @page { 
+                size: A6; 
+                margin: 0; 
+            }
         }
     </style>
 </head>
@@ -154,10 +397,12 @@
             $currentStatus = $order->status ?? 'pending';
             $colors = $statusColors[$currentStatus] ?? ['#6b7280', '#4b5563'];
         @endphp
+        
         <div class="waybill-container">
             <div class="status-badge" style="background: linear-gradient(135deg, {{ $colors[0] }} 0%, {{ $colors[1] }} 100%);">
                 {{ ucfirst(str_replace('_', ' ', $order->status ?? 'pending')) }}
             </div>
+            
             <!-- Header -->
             <div class="header">
                 <div class="brand-section">
@@ -171,6 +416,7 @@
                 </div>
                 <div class="tracking-id">{{ $order->order_no }}</div>
             </div>
+            
             <!-- Main Content Grid -->
             <div class="content-grid">
                 <div class="info-card">
@@ -182,22 +428,24 @@
                         {{ $company->address ?? 'Company Address' }}
                     </div>
                 </div>
+
                 <div class="info-card">
                     <h3>Ship To</h3>
                     <div class="name">{{ $order->customer->full_name ?? 'Customer Name' }}</div>
                     <div class="details">
                         {{ $order->customer->phone ?? 'N/A' }}<br>
-                        {{ $order->delivery_address ?? $order->customer->address ?? 'Delivery Address' }}
-
-
-<div >
-    {{ optional($order->customer->city)->name }} - 
-    {{ optional($order->customer->zone)->name }}
-</div>
-
-
-            
+                        {{ $order->delivery_address ?? $order->customer->address ?? 'Delivery Address' }}<br>
+                        @if(optional($order->customer->city)->name || optional($order->customer->zone)->name)
+                            {{ optional($order->customer->city)->name ?? '' }}
+                            @if(optional($order->customer->city)->name && optional($order->customer->zone)->name)
+                                - 
+                            @endif
+                            {{ optional($order->customer->zone)->name ?? '' }}
+                        @endif
+                    </div>
+                </div>
             </div>
+            
             <!-- Order Summary -->
             <div class="order-summary">
                 <div class="summary-header">
@@ -233,6 +481,7 @@
                     </div>
                 </div>
             </div>
+            
             <!-- Product Section -->
             <div class="product-section">
                 <div class="section-title">Items</div>
@@ -250,6 +499,7 @@
                     </div>
                 @endforelse
             </div>
+            
             <!-- Payment Section -->
             <div class="payment-section" style="background: {{ $paymentMethod == 'cod' ? '#fef3c7' : '#ecfdf5' }}; border: 1px solid {{ $paymentMethod == 'cod' ? '#fbbf24' : '#a7f3d0' }};">
                 <div class="cod-label" style="color: {{ $paymentMethod == 'cod' ? '#92400e' : '#065f46' }};">
@@ -270,12 +520,14 @@
                     @endif
                 </div>
             </div>
+            
             <!-- Barcode Section -->
             <div class="barcode-section">
                 <div class="barcode">
                     {!! $barcode !!}
                 </div>
             </div>
+            
             <!-- Delivery Info -->
             <div class="delivery-section">
                 <div>
@@ -301,6 +553,7 @@
                     </div>
                 </div>
             </div>
+            
             <!-- Footer -->
             <div class="footer">
                 <div class="footer-title">{{ $company->footer ?? 'Terms & Conditions' }}</div>

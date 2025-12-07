@@ -1,4 +1,4 @@
-// stores/orderStore.js - Fixed version
+// stores/orderStore.js - Pinia store for managing orders
 import { defineStore } from 'pinia'
 import { ref, computed, reactive } from 'vue'
 import axios from 'axios'
@@ -7,17 +7,13 @@ import { notify } from '@/utils/toast'
 export const useOrderStore = defineStore('orders', () => {
   // State
 
-  // Removed unused orderEdit to fix unused variable error
-
-
-
-
 
   const dialogType = ref('')
   const dialogTitle = ref('')
   const bulkActionForm = reactive({
     deliveryPerson: '',
     callCentreAgent: '',
+    
     status: '',
     notes: '',
     zone: '',
@@ -49,8 +45,9 @@ export const useOrderStore = defineStore('orders', () => {
   const orderFilterVendor = ref(null)
   const orderFilterCity = ref(null)
   const orderFilterCategory = ref(null)
-  // const orderDateRange = ref([])
-    const orderDateRange = ref([null, null])
+  const deliveryDateRange = ref([null, null])
+  const statusDateRange = ref([null, null])
+  const createdDateRange = ref([null, null])
 
   const orderSearch = ref('')
 
@@ -99,7 +96,9 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderFilterVendor.value) count++
     if (orderFilterCity.value) count++
     if (orderFilterCategory.value) count++
-    if (orderDateRange.value && orderDateRange.value.length > 0) count++
+    if (deliveryDateRange.value && deliveryDateRange.value.length > 0) count++
+    if (statusDateRange.value && statusDateRange.value.length > 0) count++
+    if (createdDateRange.value && createdDateRange.value.length > 0) count++  
     if (orderSearch.value) count++
     return count
   })
@@ -113,7 +112,9 @@ export const useOrderStore = defineStore('orders', () => {
     vendor: orderFilterVendor.value,
     city: orderFilterCity.value,
     category: orderFilterCategory.value,
-    dateRange: orderDateRange.value,
+    deliveryDateRange: deliveryDateRange.value,
+    statusDateRange: statusDateRange.value,
+    createdDateRange: createdDateRange.value, 
     search: orderSearch.value
   }))
 
@@ -257,8 +258,9 @@ export const useOrderStore = defineStore('orders', () => {
       pagination.value.total += 1
 
       // addNotification({ type: 'success', message: 'Order created successfully' })
+            notify.success('Order created successfully')
+
       return result.data
-      notify.success('Order created successfully')
     } catch (err) {
       notify.error('Failed to create order')
       error.value = err.response?.data?.message || err.message || 'Failed to create order'
@@ -296,9 +298,10 @@ export const useOrderStore = defineStore('orders', () => {
         selectedOrder.value = result.data
       }
 
-      // addNotification({ type: 'success', message: 'Order updated successfully' })
+
+            // notify.success('Order updated successfully')
+
       return result.data  
-      notify.success('Order updated successfully')
     } catch (err) {
       notify.error('Failed to update order')
       error.value = err.response?.data?.message || err.message || 'Failed to update order'
@@ -518,7 +521,9 @@ export const useOrderStore = defineStore('orders', () => {
     orderFilterVendor.value = null
     orderFilterCity.value = null
     orderFilterCategory.value = null
-    orderDateRange.value = []
+    deliveryDateRange.value = []
+    statusDateRange.value = []
+    createdDateRange.value = []
     orderSearch.value = ''
   }
 
@@ -534,10 +539,17 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderFilterCity.value) filters.city_id = orderFilterCity.value
     if (orderFilterCategory.value) filters.category_id = orderFilterCategory.value
     if (orderSearch.value) filters.search = orderSearch.value
-
-    if (orderDateRange.value && orderDateRange.value.length === 2) {
-      filters.created_from = orderDateRange.value[0]
-      filters.created_to = orderDateRange.value[1]
+    if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
+      filters.delivery_from = deliveryDateRange.value[0]
+      filters.delivery_to = deliveryDateRange.value[1]
+    }
+    if (statusDateRange.value && statusDateRange.value.length === 2) {
+      filters.status_from = statusDateRange.value[0]
+      filters.status_to = statusDateRange.value[1]
+    }
+    if (createdDateRange.value && createdDateRange.value.length === 2) {
+      filters.created_from = createdDateRange.value[0]
+      filters.created_to = createdDateRange.value[1]
     }
 
     // Reset to first page when applying filters
@@ -791,7 +803,13 @@ export const useOrderStore = defineStore('orders', () => {
     orderFilterVendor,
     orderFilterCity,
     orderFilterCategory,
-    orderDateRange,
+    deliveryDateRange,
+    statusDateRange,
+    createdDateRange,
+    orderSearch,
+    deliveryDateRange,
+    statusDateRange,
+    createdDateRange,
     orderSearch,
 
     // Options

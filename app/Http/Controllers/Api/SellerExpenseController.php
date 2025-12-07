@@ -59,8 +59,9 @@ class SellerExpenseController extends Controller
     /**
      * Update the specified seller expense.
      */
-    public function update(UpdateSellerExpenseRequest $request, SellerExpense $sellerExpense)
+    public function update(UpdateSellerExpenseRequest $request, $id)
     {
+        $sellerExpense = SellerExpense::findOrFail($id);
         $sellerExpense->update($request->validated());
 
         return response()->json([
@@ -73,8 +74,9 @@ class SellerExpenseController extends Controller
     /**
      * Remove the specified seller expense from storage.
      */
-    public function destroy(SellerExpense $sellerExpense)
+    public function destroy($id)
     {
+        $sellerExpense = SellerExpense::findOrFail($id);
         $sellerExpense->delete();
 
         return response()->json([
