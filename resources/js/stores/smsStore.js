@@ -44,7 +44,10 @@ export const useSmsStore = defineStore('sms', () => {
         contact = {
           id: phoneNumber, // or null if you want
           name: phoneNumber,
-          phone_number: phoneNumber
+          phone_number: phoneNumber,
+
+            // ⭐ INCLUDE ORDER DATA
+                    orderId: order.id,
         }
       }
 

@@ -63,6 +63,40 @@
 
                             <v-col cols="12" md="6">
                                 <v-select
+                                    v-model="orderEdit.status_id"
+                                    :items="statusOptionsStore"
+                                    item-title="name"
+                                    item-value="id"
+                                    label="Status Category"
+                                    prepend-inner-icon="mdi-flag"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    :rules="[rules.required]"
+                                    clearable
+                                    placeholder="Select status"
+                                />
+                            </v-col>
+
+                            <!-- if selected status category name =recall date show  inputype date recalldate -->
+
+                            <v-col cols="12" md="6">
+                                <v-select
+                                    v-model="orderEdit.status_id"
+                                    :items="statusOptionsStore"
+                                    item-title="name"
+                                    item-value="id"
+                                    label="Status Notes"
+                                    prepend-inner-icon="mdi-flag"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    :rules="[rules.required]"
+                                    clearable
+                                    placeholder="Select status"
+                                />
+                            </v-col>
+
+                            <v-col cols="12" md="6">
+                                <v-select
                                     v-model="orderEdit.platform"
                                     :items="platformOptions"
                                     label="Platform"

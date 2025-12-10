@@ -22,8 +22,8 @@ class MessageTemplateService
             'client_data' => $clientData
         ]);
 
-        // Merge client data with order data
-        $data = array_merge($clientData, $this->fetchOrderData($phone, $clientData));
+        // Merge client data with order data (pass order_id if available)
+        $data = array_merge($clientData, $this->fetchOrderData($phone, $clientData['order_id'] ?? null));
 
         Log::info('📦 Merged data for placeholders', ['data' => $data]);
 
@@ -33,7 +33,7 @@ class MessageTemplateService
     /**
      * Fetch order data (searches local DB first, then external API)
      */
-    protected function fetchOrderData(string $phone, array $clientData): array
+    protected function fetchOrderDatax(string $phone, array $clientData): array
     {
         $orderData = [
             'order_no' => '',
@@ -55,13 +55,7 @@ class MessageTemplateService
         if (!$order) {
             Log::debug('No orders found locally for phone', ['phone' => $phone]);
 
-            // Search external API
-            $externalOrderData = $this->fetchExternalOrderData($phone);
 
-            if ($externalOrderData) {
-                Log::info('✅ External order data found', ['externalOrderData' => $externalOrderData]);
-                return $externalOrderData;
-            }
 
             return $orderData;
         }
@@ -73,8 +67,13 @@ class MessageTemplateService
         $orderData['total_price'] = $order->total_price ?? '';
         $orderData['delivery_date'] = $order->delivery_date ?? '';
         $orderData['status'] = $order->status ?? '';
-        $orderData['agent_name'] = $order->agent_name ?? '';
-        $orderData['vendor_name'] = $order->vendor_name ?? '';
+        // $orderData['agent_name'] = $order->agent_name ?? '';
+        // orderassignment 
+        // assignments->role ='Delivery Agent'
+        // assignments->role='CallAgent'
+        // order vendor - vendor->name
+
+        // $orderData['vendor_name'] = $order->vendor_name ?? '';
         $orderData['website_url'] = $order->website_url ?? '';
         $orderData['zone'] = $order->zone ?? '';
         $orderData['order_id'] = $order->id ?? null;
@@ -98,187 +97,11 @@ class MessageTemplateService
         return $orderData;
     }
 
-    /**
-     * Fetch order data from external Boxleo API
-     */
-    protected function fetchExternalOrderData(string $phone): ?array
-    {
-        try {
-            Log::info('🌐 Calling Boxleo API', ['phone' => $phone]);
 
-            // Call external API
-            $response = Http::timeout(120)
-                ->retry(3, 2000)
-                ->get("https://app.boxleocourier.com/api/contact-search/{$phone}");
 
-            if (!$response->successful()) {
-                Log::warning("🚫 Boxleo API call not successful for {$phone}. Status: " . $response->status(), [
-                    'body' => $response->body()
-                ]);
-                return null;
-            }
 
-            $apiData = $response->json();
 
-            if (empty($apiData) || !is_array($apiData)) {
-                Log::debug('No data returned from external API', ['phone' => $phone]);
-                return null;
-            }
 
-            // Find customer with sales data
-            $customerWithSales = $this->findCustomerWithSales($apiData, $phone);
-
-            if (!$customerWithSales) {
-                Log::debug('No customer with sales found in external API', ['phone' => $phone]);
-                return null;
-            }
-
-            // Get the most recent sale
-            $latestSale = $this->getLatestSale($customerWithSales['sales']);
-
-            if (!$latestSale) {
-                Log::debug('No sales found for customer', [
-                    'phone' => $phone,
-                    'customer_id' => $customerWithSales['id']
-                ]);
-                return null;
-            }
-
-            // Map external API data to your order structure
-            return $this->mapExternalSaleToOrderData($latestSale, $customerWithSales);
-        } catch (\Exception $e) {
-            Log::error('Error fetching external order data', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Map external sale data to internal order structure
-     */
-    protected function mapExternalSaleToOrderData(array $sale, array $customer): array
-    {
-        // Format order items from products array
-        $orderItemsList = [];
-        $productsDetailed = [];
-
-        foreach ($sale['products'] ?? [] as $product) {
-            $pivot = $product['pivot'] ?? [];
-            $quantity = $pivot['quantity'] ?? 1;
-            $productName = $product['product_name'] ?? 'Unknown Product';
-
-            // Format: "1 x Portable And Powerful Electric Saw"
-            $orderItemsList[] = "{$quantity} x {$productName}";
-
-            // Store detailed product info
-            $productsDetailed[] = [
-                'id' => $product['id'],
-                'product_name' => $productName,
-                'sku_no' => $product['sku_no'] ?? $pivot['sku_no'] ?? '',
-                'bar_code' => $product['bar_code'] ?? null,
-                'quantity' => $quantity,
-                'price' => (float) ($pivot['price'] ?? 0),
-                'total_price' => (float) ($pivot['total_price'] ?? 0),
-                'quantity_sent' => $pivot['quantity_sent'] ?? 0,
-                'quantity_delivered' => $pivot['quantity_delivered'] ?? 0,
-                'quantity_returned' => $pivot['quantity_returned'] ?? 0,
-                'quantity_remaining' => $pivot['quantity_remaining'] ?? 0,
-                'quantity_tobe_delivered' => $pivot['quantity_tobe_delivered'] ?? 0,
-                'delivered' => (bool) ($pivot['delivered'] ?? false),
-                'sent' => (bool) ($pivot['sent'] ?? false),
-            ];
-        }
-
-        // Format agent name
-        $agentName = '';
-        if (!empty($sale['agent_id'])) {
-            $agentName = "Agent #{$sale['agent_id']}";
-        }
-        if (!empty($sale['rider_id'])) {
-            $riderText = "Rider #{$sale['rider_id']}";
-            $agentName = $agentName ? "{$agentName} / {$riderText}" : $riderText;
-        }
-
-        // Format vendor name
-        $vendorName = '';
-        if (!empty($sale['seller_id'])) {
-            $vendorName = "Seller #{$sale['seller_id']}";
-        }
-
-        // Format zone
-        $zone = '';
-        if (!empty($sale['zone_id'])) {
-            $zone = "Zone #{$sale['zone_id']}";
-        }
-
-        return [
-            // Core fields matching your $orderData array
-            'order_no' => $sale['order_no'] ?? '',
-            'order_number' => $sale['order_no'] ?? '',
-            'tracking_id' => $sale['tracking_no'] ?? $sale['waybill_no'] ?? '',
-            'total_price' => $sale['total_price'] ?? '',
-            'delivery_date' => $sale['delivery_date'] ?? '',
-            'status' => $sale['status'] ?? '',
-            'order_items' => implode(', ', $orderItemsList),
-            'agent_name' => $agentName,
-            'vendor_name' => $vendorName,
-            'website_url' => '',
-            'zone' => $zone,
-
-            // Additional fields
-            'order_id' => $sale['id'],
-            'external_order_id' => $sale['id'],
-            'customer_name' => $customer['name'] ?? '',
-            'client_name' => $customer['name'] ?? '',
-            'customer_phone' => $customer['phone'] ?? '',
-            'customer_email' => $customer['email'] ?? '',
-            'customer_address' => $customer['address'] ?? '',
-            'customer_city' => $customer['city'] ?? '',
-            'delivery_status' => $sale['delivery_status'] ?? '',
-            'payment_method' => $sale['payment_method'] ?? '',
-            'products' => $productsDetailed,
-            'data_source' => 'external_api',
-        ];
-    }
-
-    /**
-     * Find customer with sales data from API response
-     */
-    protected function findCustomerWithSales(array $apiData, string $phone): ?array
-    {
-        $normalizedSearch = preg_replace('/[\s\+]/', '', $phone);
-
-        foreach ($apiData as $customer) {
-            $customerPhone = preg_replace('/[\s\+]/', '', $customer['phone'] ?? '');
-
-            if ($customerPhone === $normalizedSearch && !empty($customer['sales'])) {
-                return $customer;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the most recent sale from sales array
-     */
-    protected function getLatestSale(array $sales): ?array
-    {
-        if (empty($sales)) {
-            return null;
-        }
-
-        usort($sales, function ($a, $b) {
-            $dateA = strtotime($a['created_at'] ?? $a['updated_at'] ?? '1970-01-01');
-            $dateB = strtotime($b['created_at'] ?? $b['updated_at'] ?? '1970-01-01');
-            return $dateB - $dateA;
-        });
-
-        return $sales[0];
-    }
 
     /**
      * Find latest order from local database
@@ -435,15 +258,10 @@ class MessageTemplateService
         }, $template);
     }
 
-    /**
-     * Generate personalized message using template
-     * 
-     * @param string $phone Customer phone number
-     * @param int|null $templateId Specific template ID
-     * @param string|null $templateSlug Template slug (e.g., 'order_followup')
-     * @param array $additionalData Extra data to merge with fetched data
-     * @return array ['message' => string, 'template' => MessageTemplate]
-     */
+
+
+
+
     public function generateMessage(
         string $phone,
         ?int $templateId = null,
@@ -453,35 +271,28 @@ class MessageTemplateService
         Log::info('🎯 Generating message', [
             'phone' => $phone,
             'template_id' => $templateId,
-            'template_slug' => $templateSlug,
             'additional_data' => $additionalData
         ]);
 
-        // Fetch the template
         $template = $this->getTemplate($templateId, $templateSlug);
 
         if (!$template) {
             throw new \Exception('Template not found');
         }
 
-        Log::info('📄 Template loaded', [
-            'template_name' => $template->name,
-            'template_content' => $template->content
-        ]);
+        // ⭐ NEW: Use orderId if provided
+        $orderId = $additionalData['order_id'] ?? null;
 
-        // Fetch customer data from external API
-        $clientData = $this->fetchFromExternalApi($phone);
+        // Fetch order data
+        $orderData = $this->fetchOrderData($phone, $orderId);
 
-        // Merge with additional data
-        $clientData = array_merge($clientData ?? [], $additionalData);
+        // Merge all data
+        $clientData = array_merge($orderData, $additionalData);
 
-        // Process the template with all data
+        Log::info('📦 Merged data', ['data' => $clientData]);
+
+        // Process template
         $message = $this->processTemplate($template->content, $phone, $clientData);
-
-        Log::info('✅ Message generated successfully', [
-            'template_used' => $template->name,
-            'message_length' => strlen($message)
-        ]);
 
         return [
             'message' => $message,
@@ -489,6 +300,160 @@ class MessageTemplateService
             'data_used' => $clientData
         ];
     }
+
+
+
+    protected function fetchOrderData(string $phone, ?int $orderId = null): array
+    {
+        $orderData = [
+            'order_no' => '',
+            'order_number' => '',
+            'tracking_id' => '',
+            'total_price' => '',
+            'delivery_date' => '',
+            'status' => '',
+            'order_items' => '',
+            'agent_name' => '',
+            'agent_phone' => '',
+            'rider_name' => '',
+            'rider_phone' => '',
+            'vendor_name' => '',
+            'zone' => '',
+            'client_name' => '',
+            'customer_name' => '',
+            'full_name' => '',
+        ];
+
+        // ⭐ NEW: Find order by ID first (preferred)
+        $order = null;
+
+        if ($orderId) {
+            $order = Order::with([
+                'orderItems.product',
+                'assignments.user',
+                'vendor',
+                'zone',
+                'customer'
+            ])->find($orderId);
+
+            if ($order) {
+                Log::info('✅ Found order by ID', ['order_id' => $orderId]);
+            }
+        }
+
+        // ⭐ Fallback: Find most recent order by customer phone
+        if (!$order) {
+            $order = $this->findLatestOrderByPhone($phone);
+
+            if ($order) {
+                Log::info('✅ Found order by phone', ['phone' => $phone]);
+            }
+        }
+
+        // ❌ No order found → return empty data structure
+        if (!$order) {
+            Log::warning('⚠️ No order found', [
+                'orderId' => $orderId,
+                'phone' => $phone
+            ]);
+            return $orderData;
+        }
+
+        // ⭐ Populate order-level fields
+        $orderData['order_no'] = $order->order_no ?? '';
+        $orderData['order_number'] = $order->order_number ?? $order->order_no ?? '';
+        $orderData['tracking_id'] = $order->tracking_no ?? '';
+        $orderData['total_price'] = $order->total_price ?? '';
+        $orderData['delivery_date'] = $order->delivery_date ?? '';
+        $orderData['status'] = $order->latest_status?->status?->name ?? '';
+        $orderData['zone'] = $order->zone?->name ?? '';
+        $orderData['vendor_name'] = $order->vendor?->name ?? '';
+
+        // ⭐ Pull customer name from all possible sources
+        $resolvedName =
+            $order->customer?->full_name ??
+            $order->customer?->name ??
+            $order->customer?->client_name ??
+            '';
+
+        $orderData['client_name'] = $resolvedName;
+        $orderData['customer_name'] = $resolvedName;
+        $orderData['full_name'] = $resolvedName;
+
+        // ⭐ Extract assigned agent & rider
+        $callAgent = $order->assignments->firstWhere('role', 'CallAgent');
+        $deliveryAgent = $order->assignments->firstWhere('role', 'Delivery Agent');
+
+        $orderData['agent_name'] = $callAgent?->user?->name ?? '';
+        $orderData['agent_phone'] = $callAgent?->user?->phone_number ?? '';
+        $orderData['rider_name'] = $deliveryAgent?->user?->name ?? '';
+        $orderData['rider_phone'] = $deliveryAgent?->user?->phone_number ?? '';
+
+        // ⭐ Format order items reliably
+        if ($order->orderItems && $order->orderItems->count() > 0) {
+            $orderData['order_items'] = $order->orderItems->map(function ($item) {
+                $name =
+                    $item->name ??
+                    $item->product?->product_name ??
+                    $item->product?->name ??
+                    $item->sku ??
+                    'Item';
+
+                $qty = $item->quantity ?? 1;
+
+                return "{$qty} x {$name}";
+            })->join(', ');
+
+
+
+            // ⭐ Add products array for template loops
+            $orderData['products'] = $order->orderItems->map(function ($item) {
+                return [
+                    'product_name' =>
+                    $item->name ??
+                        $item->product?->product_name ??
+                        $item->product?->name ??
+                        $item->sku ??
+                        'Item',
+                    'quantity' => $item->quantity ?? 1
+                ];
+            })->toArray();
+        }
+
+        Log::debug('📦 Order data prepared', [
+            'order_no' => $orderData['order_no'],
+            'items_count' => $order->orderItems?->count() ?? 0
+        ]);
+
+        return $orderData;
+    }
+
+
+    /**
+     * Find latest order by phone
+     */
+    protected function findLatestOrderByPhone(string $phone): ?Order
+    {
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+        return Order::with([
+            'orderItems.product',
+            'assignments.user',
+            'vendor',
+            'customer',
+            'latest_status.status'
+        ])
+            ->whereHas('customer', function ($q) use ($cleanPhone) {
+                $q->where(function ($subQ) use ($cleanPhone) {
+                    $subQ->where('phone', 'LIKE', "%{$cleanPhone}%")
+                        ->orWhere('alt_phone', 'LIKE', "%{$cleanPhone}%");
+                });
+            })
+            ->latest()
+            ->first();
+    }
+
+
 
     /**
      * Get template by ID or slug
@@ -516,73 +481,7 @@ class MessageTemplateService
             ?? Template::first();
     }
 
-    /**
-     * Fetch customer data from external Boxleo API
-     */
-    protected function fetchFromExternalApi(string $phone): ?array
-    {
-        try {
-            // Cache for 10 minutes to avoid repeated API calls
-            $cacheKey = "external_client_{$phone}";
 
-            return Cache::remember($cacheKey, 600, function () use ($phone) {
-                Log::info('🌐 Fetching customer from Boxleo API', ['phone' => $phone]);
-
-                $response = Http::timeout(10)
-                    ->get("https://app.boxleocourier.com/api/contact-search/{$phone}");
-
-                if (!$response->successful()) {
-                    Log::warning('External API request failed', [
-                        'phone' => $phone,
-                        'status' => $response->status()
-                    ]);
-                    return null;
-                }
-
-                $apiData = $response->json();
-
-                if (empty($apiData) || !is_array($apiData)) {
-                    Log::debug('No customer data returned from external API', ['phone' => $phone]);
-                    return null;
-                }
-
-                // Find customer by phone
-                $customer = $this->findCustomerByPhone($apiData, $phone);
-
-                if ($customer) {
-                    Log::info('✅ Customer found in external API', [
-                        'customer_id' => $customer['id'] ?? null,
-                        'customer_name' => $customer['name'] ?? null
-                    ]);
-
-                    return [
-                        'customer_name' => $customer['name'] ?? 'Customer',
-                        'client_name' => $customer['name'] ?? 'Customer',
-                        'customer_email' => $customer['email'] ?? '',
-                        'customer_phone' => $customer['phone'] ?? '',
-                        'customer_alt_phone' => $customer['alt_phone'] ?? '',
-                        'customer_address' => $customer['address'] ?? '',
-                        'customer_city' => $customer['city'] ?? '',
-                        'customer_id' => $customer['id'] ?? null,
-                        'external_customer_id' => $customer['id'] ?? null,
-                        'seller_id' => $customer['seller_id'] ?? null,
-                    ];
-                }
-
-                return null;
-            });
-        } catch (\Exception $e) {
-            Log::error('Error fetching from external API', [
-                'phone' => $phone,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Find customer by phone number in API data
-     */
     protected function findCustomerByPhone(array $apiData, string $phone): ?array
     {
         $normalizedSearch = preg_replace('/[\s\+]/', '', $phone);
