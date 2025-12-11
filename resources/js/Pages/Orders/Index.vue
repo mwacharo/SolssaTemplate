@@ -1157,6 +1157,8 @@
                 </div>
             </div>
         </div>
+
+        <WhatsAppConversation />
         <!-- <CallDialogs /> -->
 
         <!-- <CallDialogs
@@ -1192,8 +1194,12 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick, reactive } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+import WhatsAppConversation from "../CallCenter/WhatsAppConversation.vue";
 import { useOrderStore } from "@/stores/orderStore";
 import { useCallCenterStore } from "@/stores/callCenter";
+
+import { useConversationStore } from "@/stores/useConversationStore";
+
 import OrderForm from "./OrderForm.vue";
 
 import BulkAction from "./BulkAction.vue";
@@ -1204,6 +1210,7 @@ import DateRangePicker from "@/Components/DualDatePicker.vue";
 
 // Initialize store
 const orderStore = useOrderStore();
+const conversationStore = useConversationStore();
 
 const createMode = ref(false);
 
@@ -1468,6 +1475,20 @@ const goToPage = async (page) => {
         selectAll.value = false;
         selectedOrders.value = [];
     }
+};
+
+// conversation
+
+const sendWhatsAppMessage = (order) => {
+    const phone = order.customer?.phone;
+
+    if (!phone) {
+        console.error("❌ No phone number found in order:", order);
+        return;
+    }
+
+    console.log("Opening WhatsApp dialog for:", phone);
+    conversationStore.openDialog(phone);
 };
 
 // Watch for selection changes

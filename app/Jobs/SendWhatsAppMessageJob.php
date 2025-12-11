@@ -20,9 +20,17 @@ class SendWhatsAppMessageJob implements ShouldQueue
     protected $chatId;
     protected $messageContent;
     protected $userId;
+    protected $orderId;
 
-    public function __construct(string $chatId, string $messageContent, int $userId)
-    {
+
+    public function __construct(
+        string $chatId,
+        string $messageContent,
+        int $userId,
+        // $additionalData
+        array $additionalData
+
+    ) {
         // Log::info('SendWhatsAppMessageJob: constructor called', [
         //     'chatId' => $chatId,
         //     'userId' => $userId,
@@ -32,6 +40,8 @@ class SendWhatsAppMessageJob implements ShouldQueue
         $this->chatId = $chatId;
         $this->messageContent = $messageContent;
         $this->userId = $userId;
+        // $this->orderId = $additionalData['order_id'];
+        $this->orderId = $additionalData['order_id'] ?? null;
     }
 
     public function handle()
@@ -39,6 +49,7 @@ class SendWhatsAppMessageJob implements ShouldQueue
         Log::info('SendWhatsAppMessageJob: handle() started', [
             'chatId' => $this->chatId,
             'userId' => $this->userId,
+            'orderId' => $this->orderId,
         ]);
 
         // Find user to retrieve credentials
@@ -126,7 +137,7 @@ class SendWhatsAppMessageJob implements ShouldQueue
 
             // Store the message
             $msg = Message::create([
-                'chat_id' => $this->chatId,
+                // 'chat_id' => $this->chatId,
                 'from' => 'system',
                 'to' => $this->chatId,
                 'content' => $this->messageContent,
@@ -139,13 +150,15 @@ class SendWhatsAppMessageJob implements ShouldQueue
                 'messageable_id' => $user->id,
                 'messageable_type' => get_class($user),
                 'timestamp' => now(),
+                'order_id' => $this->orderId,
             ]);
 
-            // Log::info('SendWhatsAppMessageJob: Message record created', [
-            //     'id' => $msg->id,
-            //     'chat_id' => $this->chatId,
-            //     'status' => $status,
-            // ]);
+            Log::info('SendWhatsAppMessageJob: Message record created', [
+                'id' => $msg->id,
+                'chat_id' => $this->chatId,
+                'status' => $status,
+                'order_id' => $this->orderId,
+            ]);
         } catch (\Exception $e) {
             // Log::error('SendWhatsAppMessageJob: Exception in service or HTTP call', [
             //     'chatId' => $this->chatId,
@@ -158,7 +171,7 @@ class SendWhatsAppMessageJob implements ShouldQueue
             // Record failed message
             try {
                 Message::create([
-                    'chat_id' => $this->chatId,
+                    // 'chat_id' => $this->chatId,
                     'from' => 'system',
                     'to' => $this->chatId,
                     'content' => $this->messageContent,
@@ -170,6 +183,8 @@ class SendWhatsAppMessageJob implements ShouldQueue
                     'messageable_id' => $user->id,
                     'messageable_type' => get_class($user),
                     'timestamp' => now(),
+                    'order_id' => $this->orderId,
+
                 ]);
             } catch (\Exception $msgException) {
                 // Log::error('SendWhatsAppMessageJob: Failed to create error message record', [

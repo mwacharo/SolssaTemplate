@@ -1,12 +1,13 @@
 // stores/whatsappStore.js
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { comma } from 'postcss/lib/list'
 
 export const useWhatsAppStore = defineStore('whatsapp', {
   state: () => ({
     // conversation 
     dialog: false,
-    loading: false,
+    // loading: false,
     conversation: [],
     replyMessage: '',
     showEmojiPicker: false,
@@ -38,6 +39,8 @@ export const useWhatsAppStore = defineStore('whatsapp', {
 
     // Loading states
     loading: {
+            conversation: false,  // ✅ Add this for conversation dialog
+
       messages: false,
       contacts: false,
       orders: false,
@@ -684,10 +687,14 @@ export const useWhatsAppStore = defineStore('whatsapp', {
     console.log('🚀 Sending message, userId:', userId);
     
     if (!this.messageText.trim()) {
+              console.log('Message text is empty');
+
         return this.showError('Please enter a message');
     }
     
     if (!this.selectedContacts?.length) {
+              console.log('No contacts selected');
+
         return this.showError('Please select at least one recipient');
     }
 

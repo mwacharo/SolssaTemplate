@@ -50,214 +50,214 @@ class WhatsAppController extends Controller
 
 
 
-    public function sendMessageX(Request $request)
-    {
-        Log::debug('sendMessage called', ['request' => $request->all()]);
+    // public function sendMessageX(Request $request)
+    // {
+    //     Log::debug('sendMessage called', ['request' => $request->all()]);
 
-        $request->validate([
-            'message' => 'nullable|string',
-            'user_id' => 'required|integer',
-            'order_ids' => 'nullable|array',
-            'contact_ids' => 'nullable|array',
-            'contacts' => 'nullable|array',
-            'contacts.*.chatId' => 'required_with:contacts|string',
-            'template_id' => 'nullable|integer',
-            'template_slug' => 'nullable|string',
-        ]);
+    //     $request->validate([
+    //         'message' => 'nullable|string',
+    //         'user_id' => 'required|integer',
+    //         'order_ids' => 'nullable|array',
+    //         'contact_ids' => 'nullable|array',
+    //         'contacts' => 'nullable|array',
+    //         'contacts.*.chatId' => 'required_with:contacts|string',
+    //         'template_id' => 'nullable|integer',
+    //         'template_slug' => 'nullable|string',
+    //     ]);
 
-        $userId = $request->user_id;
-        $messageTemplate = $request->message;
-        $templateId = $request->template_id;
-        $templateSlug = $request->template_slug;
-        $queued = 0;
-        $delayMinutes = 5;
-        $index = 0;
+    //     $userId = $request->user_id;
+    //     $messageTemplate = $request->message;
+    //     $templateId = $request->template_id;
+    //     $templateSlug = $request->template_slug;
+    //     $queued = 0;
+    //     $delayMinutes = 5;
+    //     $index = 0;
 
-        // Initialize MessageTemplateService
-        $messageTemplateService = app(MessageTemplateService::class);
+    //     // Initialize MessageTemplateService
+    //     $messageTemplateService = app(MessageTemplateService::class);
 
-        // 1. Send to orders' clients
-        if ($request->filled(
-            'order_ids',
-            // 'orderItems.product'
-        )) {
-            Log::debug('Processing order_ids', ['order_ids' => $request->order_ids]);
+    //     // 1. Send to orders' clients
+    //     if ($request->filled(
+    //         'order_ids',
+    //         // 'orderItems.product'
+    //     )) {
+    //         Log::debug('Processing order_ids', ['order_ids' => $request->order_ids]);
 
-            $orders = Order::with('client', '')->whereIn('id', $request->order_ids)->get();
+    //         $orders = Order::with('client', '')->whereIn('id', $request->order_ids)->get();
 
-            foreach ($orders as $order) {
-                $client = $order->client;
+    //         foreach ($orders as $order) {
+    //             $client = $order->client;
 
-                if (!$client) {
-                    Log::warning('No client found for order', ['order_id' => $order->id]);
-                    continue;
-                }
+    //             if (!$client) {
+    //                 Log::warning('No client found for order', ['order_id' => $order->id]);
+    //                 continue;
+    //             }
 
-                $phone = $client->phone_number ?? $client->alt_phone_number ?? $client->phone;
+    //             $phone = $client->phone_number ?? $client->alt_phone_number ?? $client->phone;
 
-                if (!$phone) {
-                    Log::warning('No phone found for client', [
-                        'order_id' => $order->id,
-                        'client_id' => $client->id
-                    ]);
-                    continue;
-                }
+    //             if (!$phone) {
+    //                 Log::warning('No phone found for client', [
+    //                     'order_id' => $order->id,
+    //                     'client_id' => $client->id
+    //                 ]);
+    //                 continue;
+    //             }
 
-                try {
-                    // Use MessageTemplateService to generate personalized message
-                    $result = $messageTemplateService->generateMessage(
-                        phone: $phone,
-                        templateId: $templateId,
-                        templateSlug: $templateSlug ?? 'order_followup',
-                        additionalData: [
-                            'order_id' => $order->id,
-                            'customer_id' => $client->id,
-                        ]
-                    );
+    //             try {
+    //                 // Use MessageTemplateService to generate personalized message
+    //                 $result = $messageTemplateService->generateMessage(
+    //                     phone: $phone,
+    //                     templateId: $templateId,
+    //                     templateSlug: $templateSlug ?? 'order_followup',
+    //                     additionalData: [
+    //                         'order_id' => $order->id,
+    //                         'customer_id' => $client->id,
+    //                     ]
+    //                 );
 
-                    $personalizedMessage = $result['message'];
-                    $chatId = preg_replace('/[^0-9]/', '', $phone) . '@c.us';
+    //                 $personalizedMessage = $result['message'];
+    //                 $chatId = preg_replace('/[^0-9]/', '', $phone) . '@c.us';
 
-                    Log::info('Dispatching WhatsApp message (order)', [
-                        'chatId' => $chatId,
-                        'order_id' => $order->id,
-                        'template_used' => $result['template']->name ?? 'Unknown',
-                        'delay_minutes' => $delayMinutes * $index
-                    ]);
+    //                 Log::info('Dispatching WhatsApp message (order)', [
+    //                     'chatId' => $chatId,
+    //                     'order_id' => $order->id,
+    //                     'template_used' => $result['template']->name ?? 'Unknown',
+    //                     'delay_minutes' => $delayMinutes * $index
+    //                 ]);
 
-                    SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                        ->delay(now()->addMinutes($delayMinutes * $index));
+    //                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId,)
+    //                     ->delay(now()->addMinutes($delayMinutes * $index));
 
-                    $index++;
-                    $queued++;
-                } catch (\Exception $e) {
-                    Log::error('Error generating message for order', [
-                        'order_id' => $order->id,
-                        'phone' => $phone,
-                        'error' => $e->getMessage()
-                    ]);
-                    continue;
-                }
-            }
-        }
+    //                 $index++;
+    //                 $queued++;
+    //             } catch (\Exception $e) {
+    //                 Log::error('Error generating message for order', [
+    //                     'order_id' => $order->id,
+    //                     'phone' => $phone,
+    //                     'error' => $e->getMessage()
+    //                 ]);
+    //                 continue;
+    //             }
+    //         }
+    //     }
 
-        // 2. Send to user's saved contacts
-        if ($request->filled('contact_ids')) {
-            Log::debug('Processing contact_ids', ['contact_ids' => $request->contact_ids]);
+    //     // 2. Send to user's saved contacts
+    //     if ($request->filled('contact_ids')) {
+    //         Log::debug('Processing contact_ids', ['contact_ids' => $request->contact_ids]);
 
-            $user = User::with(['contacts' => function ($q) use ($request) {
-                $q->whereIn('id', $request->contact_ids);
-            }])->find($userId);
+    //         $user = User::with(['contacts' => function ($q) use ($request) {
+    //             $q->whereIn('id', $request->contact_ids);
+    //         }])->find($userId);
 
-            foreach ($user?->contacts ?? [] as $contact) {
-                $phone = $contact->phone ?? $contact->alt_phone;
+    //         foreach ($user?->contacts ?? [] as $contact) {
+    //             $phone = $contact->phone ?? $contact->alt_phone;
 
-                if (!$phone) {
-                    Log::warning('No phone found for contact', ['contact_id' => $contact->id]);
-                    continue;
-                }
+    //             if (!$phone) {
+    //                 Log::warning('No phone found for contact', ['contact_id' => $contact->id]);
+    //                 continue;
+    //             }
 
-                try {
-                    // Use MessageTemplateService for saved contacts
-                    $result = $messageTemplateService->generateMessage(
-                        phone: $phone,
-                        templateId: $templateId,
-                        templateSlug: $templateSlug ?? 'general',
-                        additionalData: [
-                            'customer_name' => $contact->name ?? 'Customer',
-                            'customer_id' => $contact->id,
-                        ]
-                    );
+    //             try {
+    //                 // Use MessageTemplateService for saved contacts
+    //                 $result = $messageTemplateService->generateMessage(
+    //                     phone: $phone,
+    //                     templateId: $templateId,
+    //                     templateSlug: $templateSlug ?? 'general',
+    //                     additionalData: [
+    //                         'customer_name' => $contact->name ?? 'Customer',
+    //                         'customer_id' => $contact->id,
+    //                     ]
+    //                 );
 
-                    $personalizedMessage = $result['message'];
-                    $chatId = preg_replace('/[^0-9]/', '', $phone) . '@c.us';
+    //                 $personalizedMessage = $result['message'];
+    //                 $chatId = preg_replace('/[^0-9]/', '', $phone) . '@c.us';
 
-                    Log::info('Dispatching WhatsApp message (saved contact)', [
-                        'chatId' => $chatId,
-                        'contact_id' => $contact->id,
-                        'template_used' => $result['template']->name ?? 'Unknown',
-                        'delay_minutes' => $delayMinutes * $index
-                    ]);
+    //                 Log::info('Dispatching WhatsApp message (saved contact)', [
+    //                     'chatId' => $chatId,
+    //                     'contact_id' => $contact->id,
+    //                     'template_used' => $result['template']->name ?? 'Unknown',
+    //                     'delay_minutes' => $delayMinutes * $index
+    //                 ]);
 
-                    SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                        ->delay(now()->addMinutes($delayMinutes * $index));
+    //                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+    //                     ->delay(now()->addMinutes($delayMinutes * $index));
 
-                    $index++;
-                    $queued++;
-                } catch (\Exception $e) {
-                    Log::error('Error generating message for contact', [
-                        'contact_id' => $contact->id,
-                        'phone' => $phone,
-                        'error' => $e->getMessage()
-                    ]);
-                    continue;
-                }
-            }
-        }
+    //                 $index++;
+    //                 $queued++;
+    //             } catch (\Exception $e) {
+    //                 Log::error('Error generating message for contact', [
+    //                     'contact_id' => $contact->id,
+    //                     'phone' => $phone,
+    //                     'error' => $e->getMessage()
+    //                 ]);
+    //                 continue;
+    //             }
+    //         }
+    //     }
 
-        // 3. Send to unknown contacts directly via chatId
-        if ($request->filled('contacts')) {
-            Log::debug('Processing direct contacts array', ['contacts' => $request->contacts]);
+    //     // 3. Send to unknown contacts directly via chatId
+    //     if ($request->filled('contacts')) {
+    //         Log::debug('Processing direct contacts array', ['contacts' => $request->contacts]);
 
-            foreach ($request->contacts as $contactData) {
-                $rawChatId = $contactData['chatId'] ?? null;
+    //         foreach ($request->contacts as $contactData) {
+    //             $rawChatId = $contactData['chatId'] ?? null;
 
-                if (!$rawChatId) {
-                    Log::warning('Missing chatId in direct contact', ['contact' => $contactData]);
-                    continue;
-                }
+    //             if (!$rawChatId) {
+    //                 Log::warning('Missing chatId in direct contact', ['contact' => $contactData]);
+    //                 continue;
+    //             }
 
-                $phone = preg_replace('/[^0-9]/', '', $rawChatId);
+    //             $phone = preg_replace('/[^0-9]/', '', $rawChatId);
 
-                try {
-                    // Use MessageTemplateService for external contacts
-                    $result = $messageTemplateService->generateMessage(
-                        phone: $phone,
-                        templateId: $templateId,
-                        templateSlug: $templateSlug ?? 'general',
-                        additionalData: [
-                            'customer_name' => $contactData['name'] ?? 'Customer',
-                            'customer_id' => $contactData['id'] ?? null,
-                        ]
-                    );
+    //             try {
+    //                 // Use MessageTemplateService for external contacts
+    //                 $result = $messageTemplateService->generateMessage(
+    //                     phone: $phone,
+    //                     templateId: $templateId,
+    //                     templateSlug: $templateSlug ?? 'general',
+    //                     additionalData: [
+    //                         'customer_name' => $contactData['name'] ?? 'Customer',
+    //                         'customer_id' => $contactData['id'] ?? null,
+    //                     ]
+    //                 );
 
-                    $personalizedMessage = $result['message'];
-                    $chatId = $phone . '@c.us';
+    //                 $personalizedMessage = $result['message'];
+    //                 $chatId = $phone . '@c.us';
 
-                    Log::info('Dispatching WhatsApp message (external contact)', [
-                        'chatId' => $chatId,
-                        'contact_name' => $contactData['name'] ?? 'Unknown',
-                        'template_used' => $result['template']->name ?? 'Unknown',
-                        'delay_minutes' => $delayMinutes * $index
-                    ]);
+    //                 Log::info('Dispatching WhatsApp message (external contact)', [
+    //                     'chatId' => $chatId,
+    //                     'contact_name' => $contactData['name'] ?? 'Unknown',
+    //                     'template_used' => $result['template']->name ?? 'Unknown',
+    //                     'delay_minutes' => $delayMinutes * $index
+    //                 ]);
 
-                    SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
-                        ->delay(now()->addMinutes($delayMinutes * $index));
+    //                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
+    //                     ->delay(now()->addMinutes($delayMinutes * $index));
 
-                    $index++;
-                    $queued++;
-                } catch (\Exception $e) {
-                    Log::error('Error generating message for external contact', [
-                        'chatId' => $rawChatId,
-                        'error' => $e->getMessage()
-                    ]);
-                    continue;
-                }
-            }
-        }
+    //                 $index++;
+    //                 $queued++;
+    //             } catch (\Exception $e) {
+    //                 Log::error('Error generating message for external contact', [
+    //                     'chatId' => $rawChatId,
+    //                     'error' => $e->getMessage()
+    //                 ]);
+    //                 continue;
+    //             }
+    //         }
+    //     }
 
-        Log::info('sendMessage completed', [
-            'queued_count' => $queued,
-            'total_delay_minutes' => $delayMinutes * ($index - 1)
-        ]);
+    //     Log::info('sendMessage completed', [
+    //         'queued_count' => $queued,
+    //         'total_delay_minutes' => $delayMinutes * ($index - 1)
+    //     ]);
 
-        return response()->json([
-            'status' => 'success',
-            'queued_count' => $queued,
-            'message' => "Queued $queued WhatsApp messages successfully.",
-            'estimated_completion_minutes' => $queued > 0 ? $delayMinutes * ($queued - 1) : 0
-        ]);
-    }
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'queued_count' => $queued,
+    //         'message' => "Queued $queued WhatsApp messages successfully.",
+    //         'estimated_completion_minutes' => $queued > 0 ? $delayMinutes * ($queued - 1) : 0
+    //     ]);
+    // }
 
     /**
      * Legacy method - kept for backward compatibility
@@ -348,7 +348,9 @@ class WhatsAppController extends Controller
                 SendWhatsAppMessageJob::dispatch(
                     $chatId,
                     $personalizedMessage,
-                    $userId
+                    $userId,
+                    $additionalData
+
                 )->delay(now()->addMinutes($delayMinutes * $index));
 
                 $index++;

@@ -41,6 +41,7 @@ class Message extends Model
         'delivered_at',
         'read_at',
         'failed_at',
+        'order_id',
     ];
 
     /**
