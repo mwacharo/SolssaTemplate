@@ -508,6 +508,7 @@ class WhatsAppController extends Controller
      */
     public function getConversation($chatId)
     {
+        Log::info('Fetching conversation for chatId', ['chatId' => $chatId]);
         $messages = Message::where(function ($q) use ($chatId) {
             $q->where('from', $chatId)
                 ->orWhere('to', $chatId);

@@ -1,5 +1,8 @@
+// useConversationStore.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { notify } from "@/utils/toast";
+
 
 export const useConversationStore = defineStore('conversation', () => {
     // State
@@ -17,6 +20,9 @@ export const useConversationStore = defineStore('conversation', () => {
     const sending = ref(false)
     const audioStates = ref({})
     const selectedContactId = ref(null)
+        const selectedContact = ref(null)
+        const contact = ref(null)
+
     const typingIndicator = ref(false)
     const connectionStatus = ref('online') // online, offline, connecting
 
@@ -38,18 +44,27 @@ export const useConversationStore = defineStore('conversation', () => {
             connectionStatus.value === 'online'
     })
 
+ 
+
+
     const contactName = computed(() => {
+        if (selectedContact.value?.name) {
+            return selectedContact.value.name
+        }
         if (conversation.value && conversation.value.length > 0) {
             const firstMessage = conversation.value.find(msg => msg.sender_name)
-            return firstMessage?.sender_name || 'Contact'
+            return firstMessage?.sender_name || 'Unknown Contact'
         }
-        return 'Contact'
+        return 'Unknown Contact'
     })
 
     const contactPhone = computed(() => {
+        if (selectedContact.value?.phone) {
+            return selectedContact.value.phone
+        }
         if (conversation.value && conversation.value.length > 0) {
             const phoneMatch = conversation.value[0].from?.match(/(\d+)/)
-            return phoneMatch ? `+${phoneMatch[1]}` : ''
+            return phoneMatch ? phoneMatch[1] : ''
         }
         return ''
     })
@@ -66,21 +81,90 @@ export const useConversationStore = defineStore('conversation', () => {
 
 
 
+// when contact is object 
+//  
 
-    // Alternative version that ensures dialog stays open:
+
+
+// const openDialog = async (contactId) => {
+//     console.log('=== openDialog called ===')
+//     console.log('contactId:', contactId)
+
+//        // Set the selected contact - THIS IS THE KEY FIX
+
+//        const contact = { id: contactId, name: contactName.value, phone: contactPhone.value };
+//         selectedContact.value = contact;
+        
+//         // Set display values
+//         contactName.value = contact.name || 'Unknown';
+//         contactPhone.value = contact.phone || '';
+        
+    
+//     dialog.value = true
+    
+//     console.log('Dialog set to true:', dialog.value)
+    
+//     // Load conversation but don't let it affect dialog state
+//     try {
+//         await loadConversation(contactId)
+//     } catch (error) {
+//         console.error('Error loading conversation:', error)
+//     }
+    
+//     // Ensure dialog is still true after loading
+//     if (!dialog.value) {
+//         console.log('Dialog was somehow set to false, correcting...')
+//         dialog.value = true
+//     }
+    
+//     console.log('openDialog completed, final dialog state:', dialog.value)
+// }
+
 
 const openDialog = async (contactId) => {
     console.log('=== openDialog called ===')
     console.log('contactId:', contactId)
+
+    // Handle both object and string formats
+    let contact;
+    let actualContactId;
     
-    selectedContactId.value = contactId
-    dialog.value = true
+    if (typeof contactId === 'object' && contactId !== null) {
+        // contactId is an object
+        contact = {
+            id: contactId.id,
+            name: contactId.name,
+            phone: contactId.phone || contactId.whatsapp
+        };
+        // For loadConversation, use the phone in WhatsApp format
+        actualContactId = contactId.whatsapp ? `${contactId.whatsapp}@c.us` : `${contactId.phone}@c.us`;
+    } else {
+        // contactId is a string like "0741821113@c.us"
+        actualContactId = contactId;
+        // Extract phone number from the string
+        const phoneNumber = contactId.replace('@c.us', '');
+        contact = {
+            id: phoneNumber,
+            name: contactName.value || 'Unknown',
+            phone: phoneNumber
+        };
+    }
+    
+    // Set the selected contact
+    selectedContact.value = contact;
+    
+    // Set display values
+    contactName.value = contact.name || 'Unknown';
+    contactPhone.value = contact.phone || '';
+    
+    dialog.value = true;
     
     console.log('Dialog set to true:', dialog.value)
+    console.log('Calling loadConversation with:', actualContactId)
     
     // Load conversation but don't let it affect dialog state
     try {
-        await loadConversation(contactId)
+        await loadConversation(actualContactId)
     } catch (error) {
         console.error('Error loading conversation:', error)
     }
@@ -98,6 +182,7 @@ const openDialog = async (contactId) => {
         dialog.value = false
         clearForm()
         selectedContactId.value = null
+        selectedContact.value = null 
     }
 
     const loadConversation = async (contactId) => {
@@ -156,6 +241,7 @@ const openDialog = async (contactId) => {
         const attachmentCopy = { ...attachment.value }
         clearForm()
 
+
         sending.value = true
 
         try {
@@ -177,6 +263,11 @@ const openDialog = async (contactId) => {
                     created_at: response.created_at || response.timestamp
                 }
             }
+            notify.success('Message sent successfully!')
+
+                    dialog.value = false
+
+
 
         } catch (error) {
             console.error('Failed to send message:', error)
@@ -186,6 +277,7 @@ const openDialog = async (contactId) => {
             if (messageIndex !== -1) {
                 conversation.value[messageIndex].message_status = 'failed'
             }
+            notify.error('Failed to send message.')
 
             showError('Failed to send message. Please try again.')
         } finally {
@@ -435,11 +527,14 @@ const retryFailedMessage = async (messageId) => {
         selectedContactId.value = null
         typingIndicator.value = false
         connectionStatus.value = 'online'
+        selectedContact.value = null // ⭐ Clear contact object too
+
     }
 
     return {
         // State
         dialog,
+        selectedContact,
         conversation,
         loading,
         replyMessage,

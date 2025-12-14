@@ -170,6 +170,11 @@ class Order extends Model
         return $this->belongsTo(User::class, 'vendor_id');
     }
 
+    public function latest_status()
+    {
+        return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
+    }
+
     public function statusTimestamps()
     {
         return $this->hasMany(OrderStatusTimestamp::class);

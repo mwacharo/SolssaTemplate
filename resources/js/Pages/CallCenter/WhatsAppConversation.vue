@@ -567,7 +567,13 @@ const closeDialog = () => {
     dialog.value = false;
 };
 
-const sendMessage = () => store.sendMessage(userId.value);
+const sendMessage = () =>
+    store.sendSingleMessage(
+        userId.value,
+        conversationStore.selectedContact,
+        store.messageText,
+        store.selectedTemplate?.id
+    );
 
 const appendEmoji = (emoji) => {
     replyMessage.value += emoji;
@@ -592,6 +598,17 @@ onMounted(() => {
     scrollToBottom();
     store.initialize();
 });
+
+watch(
+    () => conversationStore.selectedContact,
+    (contact) => {
+        if (contact) {
+            store.selectedContacts = [contact];
+            console.log("✅ Selected contact set:", store.selectedContacts);
+        }
+    },
+    { immediate: true }
+);
 
 watch(
     conversation,

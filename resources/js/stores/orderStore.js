@@ -140,8 +140,17 @@ export const useOrderStore = defineStore('orders', () => {
       if (params.product_id) queryParams.append('product_id', params.product_id)
       if (params.category_id) queryParams.append('category_id', params.category_id)
       if (params.search) queryParams.append('search', params.search)
-      if (params.created_from) queryParams.append('created_from', params.created_from)
-      if (params.created_to) queryParams.append('created_to', params.created_to)
+      // if (params.created_from) queryParams.append('created_from', params.created_from)
+      // if (params.created_to) queryParams.append('created_to', params.created_to)    // Add date range filters - THESE WERE MISSING
+    if (params.delivery_from) queryParams.append('delivery_from', params.delivery_from)
+    if (params.delivery_to) queryParams.append('delivery_to', params.delivery_to)
+    if (params.status_from) queryParams.append('status_from', params.status_from)
+    if (params.status_to) queryParams.append('status_to', params.status_to)
+    if (params.created_from) queryParams.append('created_from', params.created_from)
+    if (params.created_to) queryParams.append('created_to', params.created_to)
+
+
+
 
       const response = await axios.get(`/api/v1/orders?${queryParams.toString()}`, {
         headers: {
@@ -539,23 +548,50 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderFilterCity.value) filters.city_id = orderFilterCity.value
     if (orderFilterCategory.value) filters.category_id = orderFilterCategory.value
     if (orderSearch.value) filters.search = orderSearch.value
-    if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
-      filters.delivery_from = deliveryDateRange.value[0]
-      filters.delivery_to = deliveryDateRange.value[1]
-    }
-    if (statusDateRange.value && statusDateRange.value.length === 2) {
-      filters.status_from = statusDateRange.value[0]
-      filters.status_to = statusDateRange.value[1]
-    }
-    if (createdDateRange.value && createdDateRange.value.length === 2) {
-      filters.created_from = createdDateRange.value[0]
-      filters.created_to = createdDateRange.value[1]
-    }
+
+
+    // if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
+    //   filters.delivery_from = deliveryDateRange.value[0]
+    //   filters.delivery_to = deliveryDateRange.value[1]
+    // }
+    // if (statusDateRange.value && statusDateRange.value.length === 2) {
+    //   filters.status_from = statusDateRange.value[0]
+    //   filters.status_to = statusDateRange.value[1]
+    // }
+    // if (createdDateRange.value && createdDateRange.value.length === 2) {
+    //   filters.created_from = createdDateRange.value[0]
+    //   filters.created_to = createdDateRange.value[1]
+    // }
+
+
+      // Format dates properly
+  if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
+    filters.delivery_from = formatDate(deliveryDateRange.value[0])
+    filters.delivery_to = formatDate(deliveryDateRange.value[1])
+  }
+  if (statusDateRange.value && statusDateRange.value.length === 2) {
+    filters.status_from = formatDate(statusDateRange.value[0])
+    filters.status_to = formatDate(statusDateRange.value[1])
+  }
+  if (createdDateRange.value && createdDateRange.value.length === 2) {
+    filters.created_from = formatDate(createdDateRange.value[0])
+    filters.created_to = formatDate(createdDateRange.value[1])
+  }
 
     // Reset to first page when applying filters
     filters.page = 1
     await fetchOrders(filters)
   }
+
+  // Helper function to format dates
+const formatDate = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
   // Initialization
   const initialize = async () => {

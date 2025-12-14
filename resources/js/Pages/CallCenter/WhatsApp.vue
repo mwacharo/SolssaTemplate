@@ -1169,7 +1169,7 @@ onMounted(async () => {
                                                     viewMessageDetails(item)
                                                 "
                                             >
-                                                <v-icon>mdi-eye</v-icon>
+                                                <v-icon>mdi-email</v-icon>
                                             </v-btn>
                                             <v-btn
                                                 variant="text"

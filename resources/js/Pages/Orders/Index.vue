@@ -1148,7 +1148,7 @@
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
+                                        d="M6 18L18 f6M6 6l12 12"
                                     ></path>
                                 </svg>
                             </button>
@@ -1171,6 +1171,7 @@
         <CallDialogs
             v-model="callDialogType"
             :call-data="{ phone: newCallPhone }"
+            :phone-number="selectedPhone"
             @call-made="onCallMade"
             @call-transferred="onCallTransferred"
             @agent-called="onAgentCalled"
@@ -1219,9 +1220,13 @@ const newCallPhone = ref("");
 const isCreateMode = ref(false);
 const callDialogType = ref("");
 
+const selectedPhoneNumber = ref("");
+
 // Handle opening call dialog from order form
 const handleOpenCallDialog = (phoneNumber) => {
     newCallPhone.value = phoneNumber || "";
+    selectedPhone.value = phoneNumber;
+
     callDialogType.value = "newCall"; // This opens the "Make New Call" dialog
 };
 
@@ -1253,6 +1258,13 @@ const dialog = ref({
 // Component state
 const selectedOrders = ref([]);
 const selectAll = ref(false);
+
+const selectedPhone = ref("");
+
+const openNewCallDialog = (phone) => {
+    selectedPhone.value = phone;
+    activeDialog.value = "newCall";
+};
 
 // Dialog state
 const dialogType = ref("");
@@ -1479,16 +1491,40 @@ const goToPage = async (page) => {
 
 // conversation
 
-const sendWhatsAppMessage = (order) => {
-    const phone = order.customer?.phone;
+// const sendWhatsAppMessage = (order) => {
+//     const phone = order.customer?.phone;
 
-    if (!phone) {
+//     if (!phone) {
+//         console.error("❌ No phone number found in order:", order);
+//         return;
+//     }
+
+//     console.log("Opening WhatsApp dialog for:", phone);
+//     conversationStore.openDialog(phone);
+// };
+
+const sendWhatsAppMessage = (order) => {
+    const customer = order.customer;
+
+    if (!customer?.phone) {
         console.error("❌ No phone number found in order:", order);
         return;
     }
 
-    console.log("Opening WhatsApp dialog for:", phone);
-    conversationStore.openDialog(phone);
+    const contact = {
+        id: customer.id,
+        name: customer.full_name || customer.name || "Customer",
+        phone: customer.phone,
+        whatsapp: customer.whatsapp || customer.phone,
+        orderId: order.id,
+        orderOid: order.order_no,
+        orderData: order, // important if template needs details
+    };
+
+    // NOW pass full contact
+    conversationStore.openDialog(contact);
+
+    console.log("Opening WhatsApp dialog for contact:", contact);
 };
 
 // Watch for selection changes

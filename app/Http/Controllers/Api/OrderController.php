@@ -793,6 +793,8 @@ class OrderController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+
+        Log::info('Fetching orders with filters', ['filters' => $request->all()]);
         // 1. Apply policy (uncomment when ready)
         // $this->authorize('viewAny', Order::class);
 
