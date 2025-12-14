@@ -133,7 +133,7 @@ export const useOrderStore = defineStore('orders', () => {
       // Add filters
       if (params.status) queryParams.append('status', params.status)
       if (params.vendor_id) queryParams.append('vendor_id', params.vendor_id)
-      if (params.city_id) queryParams.append('city', params.city_id)
+      if (params.city_id) queryParams.append('city_id', params.city_id)
       if (params.agent_id) queryParams.append('agent_id', params.agent_id)
       if (params.rider_id) queryParams.append('rider_id', params.rider_id)
       if (params.zone_id) queryParams.append('zone_id', params.zone_id)
@@ -550,18 +550,7 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderSearch.value) filters.search = orderSearch.value
 
 
-    // if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
-    //   filters.delivery_from = deliveryDateRange.value[0]
-    //   filters.delivery_to = deliveryDateRange.value[1]
-    // }
-    // if (statusDateRange.value && statusDateRange.value.length === 2) {
-    //   filters.status_from = statusDateRange.value[0]
-    //   filters.status_to = statusDateRange.value[1]
-    // }
-    // if (createdDateRange.value && createdDateRange.value.length === 2) {
-    //   filters.created_from = createdDateRange.value[0]
-    //   filters.created_to = createdDateRange.value[1]
-    // }
+  
 
 
       // Format dates properly

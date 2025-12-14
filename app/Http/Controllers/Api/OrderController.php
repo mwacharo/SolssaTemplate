@@ -556,39 +556,175 @@ class OrderController extends Controller
 
 
 
+    // private function applyFilters($query, Request $request): void
+    // {
+
+    //     if ($request->filled('vendor_id')) {
+    //         $query->where('vendor_id', $request->vendor_id);
+    //     }
+    //     // Filter by latest status (from order_status_timestamps table)
+    //     if ($request->filled('status')) {
+    //         $query->whereHas('latestStatus', function ($q) use ($request) {
+    //             $q->where('status_id', $request->status);
+    //         });
+    //     }
+
+
+
+    //     if ($request->filled('delivery_date')) {
+    //         $query->whereDate('delivery_date', '>=', $request->get('delivery_date'));
+    //     }
+
+    //     // Delivery date range filters
+    //     if ($request->filled('delivery_from')) {
+    //         $query->whereDate('delivery_date', '>=', $request->get('delivery_from'));
+    //     }
+    //     if ($request->filled('delivery_to')) {
+    //         $query->whereDate('delivery_date', '<=', $request->get('delivery_to'));
+    //     }
+
+    //     // Status timestamp range (order_status_timestamps)
+    //     if ($request->filled('status_from') || $request->filled('status_to')) {
+    //         $query->whereHas('statusTimestamps', function ($q) use ($request) {
+    //             if ($request->filled('status_from') && $request->filled('status_to')) {
+    //                 $q->whereDate('created_at', '>=', $request->get('status_from'))
+    //                     ->whereDate('created_at', '<=', $request->get('status_to'));
+    //             } elseif ($request->filled('status_from')) {
+    //                 $q->whereDate('created_at', '>=', $request->get('status_from'));
+    //             } elseif ($request->filled('status_to')) {
+    //                 $q->whereDate('created_at', '<=', $request->get('status_to'));
+    //             }
+    //         });
+    //     }
+
+    //     // Created date range (aliases used by some clients)
+    //     if ($request->filled('created_from')) {
+    //         $query->whereDate('created_at', '>=', $request->get('created_from'));
+    //     }
+    //     if ($request->filled('created_to')) {
+    //         $query->whereDate('created_at', '<=', $request->get('created_to'));
+    //     }
+
+    //     if ($request->filled('agent_id')) {
+    //         $query->whereHas('assignments', function ($q) use ($request) {
+    //             $q->where('user_id', $request->agent_id)
+    //                 ->whereIn('role', ['CallAgent']);
+    //         });
+    //     }
+
+    //     if ($request->filled('rider_id')) {
+    //         $query->whereHas('assignments', function ($q) use ($request) {
+    //             $q->where('user_id', $request->rider_id)
+    //                 ->whereIn('role', ['Delivery Agent']);
+    //         });
+    //     }
+
+    //     if ($request->filled('city_id')) {
+    //         $query->whereHas('customer', function ($q) use ($request) {
+    //             $q->where('city_id', $request->city_id);
+    //         });
+    //     }
+
+    //     if ($request->filled('zone_id')) {
+    //         $query->whereHas('customer', function ($q) use ($request) {
+    //             $q->where('zone_id', $request->zone_id);
+    //         });
+    //     }
+
+    //     // Date filters remain the same
+    //     if ($request->filled('date_from')) {
+    //         $query->whereDate('created_at', '>=', $request->date_from);
+    //     }
+
+    //     if ($request->filled('date_to')) {
+    //         $query->whereDate('created_at', '<=', $request->date_to);
+    //     }
+    // }
+
+
+
     private function applyFilters($query, Request $request): void
     {
-
+        // Vendor filter
         if ($request->filled('vendor_id')) {
             $query->where('vendor_id', $request->vendor_id);
         }
-        // Filter by latest status (from order_status_timestamps table)
-        if ($request->filled('status')) {
+
+        // Status filter with optional date range
+        // KEY FIX: Combined logic to prevent double filtering
+        if ($request->filled('status') && ($request->filled('status_from') || $request->filled('status_to'))) {
+            // Orders that were set to this status within the date range
+            $query->whereHas('statusTimestamps', function ($q) use ($request) {
+                $q->where('status_id', $request->status);
+
+                if ($request->filled('status_from')) {
+                    $q->whereDate('created_at', '>=', $request->status_from);
+                }
+                if ($request->filled('status_to')) {
+                    $q->whereDate('created_at', '<=', $request->status_to);
+                }
+            });
+        } elseif ($request->filled('status')) {
+            // Orders currently in this status (no date filter)
             $query->whereHas('latestStatus', function ($q) use ($request) {
                 $q->where('status_id', $request->status);
             });
+        } elseif ($request->filled('status_from') || $request->filled('status_to')) {
+            // Orders where ANY status was set within date range
+            $query->whereHas('statusTimestamps', function ($q) use ($request) {
+                if ($request->filled('status_from')) {
+                    $q->whereDate('created_at', '>=', $request->status_from);
+                }
+                if ($request->filled('status_to')) {
+                    $q->whereDate('created_at', '<=', $request->status_to);
+                }
+            });
         }
 
-
-
-        if ($request->filled('delivery_date')) {
-            $query->whereDate('delivery_date', '>=', $request->get('delivery_date'));
+        // Delivery date filters
+        if ($request->filled('delivery_from')) {
+            $query->whereDate('delivery_date', '>=', $request->delivery_from);
+        }
+        if ($request->filled('delivery_to')) {
+            $query->whereDate('delivery_date', '<=', $request->delivery_to);
+        }
+        // Fallback single delivery_date
+        if ($request->filled('delivery_date') && !$request->filled('delivery_from')) {
+            $query->whereDate('delivery_date', '>=', $request->delivery_date);
         }
 
+        // Order created date range
+        if ($request->filled('created_from')) {
+            $query->whereDate('created_at', '>=', $request->created_from);
+        }
+        if ($request->filled('created_to')) {
+            $query->whereDate('created_at', '<=', $request->created_to);
+        }
+
+        // Alternative date filters (aliases)
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        // Agent filters
         if ($request->filled('agent_id')) {
             $query->whereHas('assignments', function ($q) use ($request) {
                 $q->where('user_id', $request->agent_id)
-                    ->whereIn('role', ['CallAgent']);
+                    ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent']);
             });
         }
 
         if ($request->filled('rider_id')) {
             $query->whereHas('assignments', function ($q) use ($request) {
                 $q->where('user_id', $request->rider_id)
-                    ->whereIn('role', ['Delivery Agent']);
+                    ->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent']);
             });
         }
 
+        // Customer location filters
         if ($request->filled('city_id')) {
             $query->whereHas('customer', function ($q) use ($request) {
                 $q->where('city_id', $request->city_id);
@@ -599,15 +735,6 @@ class OrderController extends Controller
             $query->whereHas('customer', function ($q) use ($request) {
                 $q->where('zone_id', $request->zone_id);
             });
-        }
-
-        // Date filters remain the same
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
         }
     }
 
@@ -816,6 +943,7 @@ class OrderController extends Controller
             'assignments.user',
             'payments',
             'latestStatus.status',
+            'statusTimestamps.status',
             // 'customer',
             'customer.city',      // Add this
             'customer.zone',      // Add this
