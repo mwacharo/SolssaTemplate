@@ -56,7 +56,7 @@ class OrderRepository implements OrderRepositoryInterface
                 // 4️⃣ Add initial status record (if new)
                 if ($order->wasRecentlyCreated) {
                     $order->statusTimestamps()->create([
-                        'status_id' => 2, // Example: Scheduled
+                        'status_id' => 1, // Example: Scheduled
                         'status_notes' => 'Imported via Google Sheet',
                     ]);
                 }
