@@ -89,7 +89,7 @@ class OrderRepository implements OrderRepositoryInterface
                 'user_id' => $userId,
                 'branch_id' => $sheet->branch_id,
                 'vendor_id' => $sheet->vendor_id,
-                'name' => $data['client_name'] ?? 'Unknown',
+                'full_name' => $data['full_name'] ?? 'Unknown',
                 'email' => $data['email'] ?? null,
                 'alt_phone' => $data['alt_phone'] ?? null,
                 'address' => $data['address'] ?? null,
@@ -135,93 +135,92 @@ class OrderRepository implements OrderRepositoryInterface
      * Create related order products efficiently
      */
     private function createOrderProducts(array $products, Order $order, $sheet): void
-{
-    if (empty($products)) {
-        return;
-    }
+    {
+        if (empty($products)) {
+            return;
+        }
 
-    // Group products by name or SKU to avoid duplicates
-    $grouped = collect($products)
-        ->groupBy(fn($p) => $p['sku_number'] ?? strtolower(trim($p['product_name'])))
-        ->map(function ($items) {
-            $first = $items->first();
-            $quantity = $items->sum(fn($i) => (int)($i['quantity'] ?? 1));
-            $price = (float)($first['price'] ?? 0);
+        // Group products by name or SKU to avoid duplicates
+        $grouped = collect($products)
+            ->groupBy(fn($p) => $p['sku_number'] ?? strtolower(trim($p['product_name'])))
+            ->map(function ($items) {
+                $first = $items->first();
+                $quantity = $items->sum(fn($i) => (int)($i['quantity'] ?? 1));
+                $price = (float)($first['price'] ?? 0);
 
-            return [
-                'product_name' => trim($first['product_name']),
-                'sku_number' => $first['sku_number'] ?? null,
-                'quantity' => $quantity,
-                'price' => $price,
-            ];
-        })
-        ->values();
+                return [
+                    'product_name' => trim($first['product_name']),
+                    'sku_number' => $first['sku_number'] ?? null,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                ];
+            })
+            ->values();
 
-    $orderItems = [];
+        $orderItems = [];
 
-    foreach ($grouped as $p) {
-        try {
-            // 1️⃣ Try to find existing product by SKU first
-            $product = null;
+        foreach ($grouped as $p) {
+            try {
+                // 1️⃣ Try to find existing product by SKU first
+                $product = null;
 
-            if (!empty($p['sku_number'])) {
-                $product = Product::where('sku', $p['sku_number'])
-                    ->where('vendor_id', $sheet->vendor_id)
-                    ->first();
-            }
+                if (!empty($p['sku_number'])) {
+                    $product = Product::where('sku', $p['sku_number'])
+                        ->where('vendor_id', $sheet->vendor_id)
+                        ->first();
+                }
 
-            // 2️⃣ If no SKU or product not found, try by product name
-            if (!$product) {
-                $product = Product::where('product_name', $p['product_name'])
-                    ->where('vendor_id', $sheet->vendor_id)
-                    ->first();
-            }
+                // 2️⃣ If no SKU or product not found, try by product name
+                if (!$product) {
+                    $product = Product::where('product_name', $p['product_name'])
+                        ->where('vendor_id', $sheet->vendor_id)
+                        ->first();
+                }
 
-            // 3️⃣ If still not found, create a new one with auto-generated SKU
-            if (!$product) {
-                $newSku = $p['sku_number'] ?? $this->generateSku($p['product_name'], $sheet->vendor_id);
+                // 3️⃣ If still not found, create a new one with auto-generated SKU
+                if (!$product) {
+                    $newSku = $p['sku_number'] ?? $this->generateSku($p['product_name'], $sheet->vendor_id);
 
-                $product = Product::create([
-                    'sku'          => $newSku,
-                    'vendor_id'    => $sheet->vendor_id,
-                    'product_name' => $p['product_name'],
+                    $product = Product::create([
+                        'sku'          => $newSku,
+                        'vendor_id'    => $sheet->vendor_id,
+                        'product_name' => $p['product_name'],
+                    ]);
+                }
+
+                // 4️⃣ Build order item
+                $orderItems[] = [
+                    'order_id'    => $order->id,
+                    'product_id'  => $product->id,
+                    'quantity'    => $p['quantity'],
+                    'unit_price'  => $p['price'],
+                    'total_price' => $p['quantity'] * $p['price'],
+                    'currency'    => 'KSH',
+                    // 'vendor_id'   => $sheet->vendor_id,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
+            } catch (\Throwable $e) {
+                Log::error('Failed to prepare order product', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
                 ]);
             }
+        }
 
-            // 4️⃣ Build order item
-            $orderItems[] = [
-                'order_id'    => $order->id,
-                'product_id'  => $product->id,
-                'quantity'    => $p['quantity'],
-                'unit_price'  => $p['price'],
-                'total_price' => $p['quantity'] * $p['price'],
-                'currency'    => 'KSH',
-                // 'vendor_id'   => $sheet->vendor_id,
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ];
-        } catch (\Throwable $e) {
-            Log::error('Failed to prepare order product', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-            ]);
+        if ($orderItems) {
+            OrderItem::insert($orderItems);
+            Log::info("Inserted " . count($orderItems) . " items for Order #{$order->order_no}");
         }
     }
 
-    if ($orderItems) {
-        OrderItem::insert($orderItems);
-        Log::info("Inserted " . count($orderItems) . " items for Order #{$order->order_no}");
+    /**
+     * 🔢 Helper: Generate a SKU based on product name + vendor
+     */
+    private function generateSku(string $productName, int $vendorId): string
+    {
+        $prefix = strtoupper(substr(preg_replace('/\s+/', '', $productName), 0, 3)); // first 3 letters
+        $random = strtoupper(substr(md5(uniqid()), 0, 5)); // random 5 chars
+        return "{$prefix}-{$vendorId}-{$random}";
     }
-}
-
-/**
- * 🔢 Helper: Generate a SKU based on product name + vendor
- */
-private function generateSku(string $productName, int $vendorId): string
-{
-    $prefix = strtoupper(substr(preg_replace('/\s+/', '', $productName), 0, 3)); // first 3 letters
-    $random = strtoupper(substr(md5(uniqid()), 0, 5)); // random 5 chars
-    return "{$prefix}-{$vendorId}-{$random}";
-}
-
 }

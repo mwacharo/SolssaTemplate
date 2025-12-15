@@ -223,7 +223,7 @@ class OrderSyncService
             'cod_amount' => is_numeric($cod_amount) ? $cod_amount : null,
 
 
-            'client_name' => $normalized['client name'] ?? null,
+            'full_name' => $normalized['client name'] ?? null,
             'address' => $normalized['address'] ?? null,
             'country' => $normalized['receier country*'] ?? null,
             'phone' => $normalized['phone'] ?? null,
