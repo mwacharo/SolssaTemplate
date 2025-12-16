@@ -97,8 +97,11 @@ Route::prefix('v1')->group(function () {
     Route::delete('/google-sheets/{id}', [GoogleSheetController::class, 'destroy'])->name('google-sheets.destroy');
 
     Route::post('/google-sheets/{id}/read-sheet', [GoogleSheetController::class, 'uploadOrders']);
+    Route::post('/google-sheets/{id}/update-sheet', [GoogleSheetController::class, 'updateSheet']);
+
     // Route::post('v1/google-sheets/{id}/sync-orders', [ApiGoogleSheetController::class, 'updateSheet']);
-    Route::post('/google-sheets/{id}/sync-products', [GoogleSheetController::class, 'syncProducts']);
+    // Route::post('/google-sheets/{id}/sync-products', [GoogleSheetController::class, 'syncProducts']);
+
 
 
 

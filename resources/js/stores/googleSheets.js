@@ -212,7 +212,10 @@ export const useGoogleSheetsStore = defineStore('googleSheets', {
         console.log('Writing to sheet:', id)
         
         // Using the sync-products endpoint as it's available in your routes
-        const response = await axios.post(`/api/v1/google-sheets/${id}/sync-products`, data)
+        // const response = await axios.post(`/api/v1/google-sheets/${id}/sync-products`, data)
+
+        const response = await axios.post(`/api/v1/google-sheets/${id}/update-sheet`, data)
+
         
         notify.success('Data written to sheet successfully')
         this.error = null

@@ -6,30 +6,41 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSellerExpenseRequest;
 use App\Http\Requests\UpdateSellerExpenseRequest;
 use App\Models\SellerExpense;
+use Illuminate\Http\Request;
+
 
 class SellerExpenseController extends Controller
 {
     /**
      * Display a listing of the seller expenses.
      */
-    public function index()
+    // public function index()
+    // {
+    //     $expenses = SellerExpense::with('vendor')->latest()->paginate(20);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'expenses' => $expenses
+    //     ]);
+
+
+    // }
+
+
+    public function index(Request $request)
     {
-        $expenses = SellerExpense::with('vendor')->latest()->paginate(20);
+        $perPage = $request->get('per_page', 20); // default 20
+
+        $expenses = SellerExpense::with('vendor')
+            ->latest()
+            ->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'expenses' => $expenses
         ]);
-
-        //  return response()->json([
-        //     'success'     => true,
-        //     'expeditions' => ::with([
-        //         'shipmentItems.product',
-        //         'warehouse',
-        //         'vendor'
-        //     ])->latest()->paginate(20)
-        // ]);
     }
+
 
     /**
      * Store a newly created seller expense.
