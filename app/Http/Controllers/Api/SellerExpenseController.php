@@ -29,7 +29,7 @@ class SellerExpenseController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 20); // default 20
+        $perPage = $request->get('per_page', 100); // default 20
 
         $expenses = SellerExpense::with('vendor')
             ->latest()
