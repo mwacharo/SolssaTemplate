@@ -4,35 +4,36 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Message;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class OrderConfirmationController extends Controller
 {
-    
 
 
-public function submit(Request $request, $order_no)
-{
-    logger()->info('OrderConfirmationController@submit - incoming request', [
-        'order_no'   => $order_no,
-        'payload'    => $request->all(),
-        'ip'         => $request->ip(),
-        'user_agent' => $request->header('User-Agent'),
-    ]);
 
-    $data = $request->validate([
-        'address' => 'required|string',
-        'delivery_date' => 'required|date',
-        'callback' => 'nullable|string',
-        'notes' => 'nullable|string',
-    ]);
+    public function submit(Request $request, $order_no)
+    {
+        logger()->info('OrderConfirmationController@submit - incoming request', [
+            'order_no'   => $order_no,
+            'payload'    => $request->all(),
+            'ip'         => $request->ip(),
+            'user_agent' => $request->header('User-Agent'),
+        ]);
 
-    $callback = $data['callback'] ?? 'N/A';
-    $notes    = $data['notes'] ?? '-';
+        $data = $request->validate([
+            'address' => 'required|string',
+            'delivery_date' => 'required|date',
+            'callback' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
 
-$telegramMessage = <<<MSG
+        $callback = $data['callback'] ?? 'N/A';
+        $notes    = $data['notes'] ?? '-';
+
+        $telegramMessage = <<<MSG
 📦 *Order Confirmation*
 ---------------------
 *Order No:* {$order_no}
@@ -43,6 +44,10 @@ $telegramMessage = <<<MSG
 MSG;
 
 
+
+
+
+        $order = Order::where('order_no', $order_no)->firstOrFail();
 
 
         // Save to DB (messages table)
@@ -57,7 +62,10 @@ MSG;
             'direction'        => 'outgoing',
             'message_status'   => 'sent',
             'timestamp'        => now(),
-            'order_id'         => $order_no,
+            // 'order_id'         => $order_no,
+            // ✅ FIX
+            'order_id'         => $order->id,      // INTEGER FK
+            'order_no'         => $order->order_no // STRING (if column exists)
         ]);
 
         // Send to Telegram
