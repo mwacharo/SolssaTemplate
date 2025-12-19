@@ -113,94 +113,172 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     //     }
     // });
 
+    // async function initializeAfricastalking() {
+
+
+    //     startHeartbeat();
+    //     listenForStatusUpdates();
+    //     if (!userToken.value) {
+    //         console.warn("Waiting for token...");
+    //         await waitForToken();
+    //     }
+
+    //     if (afClient.value) {
+    //         console.log("WebRTC client already initialized.");
+    //         return;
+    //     }
+
+    //     const params = {
+    //         sounds: {
+    //             // dialing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
+    //             ringing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
+    //         },
+    //     };
+
+    //     try {
+    //         const client = new Africastalking.Client(userToken.value, params);
+    //         afClient.value = client;
+
+    //         console.log("✅ WebRTC client initialized for user:", userId.value);
+
+    //         client.on('ready', () => {
+    //             connection_active.value = true;
+    //             console.log("🎧 WebRTC client ready.");
+    //             updateAgentStatus('ready');
+    //         });
+
+    //         client.on('error', (err) => {
+    //             console.error("❌ WebRTC error:", err);
+    //         });
+
+    //         client.on('closed', () => {
+    //             connection_active.value = false;
+    //             console.warn("🔌 WebRTC connection closed.");
+    //             updateAgentStatus('closed');
+
+    //         });
+
+    //         client.on('incomingcall', (event) => {
+    //             console.log("📞 Incoming call from", event.from);
+
+    //             console.log("you clicked me");
+    //             updateAgentStatus('busy');
+
+
+
+    //             setIncomingCall({
+    //                 from: event.from,
+    //                 duration: 'Connecting...',
+    //             });
+
+    //         });
+
+
+    //         // client.on('incomingcall', async (event) => {
+    //         //     console.log("📞 Incoming call from", event.from);
+    //         //     updateAgentStatus('busy');
+
+    //         //     try {
+    //         //         // make sure client exists and is connected
+    //         //         client.answer();
+    //         //         console.log("✅ Auto-answered call from", event.from);
+    //         //         connectToRealtimeAI(event.from);
+
+    //         //     } catch (err) {
+    //         //         console.error("❌ Could not auto-answer:", err);
+    //         //     }
+    //         // });
+
+    //         client.on('hangup', (event) => {
+    //             console.log("☎️ Call hung up:", event.reason);
+    //             updateAgentStatus('ready');
+
+    //             incomingCallDialog.value = false;
+    //             connection_active.value = false;
+    //         });
+
+    //     } catch (error) {
+    //         console.error("⚠️ Failed to initialize WebRTC:", error);
+    //     }
+    // }
+
+
+
     async function initializeAfricastalking() {
+    const country_id = page.props.auth?.user?.country_id;
 
-
-        startHeartbeat();
-        listenForStatusUpdates();
-        if (!userToken.value) {
-            console.warn("Waiting for token...");
-            await waitForToken();
-        }
-
-        if (afClient.value) {
-            console.log("WebRTC client already initialized.");
-            return;
-        }
-
-        const params = {
-            sounds: {
-                // dialing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
-                ringing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
-            },
-        };
-
-        try {
-            const client = new Africastalking.Client(userToken.value, params);
-            afClient.value = client;
-
-            console.log("✅ WebRTC client initialized for user:", userId.value);
-
-            client.on('ready', () => {
-                connection_active.value = true;
-                console.log("🎧 WebRTC client ready.");
-                updateAgentStatus('ready');
-            });
-
-            client.on('error', (err) => {
-                console.error("❌ WebRTC error:", err);
-            });
-
-            client.on('closed', () => {
-                connection_active.value = false;
-                console.warn("🔌 WebRTC connection closed.");
-                updateAgentStatus('closed');
-
-            });
-
-            client.on('incomingcall', (event) => {
-                console.log("📞 Incoming call from", event.from);
-
-                console.log("you clicked me");
-                updateAgentStatus('busy');
-
-
-
-                setIncomingCall({
-                    from: event.from,
-                    duration: 'Connecting...',
-                });
-
-            });
-
-
-            // client.on('incomingcall', async (event) => {
-            //     console.log("📞 Incoming call from", event.from);
-            //     updateAgentStatus('busy');
-
-            //     try {
-            //         // make sure client exists and is connected
-            //         client.answer();
-            //         console.log("✅ Auto-answered call from", event.from);
-            //         connectToRealtimeAI(event.from);
-
-            //     } catch (err) {
-            //         console.error("❌ Could not auto-answer:", err);
-            //     }
-            // });
-
-            client.on('hangup', (event) => {
-                console.log("☎️ Call hung up:", event.reason);
-                updateAgentStatus('ready');
-
-                incomingCallDialog.value = false;
-                connection_active.value = false;
-            });
-
-        } catch (error) {
-            console.error("⚠️ Failed to initialize WebRTC:", error);
-        }
+    // 🚫 HARD STOP: Disable AfricasTalking for Zambia
+    if (country_id === 2) {
+        console.warn('🚫 AfricasTalking disabled for Zambia users');
+        afClient.value = null;
+        connection_active.value = false;
+        return;
     }
+
+    // ✅ Only supported countries reach here (e.g Kenya)
+    startHeartbeat();
+    listenForStatusUpdates();
+
+    if (!userToken.value) {
+        console.warn("Waiting for token...");
+        await waitForToken();
+    }
+
+    if (afClient.value) {
+        console.log("WebRTC client already initialized.");
+        return;
+    }
+
+    const params = {
+        sounds: {
+            ringing: 'https://support.solssa.com/storage/ringtones/office_phone.mp3',
+        },
+    };
+
+    try {
+        const client = new Africastalking.Client(userToken.value, params);
+        afClient.value = client;
+
+        console.log("✅ WebRTC client initialized for user:", userId.value);
+
+        client.on('ready', () => {
+            connection_active.value = true;
+            console.log("🎧 WebRTC client ready.");
+            updateAgentStatus('ready');
+        });
+
+        client.on('error', (err) => {
+            console.error("❌ WebRTC error:", err);
+        });
+
+        client.on('closed', () => {
+            connection_active.value = false;
+            console.warn("🔌 WebRTC connection closed.");
+            updateAgentStatus('offline');
+        });
+
+        client.on('incomingcall', (event) => {
+            console.log("📞 Incoming call from", event.from);
+            updateAgentStatus('busy');
+
+            setIncomingCall({
+                from: event.from,
+                duration: 'Connecting...',
+            });
+        });
+
+        client.on('hangup', (event) => {
+            console.log("☎️ Call hung up:", event.reason);
+            updateAgentStatus('ready');
+            incomingCallDialog.value = false;
+            connection_active.value = false;
+        });
+
+    } catch (error) {
+        console.error("⚠️ Failed to initialize WebRTC:", error);
+    }
+}
+
 
 
 

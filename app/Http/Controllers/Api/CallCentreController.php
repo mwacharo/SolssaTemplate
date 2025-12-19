@@ -15,6 +15,9 @@ use App\Services\AfricasTalkingService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SmsalaVoiceService;
+
+use Illuminate\Http\JsonResponse;
 
 class CallCentreController extends Controller
 {
@@ -110,7 +113,7 @@ class CallCentreController extends Controller
             //     // 'data' => $result['data'] ?? []
 
             // ]);
-        
+
 
             return $result;
         } catch (\Exception $e) {
@@ -191,6 +194,46 @@ class CallCentreController extends Controller
 
         // Optionally re-broadcast "still online" if needed
         return response()->json(['success' => true]);
+    }
+
+
+
+    public function makeCall(
+        Request $request,
+        SmsalaVoiceService $smsala
+    ): JsonResponse {
+        $request->validate([
+            'phoneNumber' => ['required', 'string']
+        ]);
+
+        $user = $request->user();
+
+        /**
+         * This endpoint is ONLY hit when:
+         * - Africa's Talking client is NOT available
+         * - e.g Zambia
+         */
+
+        if ($user->country_id !== 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Call centre API not enabled for this country'
+            ], 403);
+        }
+
+
+        // add some logs 
+        Log::info('Making call via SmsalaVoiceService', [
+            'user_id' => $user->id,
+            'phone_number' => $request->phoneNumber
+        ]);
+        $call = $smsala->bridgeCall($request->phoneNumber);
+
+        return response()->json([
+            'success' => true,
+            'callId'  => $call['callId'] ?? uniqid('call_'),
+            'status'  => 'connecting'
+        ]);
     }
 
     public function index()

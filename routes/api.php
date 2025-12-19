@@ -369,7 +369,7 @@ Route::prefix('v1')->group(function () {
 
     // // Route::post('/africastalking-handle-selection', [ApiCallCentreController::class, 'handleSelection']);
     // // make a new call
-    // // Route::post('/v1/call-centre-make-call', [ApiCallCentreController::class, 'makeCall']);
+    Route::post('/makecall', [CallCentreController::class, 'makeCall']);
 
 
 

@@ -76,9 +76,35 @@ export const useCallCenterStore = defineStore('callCenter', () => {
             console.log(`Calling ${phone} from System...`)
             
             if (!afClient.value) {
-                console.error('AfricasTalking client is not initialized.')
-                notify.error('AfricasTalking client is not initialized.')
-                return
+                // console.error('AfricasTalking client is not initialized.')
+                // notify.error('AfricasTalking client is not initialized.')
+
+                // call make call API instead
+
+
+
+                  console.log('📡 AfricasTalking unavailable — using API provider');
+
+    axios.post('/api/v1/makecall', {
+        phoneNumber: phone
+    }).then(response => {
+        notify.success('Call started via API');
+
+        isCalling.value = true;
+        activeCall.value = {
+            id: response.data.callId || Date.now(),
+            phoneNumber: phone,
+            direction: 'outbound',
+            status: 'connecting',
+            startTime: new Date()
+        };
+    }).catch(error => {
+        console.error('❌ API call failed:', error);
+        notify.error('Failed to start call');
+    });
+     return;
+                
+                // return
             }
 
             afClient.value.call(phone)
@@ -233,10 +259,10 @@ export const useCallCenterStore = defineStore('callCenter', () => {
             }
             
             // Otherwise, use API call
-            const response = await axios.post('/api/v1/call-center/make-call', {
-                phoneNumber,
-                ...options
-            })
+            // const response = await axios.post('/api/v1/call-center/make-call', {
+            //     phoneNumber,
+            //     ...options
+            // })
             
             // Simulate call initiation
             activeCall.value = {
