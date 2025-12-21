@@ -109,6 +109,9 @@
                                     <th class="px-4 py-3 text-left">Vendor</th>
                                     <th class="px-4 py-3 text-left">Status</th>
                                     <th class="px-4 py-3 text-left">
+                                        Incurred On
+                                    </th>
+                                    <th class="px-4 py-3 text-left">
                                         Created Date
                                     </th>
                                     <th class="px-4 py-3 text-left">Actions</th>
@@ -203,14 +206,14 @@
                                                             ?.username || "N/A"
                                                     }}
                                                 </p>
-                                                <p
+                                                <!-- <p
                                                     class="text-xs text-gray-500"
                                                 >
                                                     {{
                                                         expense.vendor?.email ||
                                                         "N/A"
                                                     }}
-                                                </p>
+                                                </p> -->
                                             </div>
                                         </div>
                                     </td>
@@ -235,6 +238,9 @@
                                                     .text
                                             }}
                                         </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        {{ formatDate(expense.incurred_on) }}
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         {{ formatDate(expense.created_at) }}
