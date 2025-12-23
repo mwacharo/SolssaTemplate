@@ -664,7 +664,10 @@ class OrderController extends Controller
                     $q->whereDate('created_at', '<=', $request->status_to);
                 }
             });
-        } elseif ($request->filled('status')) {
+        } 
+        
+        
+        elseif ($request->filled('status')) {
             // Orders currently in this status (no date filter)
             $query->whereHas('latestStatus', function ($q) use ($request) {
                 $q->where('status_id', $request->status);

@@ -16,7 +16,7 @@ class ZoneController extends Controller
      */
     public function index()
     {
-        $zones = Zone::with(['country', 'city'])->paginate(15);
+        $zones = Zone::with(['country', 'city'])->paginate(300);
         return ZoneResource::collection($zones);
     }
 

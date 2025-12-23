@@ -186,7 +186,7 @@
                                 class="block text-sm font-medium text-red-600 mb-1"
                                 >CONFIRMATION STATUS</label
                             >
-                            <v-autocomplete
+                            <v-autocompleteorderFilterStatus
                                 v-model="orderStore.orderFilterStatus"
                                 :items="orderStore.statusOptions"
                                 item-title="name"
@@ -490,7 +490,7 @@
                     class="bg-white rounded-lg shadow-sm p-8 text-center"
                 >
                     <div
-                        class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
+                        class="animate-spin roundecreatedDateRanged-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"
                     ></div>
                     <p class="text-gray-600">Loading orders...</p>
                 </div>

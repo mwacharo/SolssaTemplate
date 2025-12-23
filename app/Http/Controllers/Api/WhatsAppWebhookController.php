@@ -304,48 +304,7 @@ class WhatsAppWebhookController extends Controller
     }
 
 
-    // protected function handleStatusUpdate(array $payload)
-    // {
-    //     $idMessage = data_get($payload, 'idMessage');
-    //     $status = data_get($payload, 'status');
-
-    //     if (!$idMessage || !$status) {
-    //         return response()->json(['error' => 'Missing status data'], 400);
-    //     }
-
-    //     // Try both 'external_message_id' and 'wa_message_id'
-    //     $msg = Message::where('external_message_id', $idMessage)
-    //         ->orWhere('wa_message_id', $idMessage)
-    //         ->first();
-
-    //     if ($msg) {
-    //         $msg->status = $status;
-    //         $msg->timestamp = now();
-
-    //         if ($status === 'delivered') {
-    //             $msg->delivered_at = now();
-    //         }
-
-    //         if ($status === 'read') {
-    //             $msg->read_at = now();
-    //         }
-
-    //         if ($status === 'failed') {
-    //             $msg->failed_at = now();
-    //         }
-
-    //         $msg->save();
-
-    //         return response()->json(['status' => 'updated', 'id' => $msg->id]);
-    //     }
-
-    //     Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
-
-    //     return response()->json(['warning' => 'Message not found'], 404);
-    // }
-
-
-    protected function handleStatusUpdate(array $payload)
+        protected function handleStatusUpdate(array $payload)
     {
         $idMessage = data_get($payload, 'idMessage');
         $status = data_get($payload, 'status');

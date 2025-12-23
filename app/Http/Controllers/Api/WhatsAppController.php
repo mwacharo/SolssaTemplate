@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MessageResource;
+use App\Jobs\AdvantaSmsJob;
 use App\Jobs\SendWhatsAppMessageJob;
 use App\Models\Message;
 use App\Models\Order;
@@ -353,8 +354,18 @@ class WhatsAppController extends Controller
 
                 )->delay(now()->addMinutes($delayMinutes * $index));
 
+
+
                 $index++;
                 $queued++;
+
+
+                AdvantaSmsJob::dispatch(
+                    [$phone],
+                    $personalizedMessage,
+                    $userId
+                )->delay(now()->addMinutes($delayMinutes * $index));
+                
             } catch (\Exception $e) {
                 Log::error('❌ Error generating message', [
                     'contact' => $contact,
