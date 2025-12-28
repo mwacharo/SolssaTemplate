@@ -14,7 +14,10 @@ class StatusController extends Controller
      */
     public function index()
     {
-        return response()->json(Status::all());
+
+        // fetch status with categories
+        $statuses = Status::with('statusCategories')->get();
+        return response()->json($statuses);
     }
 
     /**

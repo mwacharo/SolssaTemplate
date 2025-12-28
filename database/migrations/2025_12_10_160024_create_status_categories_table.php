@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('status_categories', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
+            // $table->string('description')->nullable();
+
+            $table->foreignId('status_id')
+                ->nullable()
+                ->constrained('statuses')
+                ->nullOnDelete();
+
+
+
             $table->timestamps();
         });
     }

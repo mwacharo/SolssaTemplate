@@ -9,4 +9,13 @@ class StatusCategory extends Model
 {
     /** @use HasFactory<\Database\Factories\StatusCategoryFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'status_id',
+    ];
+    public function status()
+    {
+        return $this->belongsTo(Status::class);
+    }
 }

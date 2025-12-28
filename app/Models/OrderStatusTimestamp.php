@@ -11,17 +11,18 @@ class OrderStatusTimestamp extends Model
     protected $fillable = [
         'order_id',
         'status_id',
+        'status_category_id',
         'status_notes',
         'timestamp',
     ];
 
-    public function status ()
+    public function status()
     {
         return $this->belongsTo(Status::class);
     }
 
     public function order()
-{
-    return $this->belongsTo(Order::class);
-}
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

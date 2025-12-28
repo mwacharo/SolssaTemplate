@@ -55,6 +55,9 @@ class UpdateOrderRequest extends FormRequest
             'archived_at' => 'nullable|date',
             'delivery_date' => 'nullable|date',
             'status_id' => 'sometimes|required|exists:statuses,id',
+            'status_category_id' => 'nullable|exists:status_categories,id',
+            'status_notes' => 'nullable|string',
+            'recall_date' => 'nullable|date',
             'customer_notes' => 'nullable|string',
             'order_items' => 'nullable|array',
             'order_items.*.id' => 'sometimes|integer',
@@ -83,7 +86,7 @@ class UpdateOrderRequest extends FormRequest
             'customer.city_id' => 'nullable|exists:cities,id',
             'customer.zone_id' => 'nullable|exists:zones,id',
 
-            
+
             'customer.address' => 'nullable|string|max:255',
             'customer.region' => 'nullable|string|max:100',
             'customer.zipcode' => 'nullable|string|max:20',

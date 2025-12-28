@@ -186,7 +186,7 @@
                                 class="block text-sm font-medium text-red-600 mb-1"
                                 >CONFIRMATION STATUS</label
                             >
-                            <v-autocompleteorderFilterStatus
+                            <v-autocomplete
                                 v-model="orderStore.orderFilterStatus"
                                 :items="orderStore.statusOptions"
                                 item-title="name"

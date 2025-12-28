@@ -25,6 +25,14 @@ return new class extends Migration
                 ->constrained('statuses')
                 ->nullOnDelete();
 
+
+            //Tstatus_categories 
+
+            // $table->foreignId('status_category_id')
+            //     ->nullable()
+            //     ->constrained('status_categories')
+            //     ->nullOnDelete();
+
             $table->text('status_notes')->nullable();
 
             $table->timestamps();

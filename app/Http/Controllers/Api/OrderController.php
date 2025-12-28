@@ -206,7 +206,10 @@ class OrderController extends Controller
             // 'statusTimestamps' => function ($query) {
             //     $query->latest('created_at')->limit(1);
             // },
-            'latestStatus.status', // ✅ latest status with relation
+            'latestStatus.status.statusCategories', // ✅ latest status with relation
+
+            // 'latestStatus.status', // ✅ latest status with relation
+
 
             'customer',
             // 'refunds',
@@ -361,6 +364,8 @@ class OrderController extends Controller
                 OrderStatusTimestamp::create([
                     'order_id' => $order->id,
                     'status_id' => $validated['status_id'],
+                    'status_category_id' => $validated['status_category_id'] ?? null,
+                    'status_notes' => $validated['status_notes'] ?? null,
                     'created_at' => now()
                 ]);
             }
@@ -664,10 +669,7 @@ class OrderController extends Controller
                     $q->whereDate('created_at', '<=', $request->status_to);
                 }
             });
-        } 
-        
-        
-        elseif ($request->filled('status')) {
+        } elseif ($request->filled('status')) {
             // Orders currently in this status (no date filter)
             $query->whereHas('latestStatus', function ($q) use ($request) {
                 $q->where('status_id', $request->status);

@@ -44,4 +44,10 @@ class Status extends Model
             ->logOnlyDirty(self::$logOnlyDirty)
             ->dontSubmitEmptyLogs();
     }
+
+//   status has many status categories
+    public function statusCategories()
+    {
+        return $this->hasMany(StatusCategory::class);
+    }
 }

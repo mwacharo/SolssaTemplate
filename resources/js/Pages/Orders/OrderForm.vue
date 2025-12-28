@@ -61,37 +61,52 @@
                                 />
                             </v-col>
 
+                            <!-- order status category -->
+
                             <v-col cols="12" md="6">
                                 <v-select
-                                    v-model="orderEdit.status_id"
-                                    :items="statusOptionsStore"
+                                    v-model="orderEdit.status_category_id"
+                                    :items="filteredStatusCategories"
                                     item-title="name"
                                     item-value="id"
                                     label="Status Category"
                                     prepend-inner-icon="mdi-flag"
                                     variant="outlined"
                                     density="comfortable"
-                                    :rules="[rules.required]"
+                                    :rules="statusCategoryRules"
                                     clearable
-                                    placeholder="Select status"
+                                    placeholder="Select status category"
                                 />
+                                <!--                                    :disabled="!filteredStatusCategories.length"
+  -->
                             </v-col>
 
                             <!-- if selected status category name =recall date show  inputype date recalldate -->
 
                             <v-col cols="12" md="6">
-                                <v-select
-                                    v-model="orderEdit.status_id"
-                                    :items="statusOptionsStore"
-                                    item-title="name"
-                                    item-value="id"
+                                <v-text-field
+                                    v-model="orderEdit.status_notes"
                                     label="Status Notes"
-                                    prepend-inner-icon="mdi-flag"
+                                    placeholder="Enter status notes"
+                                    type="text"
+                                    prepend-inner-icon="mdi-note-text"
                                     variant="outlined"
                                     density="comfortable"
                                     :rules="[rules.required]"
                                     clearable
-                                    placeholder="Select status"
+                                />
+                            </v-col>
+
+                            <v-col cols="12" md="6" v-if="shouldShowRecallDate">
+                                <v-text-field
+                                    v-model="orderEdit.recall_date"
+                                    label="Recall Date"
+                                    type="datetime-local"
+                                    prepend-inner-icon="mdi-calendar"
+                                    variant="outlined"
+                                    density="comfortable"
+                                    clearable
+                                    :rules="[rules.required]"
                                 />
                             </v-col>
 
@@ -797,6 +812,47 @@ const statusOptionsStore = computed(() => orderStore.statusOptions);
 
 const order = computed(() => orderStore.selectedOrder);
 
+const filteredStatusCategories = computed(() => {
+    if (!orderEdit.value.status_id) return [];
+
+    const selectedStatus = statusOptionsStore.value.find(
+        (status) => status.id === orderEdit.value.status_id
+    );
+
+    return selectedStatus?.status_categories || [];
+});
+
+const statusCategoryRules = computed(() => {
+    return filteredStatusCategories.value.length ? [rules.required] : [];
+});
+
+const selectedStatusCategory = computed(() => {
+    if (!orderEdit.value.status_category_id) return null;
+
+    return filteredStatusCategories.value.find(
+        (cat) => cat.id === orderEdit.value.status_category_id
+    );
+});
+
+// Computed to check if recall date field should be shown
+const shouldShowRecallDate = computed(() => {
+    // Check if currently selected category is "Follow Up"
+    const category = selectedStatusCategory.value;
+    const isCurrentlyFollowUp = category && category.name === "Follow Up";
+
+    // Check if there's a recall_date value (from existing data)
+    const hasRecallDate = !!orderEdit.value.recall_date;
+
+    // Also check if status_category_id matches a "Follow Up" category
+    const categoryFromId = filteredStatusCategories.value.find(
+        (cat) => cat.id === orderEdit.value.status_category_id
+    );
+    const isFollowUpById =
+        categoryFromId && categoryFromId.name === "Follow Up";
+
+    // Show if any condition is true
+    return isCurrentlyFollowUp || hasRecallDate || isFollowUpById;
+});
 // Form data
 const orderEdit = ref({
     id: null,
@@ -822,6 +878,9 @@ const orderEdit = ref({
     archived_at: null,
     delivery_date: "",
     status_id: "",
+    status_category_id: null,
+    status_notes: "",
+    recall_date: "",
     customer_notes: "",
     order_items: [],
     customer_address: {
@@ -890,10 +949,24 @@ const initializeEditForm = (orderData) => {
 
     // Always use the most recent status if available
     let status_id = "";
-    if (orderData.latest_status && orderData.latest_status.status_id) {
-        status_id = orderData.latest_status.status_id;
-    } else if (orderData.status_id) {
-        status_id = orderData.status_id;
+    let status_category_id = null;
+    let status_notes = "";
+    let recall_date = orderData.recall_date || "";
+
+    // if (orderData.latest_status && orderData.latest_status.status_id) {
+    //     status_id = orderData.latest_status.status_id;
+    // } else if (orderData.status_id) {
+    //     status_id = orderData.status_id;
+    // }
+
+    if (orderData.latest_status) {
+        status_id = orderData.latest_status.status_id || "";
+        status_category_id = orderData.latest_status.status_category_id || null;
+        status_notes = orderData.latest_status.status_notes || "";
+    } else {
+        status_id = orderData.status_id || "";
+        status_category_id = orderData.status_category_id || null;
+        status_notes = orderData.status_notes || "";
     }
 
     orderEdit.value = {
@@ -920,6 +993,18 @@ const initializeEditForm = (orderData) => {
         archived_at: orderData.archived_at ?? null,
         delivery_date: orderData.delivery_date ?? "",
         status_id: status_id,
+        status_category_id:
+            orderData.latest_status?.status_category_id ??
+            orderData.status_category_id ??
+            null,
+
+        status_notes:
+            orderData.latest_status?.status_notes ??
+            orderData.status_notes ??
+            "",
+        // recall_date: orderData.recall_date || "",
+        recall_date: recall_date,
+
         customer_notes: orderData.customer_notes ?? "",
         order_items: (orderData.order_items || []).map((item) => ({
             ...item,
@@ -975,6 +1060,9 @@ const initializeCreateForm = () => {
         warehouse_id: null,
         delivery_date: "",
         status_id: "",
+        status_category_id: null,
+        status_notes: "",
+        recall_date: "",
         customer_notes: "",
         order_items: [],
         customer_address: {
@@ -1198,6 +1286,25 @@ watch(
                 initializeCreateForm();
             } else if (selectedOrder.value) {
                 initializeEditForm(selectedOrder.value);
+            }
+        }
+    }
+);
+
+watch(
+    () => orderEdit.value.status_id, // 1. What to watch
+    (newStatusId, oldStatusId) => {
+        // 2. Callback with new and old values
+        // 3. Check if status actually changed AND it's not initial load
+        if (newStatusId !== oldStatusId && oldStatusId !== undefined) {
+            // 4. Check if current status_category_id is still valid for new status
+            const isValidCategory = filteredStatusCategories.value.some(
+                (cat) => cat.id === orderEdit.value.status_category_id
+            );
+
+            // 5. Only clear if the category is no longer valid
+            if (!isValidCategory) {
+                orderEdit.value.status_category_id = null;
             }
         }
     }

@@ -82,7 +82,6 @@ class Order extends Model
 
     protected $casts = [
         'paid' => 'boolean',
-        // 'delivery_date' => 'datetime',
         'schedule_date' => 'datetime',
         'sub_total' => 'decimal:2',
         'total_price' => 'decimal:2',
