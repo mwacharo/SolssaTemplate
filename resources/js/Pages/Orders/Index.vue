@@ -1066,7 +1066,7 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div
+                    <!-- <div
                         class="flex justify-between items-center px-6 py-4 bg-gray-50"
                     >
                         <div class="text-sm text-gray-700">
@@ -1074,6 +1074,85 @@
                             {{ orderStore.pagination.to }} of
                             {{ orderStore.pagination.total }} results
                         </div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                @click="previousPage"
+                                :disabled="
+                                    orderStore.pagination.current_page === 1 ||
+                                    orderStore.loading.orders
+                                "
+                                class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                                Previous
+                            </button>
+
+                            <button
+                                v-for="page in visiblePages"
+                                :key="page"
+                                @click="goToPage(page)"
+                                :disabled="orderStore.loading.orders"
+                                :class="[
+                                    'px-3 py-1 border rounded-md text-sm',
+                                    page === orderStore.pagination.current_page
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'border-gray-300 hover:bg-gray-100 disabled:opacity-50',
+                                ]"
+                            >
+                                {{ page }}
+                            </button>
+
+                            <button
+                                @click="nextPage"
+                                :disabled="
+                                    orderStore.pagination.current_page ===
+                                        orderStore.pagination.last_page ||
+                                    orderStore.loading.orders
+                                "
+                                class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div> -->
+
+                    <div
+                        class="flex justify-between items-center px-6 py-4 bg-gray-50"
+                    >
+                        <div class="flex items-center gap-4">
+                            <div class="text-sm text-gray-700">
+                                Showing {{ orderStore.pagination.from }} to
+                                {{ orderStore.pagination.to }} of
+                                {{ orderStore.pagination.total }} results
+                            </div>
+
+                            <!-- Items per page selector -->
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600"
+                                    >Show:</label
+                                >
+                                <select
+                                    :value="orderStore.pagination.per_page"
+                                    @change="
+                                        changeItemsPerPage($event.target.value)
+                                    "
+                                    :disabled="orderStore.loading.orders"
+                                    class="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                                >
+                                    <option
+                                        v-for="option in orderStore.perPageOptions"
+                                        :key="option"
+                                        :value="option"
+                                    >
+                                        {{ option }}
+                                    </option>
+                                </select>
+                                <span class="text-sm text-gray-600"
+                                    >per page</span
+                                >
+                            </div>
+                        </div>
+
                         <div class="flex items-center gap-2">
                             <button
                                 @click="previousPage"
@@ -1461,10 +1540,43 @@ const associateAgents = () => {
     orderStore.openAssignCallCentreDialog(selectedOrders.value);
 };
 
+// const previousPage = async () => {
+//     if (orderStore.pagination.current_page > 1) {
+//         await orderStore.fetchOrders({
+//             page: orderStore.pagination.current_page - 1,
+//         });
+//         selectAll.value = false;
+//         selectedOrders.value = [];
+//     }
+// };
+
+// const nextPage = async () => {
+//     if (orderStore.pagination.current_page < orderStore.pagination.last_page) {
+//         await orderStore.fetchOrders({
+//             page: orderStore.pagination.current_page + 1,
+//         });
+//         selectAll.value = false;
+//         selectedOrders.value = [];
+//     }
+// };
+
+// const goToPage = async (page) => {
+//     if (page !== orderStore.pagination.current_page) {
+//         await orderStore.fetchOrders({ page });
+//         selectAll.value = false;
+//         selectedOrders.value = [];
+//     }
+// };
+
 const previousPage = async () => {
     if (orderStore.pagination.current_page > 1) {
+        const filters = orderStore.buildFilterParams
+            ? orderStore.buildFilterParams()
+            : {};
         await orderStore.fetchOrders({
+            ...filters,
             page: orderStore.pagination.current_page - 1,
+            per_page: orderStore.pagination.per_page,
         });
         selectAll.value = false;
         selectedOrders.value = [];
@@ -1473,8 +1585,13 @@ const previousPage = async () => {
 
 const nextPage = async () => {
     if (orderStore.pagination.current_page < orderStore.pagination.last_page) {
+        const filters = orderStore.buildFilterParams
+            ? orderStore.buildFilterParams()
+            : {};
         await orderStore.fetchOrders({
+            ...filters,
             page: orderStore.pagination.current_page + 1,
+            per_page: orderStore.pagination.per_page,
         });
         selectAll.value = false;
         selectedOrders.value = [];
@@ -1483,10 +1600,23 @@ const nextPage = async () => {
 
 const goToPage = async (page) => {
     if (page !== orderStore.pagination.current_page) {
-        await orderStore.fetchOrders({ page });
+        const filters = orderStore.buildFilterParams
+            ? orderStore.buildFilterParams()
+            : {};
+        await orderStore.fetchOrders({
+            ...filters,
+            page,
+            per_page: orderStore.pagination.per_page,
+        });
         selectAll.value = false;
         selectedOrders.value = [];
     }
+};
+
+const changeItemsPerPage = async (perPage) => {
+    await orderStore.changePerPage(perPage);
+    selectAll.value = false;
+    selectedOrders.value = [];
 };
 
 // conversation

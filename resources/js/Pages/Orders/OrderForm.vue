@@ -473,7 +473,7 @@
                                 </v-col>
 
                                 <v-col cols="12" md="6">
-                                    <v-text-field
+                                    <!-- <v-text-field
                                         v-model="
                                             orderEdit.customer_address.phone
                                         "
@@ -484,9 +484,9 @@
                                         :rules="[rules.required, rules.phone]"
                                         @click:prepend-inner="openNewCallDialog"
                                         readonly-on-click
-                                    ></v-text-field>
+                                    ></v-text-field> -->
 
-                                    <!-- <v-text-field
+                                    <v-text-field
                                         v-model="
                                             orderEdit.customer_address.phone
                                         "
@@ -500,8 +500,7 @@
                                                 orderEdit.customer_address.phone
                                             )
                                         "
-                                        readonly
-                                    ></v-text-field> -->
+                                    ></v-text-field>
                                 </v-col>
 
                                 <v-col cols="12" md="6">
