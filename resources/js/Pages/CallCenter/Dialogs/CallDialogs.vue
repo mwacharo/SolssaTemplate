@@ -7,6 +7,14 @@
             persistent
             transition="dialog-bottom-transition"
         >
+            <!-- <v-navigation-drawer
+            v-model="isNewCallDialog"
+            location="right"
+            temporary
+            width="500"
+        > -->
+            <!-- content -->
+
             <v-card class="modern-card">
                 <v-card-title class="gradient-header">
                     <v-icon left color="white" size="24">mdi-phone-plus</v-icon>
@@ -192,6 +200,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <!-- </v-navigation-drawer> -->
 
         <!-- Call Agent Dialog -->
         <v-dialog
@@ -632,7 +641,7 @@ import { notify } from "@/utils/toast";
 import { useWebRTCStore } from "@/stores/webrtc";
 import { useContactsStore } from "@/stores/contact";
 
-// import { useCallCenterStore } from '@/stores/callCenter'
+// import { useCallCenterStore } from '@/stores/callCenter'c
 
 const webrtcStore = useWebRTCStore();
 

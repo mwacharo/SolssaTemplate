@@ -943,12 +943,11 @@
                                                 @click="
                                                     handleOpenCallDialog(
                                                         order.shipping_address
-                                                            ?.phone
+                                                            ?.phone ||
+                                                            order.customer
+                                                                ?.phone,
+                                                        order
                                                     )
-                                                "
-                                                :disabled="
-                                                    !order.shipping_address
-                                                        ?.phone
                                                 "
                                                 class="p-1 text-indigo-600 hover:bg-indigo-100 rounded disabled:opacity-50"
                                                 title="Call Customer"
@@ -1012,6 +1011,32 @@
 
                                             <button
                                                 @click="stkPush(order)"
+                                                class="p-1 text-green-600 hover:bg-green-100 rounded"
+                                                title="Initiate M-Pesa STK Push"
+                                            >
+                                                <!-- Mobile Payment Icon -->
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="w-5 h-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <rect
+                                                        x="7"
+                                                        y="2"
+                                                        width="10"
+                                                        height="20"
+                                                        rx="2"
+                                                    />
+                                                    <path d="M11 18h2" />
+                                                </svg>
+                                            </button>
+
+                                            <!-- 
+                                            <button
+                                                @click="stkPush(order)"
                                                 class="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
                                                 title="Initiate STK Push (M-Pesa)"
                                             >
@@ -1029,7 +1054,7 @@
                                                         d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                                                     />
                                                 </svg>
-                                            </button>
+                                            </button> -->
 
                                             <!-- <button @click="duplicateOrder(order)" class="p-1 text-green-600 hover:bg-green-100 rounded"
                         title="Duplicate Order">
@@ -1237,6 +1262,17 @@
             </div>
         </div>
 
+        <!-- <Stkpush /> -->
+
+        <Stkpush
+            ref="stkpushDialog"
+            @stkPushInitiated="handleStkPushInitiated"
+        />
+
+        <CallCentreDialler
+            v-model="callCentreDiallerStore.dialogOpen"
+            :order="callCentreDiallerStore.activeOrder"
+        />
         <WhatsAppConversation />
         <!-- <CallDialogs /> -->
 
@@ -1260,8 +1296,8 @@
             :is-create="isCreateMode"
             @order-saved="onOrderSaved"
             @dialog-closed="onDialogClosed"
-            @open-call-dialog="handleOpenCallDialog"
         />
+        <!-- @open-call-dialog="handleOpenCallDialog" -->
         <!-- Reusable Dialog -->
         <!-- <BulkAction :show="orderStore.bulkActionDialog" :type="orderStore.dialogType" :title="orderStore.dialogTitle"
       :selectedOrders="orderStore.selectedOrders" :deliveryMen="deliveryMen" :callCentreAgents="callCentreAgents"
@@ -1279,18 +1315,27 @@ import { useOrderStore } from "@/stores/orderStore";
 import { useCallCenterStore } from "@/stores/callCenter";
 
 import { useConversationStore } from "@/stores/useConversationStore";
+import { usecallCentreDiallerStore } from "@/stores/callCentreDialler";
+import { useStkpushStore } from "@/stores/stkpushStore";
 
 import OrderForm from "./OrderForm.vue";
 
 import BulkAction from "./BulkAction.vue";
 import CallDialogs from "@/Pages/CallCenter/Dialogs/CallDialogs.vue";
-// import DatePickerInput from "@/Components/DatePickerInput.vue";
+// callcentre  op
+import CallCentreDialler from "@/Pages/CallCenter/Dialogs/CallCentreDialler.vue";
+import Stkpush from "./Stkpush.vue";
 import DateRangePicker from "@/Components/DualDatePicker.vue";
 // orderjourney
 
 // Initialize store
 const orderStore = useOrderStore();
 const conversationStore = useConversationStore();
+
+const callCentreDiallerStore = usecallCentreDiallerStore();
+
+const stkpushStore = useStkpushStore();
+const stkpushDialog = ref(null); // Add template ref
 
 const createMode = ref(false);
 
@@ -1302,11 +1347,22 @@ const callDialogType = ref("");
 const selectedPhoneNumber = ref("");
 
 // Handle opening call dialog from order form
-const handleOpenCallDialog = (phoneNumber) => {
+// const handleOpenCallDialog = (phoneNumber) => {
+//     newCallPhone.value = phoneNumber || "";
+//     selectedPhone.value = phoneNumber;
+
+//     callDialogType.value = "newCall"; // This opens the "Make New Call" dialog
+// };
+
+const handleOpenCallDialog = (phoneNumber, order) => {
+    console.log("Opening call dialog for phone number:", phoneNumber);
+    console.log("Order:", order);
+
     newCallPhone.value = phoneNumber || "";
     selectedPhone.value = phoneNumber;
 
-    callDialogType.value = "newCall"; // This opens the "Make New Call" dialog
+    // Pass both phone number and order to the store
+    callCentreDiallerStore.openDialog(phoneNumber, order);
 };
 
 // Handle call dialog events
@@ -1655,6 +1711,11 @@ const sendWhatsAppMessage = (order) => {
     conversationStore.openDialog(contact);
 
     console.log("Opening WhatsApp dialog for contact:", contact);
+};
+
+const stkPush = (order) => {
+    //    opendialog  for stkpush
+    stkpushDialog.value?.openDialog(order);
 };
 
 // Watch for selection changes

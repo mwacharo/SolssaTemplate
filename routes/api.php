@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\EmailTemplateController;
+use App\Http\Controllers\Api\MpesaStkPushController;
 use App\Http\Controllers\Api\OrderConfirmationController;
 use App\Http\Controllers\Api\RealtimeController;
 use App\Http\Controllers\Api\ShopifyOrderController;
@@ -76,6 +77,10 @@ Route::post('/v1/get-vendor-token', [VendorAuthController::class, 'getToken']);
 
 Route::post('/form/{order_no}', [OrderConfirmationController::class, 'submit']);
 Route::get('/v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
+
+
+Route::post('/mpesa/stk/callback', [MpesaStkPushController::class, 'callback']);
+
 
 
 
@@ -481,6 +486,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'show']);
     Route::put('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'update']);
     Route::delete('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'destroy']);
+
+
+    // mopesa payments 
+
+    Route::post('/payments/mpesa/stk-push', [MpesaStkPushController::class, 'initiate']);
 });
 
 
