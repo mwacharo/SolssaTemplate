@@ -185,7 +185,10 @@
                                         >
                                             <td>
                                                 <v-autocomplete
-                                                    v-model="item.product.product_name"
+                                                    v-model="
+                                                        item.product
+                                                            .product_name
+                                                    "
                                                     :items="
                                                         orderStore.productOptions
                                                     "
@@ -1165,12 +1168,14 @@ import { notify } from "@/utils/toast";
 
 import { useCallCenterStore } from "@/stores/callCenter";
 import { useWhatsAppStore } from "@/stores/whatsappStore";
+import { useWebRTCStore } from "@/stores/webrtc";
 
 // Props
 const props = defineProps({
     modelValue: Boolean,
     order: Object,
 });
+const webrtc = useWebRTCStore();
 
 const emit = defineEmits(["update:modelValue", "status-updated", "note-added"]);
 
