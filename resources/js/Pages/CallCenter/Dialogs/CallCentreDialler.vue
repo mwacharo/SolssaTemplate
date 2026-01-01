@@ -1509,7 +1509,7 @@ const holdCall = () => {
 const endCall = () => {
     callActive.value = false;
 
-    callCenterStore.hangupCall();
+    webrtcStore.afClient.hangup();
 
     callDuration.value = "00:00";
     showSnackbar("Call ended", "info");
