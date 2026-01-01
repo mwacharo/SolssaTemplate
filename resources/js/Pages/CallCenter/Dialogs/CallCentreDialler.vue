@@ -1463,10 +1463,12 @@ const showSnackbar = (message, color = "success") => {
 };
 
 // Call functions
-const initiateCall = () => {
+const initiateCall = (phone) => {
     calling.value = true;
 
-    callCenterStore.callClient(callForm.phone);
+    callCenterStore.callClient(phone);
+
+    console.log("Initiating call to:", phone);
 
     setTimeout(() => {
         calling.value = false;
