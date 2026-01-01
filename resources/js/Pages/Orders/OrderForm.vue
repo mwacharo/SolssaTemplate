@@ -655,23 +655,6 @@
                         </v-btn>
                     </div>
 
-                    <!-- add total value of order -->
-
-                    <!-- <div class="mt-4">  
-            <v-row>
-                <v-col cols="12" md="4">
-                <v-text-field
-                  v-model="orderEdit.total_price"
-                  :value="orderEdit.order_items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.unit_price)), 0).toFixed(2)"
-                  label="Total"
-                  variant="outlined"
-                  density="comfortable"
-                />
-                </v-col>
-            
-            </v-row>
-          </div> -->
-
                     <!-- Replace your current total value section with this -->
                     <div class="mt-4">
                         <v-row>

@@ -96,7 +96,7 @@
                                     <!-- city  -->
                                     <v-autocomplete
                                         v-model="order.customer.city_id"
-                                        :items="cityOptions"
+                                        :items="orderStore.cityOptions"
                                         item-title="name"
                                         item-value="id"
                                         label="City"
@@ -110,7 +110,7 @@
                                     />
                                     <v-autocomplete
                                         v-model="order.customer.zone_id"
-                                        :items="zoneOptions"
+                                        :items="orderStore.zoneOptions"
                                         item-title="name"
                                         item-value="id"
                                         label="Zone"
@@ -139,7 +139,10 @@
 
                                     <div
                                         class="info-row"
-                                        v-if="order.customer_notes"
+                                        v-if="
+                                            order?.customer_notes ||
+                                            order?.latest_status?.status_notes
+                                        "
                                     >
                                         <v-icon size="20" class="mr-2"
                                             >mdi-note-text</v-icon
@@ -152,94 +155,155 @@
                             </v-card>
 
                             <!-- Order Summary -->
-                            <v-card variant="outlined" class="mb-4">
-                                <v-card-title
-                                    class="text-subtitle-1 bg-blue-grey-lighten-5 py-2"
+                            <div class="mb-6">
+                                <h3
+                                    class="text-subtitle-1 font-weight-medium mb-3 text-primary"
                                 >
-                                    <v-icon size="small" class="mr-2"
+                                    <v-icon class="mr-1" size="small"
                                         >mdi-package-variant</v-icon
                                     >
-                                    Order Summary
-                                </v-card-title>
-                                <v-card-text class="pa-3">
-                                    <div class="info-row">
-                                        <span class="text-grey">Order No:</span>
-                                        <span class="font-weight-bold">{{
-                                            order?.order_no || "N/A"
-                                        }}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="text-grey">Total:</span>
-                                        <span
-                                            class="font-weight-bold text-green"
+                                    Order Items
+                                </h3>
+                                <v-table density="comfortable" class="mb-2">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 30%">Product</th>
+                                            <th style="width: 15%">Quantity</th>
+                                            <th style="width: 15%">
+                                                Unit Price
+                                            </th>
+                                            <th style="width: 15%">Total</th>
+                                            <th style="width: 10%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            v-for="(
+                                                item, idx
+                                            ) in order.order_items || []"
+                                            :key="item.id || idx"
                                         >
-                                            KSH
-                                            {{ order?.total_price || "0.00" }}
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="text-grey"
-                                            >Delivery Date:</span
-                                        >
-                                        <span>{{
-                                            formatDate(order?.delivery_date) ||
-                                            "N/A"
-                                        }}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="text-grey">Items:</span>
-                                        <span
-                                            >{{
-                                                order?.order_items?.length || 0
-                                            }}
-                                            product(s)</span
-                                        >
-                                    </div>
+                                            <td>
+                                                <v-autocomplete
+                                                    v-model="item.product.product_name"
+                                                    :items="
+                                                        orderStore.productOptions
+                                                    "
+                                                    item-title="product_name"
+                                                    item-value="sku"
+                                                    placeholder="Product name"
+                                                    density="compact"
+                                                    hide-details
+                                                    variant="outlined"
+                                                />
+                                            </td>
+                                            <td>
+                                                <v-text-field
+                                                    v-model.number="
+                                                        item.quantity
+                                                    "
+                                                    type="number"
+                                                    min="1"
+                                                    density="compact"
+                                                    hide-details
+                                                    variant="outlined"
+                                                />
+                                            </td>
+                                            <td>
+                                                <v-text-field
+                                                    v-model.number="
+                                                        item.unit_price
+                                                    "
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    density="compact"
+                                                    hide-details
+                                                    variant="outlined"
+                                                />
+                                            </td>
+                                            <td>
+                                                {{
+                                                    (
+                                                        item.quantity *
+                                                        item.unit_price
+                                                    ).toFixed(2)
+                                                }}
+                                            </td>
+                                            <td>
+                                                <v-btn
+                                                    icon="mdi-delete"
+                                                    size="small"
+                                                    color="error"
+                                                    variant="text"
+                                                    @click="
+                                                        removeOrderItem(idx)
+                                                    "
+                                                />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </v-table>
+                                <v-btn
+                                    color="primary"
+                                    variant="text"
+                                    prepend-icon="mdi-plus"
+                                    @click="addOrderItem"
+                                    class="mt-2"
+                                >
+                                    Add Item
+                                </v-btn>
+                            </div>
 
-                                    <v-divider class="my-2" />
+                            <!-- Replace your current total value section with this -->
+                            <div class="mt-4">
+                                <v-row>
+                                    <v-col cols="12" md="4">
+                                        <v-text-field
+                                            :model-value="calculateTotal()"
+                                            @update:model-value="
+                                                order.total_price = $event
+                                            "
+                                            label="Total"
+                                            variant="outlined"
+                                            density="comfortable"
+                                            readonly
+                                        />
+                                    </v-col>
+                                    <v-col cols="12" md="4">
+                                        <v-text-field
+                                            v-model="order.shipping_charges"
+                                            label="Shipping Charges"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            variant="outlined"
+                                            density="comfortable"
+                                            @update:model-value="updateTotals()"
+                                        />
+                                    </v-col>
 
-                                    <!-- Order Items List -->
-                                    <div class="order-items-list">
-                                        <div
-                                            v-for="item in order?.order_items"
-                                            :key="item.id"
-                                            class="order-item"
-                                        >
-                                            <div class="d-flex align-center">
-                                                <v-avatar
-                                                    size="32"
-                                                    color="blue-grey-lighten-4"
-                                                    class="mr-2"
-                                                >
-                                                    <v-icon size="18"
-                                                        >mdi-package</v-icon
-                                                    >
-                                                </v-avatar>
-                                                <div class="flex-grow-1">
-                                                    <div
-                                                        class="text-body-2 font-weight-medium"
-                                                    >
-                                                        {{
-                                                            item.product
-                                                                ?.product_name ||
-                                                            item.name ||
-                                                            "Product"
-                                                        }}
-                                                    </div>
-                                                    <div
-                                                        class="text-caption text-grey"
-                                                    >
-                                                        Qty:
-                                                        {{ item.quantity }} ×
-                                                        KSH
-                                                        {{ item.unit_price }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </v-card-text>
-                            </v-card>
+                                    <v-col cols="12" md="4">
+                                        <v-text-field
+                                            :model-value="
+                                                (
+                                                    parseFloat(
+                                                        calculateTotal()
+                                                    ) +
+                                                    parseFloat(
+                                                        order.shipping_charges ||
+                                                            0
+                                                    )
+                                                ).toFixed(2)
+                                            "
+                                            label="Grand Total"
+                                            variant="outlined"
+                                            density="comfortable"
+                                            readonly
+                                        />
+                                    </v-col>
+                                </v-row>
+                            </div>
 
                             <!-- Quick Actions -->
                             <v-card variant="outlined">
@@ -338,7 +402,9 @@
                                                 size="x-large"
                                                 rounded="pill"
                                                 elevation="4"
-                                                @click="initiateCall"
+                                                @click="
+                                                    initiateCall(callForm.phone)
+                                                "
                                                 :loading="calling"
                                                 class="call-button"
                                             >
@@ -417,37 +483,6 @@
                                                 </v-btn>
                                             </div>
                                         </div>
-
-                                        <!-- Call Options -->
-                                        <v-expansion-panels
-                                            class="mt-4"
-                                            variant="accordion"
-                                        >
-                                            <v-expansion-panel>
-                                                <v-expansion-panel-title>
-                                                    <v-icon class="mr-2"
-                                                        >mdi-cog</v-icon
-                                                    >
-                                                    Call Options
-                                                </v-expansion-panel-title>
-                                                <v-expansion-panel-text>
-                                                    <v-checkbox
-                                                        v-model="
-                                                            callForm.recordCall
-                                                        "
-                                                        label="Record this call"
-                                                        density="compact"
-                                                    />
-                                                    <v-checkbox
-                                                        v-model="
-                                                            callForm.autoLog
-                                                        "
-                                                        label="Auto-log call notes"
-                                                        density="compact"
-                                                    />
-                                                </v-expansion-panel-text>
-                                            </v-expansion-panel>
-                                        </v-expansion-panels>
                                     </v-card-text>
                                 </v-card>
 
@@ -782,7 +817,9 @@
                                             <!-- New Status -->
                                             <v-select
                                                 v-model="statusForm.status_id"
-                                                :items="statusOptions"
+                                                :items="
+                                                    orderStore.statusOptions
+                                                "
                                                 item-title="name"
                                                 item-value="id"
                                                 label="New Status"
@@ -1018,7 +1055,6 @@
                                     </v-card-text>
                                 </v-card>
 
-                                <!-- Notes List -->
                                 <v-card variant="outlined">
                                     <v-card-title class="text-subtitle-1">
                                         <v-icon class="mr-2"
@@ -1120,7 +1156,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, toRef, computed, watch } from "vue";
 import { usecallCentreDiallerStore } from "@/stores/callCentreDialler";
 
 import { useOrderStore } from "@/stores/orderStore";
@@ -1174,6 +1210,8 @@ const updateDialogOpen = (value) => {
 };
 // Active tab
 const activeTab = ref("call");
+
+const order = toRef(props, "order");
 
 // Customer info
 const customer = computed(() => {
@@ -1232,43 +1270,19 @@ const snackbar = ref({
     color: "success",
 });
 
-// Sample data
-// const templates = ref([
-//     {
-//         id: 1,
-//         name: "Order Confirmation",
-//         description: "Confirm order details",
-//         content:
-//             "Dear {customer_name}, your order #{order_no} has been confirmed.",
-//     },
-//     {
-//         id: 2,
-//         name: "Delivery Update",
-//         description: "Update on delivery status",
-//         content:
-//             "Hi {customer_name}, your order will be delivered on {delivery_date}.",
-//     },
-//     {
-//         id: 3,
-//         name: "Payment Reminder",
-//         description: "Remind about pending payment",
-//         content:
-//             "Hello {customer_name}, please complete payment of KSH {total_price} for order #{order_no}.",
-//     },
-// ]);
+const calculateTotal = () => {
+    if (!order.value.order_items || order.value.order_items.length === 0) {
+        return "0.00";
+    }
 
-const statusOptions = ref([
-    { id: 1, name: "Confirmed", color: "green" },
-    { id: 2, name: "Processing", color: "blue" },
-    { id: 3, name: "Shipped", color: "orange" },
-    { id: 4, name: "Delivered", color: "teal" },
-    { id: 5, name: "Follow Up", color: "purple" },
-]);
-const statusCategories = ref([
-    { id: 1, name: "Standard", status_id: 1 },
-    { id: 2, name: "Expedited", status_id: 2 },
-    { id: 3, name: "Follow Up", status_id: 5 },
-]);
+    const itemsTotal = order.value.order_items.reduce((sum, item) => {
+        return sum + Number(item.quantity) * Number(item.unit_price);
+    }, 0);
+
+    return itemsTotal.toFixed(2);
+};
+
+const statusCategories = ref([]);
 
 // Continuing from the script setup...
 
@@ -1446,7 +1460,8 @@ const showSnackbar = (message, color = "success") => {
 // Call functions
 const initiateCall = () => {
     calling.value = true;
-    // callCenterStore.callClient(newCallForm.value.phone);
+
+    callCenterStore.callClient(callForm.phone);
 
     setTimeout(() => {
         calling.value = false;
@@ -1486,7 +1501,8 @@ const holdCall = () => {
 
 const endCall = () => {
     callActive.value = false;
-    // await webrtcStore.afClient.hangup();
+
+    callCenterStore.hangupCall();
 
     callDuration.value = "00:00";
     showSnackbar("Call ended", "info");
@@ -1648,6 +1664,7 @@ const viewCustomerOrders = () => {
 const completeAndClose = () => {
     showSnackbar("Order marked as complete", "success");
     closeDialog();
+    orderStore.updateOrder(order);
 };
 
 const closeDialog = () => {
