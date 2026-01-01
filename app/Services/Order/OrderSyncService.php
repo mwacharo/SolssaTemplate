@@ -234,7 +234,19 @@ class OrderSyncService
             // 'delivery_date' => $normalized['delivery date'] ?? null,
             'delivery_date' => $this->normalizeDate($normalized['delivery date'] ?? null),
 
-            'special_instruction' => $normalized['special instructiuons'] ?? null,
+
+            // special instuctions are status_notes found in  
+            // OrderStatusTimestamp   
+            'special_instruction' => $normalized['special instructions'] ?? null,
+
+            // orderAssignment table
+            //      'order_id',
+            // 'user_id',
+            // // 'assigned_by',
+            // 'role', // CallAgent
+            // 'status', // pending, in_progress, completed
+            'agent' => $normalized['agent'] ?? null,
+            // agent
             'distance' => 0,
             'invoice_value' => 0,
             'pod_returned' => isset($normalized['documents received']) && strtolower($normalized['documents received']) === 'yes' ? 1 : 0,

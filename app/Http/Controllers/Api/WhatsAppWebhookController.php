@@ -73,6 +73,9 @@ class WhatsAppWebhookController extends Controller
 
     protected function handleIncomingMessage(array $payload)
     {
+
+
+    
         $chatId    = data_get($payload, 'senderData.chatId');
         $senderId  = data_get($payload, 'senderData.senderId');
         $text      = data_get($payload, 'messageData.textMessageData.textMessage');

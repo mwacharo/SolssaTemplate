@@ -838,6 +838,25 @@
                                                     )
                                                 }}
                                             </span>
+
+                                            <div
+                                                v-if="
+                                                    order.latest_status
+                                                        ?.status_notes
+                                                "
+                                            >
+                                                <strong class="text-xs"
+                                                    >Note:</strong
+                                                >
+                                                <span
+                                                    class="text-xs text-gray-700"
+                                                >
+                                                    {{
+                                                        order.latest_status
+                                                            ?.status_notes
+                                                    }}
+                                                </span>
+                                            </div>
                                             <div
                                                 v-if="
                                                     order.latest_status
@@ -1261,8 +1280,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- <Stkpush /> -->
 
         <Stkpush
             ref="stkpushDialog"

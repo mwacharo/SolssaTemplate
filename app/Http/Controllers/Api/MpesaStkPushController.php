@@ -228,10 +228,9 @@ class MpesaStkPushController extends Controller
                 OrderStatusTimestamp::create([
                     'order_id' => $order->id,
                     'status_id' => $deliveredStatus->id,
-                    // 'status_category_id' => $deliveredStatus->status_category_id ?? null,
-                    // 'status_notes' => 'Order delivered after successful payment',
                 ]);
             }
+            // sendmmessage mpesa notification
         }
 
         return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);

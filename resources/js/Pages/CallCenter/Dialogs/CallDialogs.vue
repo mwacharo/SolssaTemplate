@@ -1,20 +1,11 @@
 <template>
     <div>
-        <!-- Make New Call Dialog -->
         <v-dialog
             v-model="isNewCallDialog"
             max-width="500"
             persistent
             transition="dialog-bottom-transition"
         >
-            <!-- <v-navigation-drawer
-            v-model="isNewCallDialog"
-            location="right"
-            temporary
-            width="500"
-        > -->
-            <!-- content -->
-
             <v-card class="modern-card">
                 <v-card-title class="gradient-header">
                     <v-icon left color="white" size="24">mdi-phone-plus</v-icon>

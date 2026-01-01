@@ -14,9 +14,7 @@
                         <v-icon color="white" size="28">mdi-headset</v-icon>
                     </v-avatar>
                     <div class="flex-grow-1">
-                        <div class="text-h5 font-weight-bold">
-                            CallCenter
-                        </div>
+                        <div class="text-h5 font-weight-bold">CallCenter</div>
                         <div class="text-caption text-grey-lighten-1">
                             Order #{{ order?.order_no || "N/A" }} -
                             {{ customer?.full_name || "Unknown Customer" }}
@@ -94,6 +92,37 @@
                                             customer.email
                                         }}</span>
                                     </div>
+
+                                    <!-- city  -->
+                                    <v-autocomplete
+                                        v-model="order.customer.city_id"
+                                        :items="cityOptions"
+                                        item-title="name"
+                                        item-value="id"
+                                        label="City"
+                                        prepend-inner-icon="mdi-city"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :rules="[rules.required]"
+                                        clearable
+                                        hide-no-data
+                                        class="mb-3"
+                                    />
+                                    <v-autocomplete
+                                        v-model="order.customer.zone_id"
+                                        :items="zoneOptions"
+                                        item-title="name"
+                                        item-value="id"
+                                        label="Zone"
+                                        prepend-inner-icon="mdi-map-marker-radius"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        clearable
+                                        hide-no-data
+                                        class="mb-3"
+                                    />
+
+                                    <!-- zone -->
                                     <div
                                         class="info-row"
                                         v-if="customer?.address"
@@ -103,6 +132,20 @@
                                         >
                                         <span class="text-truncate">{{
                                             customer.address
+                                        }}</span>
+                                    </div>
+
+                                    <!-- customer notes -->
+
+                                    <div
+                                        class="info-row"
+                                        v-if="order.customer_notes"
+                                    >
+                                        <v-icon size="20" class="mr-2"
+                                            >mdi-note-text</v-icon
+                                        >
+                                        <span class="text-truncate">{{
+                                            order.customer_notes
                                         }}</span>
                                     </div>
                                 </v-card-text>
@@ -500,34 +543,45 @@
                                         </v-btn-toggle>
 
                                         <!-- Template Selector -->
-                                        <v-select
-                                            v-model="selectedTemplate"
-                                            :items="templates"
+                                        <v-autocomplete
+                                            v-model="
+                                                templateStore.selectedTemplate
+                                            "
+                                            :items="templateStore.allTemplates"
                                             item-title="name"
                                             item-value="id"
-                                            label="Select Template (Optional)"
-                                            variant="outlined"
-                                            density="comfortable"
+                                            label="Select Template"
+                                            return-object
+                                            :disabled="
+                                                templateStore.loading.templates
+                                            "
+                                            :loading="
+                                                templateStore.loading.templates
+                                            "
+                                            @update:model-value="
+                                                templateStore.onTemplateSelect
+                                            "
                                             clearable
-                                            class="mb-3"
-                                            @update:model-value="loadTemplate"
-                                        >
-                                            <template #item="{ props, item }">
-                                                <v-list-item v-bind="props">
-                                                    <template #prepend>
-                                                        <v-icon
-                                                            >mdi-file-document-outline</v-icon
-                                                        >
-                                                    </template>
-                                                    <v-list-item-title>{{
-                                                        item.raw.name
-                                                    }}</v-list-item-title>
-                                                    <v-list-item-subtitle>{{
-                                                        item.raw.description
-                                                    }}</v-list-item-subtitle>
-                                                </v-list-item>
-                                            </template>
-                                        </v-select>
+                                            class="mt-3"
+                                            hide-no-data
+                                            dense
+                                        />
+
+                                        <template #item="{ props, item }">
+                                            <v-list-item v-bind="props">
+                                                <template #prepend>
+                                                    <v-icon
+                                                        >mdi-file-document-outline</v-icon
+                                                    >
+                                                </template>
+                                                <v-list-item-title>{{
+                                                    item.raw.name
+                                                }}</v-list-item-title>
+                                                <v-list-item-subtitle>{{
+                                                    item.raw.description
+                                                }}</v-list-item-subtitle>
+                                            </v-list-item>
+                                        </template>
 
                                         <!-- Email Subject (only for email) -->
                                         <v-text-field
@@ -1069,6 +1123,13 @@
 import { ref, computed, watch } from "vue";
 import { usecallCentreDiallerStore } from "@/stores/callCentreDialler";
 
+import { useOrderStore } from "@/stores/orderStore";
+
+import { notify } from "@/utils/toast";
+
+import { useCallCenterStore } from "@/stores/callCenter";
+import { useWhatsAppStore } from "@/stores/whatsappStore";
+
 // Props
 const props = defineProps({
     modelValue: Boolean,
@@ -1077,17 +1138,26 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "status-updated", "note-added"]);
 
+// Form validation rules
+const rules = {
+    required: (value) => !!value || "This field is required",
+    phone: (value) => {
+        if (!value) return true;
+        const phonePattern = /^[\d\s\-\+\(\)]+$/;
+        return phonePattern.test(value) || "Invalid phone number format";
+    },
+};
 // Dialog state
 const dialog = computed({
     get: () => props.modelValue,
     set: (val) => emit("update:modelValue", val),
 });
 
-
-
-
 // Get store instance
 const store = usecallCentreDiallerStore();
+const orderStore = useOrderStore();
+const callCenterStore = useCallCenterStore();
+const templateStore = useWhatsAppStore();
 
 // Dialog state - use computed to sync with store
 const dialogOpen = computed({
@@ -1163,29 +1233,29 @@ const snackbar = ref({
 });
 
 // Sample data
-const templates = ref([
-    {
-        id: 1,
-        name: "Order Confirmation",
-        description: "Confirm order details",
-        content:
-            "Dear {customer_name}, your order #{order_no} has been confirmed.",
-    },
-    {
-        id: 2,
-        name: "Delivery Update",
-        description: "Update on delivery status",
-        content:
-            "Hi {customer_name}, your order will be delivered on {delivery_date}.",
-    },
-    {
-        id: 3,
-        name: "Payment Reminder",
-        description: "Remind about pending payment",
-        content:
-            "Hello {customer_name}, please complete payment of KSH {total_price} for order #{order_no}.",
-    },
-]);
+// const templates = ref([
+//     {
+//         id: 1,
+//         name: "Order Confirmation",
+//         description: "Confirm order details",
+//         content:
+//             "Dear {customer_name}, your order #{order_no} has been confirmed.",
+//     },
+//     {
+//         id: 2,
+//         name: "Delivery Update",
+//         description: "Update on delivery status",
+//         content:
+//             "Hi {customer_name}, your order will be delivered on {delivery_date}.",
+//     },
+//     {
+//         id: 3,
+//         name: "Payment Reminder",
+//         description: "Remind about pending payment",
+//         content:
+//             "Hello {customer_name}, please complete payment of KSH {total_price} for order #{order_no}.",
+//     },
+// ]);
 
 const statusOptions = ref([
     { id: 1, name: "Confirmed", color: "green" },
@@ -1376,6 +1446,7 @@ const showSnackbar = (message, color = "success") => {
 // Call functions
 const initiateCall = () => {
     calling.value = true;
+    // callCenterStore.callClient(newCallForm.value.phone);
 
     setTimeout(() => {
         calling.value = false;
@@ -1415,6 +1486,8 @@ const holdCall = () => {
 
 const endCall = () => {
     callActive.value = false;
+    // await webrtcStore.afClient.hangup();
+
     callDuration.value = "00:00";
     showSnackbar("Call ended", "info");
 
@@ -1647,7 +1720,7 @@ const closeDialog = () => {
 }
 
 .call-button {
-    padding: 20px 40px !important;
+    padding: 20pxcallCenterStore 40px !important;
 }
 
 .call-controls {

@@ -56,10 +56,24 @@ class OrderRepository implements OrderRepositoryInterface
                 // 4️⃣ Add initial status record (if new)
                 if ($order->wasRecentlyCreated) {
                     $order->statusTimestamps()->create([
-                        'status_id' => 1, // Example: Scheduled
-                        'status_notes' => 'Imported via Google Sheet',
+                        // 'status_id' => 1, // Example: Scheduled
+                        // write a helper method to find the id of passed status name
+                        'status_id' => $this->getStatusIdByName(($row['status'] ?? 'New')),
+
+                        // 'status_notes' => 'Imported via Google Sheet',
+                        'status_notes' => $row['special_instruction'] ?? 'Imported via Google Sheet',
+
+
+
                     ]);
                 }
+
+                // orderassignments 
+
+
+                $this->assignOrderAgent($order, $row, $userId);
+
+
 
                 $syncedCount++;
             }
@@ -222,5 +236,92 @@ class OrderRepository implements OrderRepositoryInterface
         $prefix = strtoupper(substr(preg_replace('/\s+/', '', $productName), 0, 3)); // first 3 letters
         $random = strtoupper(substr(md5(uniqid()), 0, 5)); // random 5 chars
         return "{$prefix}-{$vendorId}-{$random}";
+    }
+
+
+
+
+
+    private function getStatusIdByName(string $statusName): int
+    {
+        // 1️⃣ Normalize aggressively
+        $normalized = strtolower(trim($statusName));
+
+        // Collapse multiple spaces (e.g. "in  transit")
+        $normalized = preg_replace('/\s+/', ' ', $normalized);
+
+        // 2️⃣ Lookup safely (case-insensitive)
+        $status = \App\Models\Status::whereRaw(
+            'LOWER(TRIM(name)) = ?',
+            [$normalized]
+        )->first();
+
+        // 3️⃣ Fallback (Scheduled)
+        return $status?->id ?? 1;
+    }
+
+
+
+    /**
+     * Assign order to call agent (by user name from import)
+     */
+    private function assignOrderAgent(Order $order, array $row, int $assignedBy): void
+    {
+        // 1️⃣ Extract agent safely
+        $agentRaw = $row['agent'] ?? null;
+
+        if (!$agentRaw) {
+            return; // nothing to assign
+        }
+
+        // 2️⃣ Normalize whitespace + case
+        $agentName = strtolower(
+            preg_replace('/\s+/', ' ', trim($agentRaw))
+        );
+
+        try {
+            // 3️⃣ Find user by normalized name
+            $agentUser = \App\Models\User::whereRaw(
+                'LOWER(TRIM(name)) = ?',
+                [$agentName]
+            )->first();
+
+            $assignmentData = [
+                'order_id'    => $order->id,
+                'assigned_by' => $assignedBy,
+                'role'        => 'CallAgent',
+            ];
+
+            if ($agentUser) {
+                // 4️⃣ Assign to known user
+                \App\Models\OrderAssignment::updateOrCreate(
+                    [
+                        'order_id' => $order->id,
+                        'user_id'  => $agentUser->id,
+                    ],
+                    $assignmentData
+                );
+
+                Log::info("Assigned Order #{$order->order_no} to {$agentUser->name}");
+            } else {
+                // 5️⃣ Store raw agent when user not found
+                \App\Models\OrderAssignment::create(
+                    $assignmentData + [
+                        'user_id' => null,
+                        'agent'   => trim($agentRaw),
+                    ]
+                );
+
+                Log::warning(
+                    "Order #{$order->order_no}: unknown agent '{$agentRaw}'"
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to assign order agent', [
+                'order_no' => $order->order_no,
+                'agent'    => $agentRaw,
+                'error'    => $e->getMessage(),
+            ]);
+        }
     }
 }
