@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
-use App\Models\Client;
+use App\Models\Customer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -75,7 +75,7 @@ class WhatsAppWebhookController extends Controller
     {
 
 
-    
+
         $chatId    = data_get($payload, 'senderData.chatId');
         $senderId  = data_get($payload, 'senderData.senderId');
         $text      = data_get($payload, 'messageData.textMessageData.textMessage');
@@ -118,16 +118,19 @@ class WhatsAppWebhookController extends Controller
 
             Log::info("📞 Normalized phone number: {$phone}");
 
-            // 🔹 Call external API (wait until response is ready)
-            $response = Http::timeout(120)
-                ->retry(3, 2000)
-                ->get("https://app.boxleocourier.com/api/contact-search/{$phone}");
 
-            if (!$response->successful()) {
-                Log::warning("🚫 Boxleo API call not successful for {$phone}. Status: " . $response->status(), [
-                    'body' => $response->body()
-                ]);
-                throw new \Exception("API error for {$phone}, status: " . $response->status());
+
+
+            // customer has many orders relationship
+
+            $client = Customer::where('phone', $phone)->first();
+
+            $orders = $client->orders;
+            Log::info("📦 Found " . $orders->count() . " orders for client with phone: {$phone}");
+
+            if (!$orders) {
+                Log::warning("🚫 No orders found for client with phone: {$phone}");
+                throw new \Exception("No orders found for client with phone: {$phone}");
             }
 
             $clients = $response->json();
@@ -307,7 +310,7 @@ class WhatsAppWebhookController extends Controller
     }
 
 
-        protected function handleStatusUpdate(array $payload)
+    protected function handleStatusUpdate(array $payload)
     {
         $idMessage = data_get($payload, 'idMessage');
         $status = data_get($payload, 'status');

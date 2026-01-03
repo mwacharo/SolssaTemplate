@@ -39,7 +39,7 @@
             <v-card-text class="pa-0" style="height: 70vh">
                 <v-row no-gutters style="height: 100%">
                     <!-- Left Panel - Customer & Order Info -->
-                    <v-col cols="12" md="4" class="left-panel">
+                    <v-col cols="12" md="6" class="left-panel">
                         <div class="pa-4">
                             <!-- Customer Information -->
                             <v-card variant="outlined" class="mb-4">
@@ -57,7 +57,7 @@
                                             >mdi-account-circle</v-icon
                                         >
                                         <span class="font-weight-medium">{{
-                                            customer?.full_name || "N/A"
+                                            order.customer?.full_name || "N/A"
                                         }}</span>
                                     </div>
                                     <div class="info-row">
@@ -83,13 +83,13 @@
                                     </div>
                                     <div
                                         class="info-row"
-                                        v-if="customer?.email"
+                                        v-if="order.Booleancustomer?.email"
                                     >
                                         <v-icon size="20" class="mr-2"
                                             >mdi-email</v-icon
                                         >
                                         <span class="text-truncate">{{
-                                            customer.email
+                                            order.customer.email
                                         }}</span>
                                     </div>
 
@@ -169,7 +169,7 @@
                                         <tr>
                                             <th style="width: 30%">Product</th>
                                             <th style="width: 15%">Quantity</th>
-                                            <th style="width: 15%">
+                                            <th style="width: 30%">
                                                 Unit Price
                                             </th>
                                             <th style="width: 15%">Total</th>
@@ -352,7 +352,7 @@
                     <v-divider vertical />
 
                     <!-- Right Panel - Operations Tabs -->
-                    <v-col cols="12" md="8" class="right-panel">
+                    <v-col cols="12" md="6" class="right-panel">
                         <v-tabs
                             v-model="activeTab"
                             bg-color="blue-grey-lighten-5"
@@ -370,10 +370,10 @@
                                 <v-icon class="mr-2">mdi-update</v-icon>
                                 Update Status
                             </v-tab>
-                            <v-tab value="notes">
+                            <!-- <v-tab value="notes">
                                 <v-icon class="mr-2">mdi-note-text</v-icon>
                                 Notes
-                            </v-tab>
+                            </v-tab> -->
                         </v-tabs>
 
                         <v-window v-model="activeTab" class="tab-content">
@@ -572,12 +572,12 @@
                                                 >
                                                 SMS
                                             </v-btn>
-                                            <v-btn value="email">
+                                            <!-- <v-btn value="email">
                                                 <v-icon class="mr-2"
                                                     >mdi-email</v-icon
                                                 >
                                                 Email
-                                            </v-btn>
+                                            </v-btn> -->
                                         </v-btn-toggle>
 
                                         <!-- Template Selector -->
@@ -621,19 +621,9 @@
                                             </v-list-item>
                                         </template>
 
-                                        <!-- Email Subject (only for email) -->
-                                        <v-text-field
-                                            v-if="messageType === 'email'"
-                                            v-model="messageForm.subject"
-                                            label="Subject"
-                                            variant="outlined"
-                                            density="comfortable"
-                                            class="mb-3"
-                                        />
-
                                         <!-- Message Content -->
                                         <v-textarea
-                                            v-model="messageForm.content"
+                                            v-model="store.messageText"
                                             label="Message"
                                             variant="outlined"
                                             rows="8"
@@ -695,49 +685,6 @@
                                                     Total Price
                                                 </v-chip>
                                             </v-chip-group>
-                                        </div>
-
-                                        <!-- Attachments (for email) -->
-                                        <div
-                                            v-if="messageType === 'email'"
-                                            class="mb-3"
-                                        >
-                                            <v-btn
-                                                variant="outlined"
-                                                size="small"
-                                                prepend-icon="mdi-paperclip"
-                                                @click="$refs.fileInput.click()"
-                                            >
-                                                Attach File
-                                            </v-btn>
-                                            <input
-                                                ref="fileInput"
-                                                type="file"
-                                                style="display: none"
-                                                @change="handleFileUpload"
-                                            />
-                                            <div
-                                                v-if="
-                                                    messageForm.attachments
-                                                        .length
-                                                "
-                                                class="mt-2"
-                                            >
-                                                <v-chip
-                                                    v-for="(
-                                                        file, idx
-                                                    ) in messageForm.attachments"
-                                                    :key="idx"
-                                                    closable
-                                                    @click:close="
-                                                        removeAttachment(idx)
-                                                    "
-                                                    size="small"
-                                                    class="mr-2"
-                                                >
-                                                    {{ file.name }}
-                                                </v-chip>
-                                            </div>
                                         </div>
 
                                         <!-- Preview -->
@@ -1011,115 +958,6 @@
                                     </v-card-text>
                                 </v-card>
                             </v-window-item>
-
-                            <!-- Notes Tab -->
-                            <v-window-item value="notes" class="pa-4">
-                                <v-card variant="outlined" class="mb-4">
-                                    <v-card-text>
-                                        <div class="text-h6 mb-4">Add Note</div>
-
-                                        <v-select
-                                            v-model="noteForm.type"
-                                            :items="noteTypes"
-                                            label="Note Type"
-                                            variant="outlined"
-                                            density="comfortable"
-                                            class="mb-3"
-                                        />
-
-                                        <v-textarea
-                                            v-model="noteForm.content"
-                                            label="Note Content"
-                                            variant="outlined"
-                                            rows="6"
-                                            counter
-                                            maxlength="500"
-                                            class="mb-3"
-                                        />
-
-                                        <v-checkbox
-                                            v-model="noteForm.pinned"
-                                            label="Pin this note"
-                                            density="compact"
-                                            class="mb-3"
-                                        />
-
-                                        <v-btn
-                                            block
-                                            color="primary"
-                                            :loading="savingNote"
-                                            @click="saveNote"
-                                        >
-                                            <v-icon class="mr-2"
-                                                >mdi-content-save</v-icon
-                                            >
-                                            Save Note
-                                        </v-btn>
-                                    </v-card-text>
-                                </v-card>
-
-                                <v-card variant="outlined">
-                                    <v-card-title class="text-subtitle-1">
-                                        <v-icon class="mr-2"
-                                            >mdi-note-multiple</v-icon
-                                        >
-                                        All Notes
-                                    </v-card-title>
-                                    <v-card-text>
-                                        <div
-                                            v-for="note in notes"
-                                            :key="note.id"
-                                            class="note-item mb-3"
-                                        >
-                                            <v-card variant="tonal">
-                                                <v-card-text>
-                                                    <div
-                                                        class="d-flex align-center mb-2"
-                                                    >
-                                                        <v-chip
-                                                            size="x-small"
-                                                            :color="
-                                                                getNoteTypeColor(
-                                                                    note.type
-                                                                )
-                                                            "
-                                                            class="mr-2"
-                                                        >
-                                                            {{ note.type }}
-                                                        </v-chip>
-                                                        <v-icon
-                                                            v-if="note.pinned"
-                                                            size="small"
-                                                            color="warning"
-                                                            class="mr-2"
-                                                        >
-                                                            mdi-pin
-                                                        </v-icon>
-                                                        <v-spacer />
-                                                        <span
-                                                            class="text-caption text-grey"
-                                                        >
-                                                            {{
-                                                                formatDateTime(
-                                                                    note.created_at
-                                                                )
-                                                            }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="text-body-2">
-                                                        {{ note.content }}
-                                                    </div>
-                                                    <div
-                                                        class="text-caption text-grey mt-2"
-                                                    >
-                                                        By {{ note.user_name }}
-                                                    </div>
-                                                </v-card-text>
-                                            </v-card>
-                                        </div>
-                                    </v-card-text>
-                                </v-card>
-                            </v-window-item>
                         </v-window>
                     </v-col>
                 </v-row>
@@ -1170,6 +1008,11 @@ import { useCallCenterStore } from "@/stores/callCenter";
 import { useWhatsAppStore } from "@/stores/whatsappStore";
 import { useWebRTCStore } from "@/stores/webrtc";
 
+import { useAuthStore } from "@/stores/auth";
+
+const auth = useAuthStore();
+const userId = computed(() => auth.user?.id);
+
 // Props
 const props = defineProps({
     modelValue: Boolean,
@@ -1199,6 +1042,29 @@ const store = usecallCentreDiallerStore();
 const orderStore = useOrderStore();
 const callCenterStore = useCallCenterStore();
 const templateStore = useWhatsAppStore();
+
+const onTemplateSelect = templateStore.onTemplateSelect;
+
+const removeOrderItem = (index) => {
+    order.value.order_items.splice(index, 1);
+    updateTotals();
+};
+
+const updateTotals = () => {
+    // This ensures the total_price is always in sync with the calculated total
+    orderEdit.value.total_price = calculateTotal();
+    orderEdit.value.sub_total = calculateTotal();
+};
+
+const addOrderItem = () => {
+    order.value.order_items.push({
+        sku: "",
+        quantity: 1,
+        unit_price: 0.0,
+        editable: true,
+    });
+    updateTotals();
+};
 
 // Dialog state - use computed to sync with store
 const dialogOpen = computed({
@@ -1243,7 +1109,7 @@ const callForm = ref({
 const messageType = ref("whatsapp");
 const selectedTemplate = ref(null);
 const sending = ref(false);
-const messageForm = ref({
+const messageText = ref({
     subject: "",
     content: "",
     attachments: [],
@@ -1358,7 +1224,7 @@ const shouldShowRecallDate = computed(() => {
 
 const previewMessage = computed(() => {
     let content =
-        messageForm.value.content || "Your message will appear here...";
+        messageText.value.content || "Your message will appear here...";
 
     // Replace variables with actual values
     content = content.replace(
@@ -1527,9 +1393,9 @@ const endCall = () => {
 const loadTemplate = (templateId) => {
     const template = templates.value.find((t) => t.id === templateId);
     if (template) {
-        messageForm.value.content = template.content;
+        messageText.value.content = template.content;
         if (messageType.value === "email") {
-            messageForm.value.subject = template.name;
+            messageText.value.subject = template.name;
         }
     }
 };
@@ -1539,47 +1405,98 @@ const insertVariable = (variable) => {
     if (textarea) {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const text = messageForm.value.content;
-        messageForm.value.content =
+        const text = messageText.value.content;
+        messageText.value.content =
             text.substring(0, start) + variable + text.substring(end);
     } else {
-        messageForm.value.content += variable;
+        messageText.value.content += variable;
     }
 };
 
 const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
-    messageForm.value.attachments.push(...files);
+    messageText.value.attachments.push(...files);
 };
 
 const removeAttachment = (index) => {
-    messageForm.value.attachments.splice(index, 1);
+    messageText.value.attachments.splice(index, 1);
 };
 
+// const sendMessage = async () => {
+//     if (!messageText.value.content.trim()) {
+//         showSnackbar("Please enter a message", "error");
+//         return;
+//     }
+
+//     sending.value = true;
+
+//     // Simulate API call
+//     setTimeout(() => {
+//         sending.value = false;
+//         showSnackbar(
+//             `${messageType.value.toUpperCase()} sent successfully`,
+//             "success"
+//         );
+
+//         // Reset form
+//         messageText.value = {
+//             subject: "",
+//             content: "",
+//             attachments: [],
+//         };
+//         selectedTemplate.value = null;
+//     }, 1500);
+// };
+
 const sendMessage = async () => {
-    if (!messageForm.value.content.trim()) {
+    if (!store.messageText.trim()) {
         showSnackbar("Please enter a message", "error");
         return;
     }
 
     sending.value = true;
 
-    // Simulate API call
-    setTimeout(() => {
-        sending.value = false;
-        showSnackbar(
-            `${messageType.value.toUpperCase()} sent successfully`,
-            "success"
+    try {
+        // Build complete contact object with order data
+        const contactData = {
+            id: customer.value.id || order.value.customer?.id,
+            name: customer.value.full_name || order.value.customer?.full_name,
+            phone: customer.value.phone || order.value.customer?.phone_number,
+            // Include complete order data
+            orderId: order.value.id,
+            orderData: order.value,
+            orderOid: order.value.order_no,
+        };
+
+        console.log("📤 Sending message with context:", contactData);
+
+        // Use the WhatsApp store's sendSingleMessage method
+        const result = await templateStore.sendSingleMessage(
+            userId.value,
+            contactData,
+            store.messageText,
+            templateStore.selectedTemplate?.id
         );
 
-        // Reset form
-        messageForm.value = {
-            subject: "",
-            content: "",
-            attachments: [],
-        };
-        selectedTemplate.value = null;
-    }, 1500);
+        if (result.success) {
+            showSnackbar(
+                `${messageType.value.toUpperCase()} sent successfully`,
+                "success"
+            );
+
+            // Reset form
+            store.messageText = "";
+            templateStore.selectedTemplate = null;
+        }
+    } catch (error) {
+        console.error("❌ Send message error:", error);
+        showSnackbar(
+            error.response?.data?.message || "Failed to send message",
+            "error"
+        );
+    } finally {
+        sending.value = false;
+    }
 };
 
 // Status functions
@@ -1679,7 +1596,7 @@ const closeDialog = () => {
     // Reset all forms
     activeTab.value = "call";
     callActive.value = false;
-    messageForm.value = {
+    messageText.value = {
         subject: "",
         content: "",
         attachments: [],
@@ -1711,7 +1628,6 @@ const closeDialog = () => {
 }
 
 .left-panel {
-    background-color: #f5f5f5;
     overflow-y: auto;
 }
 
@@ -1724,6 +1640,7 @@ const closeDialog = () => {
     align-items: center;
     padding: 8px 0;
     gap: 8px;
+    color: #333;
 }
 
 .order-items-list {
