@@ -71,9 +71,144 @@ class WhatsAppWebhookController extends Controller
     }
 
 
-         $client = Customer::where('phone', $phone)->first();
+    protected function handleIncomingMessage(array $payload)
+    {
+        $chatId    = data_get($payload, 'senderData.chatId');
+        $text      = data_get($payload, 'messageData.textMessageData.textMessage');
+        $quoted    = data_get($payload, 'messageData.quotedMessage.message');
+        $quotedId  = data_get($payload, 'messageData.quotedMessage.stanzaId');
+        $type      = data_get($payload, 'messageData.typeMessage', 'textMessage');
+        $timestamp = now();
 
-            $orders = $client->orders;
+        Log::info("🔍 Incoming message from chatId: {$chatId}");
+
+        try {
+            if (!is_string($text) || trim($text) === '') {
+                throw new \Exception('Incoming message text is empty');
+            }
+
+            /**
+             * 🔹 Normalize phone number
+             */
+            $phone = preg_replace('/@.*/', '', $chatId);
+            $phone = preg_replace('/\D/', '', $phone);
+
+            if (Str::startsWith($phone, '0')) {
+                $phone = '254' . substr($phone, 1);
+            } elseif (Str::startsWith($phone, '7')) {
+                $phone = '254' . $phone;
+            } elseif (Str::startsWith($phone, '+254')) {
+                $phone = ltrim($phone, '+');
+            }
+
+            Log::info("📞 Normalized phone: {$phone}");
+
+            /**
+             * 🔹 Fetch client & orders (DB ONLY)
+             */
+            $client = Customer::where('phone', $phone)->first();
+
+            if (!$client) {
+                Log::warning("🚫 Client not found for phone: {$phone}");
+
+                $reply = "Sorry, I could not find your number in our system. Please confirm your registered phone number.";
+                $actions = [];
+            } else {
+                $orders = $client->orders()->latest()->take(5)->get();
+
+                Log::info("📦 Found {$orders->count()} orders for client {$client->id}");
+
+                $recentOrders = $orders->map(function ($order) {
+                    return [
+                        'order_id'        => $order->id,
+                        'order_no'        => $order->order_no,
+                        'status'          => $order->status,
+                        'delivery_status' => $order->delivery_status,
+                        'total'           => $order->total,
+                        'sub_total'       => $order->sub_total,
+                        'payment_method'  => $order->payment_method,
+                        'paid'            => $order->paid,
+                        'delivery_date'   => $order->delivery_date,
+                        'dispatched_on'   => $order->dispatched_on,
+                        'customer_notes'  => $order->customer_notes,
+                        'products'        => $order->items->map(fn($item) => [
+                            'product_id'   => $item->product_id,
+                            'product_name' => $item->product->name ?? null,
+                            'sku'          => $item->product->sku ?? null,
+                            'quantity'     => $item->quantity,
+                            'price'        => $item->price,
+                            'total_price'  => $item->total_price,
+                        ])->toArray(),
+                        'client' => [
+                            'id'      => $order->customer->id ?? null,
+                            'name'    => $order->customer->name ?? null,
+                            'phone'   => $order->customer->phone ?? null,
+                            'address' => $order->customer->address ?? null,
+                            'city'    => $order->customer->city ?? null,
+                        ],
+                    ];
+                })->toArray();
+
+                /**
+                 * 🔹 AI handling
+                 */
+                $ai = new IntelligentSupportService();
+                $result = $ai->handleCustomerMessage($text, $recentOrders);
+
+                if ($result instanceof \GuzzleHttp\Promise\PromiseInterface) {
+                    $result = $result->wait();
+                }
+
+                $reply   = $result['reply'] ?? '[no reply]';
+                $actions = $result['actions'] ?? [];
+
+                Log::info("🤖 AI reply generated", compact('reply', 'actions'));
+            }
+        } catch (\Throwable $e) {
+            Log::error("❌ Message handling error: {$e->getMessage()}");
+
+            $reply = 'Sorry, something went wrong while processing your message. Please try again.';
+            $actions = [];
+        }
+
+        /**
+         * 🔹 Send WhatsApp reply
+         */
+        if (!empty($reply)) {
+            try {
+                $this->whatsAppService->sendMessage($chatId, $reply, 1);
+                Log::info("📤 Reply sent to {$chatId}");
+            } catch (\Throwable $e) {
+                Log::error("❌ WhatsApp send failed: {$e->getMessage()}");
+            }
+        }
+
+        /**
+         * 🔹 Store incoming message
+         */
+        try {
+            Message::create([
+                'chat_id'             => $chatId,
+                'from'                => $chatId,
+                'to'                  => 'system',
+                'content'             => $text,
+                'wa_message_id'       => data_get($payload, 'idMessage'),
+                'quoted_message_id'   => $quotedId,
+                'quoted_message_text' => $quoted,
+                'type'                => $type,
+                'timestamp'           => $timestamp,
+                'messageable_type'    => \App\Models\User::class,
+                'messageable_id'      => 1,
+            ]);
+
+            Log::info("💬 Message stored for {$chatId}");
+        } catch (\Throwable $e) {
+            Log::error("❌ Failed to store message: {$e->getMessage()}");
+        }
+
+        return response()->json(['status' => 'stored']);
+    }
+
 
     protected function handleOutgoing(array $payload)
     {
