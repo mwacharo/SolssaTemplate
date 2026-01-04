@@ -78,6 +78,7 @@ class CallStatsService
             // Agent-specific
             $incomingQuery = CallHistory::query()
                 ->where('user_id', $user->id)
+                ->whereNull('clientDialledNumber')
                 ->whereNull('deleted_at');
 
 
