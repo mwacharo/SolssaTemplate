@@ -11,15 +11,16 @@ class WhatsAppService
 {
    
 
-    public function sendMessage($chatId, $message, $userId)
+    public function sendMessage($chatId, $message, $userId, $orderId = null)
     {
         // Dispatch the WhatsApp message job immediately
-        SendWhatsAppMessageJob::dispatch($chatId, $message, $userId);
+        SendWhatsAppMessageJob::dispatch($chatId, $message, $userId, ['order_id' => $orderId]);
 
         // Optionally log the dispatch event
         Log::info('WhatsApp message dispatched', [
             'chat_id' => $chatId,
             'user_id' => $userId,
+            'order_id' => $orderId
         ]);
     }
 
