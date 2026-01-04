@@ -22,10 +22,10 @@ class CallStatsService
         Log::info('Fetching agent stats', ['user_id' => $user->id, 'date_range' => $dateRange]);
 
         $isAdmin = $user->hasRole('CallCentreAdmin') || $user->hasRole('Admin');
-        
+
         Log::info('User role check', ['user_id' => $user->id, 'is_admin' => $isAdmin]);
 
-        
+
 
         $ivrOptions = IvrOption::all();
 
@@ -36,7 +36,9 @@ class CallStatsService
                 $query->whereBetween('created_at', $dateRange);
             }
 
-            $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
+            // $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
+            $incomingCalls = (clone $query)->whereNull('clientDialledNumber')->count();
+
 
             // the outgoing call are made by users with client_name  as the callerNumber
             // $outgoingCalls = (clone $query)->where('callerNumber', $user->client_name)->count();
@@ -212,6 +214,10 @@ class CallStatsService
             }
         });
     }
+
+
+    // scope for incoming calls
+
 
 
 
