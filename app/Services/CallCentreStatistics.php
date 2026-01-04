@@ -36,8 +36,8 @@ class CallStatsService
                 $query->whereBetween('created_at', $dateRange);
             }
 
-            // $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
-            $incomingCalls = (clone $query)->whereNull('clientDialledNumber')->count();
+            $incomingCalls = (clone $query)->whereNotNull('user_id')->count();
+            // $incomingCalls = (clone $query)->whereNull('clientDialledNumber')->count();
 
 
             // the outgoing call are made by users with client_name  as the callerNumber

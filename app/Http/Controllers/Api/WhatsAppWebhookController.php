@@ -144,6 +144,10 @@ class WhatsAppWebhookController extends Controller
             } else {
                 $orders = $client->orders()->latest()->take(5)->get();
 
+                // log the orders response 
+                Log::info("📦 Fetched orders", ['orders_count' => $orders]);
+
+
                 Log::info("📦 Found {$orders->count()} orders for client {$client->id}");
 
                 $recentOrders = $orders->map(function ($order) {
