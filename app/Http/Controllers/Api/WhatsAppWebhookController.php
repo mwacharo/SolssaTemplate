@@ -23,52 +23,80 @@ class WhatsAppWebhookController extends Controller
         $this->whatsAppService = $whatsAppService;
     }
 
+    // public function handle(Request $request)
+    // {
+    //     $payload = $request->all();
+    //     Log::info('🔔 WhatsApp Webhook Received', $payload);
+
+    //     try {
+    //         $type = $payload['typeWebhook'] ?? 'undefined';
+
+    //         switch ($type) {
+    //             case 'incomingMessageReceived':
+    //                 return $this->handleIncomingMessage($payload);
+
+    //             case 'outgoingMessageReceived':
+    //                 return $this->handleOutgoing($payload);
+
+    //             case 'outgoingMessageStatus':
+    //                 return $this->handleStatusUpdate($payload);
+
+    //             case 'stateInstanceChanged':
+    //                 Log::info('⚙️ Instance state changed', [
+    //                     'state' => $payload['stateInstance'] ?? 'unknown'
+    //                 ]);
+    //                 break;
+
+
+    //             case 'incomingCall':
+    //                 $this->handleIncomingCall($payload);
+    //                 break;
+
+    //             default:
+    //                 Log::warning("⚠️ Unhandled or unknown webhook type: {$type}", $payload);
+    //                 break;
+    //         }
+
+
+    //         return response()->json(['status' => 'ok'], 200);
+    //     } catch (\Throwable $e) {
+    //         Log::error('❌ Webhook error: ' . $e->getMessage(), [
+    //             'trace' => $e->getTraceAsString(),
+    //         ]);
+    //         return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
+
+    //     }
+    // }
+
+
     public function handle(Request $request)
     {
-        $payload = $request->all();
-        Log::info('🔔 WhatsApp Webhook Received', $payload);
+        // ACK IMMEDIATELY
+        response()->json(['status' => 'ok'], 200)->send();
 
+        // Continue processing safely
         try {
-            $type = $payload['typeWebhook'] ?? 'undefined';
+            $payload = $request->all();
+            Log::info('🔔 WhatsApp Webhook Received', $payload);
 
-            switch ($type) {
-                case 'incomingMessageReceived':
-                    return $this->handleIncomingMessage($payload);
+            $type = data_get($payload, 'typeWebhook', 'undefined');
 
-                case 'outgoingMessageReceived':
-                    return $this->handleOutgoing($payload);
-
-                case 'outgoingMessageStatus':
-                    return $this->handleStatusUpdate($payload);
-
-                case 'stateInstanceChanged':
-                    Log::info('⚙️ Instance state changed', [
-                        'state' => $payload['stateInstance'] ?? 'unknown'
-                    ]);
-                    break;
-
-
-                case 'incomingCall':
-                    $this->handleIncomingCall($payload);
-                    break;
-
-                default:
-                    Log::warning("⚠️ Unhandled or unknown webhook type: {$type}", $payload);
-                    break;
-            }
-
-            // return response()->json(['status' => 'received']);
-
-            return response()->json(['status' => 'ok'], 200);
+            match ($type) {
+                'incomingMessageReceived' => $this->handleIncomingMessage($payload),
+                'outgoingMessageReceived' => $this->handleOutgoing($payload),
+                'outgoingMessageStatus'   => $this->handleStatusUpdate($payload),
+                'stateInstanceChanged'    => Log::info('Instance state changed', $payload),
+                'incomingCall'            => $this->handleIncomingCall($payload),
+                default                   => Log::warning('Unknown webhook type', $payload),
+            };
         } catch (\Throwable $e) {
-            Log::error('❌ Webhook error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
+            Log::error('Webhook processing error', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
             ]);
-            // return response()->json(['error' => 'Webhook processing failed'], 500);
-            return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
-
         }
     }
+
 
 
     protected function handleIncomingMessage(array $payload)
@@ -217,7 +245,7 @@ class WhatsAppWebhookController extends Controller
         $text = data_get($payload, 'messageData.textMessageData.textMessage');
 
         if (!$chatId || !$text) {
-            return response()->json(['error' => 'Missing outgoing data'], 400);
+            return response()->json(['status' => 'ok'], 200);
         }
 
         Log::info("🔍 Identifying sender for chatId: {$senderId}");
@@ -243,7 +271,6 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['status' => 'stored_outgoing', 'id' => $msg->id]);
         } catch (\Throwable $e) {
             Log::error("❌ Failed to store outgoing message: " . $e->getMessage());
-            // return response()->json(['error' => 'Failed to store outgoing'], 500);
 
             return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
 
@@ -287,7 +314,6 @@ class WhatsAppWebhookController extends Controller
 
         Log::warning("⚠️ Status update received for unknown message ID: {$idMessage}");
 
-        // return response()->json(['warning' => 'Message not found'], 200); // Green API expects 200 regardless
 
         return response()->json(['message' => 'Message not found'], 200); // Return 200 anyway
 
