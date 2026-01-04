@@ -151,33 +151,47 @@ class WhatsAppWebhookController extends Controller
                 Log::info("📦 Found {$orders->count()} orders for client {$client->id}");
 
                 $recentOrders = $orders->map(function ($order) {
-                    return [
-                        'order_id'        => $order->id,
-                        'order_no'        => $order->order_no,
-                        'status'          => $order->status,
-                        'delivery_status' => $order->delivery_status,
-                        'total'           => $order->total,
-                        'sub_total'       => $order->sub_total,
-                        'payment_method'  => $order->payment_method,
-                        'paid'            => $order->paid,
-                        'delivery_date'   => $order->delivery_date,
-                        'dispatched_on'   => $order->dispatched_on,
-                        'customer_notes'  => $order->customer_notes,
-                        'products'        => $order->items->map(fn($item) => [
-                            'product_id'   => $item->product_id,
-                            'product_name' => $item->product->name ?? null,
-                            'sku'          => $item->product->sku ?? null,
-                            'quantity'     => $item->quantity,
-                            'price'        => $item->price,
-                            'total_price'  => $item->total_price,
-                        ])->toArray(),
-                        'client' => [
+                    // Safely build products array (guard against null relation)
+                    $products = [];
+                    if ($order->items && $order->items instanceof \Illuminate\Support\Collection) {
+                        $products = $order->items->map(function ($item) {
+                            return [
+                                'product_id'   => $item->product_id ?? null,
+                                'product_name' => $item->product->name ?? null,
+                                'sku'          => $item->product->sku ?? null,
+                                'quantity'     => $item->quantity ?? null,
+                                'price'        => $item->price ?? null,
+                                'total_price'  => $item->total_price ?? null,
+                            ];
+                        })->toArray();
+                    }
+
+                    // Safely build client info (guard against null relation)
+                    $client = [];
+                    if ($order->customer) {
+                        $client = [
                             'id'      => $order->customer->id ?? null,
                             'name'    => $order->customer->name ?? null,
                             'phone'   => $order->customer->phone ?? null,
                             'address' => $order->customer->address ?? null,
                             'city'    => $order->customer->city ?? null,
-                        ],
+                        ];
+                    }
+
+                    return [
+                        'order_id'        => $order->id ?? null,
+                        'order_no'        => $order->order_no ?? null,
+                        'status'          => $order->status ?? null,
+                        'delivery_status' => $order->delivery_status ?? null,
+                        'total'           => $order->total ?? $order->total_price ?? null,
+                        'sub_total'       => $order->sub_total ?? null,
+                        'payment_method'  => $order->payment_method ?? null,
+                        'paid'            => $order->paid ?? $order->amount_paid ?? false,
+                        'delivery_date'   => $order->delivery_date ?? null,
+                        'dispatched_on'   => $order->dispatched_on ?? null,
+                        'customer_notes'  => $order->customer_notes ?? null,
+                        'products'        => $products,
+                        'client'          => $client,
                     ];
                 })->toArray();
 
