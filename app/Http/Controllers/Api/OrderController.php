@@ -212,6 +212,7 @@ class OrderController extends Controller
 
 
             'customer',
+            'callLogs',
             // 'refunds',
             // 'remittances'
         ])
