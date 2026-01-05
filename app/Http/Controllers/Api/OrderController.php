@@ -561,7 +561,7 @@ class OrderController extends Controller
 
 
 
-  
+
 
 
 
@@ -870,7 +870,8 @@ class OrderController extends Controller
             'customer.city',      // Add this
             'customer.zone',      // Add this
 
-            'vendor'
+            'vendor',
+            'callLogs',
         ]);
 
         // Get user role
