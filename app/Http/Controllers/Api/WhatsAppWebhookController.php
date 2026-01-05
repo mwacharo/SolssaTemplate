@@ -107,6 +107,7 @@ class WhatsAppWebhookController extends Controller
         $quotedId  = data_get($payload, 'messageData.quotedMessage.stanzaId');
         $type      = data_get($payload, 'messageData.typeMessage', 'textMessage');
         $timestamp = now();
+        $orderId   = null;
 
         Log::info("🔍 Incoming message from chatId: {$chatId}");
 
@@ -216,18 +217,19 @@ class WhatsAppWebhookController extends Controller
             $reply = 'Sorry, something went wrong while processing your message. Please try again.';
             $actions = [];
         }
-
         /**
          * 🔹 Send WhatsApp reply
          */
         if (!empty($reply)) {
             try {
-                $this->whatsAppService->sendMessage($chatId, $reply, 1, $order->id);
+                // use the most recent order id if available (set earlier when fetching orders)
+                $this->whatsAppService->sendMessage($chatId, $reply, 1, $orderId);
                 Log::info("📤 Reply sent to {$chatId}");
             } catch (\Throwable $e) {
                 Log::error("❌ WhatsApp send failed: {$e->getMessage()}");
             }
         }
+
 
         /**
          * 🔹 Store incoming message
@@ -254,6 +256,9 @@ class WhatsAppWebhookController extends Controller
 
         return response()->json(['status' => 'stored']);
     }
+
+
+
 
 
     protected function handleOutgoing(array $payload)
