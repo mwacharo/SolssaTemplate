@@ -550,6 +550,8 @@
                     </div>
                     <div class="delivery-agent">
                         By: {{ $order->rider->name ?? $order->agent->name ?? 'Delivery Agent' }}
+                        {!! \Illuminate\Support\Str::limit($company->terms ?? 'Standard terms and conditions apply. Contact us for any issues or concerns.', 150) !!}
+
                     </div>
                 </div>
             </div>

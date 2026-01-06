@@ -12,9 +12,9 @@ class UserUpdateRequest extends FormRequest
     public function authorize(): bool
     {
         // return false;
-            return auth()->check(); // Only allow authenticated users
+        return auth()->check(); // Only allow authenticated users
 
-            // return auth()->user()?->hasRole('admin'); // Only allow admins
+        // return auth()->user()?->hasRole('admin'); // Only allow admins
 
     }
 

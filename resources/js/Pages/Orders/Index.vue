@@ -1281,6 +1281,8 @@
             </div>
         </div>
 
+        <OrderCallHistory ref="viewRecordingsDialog" />
+
         <Stkpush
             ref="stkpushDialog"
             @stkPushInitiated="handleStkPushInitiated"
@@ -1336,6 +1338,7 @@ import { usecallCentreDiallerStore } from "@/stores/callCentreDialler";
 import { useStkpushStore } from "@/stores/stkpushStore";
 
 import OrderForm from "./OrderForm.vue";
+import OrderCallHistory from "./OrderCallHistory.vue";
 
 import BulkAction from "./BulkAction.vue";
 import CallDialogs from "@/Pages/CallCenter/Dialogs/CallDialogs.vue";
@@ -1345,6 +1348,8 @@ import Stkpush from "./Stkpush.vue";
 import DateRangePicker from "@/Components/DualDatePicker.vue";
 // orderjourney
 
+const props = defineProps({ order: Object });
+
 // Initialize store
 const orderStore = useOrderStore();
 const conversationStore = useConversationStore();
@@ -1353,6 +1358,7 @@ const callCentreDiallerStore = usecallCentreDiallerStore();
 
 const stkpushStore = useStkpushStore();
 const stkpushDialog = ref(null); // Add template ref
+const viewRecordingsDialog = ref(null);
 
 const createMode = ref(false);
 
@@ -1370,6 +1376,16 @@ const selectedPhoneNumber = ref("");
 
 //     callDialogType.value = "newCall"; // This opens the "Make New Call" dialog
 // };
+
+const viewRecordings = (order) => {
+    console.log("Viewing recordings for order:", order);
+    // Implement logic to open recordings dialog or page
+    viewRecordingsDialog.value?.open(order.call_logs);
+};
+
+const onRecordingsViewed = () => {
+    console.log("Recordings dialog closed");
+};
 
 const handleOpenCallDialog = (phoneNumber, order) => {
     console.log("Opening call dialog for phone number:", phoneNumber);
