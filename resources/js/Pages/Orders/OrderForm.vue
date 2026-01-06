@@ -535,7 +535,7 @@
                                 </v-col>
 
                                 <v-col cols="12">
-                                    <v-textareastatus_note
+                                    <v-textarea
                                         v-model="
                                             orderEdit.customer_address.address
                                         "
