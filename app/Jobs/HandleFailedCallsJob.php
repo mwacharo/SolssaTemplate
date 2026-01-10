@@ -114,7 +114,9 @@ class HandleFailedCallsJob
             Log::info('Message dispatched with template', [
                 'phone' => $phone,
                 'template_used' => $result['template']->name,
-                'message_preview' => ($result['message'])
+                'message_preview' => ($result['message']),
+                'order_id' => $call->order_id ?? null,
+
             ]);
 
 
