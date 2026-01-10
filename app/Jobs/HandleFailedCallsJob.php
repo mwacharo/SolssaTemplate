@@ -106,7 +106,9 @@ class HandleFailedCallsJob
             SendWhatsAppMessageJob::dispatch(
                 chatId: $chatId,
                 messageContent: $result['message'], // Personalized message with all placeholders replaced
-                userId: $userId
+                userId: $userId,
+                orderId: $call->order_id ?? null,
+
             );
 
             Log::info('Message dispatched with template', [
