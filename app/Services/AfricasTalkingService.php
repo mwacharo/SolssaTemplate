@@ -1716,6 +1716,7 @@ private function createDialResponse(string $phoneNumber): void
             $number = ltrim($number, '+'); // Remove all leading +
             $number = preg_replace('/[^\d]/', '', $number); // Keep only digits
 
+
             // Check if it already starts with country code
             if (str_starts_with($number, $phoneCode)) {
                 return '+' . $number;

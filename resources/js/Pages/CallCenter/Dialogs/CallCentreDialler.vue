@@ -27,6 +27,15 @@
                     >
                         {{ order?.latest_status?.status?.name || "Pending" }}
                     </v-chip>
+
+                    <v-chip
+                        :color="webrtc.connectionStatusColor"
+                        small
+                        class="white--text px-2"
+                    >
+                        <v-icon left small>mdi-circle</v-icon>
+                        {{ webrtc.connectionStatusText }}
+                    </v-chip>
                     <v-btn icon variant="text" @click="closeDialog">
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
@@ -1044,6 +1053,9 @@ const callCenterStore = useCallCenterStore();
 const templateStore = useWhatsAppStore();
 
 const onTemplateSelect = templateStore.onTemplateSelect;
+
+
+
 
 const removeOrderItem = (index) => {
     order.value.order_items.splice(index, 1);

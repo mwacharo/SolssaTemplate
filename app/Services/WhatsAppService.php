@@ -75,7 +75,7 @@ class WhatsAppService
     //                 // Subsequent messages - add progressive delay
     //                 SendWhatsAppMessageJob::dispatch($chatId, $personalizedMessage, $userId)
     //                     ->delay(now()->addMinutes($totalDelayMinutes));
-    //             }
+    //             }SendWhatsAppMessageJob
 
     //             // Log the dispatch event
     //             Log::info('WhatsApp message dispatched', [
