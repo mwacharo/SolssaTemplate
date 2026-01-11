@@ -526,44 +526,164 @@
                                     <v-card-text>
                                         <v-list density="compact">
                                             <v-list-item
-                                                v-for="call in recentCalls"
-                                                :key="call.id"
+                                                v-for="(
+                                                    call, idx
+                                                ) in recentCalls"
+                                                :key="call?.id || idx"
                                                 class="mb-1"
                                             >
                                                 <template #prepend>
                                                     <v-icon
                                                         :color="
-                                                            call.type ===
-                                                            'incoming'
+                                                            call.direction ===
+                                                            'Inbound'
                                                                 ? 'blue'
                                                                 : 'green'
                                                         "
                                                     >
                                                         {{
-                                                            call.type ===
-                                                            "incoming"
+                                                            call.direction ===
+                                                            "Inbound"
                                                                 ? "mdi-phone-incoming"
                                                                 : "mdi-phone-outgoing"
                                                         }}
                                                     </v-icon>
                                                 </template>
-                                                <v-list-item-title>{{
-                                                    call.duration
-                                                }}</v-list-item-title>
-                                                <v-list-item-subtitle>{{
-                                                    call.timestamp
-                                                }}</v-list-item-subtitle>
+
+                                                <v-list-item-content>
+                                                    <v-list-item-title
+                                                        class="d-flex justify-space-between align-center"
+                                                    >
+                                                        <div>
+                                                            <strong>
+                                                                {{
+                                                                    call.customer_name ||
+                                                                    call.callerNumber ||
+                                                                    call.caller_number ||
+                                                                    "Unknown"
+                                                                }}
+                                                            </strong>
+                                                            <span
+                                                                class="text-caption grey--text ml-2"
+                                                            >
+                                                                →
+                                                                {{
+                                                                    call.destinationNumber ||
+                                                                    call.destination_number ||
+                                                                    "-"
+                                                                }}
+                                                            </span>
+                                                        </div>
+                                                        <div
+                                                            class="text-caption grey--text"
+                                                        >
+                                                            {{
+                                                                call.status ||
+                                                                call.callSessionState ||
+                                                                ""
+                                                            }}
+                                                        </div>
+                                                    </v-list-item-title>
+
+                                                    <v-list-item-subtitle
+                                                        class="d-flex justify-space-between"
+                                                    >
+                                                        <div
+                                                            class="text-caption"
+                                                        >
+                                                            {{
+                                                                call.callStartTime
+                                                                    ? formatDateTime(
+                                                                          call.callStartTime
+                                                                      )
+                                                                    : call.created_at
+                                                                    ? formatDateTime(
+                                                                          call.created_at
+                                                                      )
+                                                                    : call.timestamp ||
+                                                                      ""
+                                                            }}
+                                                        </div>
+
+                                                        <div
+                                                            class="text-caption"
+                                                        >
+                                                            {{
+                                                                call.durationInSeconds !==
+                                                                    undefined &&
+                                                                call.durationInSeconds !==
+                                                                    null
+                                                                    ? `${Math.floor(
+                                                                          call.durationInSeconds /
+                                                                              60
+                                                                      )
+                                                                          .toString()
+                                                                          .padStart(
+                                                                              2,
+                                                                              "0"
+                                                                          )}:${(
+                                                                          call.durationInSeconds %
+                                                                          60
+                                                                      )
+                                                                          .toString()
+                                                                          .padStart(
+                                                                              2,
+                                                                              "0"
+                                                                          )}`
+                                                                    : call.duration ||
+                                                                      "00:00"
+                                                            }}
+                                                        </div>
+                                                    </v-list-item-subtitle>
+                                                </v-list-item-content>
+
                                                 <template #append>
+                                                    <v-btn
+                                                        v-if="call.recordingUrl"
+                                                        :href="
+                                                            call.recordingUrl
+                                                        "
+                                                        target="_blank"
+                                                        icon
+                                                        size="x-small"
+                                                        variant="text"
+                                                        title="Play recording"
+                                                    >
+                                                        <v-icon
+                                                            >mdi-play-circle</v-icon
+                                                        >
+                                                    </v-btn>
+
                                                     <v-btn
                                                         icon
                                                         size="x-small"
                                                         variant="text"
+                                                        @click="
+                                                            showSnackbar(
+                                                                'Open call details not implemented',
+                                                                'info'
+                                                            )
+                                                        "
                                                     >
                                                         <v-icon
-                                                            >mdi-play</v-icon
+                                                            >mdi-dots-vertical</v-icon
                                                         >
                                                     </v-btn>
                                                 </template>
+                                            </v-list-item>
+
+                                            <v-list-item
+                                                v-if="
+                                                    !recentCalls ||
+                                                    recentCalls.length === 0
+                                                "
+                                            >
+                                                <v-list-item-content>
+                                                    <v-list-item-title
+                                                        >No recent
+                                                        calls</v-list-item-title
+                                                    >
+                                                </v-list-item-content>
                                             </v-list-item>
                                         </v-list>
                                     </v-card-text>
@@ -661,75 +781,6 @@
                                             "
                                             class="mb-3"
                                         />
-
-                                        <!-- Variable Chips -->
-                                        <div class="mb-3">
-                                            <div
-                                                class="text-caption text-grey mb-2"
-                                            >
-                                                Insert Variables:
-                                            </div>
-                                            <v-chip-group>
-                                                <v-chip
-                                                    size="small"
-                                                    @click="
-                                                        insertVariable(
-                                                            '{customer_name}'
-                                                        )
-                                                    "
-                                                >
-                                                    Customer Name
-                                                </v-chip>
-                                                <v-chip
-                                                    size="small"
-                                                    @click="
-                                                        insertVariable(
-                                                            '{order_no}'
-                                                        )
-                                                    "
-                                                >
-                                                    Order Number
-                                                </v-chip>
-                                                <v-chip
-                                                    size="small"
-                                                    @click="
-                                                        insertVariable(
-                                                            '{delivery_date}'
-                                                        )
-                                                    "
-                                                >
-                                                    Delivery Date
-                                                </v-chip>
-                                                <v-chip
-                                                    size="small"
-                                                    @click="
-                                                        insertVariable(
-                                                            '{total_price}'
-                                                        )
-                                                    "
-                                                >
-                                                    Total Price
-                                                </v-chip>
-                                            </v-chip-group>
-                                        </div>
-
-                                        <!-- Preview -->
-                                        <v-card
-                                            variant="tonal"
-                                            color="blue-grey-lighten-5"
-                                            class="mb-3"
-                                        >
-                                            <v-card-text class="text-body-2">
-                                                <div
-                                                    class="font-weight-bold mb-2"
-                                                >
-                                                    Preview:
-                                                </div>
-                                                <div class="preview-content">
-                                                    {{ previewMessage }}
-                                                </div>
-                                            </v-card-text>
-                                        </v-card>
 
                                         <v-btn
                                             block
@@ -887,46 +938,6 @@
                                                 hint="Add any relevant information about this status change"
                                                 class="mb-3"
                                             />
-
-                                            <!-- Notify Customer -->
-                                            <v-checkbox
-                                                v-model="
-                                                    orderEdit.notifyCustomer
-                                                "
-                                                label="Notify customer of status change"
-                                                density="compact"
-                                                class="mb-3"
-                                            />
-
-                                            <v-expand-transition>
-                                                <div
-                                                    v-if="
-                                                        orderEdit.notifyCustomer
-                                                    "
-                                                    class="ml-8 mb-3"
-                                                >
-                                                    <v-radio-group
-                                                        v-model="
-                                                            orderEdit.notificationMethod
-                                                        "
-                                                        density="compact"
-                                                        inline
-                                                    >
-                                                        <v-radio
-                                                            label="SMS"
-                                                            value="sms"
-                                                        />
-                                                        <v-radio
-                                                            label="WhatsApp"
-                                                            value="whatsapp"
-                                                        />
-                                                        <v-radio
-                                                            label="Email"
-                                                            value="email"
-                                                        />
-                                                    </v-radio-group>
-                                                </div>
-                                            </v-expand-transition>
 
                                             <v-btn
                                                 block
@@ -1132,9 +1143,6 @@ const activeTab = ref("call");
 
 const order = toRef(props, "order");
 
-// const orderEdit = ref(null);
-
-// Order edit state - INITIALIZE WITH EMPTY STRUCTURE
 const orderEdit = ref({
     id: null,
     customer: {
@@ -1152,10 +1160,11 @@ const orderEdit = ref({
     total_price: 0,
     sub_total: 0,
     order_no: "",
-    status_id: null,
+    status_id: "",
     status_category_id: null,
     status_notes: "",
     recall_date: "",
+    delivery_date: "",
 });
 
 // Call state
@@ -1186,14 +1195,6 @@ const storeMessageText = computed({
 
 // Status state
 const updatingStatus = ref(false);
-// const orderEdit = ref({
-//     status_id: null,
-//     status_category_id: null,
-//     status_notes: "",
-//     recall_date: "",
-//     notifyCustomer: true,
-//     notificationMethod: "sms",
-// });
 
 // Notes state
 const savingNote = ref(false);
@@ -1227,57 +1228,22 @@ const calculateTotal = () => {
 
 const statusCategories = ref([]);
 
-// Continuing from the script setup...
+// initialize with an empty array to avoid undefined entries being iterated
+const recentCalls = ref(
+    order.value?.call_logs ? [...order.value.call_logs] : []
+);
 
-const noteTypes = ref([
-    "General",
-    "Call Summary",
-    "Customer Request",
-    "Issue",
-    "Follow Up",
-]);
+watch(
+    order,
+    (newOrder) => {
+        recentCalls.value = newOrder?.call_logs ? [...newOrder.call_logs] : [];
+    },
+    { immediate: true }
+);
 
-const recentCalls = ref([
-    { id: 1, type: "outgoing", duration: "5:23", timestamp: "2 hours ago" },
-    { id: 2, type: "incoming", duration: "3:45", timestamp: "Yesterday" },
-]);
+const statusHistory = ref([]);
 
-const statusHistory = ref([
-    {
-        status_name: "Order Placed",
-        notes: "Customer placed order online",
-        created_at: "2024-01-15T10:30:00",
-        user: "System",
-        color: "blue",
-    },
-    {
-        status_name: "Payment Confirmed",
-        notes: "Payment received via M-Pesa",
-        created_at: "2024-01-15T10:35:00",
-        user: "John Doe",
-        color: "green",
-    },
-]);
-
-const notes = ref([
-    {
-        id: 1,
-        type: "Call Summary",
-        content:
-            "Customer called to confirm delivery address. Updated address in system.",
-        pinned: true,
-        created_at: "2024-01-15T14:20:00",
-        user_name: "Jane Smith",
-    },
-    {
-        id: 2,
-        type: "General",
-        content: "Customer prefers morning deliveries between 8-10 AM.",
-        pinned: false,
-        created_at: "2024-01-15T14:25:00",
-        user_name: "Jane Smith",
-    },
-]);
+const notes = ref([]);
 
 // Computed
 const filteredStatusCategories = computed(() => {
@@ -1292,28 +1258,6 @@ const shouldShowRecallDate = computed(() => {
         (cat) => cat.id === orderEdit.value.status_category_id
     );
     return selectedCategory?.name === "Follow Up";
-});
-
-const previewMessage = computed(() => {
-    let content =
-        messageText.value.content || "Your message will appear here...";
-
-    // Replace variables with actual values
-    content = content.replace(
-        "{customer_name}",
-        customer.value.full_name || "Customer"
-    );
-    content = content.replace("{order_no}", props.order?.order_no || "N/A");
-    content = content.replace(
-        "{delivery_date}",
-        formatDate(props.order?.delivery_date) || "N/A"
-    );
-    content = content.replace(
-        "{total_price}",
-        props.order?.total_price || "0.00"
-    );
-
-    return content;
 });
 
 watch(
@@ -1381,17 +1325,6 @@ const getOrderStatusColor = (status) => {
         "Follow Up": "amber",
     };
     return statusMap[status] || "grey";
-};
-
-const getNoteTypeColor = (type) => {
-    const typeMap = {
-        General: "blue-grey",
-        "Call Summary": "blue",
-        "Customer Request": "purple",
-        Issue: "red",
-        "Follow Up": "orange",
-    };
-    return typeMap[type] || "grey";
 };
 
 const formatDate = (date) => {
@@ -1516,33 +1449,44 @@ const removeAttachment = (index) => {
 };
 
 const sendMessage = async () => {
-    // if (!store.messageText.trim()) {
-    //     showSnackbar("Please enter a message", "error");
-    //     return;
-    // }
+    if (!store.messageText.trim()) {
+        showSnackbar("Please enter a message", "error");
+        return;
+    }
 
     sending.value = true;
 
     try {
         // Build complete contact object with order data
+        const customerData = customer.value || {};
+        const orderData = order.value || {};
+
         const contactData = {
-            id: customer.value.id || order.value.customer?.id,
-            name: customer.value.full_name || order.value.customer?.full_name,
-            phone: customer.value.phone || order.value.customer?.phone_number,
+            id: customerData.id || orderData.customer?.id || null,
+            name:
+                customerData.full_name ||
+                orderData.customer?.full_name ||
+                "Unknown",
+            phone:
+                customerData.phone ||
+                customerData.phone_number ||
+                orderData.customer?.phone_number ||
+                "",
             // Include complete order data
-            orderId: order.value.id,
-            orderData: order.value,
-            orderOid: order.value.order_no,
+            orderId: orderData.id || null,
+            orderData: orderData,
+            orderOid: orderData.order_no || "N/A",
         };
 
         console.log("📤 Sending message with context:", contactData);
 
         // Use the WhatsApp store's sendSingleMessage method
+        const templateId = templateStore.selectedTemplate?.id || null;
         const result = await templateStore.sendSingleMessage(
             userId.value,
             contactData,
             store.messageText,
-            templateStore.selectedTemplate?.id
+            templateId
         );
 
         // Safely handle undefined/null results and unsuccessful responses
@@ -1574,7 +1518,6 @@ const sendMessage = async () => {
         sending.value = false;
     }
 };
-
 // Status functions
 const updateStatus = async () => {
     // if (!orderEdit.value.status_id || !orderEdit.value.status_notes) {
