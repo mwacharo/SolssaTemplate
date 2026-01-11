@@ -62,26 +62,40 @@
                                 </v-card-title>
                                 <v-card-text class="pa-3">
                                     <div class="info-row">
-                                        <v-icon size="20" class="mr-2"
-                                            >mdi-account-circle</v-icon
-                                        >
-                                        <span class="font-weight-medium">{{
-                                            order.customer?.full_name || "N/A"
-                                        }}</span>
+                                        <v-text-field
+                                            prepend-inner-icon="mdi-account"
+                                            v-model="
+                                                orderEdit.customer.full_name
+                                            "
+                                            type="text"
+                                            variant="outlined"
+                                            density="comfortable"
+                                            hide-details
+                                            class="flex-grow-1"
+                                            :rules="[rules.required]"
+                                            placeholder="N/A"
+                                        />
                                     </div>
                                     <div class="info-row">
-                                        <v-icon size="20" class="mr-2"
-                                            >mdi-phone</v-icon
-                                        >
-                                        <span>{{
-                                            customer?.phone || "N/A"
-                                        }}</span>
+                                        <v-text-field
+                                            prepend-inner-icon="mdi-phone"
+                                            v-model="orderEdit.customer.phone"
+                                            type="text"
+                                            variant="outlined"
+                                            density="comfortable"
+                                            hide-details
+                                            class="flex-grow-1"
+                                            :rules="[rules.phone]"
+                                            placeholder="N/A"
+                                        />
                                         <v-btn
                                             icon
                                             size="x-small"
                                             variant="text"
                                             @click="
-                                                copyToClipboard(customer?.phone)
+                                                copyToClipboard(
+                                                    orderEdit.customer.phone
+                                                )
                                             "
                                             class="ml-1"
                                         >
@@ -92,19 +106,19 @@
                                     </div>
                                     <div
                                         class="info-row"
-                                        v-if="order.Booleancustomer?.email"
+                                        v-if="orderEdit?.customer.email"
                                     >
                                         <v-icon size="20" class="mr-2"
                                             >mdi-email</v-icon
                                         >
                                         <span class="text-truncate">{{
-                                            order.customer.email
+                                            orderEdit?.customer.email
                                         }}</span>
                                     </div>
 
                                     <!-- city  -->
                                     <v-autocomplete
-                                        v-model="order.customer.city_id"
+                                        v-model="orderEdit.customer.city_id"
                                         :items="orderStore.cityOptions"
                                         item-title="name"
                                         item-value="id"
@@ -118,7 +132,7 @@
                                         class="mb-3"
                                     />
                                     <v-autocomplete
-                                        v-model="order.customer.zone_id"
+                                        v-model="orderEdit.customer.zone_id"
                                         :items="orderStore.zoneOptions"
                                         item-title="name"
                                         item-value="id"
@@ -132,34 +146,27 @@
                                     />
 
                                     <!-- zone -->
-                                    <div
-                                        class="info-row"
-                                        v-if="customer?.address"
-                                    >
-                                        <v-icon size="20" class="mr-2"
-                                            >mdi-map-marker</v-icon
-                                        >
-                                        <span class="text-truncate">{{
-                                            customer.address
-                                        }}</span>
-                                    </div>
+                                    <v-text-field
+                                        v-model="orderEdit.customer.address"
+                                        label="Address"
+                                        prepend-inner-icon="mdi-map-marker"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        clearable
+                                        class="mb-3"
+                                    />
 
                                     <!-- customer notes -->
 
-                                    <div
-                                        class="info-row"
-                                        v-if="
-                                            order?.customer_notes ||
-                                            order?.latest_status?.status_notes
-                                        "
-                                    >
-                                        <v-icon size="20" class="mr-2"
-                                            >mdi-note-text</v-icon
-                                        >
-                                        <span class="text-truncate">{{
-                                            order.customer_notes
-                                        }}</span>
-                                    </div>
+                                    <v-text-field
+                                        v-model="orderEdit.customer_notes"
+                                        label="Customer Notes"
+                                        prepend-inner-icon="mdi-note-text"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        clearable
+                                        class="mb-3"
+                                    />
                                 </v-card-text>
                             </v-card>
 
@@ -189,24 +196,28 @@
                                         <tr
                                             v-for="(
                                                 item, idx
-                                            ) in order.order_items || []"
+                                            ) in orderEdit.order_items || []"
                                             :key="item.id || idx"
                                         >
                                             <td>
                                                 <v-autocomplete
-                                                    v-model="
-                                                        item.product
-                                                            .product_name
-                                                    "
+                                                    v-model="item.product_id"
                                                     :items="
                                                         orderStore.productOptions
                                                     "
                                                     item-title="product_name"
-                                                    item-value="sku"
+                                                    item-value="id"
                                                     placeholder="Product name"
                                                     density="compact"
                                                     hide-details
                                                     variant="outlined"
+                                                    @update:model-value="
+                                                        (val) =>
+                                                            updateProductSelection(
+                                                                item,
+                                                                val
+                                                            )
+                                                    "
                                                 />
                                             </td>
                                             <td>
@@ -219,6 +230,9 @@
                                                     density="compact"
                                                     hide-details
                                                     variant="outlined"
+                                                    @update:model-value="
+                                                        updateTotals()
+                                                    "
                                                 />
                                             </td>
                                             <td>
@@ -232,6 +246,9 @@
                                                     density="compact"
                                                     hide-details
                                                     variant="outlined"
+                                                    @update:model-value="
+                                                        updateTotals()
+                                                    "
                                                 />
                                             </td>
                                             <td>
@@ -632,7 +649,7 @@
 
                                         <!-- Message Content -->
                                         <v-textarea
-                                            v-model="store.messageText"
+                                            v-model="storeMessageText"
                                             label="Message"
                                             variant="outlined"
                                             rows="8"
@@ -738,7 +755,7 @@
                                             Update Order Status
                                         </div>
 
-                                        <v-form ref="statusForm">
+                                        <v-form ref="orderEdit">
                                             <!-- Current Status Display -->
                                             <v-alert
                                                 type="info"
@@ -775,7 +792,7 @@
 
                                             <!-- New Status -->
                                             <v-select
-                                                v-model="statusForm.status_id"
+                                                v-model="orderEdit.status_id"
                                                 :items="
                                                     orderStore.statusOptions
                                                 "
@@ -808,10 +825,30 @@
                                                 </template>
                                             </v-select>
 
+                                            <!-- show delivery date -->
+
+                                            <!-- Delivery Date -->
+                                            <v-text-field
+                                                v-if="orderEdit.status_id === 2"
+                                                v-model="
+                                                    orderEdit.delivery_date
+                                                "
+                                                label="Delivery Date"
+                                                type="date"
+                                                variant="outlined"
+                                                density="comfortable"
+                                                :rules="[
+                                                    (v) =>
+                                                        !!v ||
+                                                        'Delivery date is required',
+                                                ]"
+                                                class="mb-3"
+                                            />
+
                                             <!-- Status Category -->
                                             <v-select
                                                 v-model="
-                                                    statusForm.status_category_id
+                                                    orderEdit.status_category_id
                                                 "
                                                 :items="
                                                     filteredStatusCategories
@@ -821,16 +858,14 @@
                                                 label="Status Category"
                                                 variant="outlined"
                                                 density="comfortable"
-                                                :disabled="
-                                                    !statusForm.status_id
-                                                "
+                                                :disabled="!orderEdit.status_id"
                                                 class="mb-3"
                                             />
 
                                             <!-- Recall Date (if Follow Up category) -->
                                             <v-text-field
                                                 v-if="shouldShowRecallDate"
-                                                v-model="statusForm.recall_date"
+                                                v-model="orderEdit.recall_date"
                                                 label="Recall Date & Time"
                                                 type="datetime-local"
                                                 variant="outlined"
@@ -845,17 +880,10 @@
 
                                             <!-- Status Notes -->
                                             <v-textarea
-                                                v-model="
-                                                    statusForm.status_notes
-                                                "
+                                                v-model="orderEdit.status_notes"
                                                 label="Status Notes"
                                                 variant="outlined"
                                                 rows="4"
-                                                :rules="[
-                                                    (v) =>
-                                                        !!v ||
-                                                        'Notes are required',
-                                                ]"
                                                 hint="Add any relevant information about this status change"
                                                 class="mb-3"
                                             />
@@ -863,7 +891,7 @@
                                             <!-- Notify Customer -->
                                             <v-checkbox
                                                 v-model="
-                                                    statusForm.notifyCustomer
+                                                    orderEdit.notifyCustomer
                                                 "
                                                 label="Notify customer of status change"
                                                 density="compact"
@@ -873,13 +901,13 @@
                                             <v-expand-transition>
                                                 <div
                                                     v-if="
-                                                        statusForm.notifyCustomer
+                                                        orderEdit.notifyCustomer
                                                     "
                                                     class="ml-8 mb-3"
                                                 >
                                                     <v-radio-group
                                                         v-model="
-                                                            statusForm.notificationMethod
+                                                            orderEdit.notificationMethod
                                                         "
                                                         density="compact"
                                                         inline
@@ -1046,6 +1074,8 @@ const dialog = computed({
     set: (val) => emit("update:modelValue", val),
 });
 
+const statusOptions = computed(() => orderStore.statusOptions);
+
 // Get store instance
 const store = usecallCentreDiallerStore();
 const orderStore = useOrderStore();
@@ -1054,22 +1084,29 @@ const templateStore = useWhatsAppStore();
 
 const onTemplateSelect = templateStore.onTemplateSelect;
 
-
-
-
 const removeOrderItem = (index) => {
-    order.value.order_items.splice(index, 1);
+    orderEdit.value.order_items.splice(index, 1);
     updateTotals();
 };
 
+const selectedStatus = orderStore.statusOptions.find(
+    (s) => s.id === orderEdit.value.status_id
+);
+
 const updateTotals = () => {
-    // This ensures the total_price is always in sync with the calculated total
-    orderEdit.value.total_price = calculateTotal();
-    orderEdit.value.sub_total = calculateTotal();
+    const itemsTotal = calculateTotal();
+    orderEdit.value.total_price = itemsTotal;
+    orderEdit.value.sub_total = itemsTotal;
 };
 
 const addOrderItem = () => {
-    order.value.order_items.push({
+    if (!orderEdit.value.order_items) {
+        orderEdit.value.order_items = [];
+    }
+
+    orderEdit.value.order_items.push({
+        product_id: null,
+        product: {},
         sku: "",
         quantity: 1,
         unit_price: 0.0,
@@ -1077,7 +1114,6 @@ const addOrderItem = () => {
     });
     updateTotals();
 };
-
 // Dialog state - use computed to sync with store
 const dialogOpen = computed({
     get: () => props.modelValue,
@@ -1096,14 +1132,30 @@ const activeTab = ref("call");
 
 const order = toRef(props, "order");
 
-// Customer info
-const customer = computed(() => {
-    return (
-        props.order?.customer ||
-        props.order?.customer_address ||
-        props.order?.shipping_address ||
-        {}
-    );
+// const orderEdit = ref(null);
+
+// Order edit state - INITIALIZE WITH EMPTY STRUCTURE
+const orderEdit = ref({
+    id: null,
+    customer: {
+        id: null,
+        full_name: "",
+        phone: "",
+        phone_number: "",
+        email: "",
+        city_id: null,
+        zone_id: null,
+        address: "",
+    },
+    order_items: [],
+    shipping_charges: 0,
+    total_price: 0,
+    sub_total: 0,
+    order_no: "",
+    status_id: null,
+    status_category_id: null,
+    status_notes: "",
+    recall_date: "",
 });
 
 // Call state
@@ -1121,22 +1173,27 @@ const callForm = ref({
 const messageType = ref("whatsapp");
 const selectedTemplate = ref(null);
 const sending = ref(false);
-const messageText = ref({
-    subject: "",
-    content: "",
-    attachments: [],
+
+const messageText = ref("");
+
+const storeMessageText = computed({
+    get: () => templateStore.messageText || store.messageText,
+    set: (value) => {
+        templateStore.messageText = value;
+        store.messageText = value;
+    },
 });
 
 // Status state
 const updatingStatus = ref(false);
-const statusForm = ref({
-    status_id: null,
-    status_category_id: null,
-    status_notes: "",
-    recall_date: "",
-    notifyCustomer: true,
-    notificationMethod: "sms",
-});
+// const orderEdit = ref({
+//     status_id: null,
+//     status_category_id: null,
+//     status_notes: "",
+//     recall_date: "",
+//     notifyCustomer: true,
+//     notificationMethod: "sms",
+// });
 
 // Notes state
 const savingNote = ref(false);
@@ -1154,12 +1211,15 @@ const snackbar = ref({
 });
 
 const calculateTotal = () => {
-    if (!order.value.order_items || order.value.order_items.length === 0) {
+    if (
+        !orderEdit.value.order_items ||
+        orderEdit.value.order_items.length === 0
+    ) {
         return "0.00";
     }
 
-    const itemsTotal = order.value.order_items.reduce((sum, item) => {
-        return sum + Number(item.quantity) * Number(item.unit_price);
+    const itemsTotal = orderEdit.value.order_items.reduce((sum, item) => {
+        return sum + Number(item.quantity || 0) * Number(item.unit_price || 0);
     }, 0);
 
     return itemsTotal.toFixed(2);
@@ -1221,15 +1281,15 @@ const notes = ref([
 
 // Computed
 const filteredStatusCategories = computed(() => {
-    if (!statusForm.value.status_id) return [];
+    if (!orderEdit.value.status_id) return [];
     return statusCategories.value.filter(
-        (cat) => cat.status_id === statusForm.value.status_id
+        (cat) => cat.status_id === orderEdit.value.status_id
     );
 });
 
 const shouldShowRecallDate = computed(() => {
     const selectedCategory = statusCategories.value.find(
-        (cat) => cat.id === statusForm.value.status_category_id
+        (cat) => cat.id === orderEdit.value.status_category_id
     );
     return selectedCategory?.name === "Follow Up";
 });
@@ -1256,15 +1316,32 @@ const previewMessage = computed(() => {
     return content;
 });
 
-// Watch for order changes
 watch(
     () => props.order,
     (newOrder) => {
         if (newOrder) {
-            callForm.value.phone = customer.value.phone || "";
+            // Deep clone the order to avoid mutating the prop
+            orderEdit.value = {
+                ...newOrder,
+                customer: { ...newOrder.customer },
+                order_items:
+                    newOrder.order_items?.map((item) => ({
+                        ...item,
+                        product: { ...item.product },
+                    })) || [],
+                shipping_charges: newOrder.shipping_charges || 0,
+                total_price: newOrder.total_price || 0,
+                sub_total: newOrder.sub_total || 0,
+            };
+
+            // Initialize call form
+            callForm.value.phone =
+                newOrder.customer?.phone ||
+                newOrder.customer?.phone_number ||
+                "";
 
             // Load status history if available
-            if (newOrder.order_statuses && newOrder.order_statuses.length > 0) {
+            if (newOrder.order_statuses?.length > 0) {
                 statusHistory.value = newOrder.order_statuses.map((status) => ({
                     status_name: status.status?.name || "Unknown",
                     notes: status.status_notes || "No notes",
@@ -1277,6 +1354,20 @@ watch(
     },
     { immediate: true, deep: true }
 );
+
+const updateProductSelection = (item, productId) => {
+    const product = orderStore.productOptions.find((p) => p.id === productId);
+    if (product) {
+        item.product = { ...product };
+        item.product_id = productId;
+        item.sku = product.sku;
+        // Optionally set default price
+        if (!item.unit_price || item.unit_price === 0) {
+            item.unit_price = product.price || 0;
+        }
+        updateTotals();
+    }
+};
 
 // Methods
 const getOrderStatusColor = (status) => {
@@ -1349,6 +1440,7 @@ const initiateCall = (phone) => {
     console.log("Initiating call to:", phone);
 
     setTimeout(() => {
+        messageText;
         calling.value = false;
         callActive.value = true;
         startCallTimer();
@@ -1401,17 +1493,6 @@ const endCall = () => {
     });
 };
 
-// Message functions
-const loadTemplate = (templateId) => {
-    const template = templates.value.find((t) => t.id === templateId);
-    if (template) {
-        messageText.value.content = template.content;
-        if (messageType.value === "email") {
-            messageText.value.subject = template.name;
-        }
-    }
-};
-
 const insertVariable = (variable) => {
     const textarea = document.querySelector("textarea");
     if (textarea) {
@@ -1434,37 +1515,11 @@ const removeAttachment = (index) => {
     messageText.value.attachments.splice(index, 1);
 };
 
-// const sendMessage = async () => {
-//     if (!messageText.value.content.trim()) {
-//         showSnackbar("Please enter a message", "error");
-//         return;
-//     }
-
-//     sending.value = true;
-
-//     // Simulate API call
-//     setTimeout(() => {
-//         sending.value = false;
-//         showSnackbar(
-//             `${messageType.value.toUpperCase()} sent successfully`,
-//             "success"
-//         );
-
-//         // Reset form
-//         messageText.value = {
-//             subject: "",
-//             content: "",
-//             attachments: [],
-//         };
-//         selectedTemplate.value = null;
-//     }, 1500);
-// };
-
 const sendMessage = async () => {
-    if (!store.messageText.trim()) {
-        showSnackbar("Please enter a message", "error");
-        return;
-    }
+    // if (!store.messageText.trim()) {
+    //     showSnackbar("Please enter a message", "error");
+    //     return;
+    // }
 
     sending.value = true;
 
@@ -1490,7 +1545,8 @@ const sendMessage = async () => {
             templateStore.selectedTemplate?.id
         );
 
-        if (result.success) {
+        // Safely handle undefined/null results and unsuccessful responses
+        if (result && result.success) {
             showSnackbar(
                 `${messageType.value.toUpperCase()} sent successfully`,
                 "success"
@@ -1499,11 +1555,19 @@ const sendMessage = async () => {
             // Reset form
             store.messageText = "";
             templateStore.selectedTemplate = null;
+        } else {
+            console.warn("Send message returned unexpected result:", result);
+            const message =
+                (result && (result.message || result.error)) ||
+                "Failed to send message";
+            showSnackbar(message, "error");
         }
     } catch (error) {
         console.error("❌ Send message error:", error);
         showSnackbar(
-            error.response?.data?.message || "Failed to send message",
+            error?.response?.data?.message ||
+                error?.message ||
+                "Failed to send message",
             "error"
         );
     } finally {
@@ -1513,10 +1577,10 @@ const sendMessage = async () => {
 
 // Status functions
 const updateStatus = async () => {
-    if (!statusForm.value.status_id || !statusForm.value.status_notes) {
-        showSnackbar("Please fill in all required fields", "error");
-        return;
-    }
+    // if (!orderEdit.value.status_id || !orderEdit.value.status_notes) {
+    //     showSnackbar("Please fill in all required fields", "error");
+    //     return;
+    // }
 
     updatingStatus.value = true;
 
@@ -1527,20 +1591,20 @@ const updateStatus = async () => {
 
         // Add to status history
         const selectedStatus = statusOptions.value.find(
-            (s) => s.id === statusForm.value.status_id
+            (s) => s.id === orderEdit.value.status_id
         );
         statusHistory.value.unshift({
             status_name: selectedStatus.name,
-            notes: statusForm.value.status_notes,
+            notes: orderEdit.value.status_notes,
             created_at: new Date().toISOString(),
             user: "Current User",
             color: selectedStatus.color,
         });
 
-        emit("status-updated", statusForm.value);
+        emit("status-updated", orderEdit.value);
 
         // Reset form
-        statusForm.value = {
+        orderEdit.value = {
             status_id: null,
             status_category_id: null,
             status_notes: "",
@@ -1597,12 +1661,33 @@ const viewCustomerOrders = () => {
     // Implement navigation to customer orders
 };
 
-const completeAndClose = () => {
-    showSnackbar("Order marked as complete", "success");
-    closeDialog();
-    orderStore.updateOrder(order);
-};
+const customer = computed(() => {
+    return (
+        orderEdit.value?.customer ||
+        props.order?.customer ||
+        props.order?.customer_address ||
+        props.order?.shipping_address ||
+        {}
+    );
+});
+const completeAndClose = async () => {
+    try {
+        // Extract id and pass orderData separately
+        const orderId = orderEdit.value.id;
 
+        // Prepare the order data (exclude id from the data payload)
+        const { id, ...orderData } = orderEdit.value;
+
+        // Save the edited order back to the store
+        await orderStore.updateOrder(orderId, orderData);
+
+        showSnackbar("Order updated and marked as complete", "success");
+        closeDialog();
+    } catch (error) {
+        console.error("Failed to update order:", error);
+        showSnackbar("Failed to update order", "error");
+    }
+};
 const closeDialog = () => {
     dialog.value = false;
     // Reset all forms
@@ -1613,7 +1698,7 @@ const closeDialog = () => {
         content: "",
         attachments: [],
     };
-    statusForm.value = {
+    orderEdit.value = {
         status_id: null,
         status_category_id: null,
         status_notes: "",
