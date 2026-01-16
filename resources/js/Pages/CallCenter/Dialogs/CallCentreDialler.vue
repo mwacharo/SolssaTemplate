@@ -396,10 +396,6 @@
                                 <v-icon class="mr-2">mdi-update</v-icon>
                                 Update Status
                             </v-tab>
-                            <!-- <v-tab value="notes">
-                                <v-icon class="mr-2">mdi-note-text</v-icon>
-                                Notes
-                            </v-tab> -->
                         </v-tabs>
 
                         <v-window v-model="activeTab" class="tab-content">
@@ -806,7 +802,7 @@
                                             Update Order Status
                                         </div>
 
-                                        <v-form ref="orderEdit">
+                                        <v-form ref="statusForm">
                                             <!-- Current Status Display -->
                                             <v-alert
                                                 type="info"
@@ -1141,6 +1137,8 @@ const updateDialogOpen = (value) => {
 // Active tab
 const activeTab = ref("call");
 
+const statusForm = ref(null);
+
 const order = toRef(props, "order");
 
 const orderEdit = ref({
@@ -1162,10 +1160,13 @@ const orderEdit = ref({
     order_no: "",
     status_id: "",
     status_category_id: null,
+
     status_notes: "",
     recall_date: "",
     delivery_date: "",
 });
+
+// const statusForm = ref(null);
 
 // Call state
 const callActive = ref(false);
@@ -1296,7 +1297,8 @@ watch(
             }
         }
     },
-    { immediate: true, deep: true }
+
+    { immediate: true }
 );
 
 const updateProductSelection = (item, productId) => {
@@ -1449,10 +1451,10 @@ const removeAttachment = (index) => {
 };
 
 const sendMessage = async () => {
-    if (!store.messageText.trim()) {
-        showSnackbar("Please enter a message", "error");
-        return;
-    }
+    // if (!store.messageText.trim()) {
+    //     showSnackbar("Please enter a message", "error");
+    //     return;
+    // }
 
     sending.value = true;
 
