@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 class GoogleSheetService
 {
     protected $client;
-    protected $sheetsService;
+    public $sheetsService;
     protected $spreadsheetId;
 
     /**
@@ -20,22 +20,22 @@ class GoogleSheetService
     {
         try {
             $this->client = new Client();
-            
+
             // Check if credentials file exists
             $credentialsPath = storage_path('credentials/credentials.json');
             if (!file_exists($credentialsPath)) {
                 Log::error('Google API credentials file not found at: ' . $credentialsPath);
                 throw new \Exception('Google API credentials file not found');
             }
-            
+
             $this->client->setAuthConfig($credentialsPath);
             $this->client->addScope('https://www.googleapis.com/auth/spreadsheets');
             $this->client->setAccessType('offline');
             $this->client->setApplicationName('CustomerServiceSupport');
-            
+
             // Create Sheets service
             $this->sheetsService = new Sheets($this->client);
-            
+
             Log::info('Google Sheets service initialized successfully');
         } catch (\Exception $e) {
             Log::error('Failed to initialize Google Sheets service: ' . $e->getMessage());
@@ -104,7 +104,7 @@ class GoogleSheetService
                 $this->spreadsheetId,
                 $sheetName
             );
-            
+
             $values = $response->getValues();
             Log::info('Read ' . (is_array($values) ? count($values) : 0) . ' rows from sheet ' . $sheetName);
             return $values ?: [];
@@ -206,7 +206,7 @@ class GoogleSheetService
     {
         try {
             $this->setSpreadsheetId($spreadsheetId);
-            
+
             // First, get the existing data from the sheet
             $range = "$sheetName!A:T";  // Adjust range as needed
             $sheetData = $this->getSheetData($range);
@@ -232,18 +232,18 @@ class GoogleSheetService
                 if ($rowIndex === 0) {
                     continue;
                 }
-            
+
                 // Check if Order ID column exists
                 if (!isset($row[$orderIdIndex])) {
                     continue;
                 }
-            
+
                 $orderId = $row[$orderIdIndex];
-            
+
                 // Check if there is an update for this Order ID
                 if (isset($updateData[$orderId])) {
                     $rowNumber = $rowIndex + 1; // 1-based index for Google Sheets
-                
+
                     // Add update for Status
                     if (isset($updateData[$orderId]['status'])) {
                         $updates[] = [
@@ -251,7 +251,7 @@ class GoogleSheetService
                             'values' => [[$updateData[$orderId]['status']]]
                         ];
                     }
-                
+
                     // Add update for POD
                     if (isset($updateData[$orderId]['pod'])) {
                         $updates[] = [
@@ -259,7 +259,7 @@ class GoogleSheetService
                             'values' => [[$updateData[$orderId]['pod']]]
                         ];
                     }
-                    
+
                     // Add update for Special Instructions if needed
                     if (isset($updateData[$orderId]['special_instruction'])) {
                         $updates[] = [
@@ -276,11 +276,17 @@ class GoogleSheetService
                 }
                 return true;
             }
-            
+
             return false;
         } catch (\Exception $e) {
             Log::error("Error in updateGoogleSheet: " . $e->getMessage());
             throw $e;
         }
+    }
+
+
+    public function getSheetsService(): Sheets
+    {
+        return $this->sheetsService;
     }
 }

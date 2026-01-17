@@ -10,7 +10,7 @@ use App\Http\Requests\UpdateGoogleSheetRequest;
 use App\Http\Resources\GoogleSheetResource;
 use App\Models\Customer;
 use App\Models\GoogleSheet;
-use App\Models\Order;   
+use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Repositories\GoogleSheetRepository;
@@ -72,21 +72,7 @@ class GoogleSheetController extends Controller
         ]);
     }
 
-    // /**
-    //  * Store a newly created resource in storage.
-    // */
-    // public function store(StoreGoogleSheetRequest $request): JsonResponse
-    // {
 
-    //         $googleSheet = GoogleSheet::create($request->validated());
-
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => new GoogleSheetResource($googleSheet)
-    //         ]);
-
-    // }
 
 
 
@@ -159,17 +145,7 @@ class GoogleSheetController extends Controller
     }
 
 
-    // public function store(StoreGoogleSheetRequest $request)
-    // {
-    //     $googleSheet = GoogleSheet::create($request->validated());
-    //     return new GoogleSheetResource($googleSheet);
-    // }
 
-
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id): JsonResponse
     {
         $sheet = $this->repository->findById($id);
@@ -364,27 +340,390 @@ class GoogleSheetController extends Controller
 
 
 
-    public function updateSheet(Request $request)
+
+
+
+
+    public function updateSheet(string $id, Request $request): JsonResponse
     {
+        Log::info("updateSheet: Start syncing orders", ['sheet_id' => $id]);
+
         try {
-            $validatedData = $this->validateRequest($request);
-            $vendorId = $validatedData['item']['vendor_id'];
-            $sheetName = $validatedData['item']['sheet_name'];
-            $spreadsheetId = $validatedData['item']['post_spreadsheet_id'];
-
-            $orders = $this->fetchOrders($vendorId);
-
-            if ($orders->isEmpty()) {
-                return response()->json(['message' => 'No orders found for this vendor'], 204);
+            $sheet = $this->repository->findById($id);
+            if (!$sheet) {
+                Log::warning("updateSheet: Google Sheet integration not found", ['sheet_id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Google Sheet integration not found'
+                ], 404);
             }
 
-            $updateData = $this->prepareOrderData($orders);
-            $result = $this->updateGoogleSheet($spreadsheetId, $sheetName, $updateData);
+            $vendorId = $sheet->vendor_id;
+            $spreadsheetId = $sheet->post_spreadsheet_id;
+            $sheetName = $sheet->sheet_name;
 
-            return $this->prepareResponse($result, $orders);
+            Log::info("updateSheet: Integration loaded", [
+                'vendor_id' => $vendorId,
+                'spreadsheet_id' => $spreadsheetId,
+                'sheet_name' => $sheetName
+            ]);
+
+            $orders = $this->fetchOrders($vendorId);
+            Log::info("updateSheet: Orders fetched", ['count' => $orders->count()]);
+
+            if ($orders->isEmpty()) {
+                Log::info("updateSheet: No recent changes to orders", ['vendor_id' => $vendorId]);
+                return response()->json(['message' => 'No recent changes'], 204);
+            }
+
+            $sheetMap = $this->fetchSheetOrders($spreadsheetId, $sheetName);
+            Log::info("updateSheet: Sheet map fetched", ['sheet_map_count' => count($sheetMap)]);
+
+            $changes = $this->getChangedOrders($orders, $sheetMap);
+            Log::info("updateSheet: Changes computed", ['changes_count' => count($changes)]);
+
+            if (empty($changes)) {
+                Log::info("updateSheet: Sheet already up to date", ['sheet_id' => $id]);
+                return response()->json(['message' => 'Sheet already up to date'], 200);
+            }
+
+            $result = $this->batchUpdateSheet($spreadsheetId, $sheetName, $changes);
+            Log::info("updateSheet: Batch update completed", [
+                'updated_rows' => count($changes),
+                'google_response' => $result
+            ]);
+
+            return response()->json([
+                'updated_rows' => count($changes),
+                'status' => 'Synced successfully'
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error updating sheet: ' . $e->getMessage());
-            return response()->json(['error' => 'An error occurred while updating the sheet'], 500);
+            Log::error("updateSheet: Exception during sync", [
+                'sheet_id' => $id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to sync sheet: ' . $e->getMessage()
+            ], 500);
         }
+    }
+
+
+    protected function fetchOrders($vendorId)
+    {
+        // $since = now()->subMinutes(30);
+        $since = now()->startOfDay();
+
+
+        Log::info("fetchOrders: Fetching changed orders", [
+            'vendor_id' => $vendorId,
+            'since' => $since->toDateTimeString()
+        ]);
+
+        return Order::select('orders.*')
+            ->with([
+                'customer',
+                'orderItems.product',
+                'latestStatus.status',
+                'assignments.user',
+                'payments',
+                'addresses',
+                'callLogs'
+            ])
+            ->where('orders.vendor_id', $vendorId)
+            ->where(function ($q) use ($since) {
+
+                // 1. Order core fields
+                $q->where('orders.updated_at', '>=', $since)
+
+                    // 2. Status timeline changes
+                    ->orWhereHas('statusTimestamps', function ($s) use ($since) {
+                        $s->where('created_at', '>=', $since)
+                            ->orWhere('updated_at', '>=', $since);
+                    })
+
+                    // 3. Item changes
+                    ->orWhereHas('orderItems', function ($i) use ($since) {
+                        $i->where('updated_at', '>=', $since);
+                    })
+
+                    // 4. Assignment changes
+                    ->orWhereHas('assignments', function ($a) use ($since) {
+                        $a->where('updated_at', '>=', $since);
+                    })
+
+                    // 5. Address edits
+                    ->orWhereHas('addresses', function ($ad) use ($since) {
+                        $ad->where('updated_at', '>=', $since);
+                    })
+
+                    // 6. Payment updates
+                    ->orWhereHas('payments', function ($p) use ($since) {
+                        $p->where('updated_at', '>=', $since);
+                    })
+
+                    // 7. Customer profile change (important!)
+                    ->orWhereHas('customer', function ($c) use ($since) {
+                        $c->where('updated_at', '>=', $since);
+                    })
+
+                    // 8. Call log activity (optional but useful for ops tracking)
+                    ->orWhereHas('callLogs', function ($cl) use ($since) {
+                        $cl->where('updated_at', '>=', $since);
+                    });
+            })
+            ->get();
+    }
+
+
+    public function fetchSheetOrders($spreadsheetId, $sheetName)
+    {
+        Log::info("fetchSheetOrders: Fetching orders from sheet", [
+            'spreadsheet_id' => $spreadsheetId,
+            'sheet_name' => $sheetName
+        ]);
+
+        $googleSheetService = app(GoogleSheetService::class);
+
+
+        // set spredsheet id
+        $googleSheetService->setSpreadsheetId($spreadsheetId);
+
+
+
+
+        $response = $googleSheetService->readAllSheetData($sheetName);
+
+        $rows = $googleSheetService->readAllSheetData($sheetName) ?? [];
+
+
+        Log::info("fetchSheetOrders: Raw rows fetched", ['row_count' => count($rows)]);
+
+        $map = [];
+
+        foreach ($rows as $index => $row) {
+            $orderNo = $row[1] ?? null; // Column B = Order Id
+            if ($orderNo) {
+                $map[$orderNo] = [
+                    'row' => $index + 2,
+                    'db_updated_at' => $row[15] ?? null // Col P
+                ];
+            } else {
+                Log::debug("fetchSheetOrders: Skipping row with no order number", ['row_index' => $index + 2, 'row' => $row]);
+            }
+        }
+
+        Log::info("fetchSheetOrders: Sheet map built", ['mapped_count' => count($map)]);
+
+        return $map;
+    }
+
+
+
+    protected function mapOrderRow(Order $order)
+    {
+        $productNames = $order->orderItems->pluck('product.product_name')->implode(', ');
+        $qty = $order->orderItems->sum('quantity');
+
+
+
+
+
+        // helper to safely format date values (accepts DateTime, Carbon or string)
+        $formatDate = function ($d) {
+            if ($d instanceof \DateTimeInterface) {
+                return $d->format('Y-m-d');
+            }
+            if (is_string($d) && !empty($d)) {
+                try {
+                    return \Carbon\Carbon::parse($d)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    // If parsing fails, return the raw string (could already be in desired format)
+                    return $d;
+                }
+            }
+            return '';
+        };
+
+        // Use array_values to ensure it's a proper indexed array
+        $row = array_values([
+            $order->created_at->format('Y-m-d'),
+            $order->order_no,
+            $order->total_price,
+            optional($order->customer)->full_name ?? '',
+            optional($order->customer)->address ?? '',
+            optional($order->customer)->phone ?? '',
+            optional($order->customer)->alt_phone ?? '',
+            optional($order->country)->name ?? '',
+            optional($order->customer)->city?->name ?? '',
+
+            // $productNames,
+            // $qty,
+
+            // order has single order items 
+            optional($order->orderItems)->isNotEmpty() ? $productNames : null,
+            optional($order->orderItems)->isNotEmpty() ? $qty : null,
+
+            // order mutiple order items
+            // $order->orderItems->pluck('product.product_name')->implode(', '),
+            // $order->orderItems->sum('quantity'),
+
+            optional($order->latest_status->status)->name ?? '',
+            // safe delivery date: prefer delivery_date, fall back to latest status updated_at
+            $formatDate($order->delivery_date) ?: $formatDate($order->latest_status?->updated_at),
+            $order->customer_notes ?? '',
+            optional($order->assignments->first())->user->name ?? '',
+            // $order->updated_at->toDateTimeString(), // Col P
+            // now()->toDateTimeString()               // Col Q
+        ]);
+        Log::debug("mapOrderRow: Mapped order to row", [
+            'order_no' => $order->order_no,
+            'row_preview' => array_slice($row, 0, 6),
+            'updated_at' => $order->updated_at->toDateTimeString()
+        ]);
+
+        return $row;
+    }
+
+
+
+
+
+
+
+    protected function batchUpdateSheet($spreadsheetId, $sheetName, $changes)
+    {
+        Log::info("batchUpdateSheet: Preparing batch update", [
+            'spreadsheet_id' => $spreadsheetId,
+            'sheet_name' => $sheetName,
+            'changes_count' => count($changes)
+        ]);
+
+        $googleSheetService = app(GoogleSheetService::class)
+            ->setSpreadsheetId($spreadsheetId);
+
+        $service = $googleSheetService->sheetsService; // <-- we expose it (see below)
+
+        $data = [];
+
+        foreach ($changes as $item) {
+            $range = $sheetName . '!A' . $item['row'] . ':Q' . $item['row'];
+            $values = [$this->mapOrderRow($item['order'])];
+
+            $data[] = new \Google\Service\Sheets\ValueRange([
+                'range'  => $range,
+                'values' => $values
+            ]);
+        }
+
+        $body = new \Google\Service\Sheets\BatchUpdateValuesRequest([
+            'valueInputOption' => 'RAW',
+            'data' => $data
+        ]);
+
+        return $service->spreadsheets_values->batchUpdate($spreadsheetId, $body);
+    }
+
+
+
+
+
+    protected function getChangedOrders($orders, $sheetMap)
+    {
+        $toUpdate = [];
+        $checked = 0;
+        $changed = 0;
+
+        foreach ($orders as $order) {
+            $checked++;
+            $sheet = $sheetMap[$order->order_no] ?? null;
+
+            if (!$sheet) {
+                Log::debug("getChangedOrders: Order not present on sheet (skip)", ['order_no' => $order->order_no]);
+                continue; // not in sheet yet (optional append later)
+            }
+
+            $sheetUpdatedAt = $sheet['db_updated_at'];
+            $dbUpdatedAt = $order->updated_at->toDateTimeString();
+
+            if ($sheetUpdatedAt !== $dbUpdatedAt) {
+                $changed++;
+                $toUpdate[] = [
+                    'row'   => $sheet['row'],
+                    'order' => $order
+                ];
+
+                Log::debug("getChangedOrders: Marked for update", [
+                    'order_no' => $order->order_no,
+                    'sheet_updated_at' => $sheetUpdatedAt,
+                    'db_updated_at' => $dbUpdatedAt,
+                    'row' => $sheet['row']
+                ]);
+            } else {
+                Log::debug("getChangedOrders: No change", ['order_no' => $order->order_no]);
+            }
+        }
+
+        Log::info("getChangedOrders: Summary", [
+            'checked' => $checked,
+            'changed' => $changed
+        ]);
+
+        return $toUpdate;
+    }
+
+
+
+
+    protected function prepareOrderData($orders)
+    {
+        Log::info("prepareOrderData: Preparing rows for append/update", ['count' => count($orders)]);
+        $rows = [];
+
+        foreach ($orders as $order) {
+
+            $productNames = $order->orderItems->pluck('product.product_name')->implode(', ');
+            $qty = $order->orderItems->sum('quantity');
+
+            $rows[] = [
+                $order->created_at->format('Y-m-d'),
+                $order->order_no,
+                $order->total_price,
+                optional($order->customer)->full_name,
+                optional($order->customer)->address,
+                optional($order->customer)->phone,
+                optional($order->customer)->alt_phone,
+                optional($order->country)->name ?? 'Kenya',
+                optional($order->customer)->city?->name,
+                $productNames,
+                $qty,
+                optional($order->latest_status->status)->name,
+                optional($order->delivery_date)?->format('Y-m-d'),
+                $order->customer_notes,
+                optional($order->assignments->first())->user->name ?? ''
+            ];
+        }
+
+        Log::info("prepareOrderData: Prepared rows", ['rows_count' => count($rows)]);
+        return $rows;
+    }
+
+
+
+    protected function prepareResponse($result, $orders)
+    {
+        Log::info("prepareResponse: Preparing API response", [
+            'orders_count' => count($orders),
+            'result' => $result
+        ]);
+
+        return response()->json([
+            'message' => 'Sheet updated successfully',
+            'rows_added' => count($orders),
+            'updatedRange' => $result->updates->updatedRange ?? null
+        ]);
     }
 }
