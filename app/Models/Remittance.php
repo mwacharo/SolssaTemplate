@@ -57,7 +57,7 @@ class Remittance extends Model
     protected $casts = [
         'invoice_date' => 'datetime',
         'payment_period_start' => 'datetime',
-        'payment_period_end' => 'datetime',
+        'payment_approved_by_cfo_idperiod_end' => 'datetime',
         'manager_approved_at' => 'datetime',
         'cfo_approved_at' => 'datetime',
         'payment_date' => 'datetime',

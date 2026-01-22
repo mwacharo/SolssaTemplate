@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('vendor_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
+            // add amount or percentage field
+            $table->decimal('fee_amount', 15, 2)->nullable();
+            $table->decimal('fee_percentage', 5, 2)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();

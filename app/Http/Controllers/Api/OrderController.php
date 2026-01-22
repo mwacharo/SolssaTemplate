@@ -29,6 +29,10 @@ use App\Services\StockService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 
+use Illuminate\Validation\ValidationException;
+
+
+
 
 class OrderController extends Controller
 {
@@ -1223,6 +1227,229 @@ class OrderController extends Controller
                 'success' => false,
                 'message' => 'Failed to delete order',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    // find by assignemnt  person /rider /call agnet /vendor / courier  etc 
+
+    //     Route::get('/orders/find-by/{type}/{identifier}', [OrderController::class, 'findByIdentifier']);
+
+
+    public function findByIdentifier(Request $request, $type, $identifier): JsonResponse
+    {
+        try {
+            $query = Order::with([
+                'warehouse',
+                'country',
+                'agent',
+                'createdBy',
+                'rider',
+                'zone',
+                'orderItems.product',
+                'addresses',
+                'shippingAddress',
+                'pickupAddress',
+                'assignments.user',
+                'payments',
+                'latestStatus.status',
+                'customer',
+                'vendor'
+            ]);
+
+            switch (strtolower($type)) {
+                case 'rider':
+                    $query->whereHas('assignments', function ($q) use ($identifier) {
+                        $q->where('user_id', $identifier)
+                            ->whereIn('role', ['Delivery Agent', 'Delivery    Man', 'DeliveryAgent']);
+                    });
+                    break;
+                case 'call_agent':
+                case 'call_agent':
+                    $query->whereHas('assignments', function ($q) use ($identifier) {
+                        $q->where('user_id', $identifier)
+                            ->whereIn('role', ['Call Agent', 'CallCenterAgent']);
+                    });
+                    break;
+            }
+
+            $orders = $query->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $orders
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve orders',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+    public function getByAgent(Request $request, $agentId): JsonResponse
+    {
+        Log::info('getByAgent called', [
+            'agent_id' => $agentId,
+            'input' => $request->all(),
+            'user_id' => $request->user()?->id
+        ]);
+
+        try {
+            $validated = $request->validate([
+                'from' => 'nullable|date',
+                'to'   => 'nullable|date|after_or_equal:from',
+            ]);
+
+            Log::debug('getByAgent validated payload', ['validated' => $validated]);
+
+            $query = Order::with([
+                'warehouse',
+                'agent',
+                'rider',
+                'zone',
+                'orderItems.product',
+                'customer',
+                'vendor',
+                'latestStatus.status',
+                'shippingAddress'
+            ])
+                ->whereHas('assignments', function ($q) use ($agentId) {
+                    $q->where('user_id', $agentId)
+                        ->whereIn('role', ['CallAgent', 'CallCenterAgent']);
+                })
+                /**
+                 * 🔑 ONLY orders whose LATEST status is Delivered
+                 * 🔑 AND that status happened between from & to
+                 */
+                ->whereHas('latestStatus', function ($q) use ($validated) {
+                    $q->whereHas('status', function ($sq) {
+                        $sq->where('name', 'Delivered'); // 🚫 no slug
+                    });
+
+                    if (!empty($validated['from'])) {
+                        $q->whereDate('created_at', '>=', $validated['from']);
+                    }
+
+                    if (!empty($validated['to'])) {
+                        $q->whereDate('created_at', '<=', $validated['to']);
+                    }
+                });
+
+            // Log SQL and bindings for debugging (note: closures may prevent full SQL preview)
+            try {
+                Log::debug('getByAgent query SQL', [
+                    'sql' => $query->toSql(),
+                    'bindings' => $query->getBindings()
+                ]);
+            } catch (\Exception $e) {
+                Log::debug('Could not dump query SQL', ['error' => $e->getMessage()]);
+            }
+
+            Log::info('Executing getByAgent query', ['agent_id' => $agentId]);
+            $orders = $query->orderBy('created_at', 'desc')->get();
+
+            Log::info('getByAgent query executed', [
+                'agent_id' => $agentId,
+                'result_count' => $orders->count(),
+                'orders' => $orders
+
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data'    => $orders,
+                'count'   => $orders->count(),
+            ]);
+        } catch (ValidationException $e) {
+            Log::warning('getByAgent validation failed', [
+                'agent_id' => $agentId,
+                'errors' => $e->errors()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch agent delivered orders', [
+                'agent_id' => $agentId,
+                'error'    => $e->getMessage(),
+                'trace'    => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve orders',
+                'error'   => config('app.debug') ? $e->getMessage() : 'Internal server error',
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Get orders by rider
+     */
+    public function getByRider(Request $request, $riderId): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'from' => 'nullable|date',
+                'to' => 'nullable|date|after_or_equal:from',
+            ]);
+
+            $query = Order::with([
+                'warehouse',
+                'rider',
+                'zone',
+                'orderItems.product',
+                'customer',
+                'vendor',
+                'latestStatus.status',
+                'shippingAddress'
+            ])
+                ->whereHas('assignments', function ($q) use ($riderId) {
+                    $q->where('user_id', $riderId)
+                        ->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent']);
+                });
+
+            // Apply date filters
+            if (!empty($validated['from'])) {
+                $query->whereDate('created_at', '>=', $validated['from']);
+            }
+
+            if (!empty($validated['to'])) {
+                $query->whereDate('created_at', '<=', $validated['to']);
+            }
+
+            $orders = $query->orderBy('created_at', 'desc')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $orders,
+                'count' => $orders->count()
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch rider orders', [
+                'rider_id' => $riderId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve orders',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
             ], 500);
         }
     }

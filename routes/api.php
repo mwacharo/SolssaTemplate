@@ -139,6 +139,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/orders/bulk-delete', [OrderController::class, 'bulkDelete']);
 
 
+    // find order by callagent /rirder /courier / vendor
+
+    // Route::get('/orders/find-by/{type}/{identifier}', [OrderController::class, 'findByIdentifier']);
+
+    Route::get('/orders/agent/{agentId}', [OrderController::class, 'getByAgent']);
+    Route::get('/orders/rider/{riderId}', [OrderController::class, 'getByRider']);
+
+
     // shopifty 
 
     Route::post('/shopify/orders/webhook', [ShopifyOrderController::class, 'handleWebhook']); // Handle Shopify order webhook

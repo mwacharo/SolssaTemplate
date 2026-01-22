@@ -11,7 +11,13 @@ class VendorService extends Model
     //
     use SoftDeletes;
     use HasFactory;
-    protected $fillable = ['vendor_id', 'service_id', 'is_active'];
+    protected $fillable = [
+        'vendor_id',
+        'service_id',
+        'is_active',
+        // 'fee_amount',
+        // 'fee_percentage'
+    ];
 
     public function vendor()
     {
@@ -23,7 +29,7 @@ class VendorService extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function serviceRates()
+    public function servserviceRatesiceRates()
     {
         return $this->hasMany(ServiceRate::class);
     }

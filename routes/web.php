@@ -314,6 +314,11 @@ Route::middleware([
     // Remittances
     Route::prefix('remittances')->name('remittances.')->group(function () {
         Route::get('/', fn() => Inertia::render('Remittances/Index'))->name('index');
+        // call agents payment 
+        Route::get('/agent-payments', fn() => Inertia::render('Remittances/AgentPayments'))->name('agent-payments');
+
+        // rider payments
+        Route::get('/rider-payments', fn() => Inertia::render('Remittances/RiderPayments'))->name('rider-payments');
     });
 });
 

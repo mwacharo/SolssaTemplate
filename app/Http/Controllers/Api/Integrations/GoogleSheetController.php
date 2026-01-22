@@ -445,6 +445,8 @@ class GoogleSheetController extends Controller
                             ->orWhere('updated_at', '>=', $since);
                     })
 
+                    // 
+
                     // 3. Item changes
                     ->orWhereHas('orderItems', function ($i) use ($since) {
                         $i->where('updated_at', '>=', $since);
@@ -560,7 +562,7 @@ class GoogleSheetController extends Controller
             optional($order->country)->name ?? '',
             optional($order->customer)->city?->name ?? '',
 
-            // $productNames,
+            // $productNames,mapOrderRow
             // $qty,
 
             // order has single order items 
@@ -574,7 +576,7 @@ class GoogleSheetController extends Controller
             optional($order->latest_status->status)->name ?? '',
             // safe delivery date: prefer delivery_date, fall back to latest status updated_at
             $formatDate($order->delivery_date) ?: $formatDate($order->latest_status?->updated_at),
-            $order->customer_notes ?? '',
+            trim(($order->customer_notes ?? '') . ' ' . optional(optional($order->latest_status)->status)->status_notes),
             optional($order->assignments->first())->user->name ?? '',
             // $order->updated_at->toDateTimeString(), // Col P
             // now()->toDateTimeString()               // Col Q
@@ -701,7 +703,11 @@ class GoogleSheetController extends Controller
                 $productNames,
                 $qty,
                 optional($order->latest_status->status)->name,
+                // status_notes
+
                 optional($order->delivery_date)?->format('Y-m-d'),
+                optional($order->latest_status)->status_notes,
+
                 $order->customer_notes,
                 optional($order->assignments->first())->user->name ?? ''
             ];

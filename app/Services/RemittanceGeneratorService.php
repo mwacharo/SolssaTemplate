@@ -25,7 +25,7 @@ class RemittanceGeneratorService
         return DB::transaction(function () use ($sellerId, $periodStart, $periodEnd) {
 
             // 1. Fetch seller orders that should be included
-            $orders = Order::where('seller_id', $sellerId)
+            $orders = Order::where('vendor_id', $sellerId)
                 ->whereNull('invoice_id')
                 ->where('shipping_status_id', 1272) // delivered
                 ->whereBetween('delivered_at', [$periodStart, $periodEnd])
@@ -62,7 +62,7 @@ class RemittanceGeneratorService
                 'payment_period_end'    => $periodEnd,
                 'approval_status'       => 'draft',
 
-                'seller_id'             => $sellerId,
+                'vendor_id'             => $sellerId,
 
                 'total_amount'          => $amountToPaySeller,
                 'total_amount_mad'      => $amountToPaySeller / 140, // example conversion rate

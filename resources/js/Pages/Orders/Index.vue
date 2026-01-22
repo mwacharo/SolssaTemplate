@@ -605,10 +605,10 @@
                                         order.status === 1
                                             ? 'bg-green-50'
                                             : order.status === 0
-                                            ? 'bg-yellow-50'
-                                            : order.status === 2
-                                            ? 'bg-red-50'
-                                            : 'bg-white',
+                                              ? 'bg-yellow-50'
+                                              : order.status === 2
+                                                ? 'bg-red-50'
+                                                : 'bg-white',
                                     ]"
                                 >
                                     <td class="px-4 py-3">
@@ -834,7 +834,7 @@
                                                     order.latest_status?.status
                                                         ?.name ||
                                                     orderStatusLabel(
-                                                        order.status
+                                                        order.status,
                                                     )
                                                 }}
                                             </span>
@@ -868,7 +868,7 @@
                                                 {{
                                                     formatDateTime(
                                                         order.latest_status
-                                                            .created_at
+                                                            .created_at,
                                                     )
                                                 }}
                                             </div>
@@ -965,7 +965,7 @@
                                                             ?.phone ||
                                                             order.customer
                                                                 ?.phone,
-                                                        order
+                                                        order,
                                                     )
                                                 "
                                                 class="p-1 text-indigo-600 hover:bg-indigo-100 rounded disabled:opacity-50"
@@ -1050,6 +1050,29 @@
                                                         rx="2"
                                                     />
                                                     <path d="M11 18h2" />
+                                                </svg>
+                                            </button>
+
+                                            <!-- add expense -->
+
+                                            <button
+                                                @click="addExpense(order)"
+                                                class="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                                title="Add Expense"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="w-5 h-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                                                    />
                                                 </svg>
                                             </button>
 
@@ -1256,7 +1279,7 @@
                             <button
                                 @click="
                                     orderStore.removeNotification(
-                                        notification.id
+                                        notification.id,
                                     )
                                 "
                                 class="ml-4 text-white hover:text-gray-200"
@@ -1280,6 +1303,8 @@
                 </div>
             </div>
         </div>
+
+        <OrderExpenses ref="orderExpensesDialog" />
 
         <OrderCallHistory ref="viewRecordingsDialog" />
 
@@ -1340,6 +1365,8 @@ import { useStkpushStore } from "@/stores/stkpushStore";
 import OrderForm from "./OrderForm.vue";
 import OrderCallHistory from "./OrderCallHistory.vue";
 
+import OrderExpenses from "./OrderExpenses.vue";
+
 import BulkAction from "./BulkAction.vue";
 import CallDialogs from "@/Pages/CallCenter/Dialogs/CallDialogs.vue";
 // callcentre  op
@@ -1359,6 +1386,7 @@ const callCentreDiallerStore = usecallCentreDiallerStore();
 const stkpushStore = useStkpushStore();
 const stkpushDialog = ref(null); // Add template ref
 const viewRecordingsDialog = ref(null);
+const orderExpensesDialog = ref(null);
 
 const createMode = ref(false);
 
@@ -1381,6 +1409,12 @@ const viewRecordings = (order) => {
     console.log("Viewing recordings for order:", order);
     // Implement logic to open recordings dialog or page
     viewRecordingsDialog.value?.open(order.call_logs);
+};
+
+const addExpense = (order) => {
+    console.log("Adding expense for order:", order);
+    // Implement logic to open expense dialog or page
+    orderExpensesDialog.value?.open(order);
 };
 
 const onRecordingsViewed = () => {
@@ -1505,7 +1539,7 @@ const assignDeliveryPerson = () => {
     orderStore.openAssignDeliveryDialog(selectedOrders.value);
     console.info(
         "Opened assign delivery dialog for orders:",
-        selectedOrders.value
+        selectedOrders.value,
     );
 };
 
