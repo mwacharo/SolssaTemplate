@@ -23,6 +23,7 @@
                             <th>Amount</th>
                             <th>Status</th>
                             <th>Invoice</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
 
@@ -58,6 +59,48 @@
                                 </span>
                                 <span v-else class="text-grey"> — </span>
                             </td>
+
+                            <!-- actions -->
+
+                            <td>
+                                <div v-if="true" class="d-flex align-center">
+                                    <v-btn
+                                        v-if="expense.invoice_url"
+                                        :href="expense.invoice_url"
+                                        target="_blank"
+                                        icon
+                                        size="small"
+                                        color="primary"
+                                    >
+                                        <v-icon
+                                            >mdi-file-download-outline</v-icon
+                                        >
+                                    </v-btn>
+
+                                    <v-btn
+                                        icon
+                                        size="small"
+                                        color="primary"
+                                        @click="$emit('edit-expense', expense)"
+                                        title="Edit expense"
+                                    >
+                                        <v-icon>mdi-pencil</v-icon>
+                                    </v-btn>
+
+                                    <v-btn
+                                        icon
+                                        size="small"
+                                        color="error"
+                                        @click="
+                                            $emit('remove-expense', expense)
+                                        "
+                                        title="Remove expense"
+                                    >
+                                        <v-icon>mdi-delete</v-icon>
+                                    </v-btn>
+                                </div>
+                                <span v-else class="text-grey"> — </span>
+                            </td>
                         </tr>
 
                         <tr v-if="!expenses.length">
@@ -67,6 +110,16 @@
                         </tr>
                     </tbody>
                 </v-table>
+
+                <v-btn
+                    color="primary"
+                    variant="text"
+                    prepend-icon="mdi-plus"
+                    @click="addOrderItem"
+                    class="mt-2"
+                >
+                    Add Item
+                </v-btn>
             </v-card-text>
 
             <v-divider />
@@ -78,10 +131,7 @@
                     <strong>KES {{ formatMoney(totalExpenses) }}</strong>
                 </div>
 
-                <v-btn
-                    color="primary"
-                    variant="flat"
- @click="dialog = false"                >
+                <v-btn color="primary" variant="flat" @click="dialog = false">
                     Close
                 </v-btn>
             </v-card-actions>
@@ -102,6 +152,18 @@ const props = defineProps({
         default: () => [],
     },
 });
+
+
+
+const addOrderItem = () => {
+    // orderEdit.value.order_items.push({
+    //     sku: "",
+    //     quantity: 1,
+    //     unit_price: 0.0,
+    //     editable: true,
+    // });
+    // updateTotals();
+};
 
 defineEmits(["update:modelValue"]);
 

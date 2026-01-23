@@ -31,7 +31,7 @@ class SellerExpenseController extends Controller
     {
         $perPage = $request->get('per_page', 200); // default 20
 
-        $expenses = SellerExpense::with('vendor')
+        $expenses = SellerExpense::with('vendor', 'expenseType')
             ->latest()
             ->paginate($perPage);
 

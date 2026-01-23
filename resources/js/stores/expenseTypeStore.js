@@ -47,6 +47,13 @@ export const useExpenseTypeStore = defineStore('expenseType', {
             }
         },
 
+
+         async fetchExpenseTypes() {
+            // Alias method for better naming convention
+            return this.fetchTypes();
+        },
+
+
         async fetchCategories() {
             try {
                 const response = await axios.get('/api/v1/expense-categories');

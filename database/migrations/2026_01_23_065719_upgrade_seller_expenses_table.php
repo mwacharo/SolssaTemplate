@@ -27,9 +27,9 @@ return new class extends Migration
 
             $table->string('currency', 10)->default('KES')->after('amount');
 
-            $table->enum('status', ['pending', 'approved', 'rejected', 'paid'])
-                ->default('pending')
-                ->change();
+            // $table->enum('status', ['pending', 'approved', 'rejected', 'paid'])
+            //     ->default('pending')
+            //     ->change();
 
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('paid_at')->nullable();

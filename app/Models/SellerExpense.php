@@ -22,6 +22,7 @@ class SellerExpense extends Model
         'description',
         'amount',
         'expense_type',
+        'expense_type_id',
         'remittacnce_id',
         'country_id',
         'status',

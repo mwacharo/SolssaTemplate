@@ -141,9 +141,9 @@ export const useVendorExpensesStore = defineStore('vendorExpenses', () => {
       if (!expenseData.vendor_id) {
         throw new Error('Seller is required')
       }
-      if (!expenseData.country_id) {
-        throw new Error('Country is required')
-      }
+      // if (!expenseData.country_id) {
+      //   throw new Error('Country is required')
+      // }
 
       const dataToSend = {
         description: expenseData.description.trim(),
@@ -156,7 +156,8 @@ export const useVendorExpensesStore = defineStore('vendorExpenses', () => {
 
         // incurred_on: expenseData.incurred_on ? parseInt(expenseData.incurred_on) : null,
         source_country_id: expenseData.source_country_id ? parseInt(expenseData.source_country_id) : null,
-        destination_country_id: expenseData.destination_country_id ? parseInt(expenseData.destination_country_id) : null
+        destination_country_id: expenseData.destination_country_id ? parseInt(expenseData.destination_country_id) : null,
+        expense_type_id: expenseData.expense_type_id ? parseInt(expenseData.expense_type_id) : null
       }
 
       const { data } = await api.post('/seller-expenses', dataToSend)
@@ -205,6 +206,8 @@ export const useVendorExpensesStore = defineStore('vendorExpenses', () => {
         status: expenseData.status || 'not_applied',
         // incurred_on: expenseData.incurred_on || null,
           incurred_on: expenseData.incurred_on || null,
+          expense_type_id: expenseData.expense_type_id,  // ⚠️ Make sure this is included!
+
 
         source_country_id: expenseData.source_country_id ? parseInt(expenseData.source_country_id) : null,
         destination_country_id: expenseData.destination_country_id ? parseInt(expenseData.destination_country_id) : null

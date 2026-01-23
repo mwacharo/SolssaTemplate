@@ -16,6 +16,7 @@
                         </div>
                         <button
                             @click="openModal('create')"
+                            expenseTypesStore
                             class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                         >
                             <Plus :size="20" />
@@ -101,6 +102,8 @@
                             <thead class="bg-blue-600 text-white">
                                 <tr>
                                     <th class="px-4 py-3 text-left">ID</th>
+                                    <!-- name -->
+                                    <th class="px-4 py-3 text-left">Expense</th>
                                     <th class="px-4 py-3 text-left">
                                         Description
                                     </th>
@@ -120,7 +123,7 @@
                             <tbody>
                                 <tr v-if="paginatedExpenses.length === 0">
                                     <td
-                                        colspan="8"
+                                        colspan="10"
                                         class="px-4 py-8 text-center text-gray-500"
                                     >
                                         No expenses found
@@ -139,6 +142,13 @@
                                 >
                                     <td class="px-4 py-3 font-medium">
                                         #{{ expense.id }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-left font-medium">
+                                        {{
+                                            expense.expense_type
+                                                ?.display_name || "N/A"
+                                        }}
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="flex items-start gap-2">
@@ -228,7 +238,7 @@
                                             <component
                                                 :is="
                                                     getStatusConfig(
-                                                        expense.status
+                                                        expense.status,
                                                     ).icon
                                                 "
                                                 :size="12"
@@ -301,7 +311,7 @@
                             {{
                                 Math.min(
                                     currentPage * itemsPerPage,
-                                    filteredExpenses.length
+                                    filteredExpenses.length,
                                 )
                             }}
                             of {{ filteredExpenses.length }} expenses
@@ -333,7 +343,7 @@
                                 @click="
                                     currentPage = Math.min(
                                         totalPages,
-                                        currentPage + 1
+                                        currentPage + 1,
                                     )
                                 "
                                 :disabled="currentPage === totalPages"
@@ -362,8 +372,8 @@
                                 modalMode === "create"
                                     ? "Add New Expense"
                                     : modalMode === "edit"
-                                    ? "Edit Expense"
-                                    : "Expense Details"
+                                      ? "Edit Expense"
+                                      : "Expense Details"
                             }}
                         </h2>
                         <button
@@ -393,21 +403,21 @@
                                             :class="[
                                                 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-white',
                                                 getStatusConfig(
-                                                    selectedExpense.status
+                                                    selectedExpense.status,
                                                 ).bg,
                                             ]"
                                         >
                                             <component
                                                 :is="
                                                     getStatusConfig(
-                                                        selectedExpense.status
+                                                        selectedExpense.status,
                                                     ).icon
                                                 "
                                                 :size="12"
                                             />
                                             {{
                                                 getStatusConfig(
-                                                    selectedExpense.status
+                                                    selectedExpense.status,
                                                 ).text
                                             }}
                                         </span>
@@ -426,7 +436,7 @@
                                     <p class="font-semibold text-lg">
                                         {{
                                             formatCurrency(
-                                                selectedExpense.amount
+                                                selectedExpense.amount,
                                             )
                                         }}
                                     </p>
@@ -472,7 +482,7 @@
                                     <p class="font-semibold">
                                         {{
                                             formatDate(
-                                                selectedExpense.created_at
+                                                selectedExpense.created_at,
                                             )
                                         }}
                                     </p>
@@ -484,7 +494,7 @@
                                     <p class="font-semibold">
                                         {{
                                             formatDate(
-                                                selectedExpense.updated_at
+                                                selectedExpense.updated_at,
                                             )
                                         }}
                                     </p>
@@ -510,6 +520,32 @@
                                 {{ errors.submit }}
                             </div>
 
+                            <!--expense name-->
+
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-red-600 mb-1"
+                                    >Expense</label
+                                >
+                                <v-autocomplete
+                                    v-model="formData.expense_type_id"
+                                    :items="
+                                        expenseTypesStore.types &&
+                                        expenseTypesStore.types.data
+                                            ? expenseTypesStore.types.data
+                                            : expenseTypesStore.types
+                                    "
+                                    item-title="display_name"
+                                    item-value="id"
+                                    clearable
+                                    dense
+                                    outlined
+                                    placeholder="Search expenses..."
+                                    class="w-full"
+                                    autocomplete
+                                />
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium mb-2">
                                     Description
@@ -523,6 +559,7 @@
                                             : '',
                                     ]"
                                     rows="3"
+                                    formData
                                     v-model="formData.description"
                                     @input="clearError('description')"
                                     placeholder="Enter expense description"
@@ -597,7 +634,7 @@
                                     />
                                 </div>
 
-                                <div>
+                                <!-- <div>
                                     <label
                                         class="block text-sm font-medium mb-2"
                                     >
@@ -622,7 +659,7 @@
                                     >
                                         {{ errors.country_id }}
                                     </p>
-                                </div>
+                                </div> -->
 
                                 <div>
                                     <label
@@ -709,6 +746,10 @@ import { useVendorExpensesStore } from "@/stores/vendorExpenses";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { useOrderStore } from "@/stores/orderStore";
 
+import { useExpenseTypeStore } from "@/stores/expenseTypeStore.js";
+
+// expenseTypes.js
+
 import {
     DollarSign,
     Plus,
@@ -731,6 +772,8 @@ import {
 const expenseStore = useVendorExpensesStore();
 const orderStore = useOrderStore();
 
+const expenseTypesStore = useExpenseTypeStore();
+
 const vendorOptions = computed(() => orderStore.vendorOptions);
 
 // Local State
@@ -747,6 +790,7 @@ const formData = ref({
     description: "",
     amount: "",
     expense_type: "expense",
+    expense_type_id: "",
     vendor_id: "",
     country_id: "",
     status: "not_applied",
@@ -759,6 +803,7 @@ const errors = ref({});
 onMounted(async () => {
     await expenseStore.fetchExpenses();
     await orderStore.fetchDropdownOptions();
+    await expenseTypesStore.fetchExpenseTypes();
 });
 
 // Computed
@@ -771,7 +816,7 @@ const filteredExpenses = computed(() => {
             (exp) =>
                 exp.description?.toLowerCase().includes(query) ||
                 exp.vendor?.username?.toLowerCase().includes(query) ||
-                exp.vendor?.email?.toLowerCase().includes(query)
+                exp.vendor?.email?.toLowerCase().includes(query),
         );
     }
 
@@ -781,7 +826,7 @@ const filteredExpenses = computed(() => {
 
     if (filterType.value !== "all") {
         filtered = filtered.filter(
-            (exp) => exp.expense_type === filterType.value
+            (exp) => exp.expense_type === filterType.value,
         );
     }
 
@@ -789,7 +834,7 @@ const filteredExpenses = computed(() => {
 });
 
 const totalPages = computed(() =>
-    Math.ceil(filteredExpenses.value.length / itemsPerPage)
+    Math.ceil(filteredExpenses.value.length / itemsPerPage),
 );
 
 const paginatedExpenses = computed(() => {
@@ -799,12 +844,20 @@ const paginatedExpenses = computed(() => {
 });
 
 const totalAmount = computed(() =>
-    filteredExpenses.value.reduce((sum, exp) => sum + parseFloat(exp.amount), 0)
+    filteredExpenses.value.reduce(
+        (sum, exp) => sum + parseFloat(exp.amount),
+        0,
+    ),
 );
 
 // Methods
 const validateForm = () => {
     const newErrors = {};
+
+    // expense_type_id validation
+    if (!formData.value.expense_type_id) {
+        newErrors.expense_type_id = "Expense selection is required";
+    }
 
     if (!formData.value.description?.trim()) {
         newErrors.description = "Description is required";
@@ -818,8 +871,12 @@ const validateForm = () => {
         newErrors.vendor_id = "vendor is required";
     }
 
-    if (!formData.value.country_id) {
-        newErrors.country_id = "Country is required";
+    // if (!formData.value.country_id) {
+    //     newErrors.country_id = "Country is required";
+    // }
+
+    if (!formData.value.expense_type_id) {
+        newErrors.expense_type_id = "Expense type is required";
     }
 
     errors.value = newErrors;
@@ -845,7 +902,7 @@ const handleUpdate = async () => {
     try {
         await expenseStore.updateExpense(
             selectedExpense.value.id,
-            formData.value
+            formData.value,
         );
         closeModal();
     } catch (err) {
@@ -878,6 +935,7 @@ const openModal = (mode, expense = null) => {
             country_id: "",
             status: "not_applied",
             incurred_on: "",
+            expense_type_id: "",
         };
     } else if (expense) {
         formData.value = {
@@ -888,6 +946,9 @@ const openModal = (mode, expense = null) => {
             country_id: expense.country_id.toString(),
             status: expense.status,
             incurred_on: expense.incurred_on ? expense.incurred_on : "",
+            expense_type_id: expense.expense_type_id
+                ? expense.expense_type_id
+                : "",
         };
     }
 

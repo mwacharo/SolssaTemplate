@@ -27,8 +27,10 @@ class StoreSellerExpenseRequest extends FormRequest
             'description'            => 'nullable|string|max:500',
             'amount'                 => 'required|numeric|min:0',
             'expense_type'           => 'required|string|in:transport,warehouse,purchase,other,expense,income',
+            'expense_type_id'        => 'nullable|integer|exists:expense_types,id',
+
             'remittance_id'          => 'nullable|integer|exists:remittance,id',
-            'country_id'             => 'required|integer|exists:countries,id',
+            // 'country_id'             => 'required|integer|exists:countries,id',
             'source_country_id'      => 'nullable|integer|exists:countries,id',
             'destination_country_id' => 'nullable|integer|exists:countries,id',
             'status'                 => 'required|string|in:pending,approved,rejected,paid,applied,not_applied',

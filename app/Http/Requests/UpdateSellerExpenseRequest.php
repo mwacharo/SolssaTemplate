@@ -27,6 +27,7 @@ class UpdateSellerExpenseRequest extends FormRequest
             'description'            => 'nullable|string|max:500',
             'amount'                 => 'sometimes|numeric|min:0',
             'expense_type'           => 'sometimes|string|in:transport,warehouse,purchase,other,expense,income',
+            'expense_type_id'        => 'sometimes|integer|exists:expense_types,id',
             'remittance_id'          => 'nullable|integer|exists:remittance,id',
             'country_id'             => 'sometimes|integer|exists:countries,id',
             'source_country_id'      => 'nullable|integer|exists:countries,id',
