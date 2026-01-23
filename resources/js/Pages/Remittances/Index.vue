@@ -1,7 +1,7 @@
 <template>
     <AppLayout>
         <div class="pa-4">
-            <h2 class="text-h4 mb-6">Agent Payments</h2>
+            <h2 class="text-h4 mb-6">Vendor Payments</h2>
 
             <v-row>
                 <v-col cols="12" md="4">
@@ -26,15 +26,16 @@
 
                 <v-col cols="12" md="4">
                     <v-autocomplete
-                        v-model="filters.agent"
-                        :items="orderStore.agentOptions"
+                        v-model="orderStore.orderFilterVendor"
+                        :items="orderStore.vendorOptions"
                         item-title="name"
                         item-value="id"
-                        label="Call Agent"
-                        variant="outlined"
-                        density="comfortable"
                         clearable
-                        placeholder="Search agents..."
+                        dense
+                        outlined
+                        placeholder="Search sellers..."
+                        class="w-full"
+                        autocomplete
                     />
                 </v-col>
 
@@ -45,7 +46,7 @@
                         :disabled="!canGenerateInvoice"
                         size="large"
                     >
-                        Generate Call Agent Invoice
+                        Generate Invoice
                     </v-btn>
                 </v-col>
             </v-row>

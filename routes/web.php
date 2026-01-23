@@ -218,6 +218,11 @@ Route::middleware([
         Route::get('/templates', fn() => Inertia::render('Settings/Templates'))->name('templates');
         Route::get('/status', fn() => Inertia::render('Settings/Status'))->name('status');
 
+
+        // expense settings routes
+        Route::get('/expense-categories', fn() => Inertia::render('Settings/ExpenseCategories'))->name('expense-categories');
+        Route::get('/expense-types', fn() => Inertia::render('Settings/ExpenseTypes'))->name('expense-types');  
+
         // add call settings
 
         Route::get('/call-settings', fn() => Inertia::render('Settings/CallSettings'))->name('call-settings');

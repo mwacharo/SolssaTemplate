@@ -488,6 +488,23 @@ Route::prefix('v1')->group(function () {
     Route::delete('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'destroy']);
 
 
+
+    // expense-categories
+    Route::get('/expense-categories', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'index']);
+    Route::post('/expense-categories', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'store']);
+    Route::get('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'show']);
+    Route::put('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'update']);
+    Route::delete('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'destroy']);
+
+
+    // expense-types
+    Route::get('/expense-types', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'index']);
+    Route::post('/expense-types', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'store']);
+    Route::get('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'show']);
+    Route::put('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'update']);
+    Route::delete('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'destroy']);
+
+
     // remittances
     Route::get('/remittances', [\App\Http\Controllers\Api\RemittanceController::class, 'index']);
     Route::post('/remittances', [\App\Http\Controllers\Api\RemittanceController::class, 'store']);

@@ -29,6 +29,16 @@ return new class extends Migration
             $table->unsignedBigInteger('country_id')->nullable();
             $table->string('status')->default('pending');
             $table->date('incurred_on')->nullable();
+
+
+            // sometimes an expense belongs to an order
+            // $table->foreignId('order_id')
+            //     ->nullable()
+            //     ->constrained('orders')
+            //     ->nullOnDelete();
+
+
+            // sometimes an expense belongs to user id who has a role  i.e rider,agent,courier etc 
             $table->timestamps();
             $table->softDeletes();
         });

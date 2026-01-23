@@ -20,8 +20,29 @@ export const ROUTES = {
     INDEX: 'seller-expenses.index',
   },
 
+
+//   FINANCE: {
+//   INDEX: 'finance.index',
+
+//   // Operational expenses
+//   ORDER_EXPENSES: 'finance.order-expenses',
+//   SELLER_EXPENSES: 'finance.seller-expenses',
+
+//   // Configuration
+//   EXPENSE_CATEGORIES: 'finance.expense-categories',
+//   EXPENSE_TYPES: 'finance.expense-types',
+
+//   // Payouts / Invoices
+//   RIDER_INVOICES: 'finance.rider-invoices',
+//   AGENT_INVOICES: 'finance.agent-invoices',
+//   COURIER_INVOICES: 'finance.courier-invoices',
+// },
+
+
   REMITTANCES: {
     INDEX: 'remittances.index',
+    AGENT_PAYMENTS: 'remittances.agent-payments',
+    RIDER_PAYMENTS: 'remittances.rider-payments',
   },
   CALL_CENTRE: {
     INDEX: 'call-centre.index',
@@ -89,6 +110,11 @@ export const ROUTES = {
     // FEATURES: 'settings.features',
     // NOTIFICATIONS: 'settings.notifications',
     // BRANDING: 'settings.branding',
+
+    // expenses settings
+    EXPENSE_CATEGORIES: 'settings.expense-categories',
+    EXPENSE_TYPES: 'settings.expense-types',
+    
   },
   INTEGRATIONS: {
     // API: 'integrations.api',
@@ -195,6 +221,69 @@ export const useNavStore = defineStore('nav', {
         ],
       },
 
+
+
+//       {
+//   title: 'Finance',
+//   icon: 'mdi-cash-register',
+//   route: ROUTES.FINANCE.INDEX,
+//   roles: ['Admin', 'Manager'],
+//   plans: ['Pro', 'Enterprise'],
+//   features: ['finance'],
+//   permissions: ['finance_view'],
+//   children: [
+
+//     // Operational Tracking
+//     {
+//       title: 'Order Expenses',
+//       route: ROUTES.FINANCE.ORDER_EXPENSES,
+//       icon: 'mdi-truck-delivery-outline',
+//       permission: 'order_expenses_view'
+//     },
+//     {
+//       title: 'Seller Expenses',
+//       route: ROUTES.FINANCE.SELLER_EXPENSES,
+//       icon: 'mdi-cash-multiple',
+//       permission: 'seller_expenses_view'
+//     },
+
+//     // Invoices
+//     {
+//       title: 'Rider Invoices',
+//       route: ROUTES.FINANCE.RIDER_INVOICES,
+//       icon: 'mdi-motorbike',
+//       permission: 'rider_invoices_view'
+//     },
+//     {
+//       title: 'Agent Invoices',
+//       route: ROUTES.FINANCE.AGENT_INVOICES,
+//       icon: 'mdi-headset',
+//       permission: 'agent_invoices_view'
+//     },
+//     {
+//       title: 'Courier Invoices',
+//       route: ROUTES.FINANCE.COURIER_INVOICES,
+//       icon: 'mdi-truck',
+//       permission: 'courier_invoices_view'
+//     },
+
+//     // Configuration
+//     {
+//       title: 'Expense Categories',
+//       route: ROUTES.FINANCE.EXPENSE_CATEGORIES,
+//       icon: 'mdi-folder-outline',
+//       permission: 'expense_categories_manage'
+//     },
+//     {
+//       title: 'Expense Types',
+//       route: ROUTES.FINANCE.EXPENSE_TYPES,
+//       icon: 'mdi-tag-outline',
+//       permission: 'expense_types_manage'
+//     },
+//   ],
+// },
+
+
       {
         title: 'Remittances',
         icon: 'mdi-bank-transfer',
@@ -205,6 +294,8 @@ export const useNavStore = defineStore('nav', {
         permissions: ['remittances_view', 'remittances_manage'],
         children: [
           { title: 'Remittances', route: ROUTES.REMITTANCES.INDEX, icon: 'mdi-bank-transfer-outline', permission: 'remittances_view' },
+          { title: 'Agent Payments', route: ROUTES.REMITTANCES.AGENT_PAYMENTS, icon: 'mdi-cash-multiple', permission: 'agent_payments_view' },
+          { title: 'Rider Payments', route: ROUTES.REMITTANCES.RIDER_PAYMENTS, icon: 'mdi-motorbike', permission: 'rider_payments_view' },
         ],    
       },
 
@@ -319,6 +410,13 @@ export const useNavStore = defineStore('nav', {
           { title: 'Templates', route: ROUTES.SETTINGS.TEMPLATES, icon: 'mdi-file-outline', permission: 'templates_view' },
           { title: 'Call Settings', route: ROUTES.SETTINGS.CALL_SETTINGS, icon: 'mdi-phone-outline', permission: 'call_settings_manage' },
           { title: 'System Statuses', route: ROUTES.SETTINGS.STATUS, icon: 'mdi-server', permission: 'system_status_view' },
+
+
+          // expense settings
+
+          { title: 'Expense Categories', route: ROUTES.SETTINGS.EXPENSE_CATEGORIES, icon: 'mdi-folder-outline', permission: 'expense_categories_manage' },
+          { title: 'Expense Types', route: ROUTES.SETTINGS.EXPENSE_TYPES, icon: 'mdi-tag-outline', permission: 'expense_types_manage' },
+          
         ],
       },
 

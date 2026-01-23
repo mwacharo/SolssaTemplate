@@ -44,4 +44,10 @@ class SellerExpense extends Model
     {
         return $this->belongsTo(Remittance::class);
     }
+
+
+    public function expenseType()
+    {
+        return $this->belongsTo(ExpenseType::class);
+    }
 }
