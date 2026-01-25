@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
 {
     /** @use HasFactory<\Database\Factories\ServiceFactory> */
-    use HasFactory;
+    use HasFactory,
+        SoftDeletes;
 
 
-     protected $fillable = ['service_name', 'description', 'is_active'];
+    protected $fillable = ['service_name', 'description', 'is_active'];
 
     public function conditions()
     {

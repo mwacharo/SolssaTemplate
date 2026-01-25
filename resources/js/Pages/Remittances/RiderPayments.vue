@@ -26,7 +26,7 @@
 
                 <v-col cols="12" md="4">
                     <v-autocomplete
-                        v-model="orderStore.orderFilterRider"
+                        v-model="filters.rider"
                         :items="orderStore.riderOptions"
                         item-title="name"
                         item-value="id"
@@ -46,7 +46,7 @@
                         :disabled="!canGenerateInvoice"
                         size="large"
                     >
-                        Generate Call Agent Invoice
+                        Generate Invoice
                     </v-btn>
                 </v-col>
             </v-row>
@@ -125,9 +125,9 @@
                         type="info"
                         variant="tonal"
                         class="mb-4"
-                        v-if="selectedAgent"
+                        v-if="selectedRider"
                     >
-                        <strong>Agent:</strong> {{ selectedAgent.name }} <br />
+                        <strong>Agent:</strong> {{ selectedRider.name }} <br />
                         <strong>Period:</strong>
                         {{ formatDate(filters.from) }} to
                         {{ formatDate(filters.to) }}
@@ -325,7 +325,7 @@ const snackbarColor = ref("success");
 const filters = ref({
     from: "",
     to: "",
-    agent: null,
+    rider: null,
 });
 
 const rate = ref(100); // Default commission rate
@@ -333,11 +333,11 @@ const filteredOrders = ref([]);
 
 // Computed
 const canGenerateInvoice = computed(() => {
-    return filters.value.from && filters.value.to && filters.value.agent;
+    return filters.value.from && filters.value.to && filters.value.rider;
 });
 
-const selectedAgent = computed(() => {
-    return orderStore.agentOptions.find((a) => a.id === filters.value.agent);
+const selectedRider = computed(() => {
+    return orderStore.riderOptions.find((r) => r.id === filters.value.rider);
 });
 
 const totalCommission = computed(() => {
@@ -357,7 +357,7 @@ const openDialog = async () => {
     try {
         // Fetch orders for the selected agent and date range
         const response = await fetch(
-            `/api/v1/orders/agent/${filters.value.agent}?from=${filters.value.from}&to=${filters.value.to}`,
+            `/api/v1/orders/rider/${filters.value.rider}?from=${filters.value.from}&to=${filters.value.to}`,
         );
         const data = await response.json();
 
@@ -387,7 +387,7 @@ const generateInvoice = async () => {
         await router.post(
             "/call-agent-invoices",
             {
-                agent_id: filters.value.agent,
+                rider_id: filters.value.rider,
                 from: filters.value.from,
                 to: filters.value.to,
                 rate: rate.value,
@@ -399,7 +399,7 @@ const generateInvoice = async () => {
                     showSnackbar("Invoice generated successfully", "success");
                     closeDialog();
                     // Reset filters
-                    filters.value = { from: "", to: "", agent: null };
+                    filters.value = { from: "", to: "", rider: null };
                 },
                 onError: (errors) => {
                     showSnackbar("Error generating invoice", "error");
@@ -418,7 +418,8 @@ const viewInvoice = (invoice) => {
 
 const downloadInvoice = async (invoice) => {
     window.open(`/call-agent-invoices/${invoice.id}/download`, "_blank");
-};viewInvoice
+};
+viewInvoice;
 
 const showSnackbar = (text, color = "success") => {
     snackbarText.value = text;

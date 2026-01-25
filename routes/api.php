@@ -145,6 +145,11 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/orders/agent/{agentId}', [OrderController::class, 'getByAgent']);
     Route::get('/orders/rider/{riderId}', [OrderController::class, 'getByRider']);
+    // get orders by courier 
+    Route::get('/orders/courier/{courierId}', [OrderController::class, 'getByCourier']);
+
+    // get orders by vendor
+    Route::get('/orders/vendor/{vendorId}', [OrderController::class, 'getByVendor']);
 
 
     // shopifty 
@@ -503,6 +508,15 @@ Route::prefix('v1')->group(function () {
     Route::get('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'show']);
     Route::put('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'update']);
     Route::delete('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'destroy']);
+
+
+
+    // service 
+    Route::get('/services', [\App\Http\Controllers\Api\ServiceController::class, 'index']);
+    Route::post('/services', [\App\Http\Controllers\Api\ServiceController::class, 'store']);
+    Route::get('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'show']);
+    Route::put('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'update']);
+    Route::delete('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'destroy']);
 
 
     // remittances

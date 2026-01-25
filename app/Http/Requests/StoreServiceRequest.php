@@ -11,7 +11,7 @@ class StoreServiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -19,10 +19,13 @@ class StoreServiceRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+
     public function rules(): array
     {
         return [
-            //
+            'service_name' => ['required', 'string', 'max:255'],
+            'description'  => ['nullable', 'string'],
+            'is_active'    => ['sometimes', 'boolean'],
         ];
     }
 }

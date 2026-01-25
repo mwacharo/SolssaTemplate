@@ -114,6 +114,18 @@ export const ROUTES = {
     // expenses settings
     EXPENSE_CATEGORIES: 'settings.expense-categories',
     EXPENSE_TYPES: 'settings.expense-types',
+
+
+
+      // Pricing (Admin Only)
+
+
+      PRICING_SERVICES: 'settings.pricing-services',
+PRICING_CONDITIONS: 'settings.pricing-conditions',
+PRICING_VENDOR_ASSIGNMENTS: 'settings.vendor-assignments',
+PRICING_VENDOR_OVERRIDES: 'settings.vendor-overrides',
+
+
     
   },
   INTEGRATIONS: {
@@ -416,6 +428,13 @@ export const useNavStore = defineStore('nav', {
 
           { title: 'Expense Categories', route: ROUTES.SETTINGS.EXPENSE_CATEGORIES, icon: 'mdi-folder-outline', permission: 'expense_categories_manage' },
           { title: 'Expense Types', route: ROUTES.SETTINGS.EXPENSE_TYPES, icon: 'mdi-tag-outline', permission: 'expense_types_manage' },
+
+
+          // Pricing (Admin Only)
+          { title: 'Pricing Services', route: ROUTES.SETTINGS.PRICING_SERVICES, icon: 'mdi-currency-usd', permission: 'pricing_view' },
+          { title: 'Pricing Conditions', route: ROUTES.SETTINGS.PRICING_CONDITIONS, icon: 'mdi-scale-balance', permission: 'pricing_view' },
+          { title: 'Vendor Assignments', route: ROUTES.SETTINGS.PRICING_VENDOR_ASSIGNMENTS, icon: 'mdi-account-multiple-check', permission: 'pricing_manage' },
+          { title: 'Vendor Overrides', route: ROUTES.SETTINGS.PRICING_VENDOR_OVERRIDES, icon: 'mdi-account-cash', permission: 'pricing_manage' }, 
           
         ],
       },
