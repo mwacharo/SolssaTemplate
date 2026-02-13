@@ -20,30 +20,30 @@ class DatabaseSeeder extends Seeder
     {
         // Call the roles and permissions seeder
         $this->call([
-            // RolesAndPermissionsSeeder::class,
-            // CountrySeeder::class,
-            // VendorSeeder::class,
-            // GoogleSheetSeeder::class,
-            // TemplateSeeder::class,
-            // ContactSeeder::class,
-            // MessageSeeder::class,
-            // ChannelCredentialSeeder::class,
-            //  RiderSeeder::class,
-            // AgentSeeder::class,
-            // WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
+            RolesAndPermissionsSeeder::class,
+            CountrySeeder::class,
+            VendorSeeder::class,
+            GoogleSheetSeeder::class,
+            TemplateSeeder::class,
+            ContactSeeder::class,
+            MessageSeeder::class,
+            ChannelCredentialSeeder::class,
+            RiderSeeder::class,
+            AgentSeeder::class,
+            WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
 
 
-            // CallCenterSettingSeeder::class,
-            // IvrOptionSeeder::class,
+            CallCenterSettingSeeder::class,
+            IvrOptionSeeder::class,
 
-            // StatusSeeder::class,
-            // CitySeeder::class,
-            // ZoneSeeder::class,
-            // CourierSeeder::class,
+            StatusSeeder::class,
+            CitySeeder::class,
+            ZoneSeeder::class,
+            CourierSeeder::class,
 
-            // EmailTemplateSeeder::class,
-            // EmailSeeder::class,
-            // StatusSeeder::class,
+            EmailTemplateSeeder::class,
+            EmailSeeder::class,
+            StatusSeeder::class,
             ConditionTypeSeeder::class,
 
         ]);
