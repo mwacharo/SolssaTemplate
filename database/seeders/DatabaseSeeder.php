@@ -42,7 +42,7 @@ class DatabaseSeeder extends Seeder
             CourierSeeder::class,
 
             EmailTemplateSeeder::class,
-            EmailSeeder::class,
+            // EmailSeeder::class,
             StatusSeeder::class,
             ConditionTypeSeeder::class,
 
