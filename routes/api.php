@@ -39,6 +39,14 @@ use App\Http\Controllers\Api\ShopifyOrderController;
 use App\Http\Controllers\Api\StatusController;
 use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
+
+use App\Http\Controllers\Api\ConditionTypeController;
+
+use App\Http\Controllers\Api\ServiceConditionController;
+
+use App\Http\Controllers\Api\VendorServicesController;
+use App\Http\Controllers\Api\ServiceRateController;
+
 use Illuminate\Support\Facades\Http;
 
 
@@ -445,6 +453,31 @@ Route::prefix('v1')->group(function () {
     Route::delete('/call-center-settings/{id}', [CallCenterSettingController::class, 'destroy']);
 
 
+    // conditiontypes 
+    Route::get('/condition-types', [ConditionTypeController::class, 'index']);
+    Route::post('/condition-types', [ConditionTypeController::class, 'store']);
+    Route::get('/condition-types/{id}', [ConditionTypeController::class, 'show']);
+    Route::put('/condition-types/{id}', [ConditionTypeController::class, 'update']);
+    Route::delete('/condition-types/{id}', [ConditionTypeController::class, 'destroy']);
+
+
+
+    // service conditions
+
+    Route::get('/service-conditions', [ServiceConditionController::class, 'index']);
+    Route::post('/service-conditions', [ServiceConditionController::class, 'store']);
+    Route::get('/service-conditions/{id}', [ServiceConditionController::class, 'show']);
+    Route::put('/service-conditions/{id}', [ServiceConditionController::class, 'update']);
+    Route::delete('/service-conditions/{id}', [ServiceConditionController::class, 'destroy']);
+
+
+    // assign vendor a service 
+
+    Route::post('/vendors/{vendorId}/services', [VendorServicesController::class, 'assignService']);
+    Route::get('/vendors/{vendorId}/services', [VendorServicesController::class, 'getServices']);
+    Route::delete('/vendors/{vendorId}/services/{vendorServiceId}', [VendorServicesController::class, 'removeService']);
+
+
 
 
     // email routes
@@ -525,6 +558,16 @@ Route::prefix('v1')->group(function () {
     Route::get('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'show']);
     Route::put('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'update']);
     Route::delete('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'destroy']);
+
+
+
+    // seriverates 
+
+    Route::get('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'index']);
+    Route::post('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
+    Route::get('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'show']);
+    Route::put('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'update']);
+    Route::delete('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'destroy']);
 
 
     // mopesa payments 

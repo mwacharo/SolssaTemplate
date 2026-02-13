@@ -16,9 +16,11 @@
                 $table->string('service_name'); // e.g., Inbound, Outbound, Storage
                 $table->text('description')->nullable();
                 $table->boolean('is_active')->default(true);
+                // $table->boolean('inbound')->default(false); // true for inbound, false for outbound
                 $table->timestamps();
                 $table->softDeletes();
-            });    }
+            });
+        }
 
         /**
          * Reverse the migrations.

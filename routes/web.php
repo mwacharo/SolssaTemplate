@@ -227,9 +227,10 @@ Route::middleware([
 
         // pricing settings routes
         Route::get('/pricing-services', fn() => Inertia::render('Settings/Pricing/Services'))->name('pricing-services');
+        Route::get('/pricing-conditions-types', fn() => Inertia::render('Settings/Pricing/ConditionTypes'))->name('pricing-conditions-types');
         Route::get('/pricing-conditions', fn() => Inertia::render('Settings/Pricing/Conditions'))->name('pricing-conditions');
         Route::get('/vendor-assignments', fn() => Inertia::render('Settings/Pricing/VendorAssignments'))->name('vendor-assignments');
-        Route::get('/vendor-overrides', fn() => Inertia::render('Settings/Pricing/VendorOverrides'))->name('vendor-overrides');
+        Route::get('/vendor-overrides', fn() => Inertia::render('Settings/Pricing/VendorOverriders'))->name('vendor-overrides');
 
         // add call settings
 

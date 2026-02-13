@@ -1,66 +1,83 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Api;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreServiceRateRequest;
 use App\Http\Requests\UpdateServiceRateRequest;
 use App\Models\ServiceRate;
+use Illuminate\Http\JsonResponse;
 
 class ServiceRateController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of overrides.
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        return response()->json(
+            ServiceRate::with([
+                'vendorService',
+                'serviceCondition'
+            ])->latest()->paginate(20)
+        );
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Store or Update Override (UPSERT)
      */
-    public function create()
+    public function store(StoreServiceRateRequest $request): JsonResponse
     {
-        //
+        $data = $request->validated();
+
+        $rate = ServiceRate::updateOrCreate(
+            [
+                'vendor_service_id' => $data['vendor_service_id'],
+                'service_condition_id' => $data['service_condition_id'],
+            ],
+            [
+                'custom_rate' => $data['custom_rate'],
+                'rate_type' => $data['rate_type'],
+            ]
+        );
+
+        return response()->json([
+            'message' => 'Override saved successfully',
+            'data' => $rate->load([
+                'vendorService',
+                'serviceCondition'
+            ])
+        ], 201);
+    }
+
+   
+    /**
+     * Update override explicitly
+     */
+    public function update(
+        UpdateServiceRateRequest $request,
+        ServiceRate $serviceRate
+    ): JsonResponse {
+
+        $serviceRate->update($request->validated());
+
+        return response()->json([
+            'message' => 'Override updated successfully',
+            'data' => $serviceRate->fresh()->load([
+                'vendorService',
+                'serviceCondition'
+            ])
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Delete override (Revert to default service pricing)
      */
-    public function store(StoreServiceRateRequest $request)
+    public function destroy(ServiceRate $serviceRate): JsonResponse
     {
-        //
-    }
+        $serviceRate->delete();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ServiceRate $serviceRate)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ServiceRate $serviceRate)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateServiceRateRequest $request, ServiceRate $serviceRate)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ServiceRate $serviceRate)
-    {
-        //
+        return response()->json([
+            'message' => 'Override removed. Default service pricing will apply.'
+        ]);
     }
 }

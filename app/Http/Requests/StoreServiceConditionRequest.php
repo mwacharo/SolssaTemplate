@@ -11,7 +11,7 @@ class StoreServiceConditionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,19 @@ class StoreServiceConditionRequest extends FormRequest
      */
     public function rules(): array
     {
+
+
         return [
-            //
+            'service_id' => ['required', 'integer', 'exists:services,id'],
+            'condition_type_id' => ['required', 'integer', 'exists:condition_types,id'],
+            'min_value' => ['nullable', 'numeric'],
+            'max_value' => ['nullable', 'numeric', 'gte:min_value'],
+            'operator' => ['nullable', 'string', 'in:>=,<=,>,<,='],
+            'rate' => ['nullable', 'numeric', 'min:0'],
+            'rate_type' => ['required', 'in:fixed,percent'],
+            'value' => ['nullable', 'numeric'],
+            'unit' => ['nullable', 'string', 'max:50'],
+            'priority' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

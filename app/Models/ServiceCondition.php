@@ -11,7 +11,18 @@ class ServiceCondition extends Model
     use HasFactory;
 
 
-      protected $fillable = ['service_id', 'condition_type', 'min_value', 'max_value', 'rate', 'unit'];
+    protected $fillable = [
+        'service_id',
+        'condition_type_id',
+        'min_value',
+        'max_value',
+        'operator',
+        'rate',
+        'rate_type',
+        'value',
+        'unit',
+        'priority',
+    ];
 
     public function service()
     {
@@ -21,5 +32,10 @@ class ServiceCondition extends Model
     public function serviceRates()
     {
         return $this->hasMany(ServiceRate::class);
+    }
+
+    public function conditionType()
+    {
+        return $this->belongsTo(ConditionType::class);
     }
 }

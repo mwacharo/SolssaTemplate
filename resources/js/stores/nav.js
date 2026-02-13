@@ -121,10 +121,14 @@ export const ROUTES = {
 
 
       PRICING_SERVICES: 'settings.pricing-services',
-PRICING_CONDITIONS: 'settings.pricing-conditions',
-PRICING_VENDOR_ASSIGNMENTS: 'settings.vendor-assignments',
-PRICING_VENDOR_OVERRIDES: 'settings.vendor-overrides',
 
+      //condition types management
+      PRICING_CONDITIONS_TYPES: 'settings.pricing-conditions-types',
+
+
+      PRICING_CONDITIONS: 'settings.pricing-conditions',
+      PRICING_VENDOR_ASSIGNMENTS: 'settings.vendor-assignments',
+      PRICING_VENDOR_OVERRIDES: 'settings.vendor-overrides',
 
     
   },
@@ -432,6 +436,7 @@ export const useNavStore = defineStore('nav', {
 
           // Pricing (Admin Only)
           { title: 'Pricing Services', route: ROUTES.SETTINGS.PRICING_SERVICES, icon: 'mdi-currency-usd', permission: 'pricing_view' },
+          { title: 'Condition Types', route: ROUTES.SETTINGS.PRICING_CONDITIONS_TYPES, icon: 'mdi-shape-plus', permission: 'pricing_manage' },
           { title: 'Pricing Conditions', route: ROUTES.SETTINGS.PRICING_CONDITIONS, icon: 'mdi-scale-balance', permission: 'pricing_view' },
           { title: 'Vendor Assignments', route: ROUTES.SETTINGS.PRICING_VENDOR_ASSIGNMENTS, icon: 'mdi-account-multiple-check', permission: 'pricing_manage' },
           { title: 'Vendor Overrides', route: ROUTES.SETTINGS.PRICING_VENDOR_OVERRIDES, icon: 'mdi-account-cash', permission: 'pricing_manage' }, 

@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
     {
         // Call the roles and permissions seeder
         $this->call([
-            RolesAndPermissionsSeeder::class,
+            // RolesAndPermissionsSeeder::class,
             // CountrySeeder::class,
             // VendorSeeder::class,
             // GoogleSheetSeeder::class,
@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
             //  RiderSeeder::class,
             // AgentSeeder::class,
             // WaybillSettingSeeder::class, // Fixed typo: was "aybillSettingSeeder"
-            
+
 
             // CallCenterSettingSeeder::class,
             // IvrOptionSeeder::class,
@@ -43,7 +43,9 @@ class DatabaseSeeder extends Seeder
 
             // EmailTemplateSeeder::class,
             // EmailSeeder::class,
-            StatusSeeder::class,
+            // StatusSeeder::class,
+            ConditionTypeSeeder::class,
+
         ]);
 
         // User::factory(1)->withPersonalTeam()->create();
@@ -56,7 +58,7 @@ class DatabaseSeeder extends Seeder
         // Create a user with a personal team
         // First, ensure we have a country to reference
         $country = Country::first();
-        
+
         User::factory()->withPersonalTeam()->create([
             'name' => 'Mwacharo',
             'email' => 'support@solssa.com',

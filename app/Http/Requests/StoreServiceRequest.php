@@ -26,6 +26,12 @@ class StoreServiceRequest extends FormRequest
             'service_name' => ['required', 'string', 'max:255'],
             'description'  => ['nullable', 'string'],
             'is_active'    => ['sometimes', 'boolean'],
+            'inbound'      => ['sometimes', 'boolean'],
+
+            'value' => ['nullable', 'numeric'],
+            'unit' => ['nullable', 'string', 'max:50'],
+            'priority' => ['sometimes', 'integer', 'min:0'],
+
         ];
     }
 }

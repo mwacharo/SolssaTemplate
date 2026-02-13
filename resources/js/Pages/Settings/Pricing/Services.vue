@@ -28,14 +28,19 @@
                             <th>Service Name</th>
                             <th>Description</th>
                             <th>Status</th>
+                            <!-- inbound -->
+                            <th>Inbound</th>
                             <th>Created At</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="service in services" :key="service?.id || Math.random()">
+                        <tr
+                            v-for="service in services"
+                            :key="service?.id || Math.random()"
+                        >
                             <td class="service-name">
-                                {{ service?.service_name || 'N/A' }}
+                                {{ service?.service_name || "N/A" }}
                             </td>
                             <td class="description">
                                 {{ service?.description || "No description" }}
@@ -53,6 +58,23 @@
                                         service?.is_active
                                             ? "Active"
                                             : "Inactive"
+                                    }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span
+                                    :class="[
+                                        'status-badge',
+                                        service?.inbound
+                                            ? 'active'
+                                            : 'inactive',
+                                    ]"
+                                >
+                                    {{
+                                        service?.inbound
+                                            ? "Inbound"
+                                            : "Outbound"
                                     }}
                                 </span>
                             </td>
@@ -155,6 +177,19 @@
                                 <span>Active Service</span>
                             </label>
                         </div>
+                        <input type="text" />
+
+                        <!--  inbound-->
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input
+                                    v-model="formData.inbound"
+                                    type="checkbox"
+                                    class="checkbox"
+                                />
+                                <span>Inbound Service</span>
+                            </label>
+                        </div>
 
                         <div class="modal-footer">
                             <button
@@ -246,7 +281,7 @@ const currentServiceId = ref(null);
 const serviceToDelete = ref(null);
 
 const formData = ref({
-    service_name: "",
+    servServiceice_name: "",
     description: "",
     is_active: true,
 });
@@ -262,6 +297,7 @@ const resetForm = () => {
         service_name: "",
         description: "",
         is_active: true,
+        inbound: false,
     };
     formErrors.value = {};
 };
@@ -275,14 +311,15 @@ const openCreateModal = () => {
 
 const openEditModal = (service) => {
     if (!service || !service.id) {
-        console.error('Invalid service object');
+        console.error("Invalid service object");
         return;
     }
-    
+
     formData.value = {
         service_name: service.service_name,
         description: service.description || "",
         is_active: service.is_active,
+        inbound: service.inbound,
     };
     isEditMode.value = true;
     currentServiceId.value = service.id;
@@ -303,7 +340,8 @@ const validateForm = () => {
     }
 
     if (formData.value.service_name.length > 255) {
-        formErrors.value.service_name = "Service name must be less than 255 characters";
+        formErrors.value.service_name =
+            "Service name must be less than 255 characters";
         return false;
     }
 
@@ -332,10 +370,10 @@ const handleSubmit = async () => {
 
 const confirmDelete = (service) => {
     if (!service || !service.id) {
-        console.error('Invalid service object');
+        console.error("Invalid service object");
         return;
     }
-    
+
     serviceToDelete.value = service;
     showDeleteModal.value = true;
 };
@@ -354,7 +392,7 @@ const handleDelete = async () => {
 
 const toggleStatus = async (service) => {
     if (!service || !service.id) {
-        console.error('Invalid service object');
+        console.error("Invalid service object");
         return;
     }
 
@@ -694,6 +732,10 @@ textarea.form-control {
     width: 1.25rem;
     height: 1.25rem;
     cursor: pointer;
+    border: 2px solid #555; /* makes it visible */
+    border-radius: 4px; /* optional - smoother look */
+    accent-color: #2563eb; /* modern blue check color */
+    background-color: #fff; /* ensures contrast */
 }
 
 .error {

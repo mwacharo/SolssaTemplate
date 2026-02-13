@@ -11,7 +11,7 @@ class UpdateServiceConditionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,16 @@ class UpdateServiceConditionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'service_id' => ['required', 'integer', 'exists:services,id'],
+            'condition_type_id' => ['required', 'integer', 'exists:condition_types,id'],
+            'min_value' => ['nullable', 'numeric', 'lte:max_value'],
+            'max_value' => ['nullable', 'numeric', 'gte:min_value'],
+            'operator' => ['nullable', 'string', 'in:=,>,<,>=,<=,!='],
+            'rate' => ['nullable', 'numeric'],
+            'rate_type' => ['nullable', 'string', 'in:fixed,percentage'],
+            'value' => ['nullable', 'numeric'],
+            'unit' => ['nullable', 'string', 'max:50'],
+            'priority' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

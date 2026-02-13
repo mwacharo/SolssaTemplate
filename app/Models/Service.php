@@ -13,7 +13,7 @@ class Service extends Model
         SoftDeletes;
 
 
-    protected $fillable = ['service_name', 'description', 'is_active'];
+    protected $fillable = ['service_name', 'description', 'is_active' ,'inbound'];
 
     public function conditions()
     {

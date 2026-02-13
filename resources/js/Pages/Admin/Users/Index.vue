@@ -168,6 +168,22 @@
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex gap-1">
+                            <!-- assign vendor services and service rates -->
+
+                            <v-tooltip text="View Services" location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn
+                                        v-bind="props"
+                                        icon="mdi-eye"
+                                        size="small"
+                                        variant="text"
+                                        color="success"
+                                        @click="store.openModal(item.id)"
+                                        :loading="updatingUser === item.id"
+                                        class="ma-1"
+                                    ></v-btn>
+                                </template>
+                            </v-tooltip>
                             <v-tooltip text="Manage Roles" location="top">
                                 <template v-slot:activator="{ props }">
                                     <v-btn
@@ -210,7 +226,7 @@
                                         size="small"
                                         variant="text"
                                         color="success"
-                                        @click="openServicesDialog(item)"
+                                        @click="store.openModal(vendor.id)"
                                         :loading="updatingUser === item.id"
                                         class="ma-1"
                                     ></v-btn>
@@ -246,6 +262,8 @@
                                     ></v-btn>
                                 </template>
                             </v-tooltip>
+
+                            <!-- -->
                         </div>
                     </template>
 
@@ -340,20 +358,6 @@
                             color="primary"
                             bg-color="white"
                         ></v-text-field>
-
-                        <!-- <v-text-field
-          v-model="userFormData.password"
-          label="Password"
-          type="password"
-          :rules="isEditing ? [] : [rules.required, rules.minPassword]"
-          :loading="formLoading"
-          variant="outlined"
-          class="mb-4"
-          :hint="isEditing ? 'Leave blank to keep current password' : ''"
-          persistent-hint
-          color="primary"
-          bg-color="white"
-        ></v-text-field> -->
 
                         <v-autocomplete
                             v-model="userFormData.country_id"
@@ -560,7 +564,7 @@
                                 <v-checkbox
                                     :model-value="
                                         selectedUserPermissions.includes(
-                                            permission.key
+                                            permission.key,
                                         )
                                     "
                                     @update:model-value="
@@ -573,7 +577,7 @@
                                     "
                                     :disabled="
                                         roleBasedPermissions.includes(
-                                            permission.key
+                                            permission.key,
                                         )
                                     "
                                     hide-details
@@ -585,7 +589,7 @@
                                 <v-chip
                                     v-if="
                                         roleBasedPermissions.includes(
-                                            permission.key
+                                            permission.key,
                                         )
                                     "
                                     size="x-small"
@@ -832,16 +836,28 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <!-- import vendorservices -->
+        <VendorServices
+            ref="vendorServicesRef"
+            :vendor-id="selectedVendorId"
+            :open="isModalOpen"
+            :services="availableServices"
+            @close="closeModal"
+        />
     </AppLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
+
+import VendorServices from "@/Pages/Settings/Pricing/VendorServices.vue";
+
 import { notify } from "@/utils/toast";
 import axios from "axios";
 import { debounce } from "lodash";
 import { useCountriesStore } from "@/stores/countries";
+import { useVendorServicesStore } from "@/stores/vendorServices";
 
 // Configure Axios for Laravel Sanctum
 axios.defaults.withCredentials = true;
@@ -849,6 +865,15 @@ axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 axios.defaults.headers.common["Accept"] = "application/json";
 
 // Reactive data
+
+const vendorServicesRef = ref(null);
+
+const selectedVendorId = ref(null);
+const isModalOpen = ref(false);
+// const availableServices = ref([]);
+
+const store = useVendorServicesStore();
+
 const users = ref([]);
 const availableRoles = ref([]);
 const availablePermissions = ref([]);
@@ -1017,7 +1042,7 @@ const hasActiveFilters = computed(() => {
 const filteredAvailableRoles = computed(() => {
     if (!roleSearch.value) return availableRoles.value;
     return availableRoles.value.filter((role) =>
-        role.name.toLowerCase().includes(roleSearch.value.toLowerCase())
+        role.name.toLowerCase().includes(roleSearch.value.toLowerCase()),
     );
 });
 
@@ -1030,7 +1055,7 @@ const filteredAvailablePermissions = computed(() => {
                 .includes(permissionSearch.value.toLowerCase()) ||
             permission.description
                 .toLowerCase()
-                .includes(permissionSearch.value.toLowerCase())
+                .includes(permissionSearch.value.toLowerCase()),
     );
 });
 
@@ -1190,7 +1215,7 @@ async function fetchRoles() {
 async function fetchUserPermissions(userId) {
     try {
         const response = await axios.get(
-            `/api/v1/admin/users/${userId}/permissions`
+            `/api/v1/admin/users/${userId}/permissions`,
         );
         return response.data.permissions || [];
     } catch (error) {
@@ -1240,7 +1265,7 @@ async function removeRole(userId, roleName) {
         const userIndex = users.value.findIndex((u) => u.id === userId);
         if (userIndex !== -1) {
             users.value[userIndex].roles = users.value[userIndex].roles.filter(
-                (r) => r !== roleName
+                (r) => r !== roleName,
             );
         }
 
@@ -1300,7 +1325,7 @@ async function removePermission(userId, permission) {
 
         notify.success(
             `Permission "${permission}" removed successfully`,
-            "success"
+            "success",
         );
     } catch (error) {
         console.error("Error removing permission:", error);
@@ -1316,7 +1341,7 @@ async function createUser() {
     try {
         const response = await axios.post(
             "/api/v1/admin/users",
-            userFormData.value
+            userFormData.value,
         );
 
         const newUser = response.data.data || response.data;
@@ -1343,12 +1368,12 @@ async function updateUser() {
 
         const response = await axios.put(
             `/api/v1/admin/users/${editingUserId.value}`,
-            updateData
+            updateData,
         );
 
         const updatedUser = response.data.data || response.data;
         const index = users.value.findIndex(
-            (u) => u.id === editingUserId.value
+            (u) => u.id === editingUserId.value,
         );
         if (index !== -1) {
             users.value[index] = updatedUser;
@@ -1399,7 +1424,7 @@ async function fetchUserServices(userId) {
     serviceLoading.value = true;
     try {
         const response = await axios.get(
-            `/api/v1/admin/users/${userId}/services`
+            `/api/v1/admin/users/${userId}/services`,
         );
         userServices.value = response.data.data || response.data || [];
     } catch (error) {
@@ -1418,7 +1443,7 @@ async function assignService() {
     try {
         const response = await axios.post(
             `/api/v1/admin/users/${selectedUser.value.id}/assign-service`,
-            serviceFormData.value
+            serviceFormData.value,
         );
 
         const newService = response.data.data || response.data;
@@ -1441,11 +1466,11 @@ async function removeService(service) {
             `/api/v1/admin/users/${selectedUser.value.id}/remove-service`,
             {
                 service_id: service.id,
-            }
+            },
         );
 
         userServices.value = userServices.value.filter(
-            (s) => s.id !== service.id
+            (s) => s.id !== service.id,
         );
         notify("Service removed successfully", "success");
     } catch (error) {
@@ -1566,7 +1591,7 @@ async function toggleRole(roleName, isAssigned) {
         await assignRole(selectedUser.value.id, roleName);
     } else {
         selectedUserRoles.value = selectedUserRoles.value.filter(
-            (r) => r !== roleName
+            (r) => r !== roleName,
         );
         await removeRole(selectedUser.value.id, roleName);
     }
@@ -1599,23 +1624,17 @@ async function togglePermission(permission, isAssigned) {
         await assignPermission(selectedUser.value.id, permission);
     } else {
         selectedUserPermissions.value = selectedUserPermissions.value.filter(
-            (p) => p !== permission
+            (p) => p !== permission,
         );
         await removePermission(selectedUser.value.id, permission);
     }
 }
 
-async function openServicesDialog(user) {
-    selectedUser.value = user;
-    servicesDialog.value = true;
+// async function openServicesDialog(user) {
+//     vendorServicesRef.openDialog(user);
 
-    await Promise.all([
-        fetchUserServices(user.id),
-        availableServices.value.length === 0
-            ? fetchAvailableServices()
-            : Promise.resolve(),
-    ]);
-}
+//     console.log("Opening Vendor Assignments dialog for user:", user);
+// }
 
 function closeServicesDialog() {
     servicesDialog.value = false;
@@ -1651,6 +1670,7 @@ function confirmDelete(user) {
 // Initialize component
 onMounted(async () => {
     await Promise.all([fetchUsers(), fetchRoles(), loadCountries()]);
+    // loadServices();
 });
 </script>
 

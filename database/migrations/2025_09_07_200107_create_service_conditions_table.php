@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_conditions', function (Blueprint $table) {
+        Schema::create('php artisan make:migration add_operator_rate_type_value_priority_to_service_conditions_table --table=service_conditions
+', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
-            $table->string('condition_type'); // e.g., weight, distance, region, flat_rate
+            // $table->string('condition_type'); // e.g., weight, distance, region, flat_rate
+            $table->foreignId('condition_type_id')->constrained()->cascadeOnDelete();
             $table->decimal('min_value', 12, 2)->nullable();
             $table->decimal('max_value', 12, 2)->nullable();
             $table->decimal('rate', 12, 2)->default(0);

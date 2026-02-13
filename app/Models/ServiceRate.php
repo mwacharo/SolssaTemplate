@@ -13,7 +13,14 @@ class ServiceRate extends Model
     use SoftDeletes;
 
 
-    protected $fillable = ['vendor_service_id', 'service_condition_id', 'custom_rate'];
+    protected $fillable = [
+        'vendor_service_id',
+        'service_condition_id',
+        'custom_rate',
+
+        'rate_type',
+
+    ];
 
     public function vendorService()
     {

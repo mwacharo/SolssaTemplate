@@ -11,7 +11,7 @@ class UpdateServiceRateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,10 @@ class UpdateServiceRateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'vendor_service_id'    => ['sometimes', 'integer', 'exists:vendor_services,id'],
+            'service_condition_id' => ['sometimes', 'integer', 'exists:service_conditions,id'],
+            'custom_rate'          => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'rate_type'            => ['sometimes', 'string', 'in:fixed,percentage'],
         ];
     }
 }
