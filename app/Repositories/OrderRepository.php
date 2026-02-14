@@ -206,6 +206,8 @@ class OrderRepository implements OrderRepositoryInterface
                 $orderItems[] = [
                     'order_id'    => $order->id,
                     'product_id'  => $product->id,
+                    'sku'         => $product->sku,  // <--- add this
+
                     'quantity'    => $p['quantity'],
                     'unit_price'  => $p['price'],
                     'total_price' => $p['quantity'] * $p['price'],
