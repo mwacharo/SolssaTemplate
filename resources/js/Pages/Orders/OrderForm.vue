@@ -706,13 +706,11 @@
                             <!-- Total -->
                             <v-col cols="12" md="4">
                                 <v-text-field
-                                    v-model="orderEdit.user_total_override"
-                                    :value="displayTotal()"
+                                    v-model="totalInput"
                                     label="Total"
                                     type="number"
                                     variant="outlined"
                                     density="comfortable"
-                                    @input="overrideTotal($event)"
                                     hint="You can override manually if needed"
                                 />
                             </v-col>
@@ -737,8 +735,8 @@
                                     :model-value="
                                         (
                                             parseFloat(
-                                                orderEdit.user_total_override ||
-                                                    orderEdit.total_price ||
+                                                orderEdit.user_total_override ??
+                                                    orderEdit.total_price ??
                                                     0,
                                             ) +
                                             parseFloat(
@@ -887,6 +885,22 @@ const shouldShowRecallDate = computed(() => {
 
     // Show if any condition is true
     return isCurrentlyFollowUp || hasRecallDate || isFollowUpById;
+});
+
+// Computed property that handles both display and manual override
+const totalInput = computed({
+    get() {
+        return Number(
+            orderEdit.value.user_total_override ??
+                orderEdit.value.total_price ??
+                0,
+        ).toFixed(2);
+    },
+    set(value) {
+        orderEdit.value.user_total_override = Number(value);
+        orderEdit.value.total_price = Number(value).toFixed(2);
+        orderEdit.value.sub_total = Number(value).toFixed(2);
+    },
 });
 // Form data
 const orderEdit = ref({
