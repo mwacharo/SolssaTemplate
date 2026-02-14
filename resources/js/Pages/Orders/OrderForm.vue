@@ -703,23 +703,17 @@
 
                     <div class="mt-4">
                         <v-row>
-                            <!-- Total (supports user override) -->
+                            <!-- Total -->
                             <v-col cols="12" md="4">
                                 <v-text-field
                                     v-model="orderEdit.user_total_override"
-                                    value="total_price"
+                                    :value="displayTotal()"
                                     label="Total"
                                     type="number"
                                     variant="outlined"
                                     density="comfortable"
                                     @input="overrideTotal($event)"
-                                    :readonly="
-                                        orderEdit.is_imported &&
-                                        orderEdit.order_items.some(
-                                            (item) => item.unit_price === null,
-                                        )
-                                    "
-                                    hint="You can override manually if all prices are available"
+                                    hint="You can override manually if needed"
                                 />
                             </v-col>
 
@@ -742,7 +736,11 @@
                                 <v-text-field
                                     :model-value="
                                         (
-                                            parseFloat(calculateTotal()) +
+                                            parseFloat(
+                                                orderEdit.user_total_override ||
+                                                    orderEdit.total_price ||
+                                                    0,
+                                            ) +
                                             parseFloat(
                                                 orderEdit.shipping_charges || 0,
                                             )
@@ -1293,6 +1291,14 @@ const updateTotals = () => {
         orderEdit.value.sub_total = total;
     }
 };
+
+const displayTotal = () => {
+    return Number(
+        (orderEdit.value.user_total_override ?? orderEdit.value.total_price) ||
+            0,
+    ).toFixed(2);
+};
+
 // Also update your addOrderItem and removeOrderItem methods to call updateTotals:
 const addOrderItem = () => {
     orderEdit.value.order_items.push({
