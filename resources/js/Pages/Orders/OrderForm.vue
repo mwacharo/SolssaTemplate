@@ -655,7 +655,7 @@
                         </v-btn>
                     </div>
 
-                    <div class="mt-4">
+                    <!-- <div class="mt-4">
                         <v-row>
                             <v-col cols="12" md="4">
                                 <v-text-field
@@ -699,7 +699,56 @@
                                 />
                             </v-col>
                         </v-row>
-                    </div>
+                    </div> -->
+
+
+
+                    <div class="mt-4">
+  <v-row>
+    <!-- Total (supports user override) -->
+    <v-col cols="12" md="4">
+      <v-text-field
+        v-model="orderEdit.user_total_override"
+        label="Total"
+        type="number"
+        variant="outlined"
+        density="comfortable"
+        @input="overrideTotal($event)"
+        :readonly="orderEdit.is_imported && orderEdit.order_items.some(item => item.unit_price === null)"
+        hint="You can override manually if all prices are available"
+      />
+    </v-col>
+
+    <!-- Shipping Charges -->
+    <v-col cols="12" md="4">
+      <v-text-field
+        v-model="orderEdit.shipping_charges"
+        label="Shipping Charges"
+        type="number"
+        min="0"
+        step="0.01"
+        variant="outlined"
+        density="comfortable"
+        @update:model-value="updateTotals()"
+      />
+    </v-col>
+
+    <!-- Grand Total -->
+    <v-col cols="12" md="4">
+      <v-text-field
+        :model-value="(
+          parseFloat(calculateTotal()) +
+          parseFloat(orderEdit.shipping_charges || 0)
+        ).toFixed(2)"
+        label="Grand Total"
+        variant="outlined"
+        density="comfortable"
+        readonly
+      />
+    </v-col>
+  </v-row>
+</div>
+
                 </v-form>
             </v-card-text>
 
