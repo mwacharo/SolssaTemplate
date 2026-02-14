@@ -30,7 +30,7 @@ class StoreServiceConditionRequest extends FormRequest
             'max_value' => ['nullable', 'numeric', 'gte:min_value'],
             'operator' => ['nullable', 'string', 'in:>=,<=,>,<,='],
             'rate' => ['nullable', 'numeric', 'min:0'],
-            'rate_type' => ['required', 'in:fixed,percent'],
+            'rate_type' => ['required', 'in:fixed,percentage'],
             'value' => ['nullable', 'numeric'],
             'unit' => ['nullable', 'string', 'max:50'],
             'priority' => ['nullable', 'integer', 'min:0'],

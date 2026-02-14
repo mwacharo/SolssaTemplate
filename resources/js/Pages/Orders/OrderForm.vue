@@ -92,7 +92,6 @@
                                     prepend-inner-icon="mdi-note-text"
                                     variant="outlined"
                                     density="comfortable"
-                                    :rules="[rules.required]"
                                     clearable
                                 />
                             </v-col>
@@ -497,7 +496,8 @@
                                         :rules="[rules.required, rules.phone]"
                                         @click:prepend-inner="
                                             openNewCallDialog(
-                                                orderEdit.customer_address.phone
+                                                orderEdit.customer_address
+                                                    .phone,
                                             )
                                         "
                                     ></v-text-field>
@@ -689,7 +689,7 @@
                                         (
                                             parseFloat(calculateTotal()) +
                                             parseFloat(
-                                                orderEdit.shipping_charges || 0
+                                                orderEdit.shipping_charges || 0,
                                             )
                                         ).toFixed(2)
                                     "
@@ -798,7 +798,7 @@ const filteredStatusCategories = computed(() => {
     if (!orderEdit.value.status_id) return [];
 
     const selectedStatus = statusOptionsStore.value.find(
-        (status) => status.id === orderEdit.value.status_id
+        (status) => status.id === orderEdit.value.status_id,
     );
 
     return selectedStatus?.status_categories || [];
@@ -812,7 +812,7 @@ const selectedStatusCategory = computed(() => {
     if (!orderEdit.value.status_category_id) return null;
 
     return filteredStatusCategories.value.find(
-        (cat) => cat.id === orderEdit.value.status_category_id
+        (cat) => cat.id === orderEdit.value.status_category_id,
     );
 });
 
@@ -827,7 +827,7 @@ const shouldShowRecallDate = computed(() => {
 
     // Also check if status_category_id matches a "Follow Up" category
     const categoryFromId = filteredStatusCategories.value.find(
-        (cat) => cat.id === orderEdit.value.status_category_id
+        (cat) => cat.id === orderEdit.value.status_category_id,
     );
     const isFollowUpById =
         categoryFromId && categoryFromId.name === "Follow Up";
@@ -1170,7 +1170,7 @@ const saveOrder = async () => {
         notify.success(
             isCreateMode.value
                 ? "Order created successfully"
-                : "Order updated successfully"
+                : "Order updated successfully",
         );
 
         emit("order-saved");
@@ -1179,7 +1179,7 @@ const saveOrder = async () => {
         notify.error(
             isCreateMode.value
                 ? "Failed to create order"
-                : "Failed to update order"
+                : "Failed to update order",
         );
         console.error("Error saving order:", error);
     } finally {
@@ -1232,7 +1232,7 @@ watch(
             updateTotals();
         }
     },
-    { deep: true }
+    { deep: true },
 );
 
 // Watch for changes in the selected order from store (for editing)
@@ -1244,7 +1244,7 @@ watch(
             initializeEditForm(newOrder);
         }
     },
-    { immediate: true, deep: true }
+    { immediate: true, deep: true },
 );
 
 // Watch for create mode changes
@@ -1256,7 +1256,7 @@ watch(
             initializeCreateForm();
         }
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 // Also watch dialog state to handle initialization
@@ -1270,7 +1270,7 @@ watch(
                 initializeEditForm(selectedOrder.value);
             }
         }
-    }
+    },
 );
 
 watch(
@@ -1281,7 +1281,7 @@ watch(
         if (newStatusId !== oldStatusId && oldStatusId !== undefined) {
             // 4. Check if current status_category_id is still valid for new status
             const isValidCategory = filteredStatusCategories.value.some(
-                (cat) => cat.id === orderEdit.value.status_category_id
+                (cat) => cat.id === orderEdit.value.status_category_id,
             );
 
             // 5. Only clear if the category is no longer valid
@@ -1289,7 +1289,7 @@ watch(
                 orderEdit.value.status_category_id = null;
             }
         }
-    }
+    },
 );
 </script>
 

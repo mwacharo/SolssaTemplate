@@ -84,33 +84,41 @@
                             <thead>
                                 <tr class="bg-gray-100">
                                     <th class="p-2 text-left">Condition</th>
-                                    <th class="p-2 text-center">Base Rate</th>
+                                    <th class="p-2 text-center">Rate Type</th>
+                                    <th class="p-2 text-center">Value</th>
+
                                     <th class="p-2 text-center">Override</th>
-                                    <th class="p-2 text-center">Type</th>
                                     <th class="p-2 text-center">Action</th>
                                 </tr>
                             </thead>
 
                             <tbody>
+                                <!-- if service rates available show them else loop all the (conditions)service_conditions for user to overider and store the records in service rates    -->
                                 <tr
-                                    v-for="condition in vs.service.conditions"
+                                    v-for="condition in conditions"
                                     :key="condition.id"
                                     class="border-t hover:bg-gray-50"
                                 >
+                                    <!-- condition name -->
+
                                     <td class="p-2">
-                                        {{ condition.min_value }} -
-                                        {{ condition.max_value }}
-                                        {{ condition.unit }}
+                                        {{ condition.condition_type.name }}
                                     </td>
 
                                     <td class="p-2 text-center">
-                                        <span class="font-medium">
-                                            {{ condition.rate }}
-                                        </span>
                                         <span
                                             class="text-gray-500 text-xs ml-1"
                                         >
                                             ({{ condition.rate_type }})
+                                        </span>
+                                    </td>
+
+                                    <!-- value -->
+                                    <td class="p-2 text-center">
+                                        <span
+                                            class="text-gray-500 text-xs ml-1"
+                                        >
+                                            ({{ condition.value }})
                                         </span>
                                     </td>
 
@@ -132,32 +140,8 @@
                                                 )
                                             "
                                             class="border p-1 w-24 rounded text-center"
-                                            placeholder="Rate"
+                                            placeholder="override value"
                                         />
-                                    </td>
-
-                                    <td class="p-2">
-                                        <select
-                                            :value="
-                                                store.overrides[vs.id]?.[
-                                                    condition.id
-                                                ]?.rate_type
-                                            "
-                                            @change="
-                                                handleOverrideChange(
-                                                    vs.id,
-                                                    condition.id,
-                                                    'rate_type',
-                                                    $event.target.value,
-                                                )
-                                            "
-                                            class="border p-1 rounded"
-                                        >
-                                            <option value="fixed">Fixed</option>
-                                            <option value="percentage">
-                                                Percentage
-                                            </option>
-                                        </select>
                                     </td>
 
                                     <td class="p-2 text-center">
@@ -195,7 +179,6 @@ const store = useVendorServicesStore();
 const servicesStore = useServicesStore();
 const conditionStore = useConditionStore();
 const conditionTypeStore = useConditionTypeStore();
-// ^^^ Remove the `` backticks that were here
 
 const conditions = computed(() => conditionStore.conditions);
 const services = computed(() => servicesStore.services);
@@ -265,6 +248,14 @@ onMounted(async () => {
             "Condition types loaded:",
             conditionTypeStore.conditionTypes,
         );
+
+        // service_conditions
+        try {
+            await conditionStore.fetchConditions();
+            console.log("Conditions loaded:", conditionStore.conditions);
+        } catch (error) {
+            console.error("Error loading conditions:", error);
+        }
     } catch (error) {
         console.error("Error loading condition types:", error);
     }
