@@ -655,7 +655,6 @@
                         </v-btn>
                     </div>
 
-                    <!-- Replace your current total value section with this -->
                     <div class="mt-4">
                         <v-row>
                             <v-col cols="12" md="4">
@@ -865,6 +864,8 @@ const orderEdit = ref({
     recall_date: "",
     customer_notes: "",
     order_items: [],
+    user_total_override: null, // NEW: store manual user override
+
     customer_address: {
         full_name: "",
         phone: "",
@@ -1081,19 +1082,6 @@ const initializeCreateForm = () => {
     addressType.value = "customer";
 };
 
-// const addOrderItem = () => {
-//   orderEdit.value.order_items.push({
-//     sku: '',
-//     quantity: 1,
-//     unit_price: 0.00,
-//     editable: true
-//   })
-// }
-
-// const removeOrderItem = (index) => {
-//   orderEdit.value.order_items.splice(index, 1)
-// }
-
 // Methods
 const onVendorChange = (vendorId) => {
     if (vendorId) {
@@ -1187,27 +1175,68 @@ const saveOrder = async () => {
     }
 };
 
+// const calculateTotal = () => {
+//     if (
+//         !orderEdit.value.order_items ||
+//         orderEdit.value.order_items.length === 0
+//     ) {
+//         return "0.00";
+//     }
+
+//     const itemsTotal = orderEdit.value.order_items.reduce((sum, item) => {
+//         return sum + Number(item.quantity) * Number(item.unit_price);
+//     }, 0);
+
+//     return itemsTotal.toFixed(2);
+// };
+
+// const updateTotals = () => {
+//     // This ensures the total_price is always in sync with the calculated total
+//     orderEdit.value.total_price = calculateTotal();
+//     orderEdit.value.sub_total = calculateTotal();
+// };
+
 const calculateTotal = () => {
-    if (
-        !orderEdit.value.order_items ||
-        orderEdit.value.order_items.length === 0
-    ) {
+    const items = orderEdit.value.order_items;
+
+    if (!items || items.length === 0) {
         return "0.00";
     }
 
-    const itemsTotal = orderEdit.value.order_items.reduce((sum, item) => {
-        return sum + Number(item.quantity) * Number(item.unit_price);
+    // If any item has null unit_price, skip recalculation for imported orders
+    const hasNullPrice = items.some(
+        (item) => item.unit_price === null || item.unit_price === undefined,
+    );
+
+    if (hasNullPrice && !orderEdit.value.user_total_override) {
+        // Return the total_price from import
+        return Number(orderEdit.value.total_price || 0).toFixed(2);
+    }
+
+    // Otherwise, calculate total dynamically
+    const itemsTotal = items.reduce((sum, item) => {
+        const price = Number(item.unit_price) || 0;
+        const qty = Number(item.quantity) || 0;
+        return sum + price * qty;
     }, 0);
 
     return itemsTotal.toFixed(2);
 };
 
-const updateTotals = () => {
-    // This ensures the total_price is always in sync with the calculated total
-    orderEdit.value.total_price = calculateTotal();
-    orderEdit.value.sub_total = calculateTotal();
+// Call this when user manually edits total
+const overrideTotal = (newTotal) => {
+    orderEdit.value.user_total_override = Number(newTotal);
+    orderEdit.value.total_price = Number(newTotal).toFixed(2);
+    orderEdit.value.sub_total = Number(newTotal).toFixed(2);
 };
 
+const updateTotals = () => {
+    if (!orderEdit.value.user_total_override) {
+        const total = calculateTotal();
+        orderEdit.value.total_price = total;
+        orderEdit.value.sub_total = total;
+    }
+};
 // Also update your addOrderItem and removeOrderItem methods to call updateTotals:
 const addOrderItem = () => {
     orderEdit.value.order_items.push({
