@@ -376,6 +376,7 @@ class GoogleSheetController extends Controller
                 return response()->json(['message' => 'No recent changes'], 204);
             }
 
+
             $sheetMap = $this->fetchSheetOrders($spreadsheetId, $sheetName);
             Log::info("updateSheet: Sheet map fetched", ['sheet_map_count' => count($sheetMap)]);
 
@@ -497,7 +498,7 @@ class GoogleSheetController extends Controller
 
 
 
-        $response = $googleSheetService->readAllSheetData($sheetName);
+        // $response = $googleSheetService->readAllSheetData($sheetName);
 
         $rows = $googleSheetService->readAllSheetData($sheetName) ?? [];
 
@@ -510,7 +511,7 @@ class GoogleSheetController extends Controller
             $orderNo = $row[1] ?? null; // Column B = Order Id
             if ($orderNo) {
                 $map[$orderNo] = [
-                    'row' => $index + 2,
+                    'row' => $index + 1,
                     'db_updated_at' => $row[15] ?? null // Col P
                 ];
             } else {
@@ -576,7 +577,9 @@ class GoogleSheetController extends Controller
             optional($order->latest_status->status)->name ?? '',
             // safe delivery date: prefer delivery_date, fall back to latest status updated_at
             $formatDate($order->delivery_date) ?: $formatDate($order->latest_status?->updated_at),
-            trim(($order->customer_notes ?? '') . ' ' . optional(optional($order->latest_status)->status)->status_notes),
+
+            trim(($order->customer_notes ?? '') . ' ' . ($order->latest_status->status_notes ?? '')),
+
             optional($order->assignments->first())->user->name ?? '',
             // $order->updated_at->toDateTimeString(), // Col P
             // now()->toDateTimeString()               // Col Q
@@ -607,12 +610,21 @@ class GoogleSheetController extends Controller
         $googleSheetService = app(GoogleSheetService::class)
             ->setSpreadsheetId($spreadsheetId);
 
-        $service = $googleSheetService->sheetsService; // <-- we expose it (see below)
-
+        $service = $googleSheetService->sheetsService;
         $data = [];
 
         foreach ($changes as $item) {
-            $range = $sheetName . '!A' . $item['row'] . ':Q' . $item['row'];
+            // $range = $sheetName . '!A' . $item['row'] . ':Q' . $item['row'];
+
+
+            $rowValues = $this->mapOrderRow($item['order']);
+            $columnCount = count($rowValues);
+
+            $lastColumn = $this->getColumnLetter($columnCount);
+
+            $range = "{$sheetName}!A{$item['row']}:{$lastColumn}{$item['row']}";
+
+
             $values = [$this->mapOrderRow($item['order'])];
 
             $data[] = new \Google\Service\Sheets\ValueRange([
@@ -630,6 +642,23 @@ class GoogleSheetController extends Controller
     }
 
 
+    private function getColumnLetter($index)
+    {
+        $letter = '';
+        while ($index > 0) {
+            $temp = ($index - 1) % 26;
+            $letter = chr($temp + 65) . $letter;
+            $index = floor(($index - $temp - 1) / 26);
+        }
+        return $letter;
+    }
+
+
+
+
+
+
+
 
 
 
@@ -640,42 +669,46 @@ class GoogleSheetController extends Controller
         $changed = 0;
 
         foreach ($orders as $order) {
+
             $checked++;
+
             $sheet = $sheetMap[$order->order_no] ?? null;
 
             if (!$sheet) {
-                Log::debug("getChangedOrders: Order not present on sheet (skip)", ['order_no' => $order->order_no]);
-                continue; // not in sheet yet (optional append later)
+                continue;
             }
 
-            $sheetUpdatedAt = $sheet['db_updated_at'];
-            $dbUpdatedAt = $order->updated_at->toDateTimeString();
+            $sheetUpdatedAt = $sheet['db_updated_at'] ?? null;
 
-            if ($sheetUpdatedAt !== $dbUpdatedAt) {
+            $lastChange = $this->getOrderLastChangeTimestamp($order);
+
+            $dbUpdatedAt = optional($lastChange)->toDateTimeString();
+
+            if (!$sheetUpdatedAt || $sheetUpdatedAt !== $dbUpdatedAt) {
+
                 $changed++;
+
                 $toUpdate[] = [
                     'row'   => $sheet['row'],
                     'order' => $order
                 ];
 
-                Log::debug("getChangedOrders: Marked for update", [
+                Log::debug("Order changed → update required", [
                     'order_no' => $order->order_no,
                     'sheet_updated_at' => $sheetUpdatedAt,
-                    'db_updated_at' => $dbUpdatedAt,
-                    'row' => $sheet['row']
+                    'db_last_change' => $dbUpdatedAt
                 ]);
-            } else {
-                Log::debug("getChangedOrders: No change", ['order_no' => $order->order_no]);
             }
         }
 
-        Log::info("getChangedOrders: Summary", [
+        Log::info("Sheet Sync Summary", [
             'checked' => $checked,
             'changed' => $changed
         ]);
 
         return $toUpdate;
     }
+
 
 
 
@@ -732,4 +765,29 @@ class GoogleSheetController extends Controller
             'updatedRange' => $result->updates->updatedRange ?? null
         ]);
     }
+
+
+
+    protected function getOrderLastChangeTimestamp(Order $order)
+    {
+        $timestamps = [
+            $order->updated_at,
+            optional($order->orderItems)->max('updated_at'),
+            optional($order->statusTimestamps)->max('updated_at'),
+            optional($order->assignments)->max('updated_at'),
+            optional($order->payments)->max('updated_at'),
+            optional($order->addresses)->max('updated_at'),
+            optional($order->callLogs)->max('updated_at'),
+            optional($order->customer)->updated_at,
+        ];
+
+        // Remove nulls
+        $timestamps = array_filter($timestamps);
+
+        return collect($timestamps)->max();
+    }
+
+
+
+ 
 }
