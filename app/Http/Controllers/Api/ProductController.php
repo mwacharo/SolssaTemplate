@@ -549,7 +549,7 @@ class ProductController extends Controller
             // NEW LINE
             'country_id' => 'sometimes|exists:countries,id',
 
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id',
             'product_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sku'         => 'required|string|max:100|unique:products,sku',
@@ -561,7 +561,7 @@ class ProductController extends Controller
             'images'      => 'array',
             'images.*'    => 'file|image|max:5120', // Support file uploads (5MB max)
 
-            'base_price' => 'required|numeric|min:0',
+            'base_price' => 'nullable|numeric|min:0',
             'initial_quantity' => 'nullable|integer|min:0',
             'stock_threshold' => 'required|integer|min:0',
 
