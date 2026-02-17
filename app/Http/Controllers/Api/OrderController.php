@@ -238,6 +238,52 @@ class OrderController extends Controller
         ]);
     }
 
+
+    // complete showByOrderNo
+
+    public function showByOrderNo($order_no): JsonResponse
+    {
+        $order = Order::with([
+            'warehouse',
+            'country',
+            'agent',
+            'createdBy',
+            'rider',
+            'zone',
+            'orderItems.product',
+            'addresses',
+            'shippingAddress',
+            'pickupAddress',
+            'assignments.user',
+            'payments',
+            // 'events.user',
+            // 'statusTimestamps' => function ($query) {
+            //     $query->latest('created_at')->limit(1);
+            // },
+            'latestStatus.status.statusCategories', // ✅ latest status with relation
+
+            // 'latestStatus.status', // ✅ latest status with relation 
+            'customer',
+            'callLogs',
+            // 'refunds',   
+            // 'remittances'
+        ])
+            ->where('order_no', $order_no)
+            ->first();
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $order
+        ]);
+    }
+
     // write function to fetch order journey from order_events table
     public function journey($id): JsonResponse
     {

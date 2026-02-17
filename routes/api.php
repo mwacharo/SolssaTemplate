@@ -122,6 +122,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
     Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
     Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']);
+
+    // show a specific order by id or order_no
+
+    Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order by ID
+    Route::get('/orders/order_no/{order_no}', [\App\Http\Controllers\Api\OrderController::class, 'showByOrderNo']); // Show a specific order by order_no
+
     // delete 
     Route::delete('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']);
     // Update a specific order
