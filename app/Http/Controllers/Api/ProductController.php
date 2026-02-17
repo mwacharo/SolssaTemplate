@@ -35,21 +35,61 @@ class ProductController extends Controller
     ];
 
     // List all products (with vendor & relationships)
-    public function index(): JsonResponse
-    {
-        $products = Product::with([
-            'vendor',
-            'category',
-            'stocks',
-            'statistics',
-            'prices',
-            'images',
-            'media',
-            'variants'
-        ])->paginate(10);
+    // public function index(): JsonResponse
+    // {
+    //     $products = Product::with([
+    //         'vendor',
+    //         'category',
+    //         'stocks',
+    //         'statistics',
+    //         'prices',
+    //         'images',
+    //         'media',
+    //         'variants'
+    //     ])->paginate(10);
 
-        return response()->json(ProductResource::collection($products));
+    //     return response()->json(ProductResource::collection($products));
+    // }
+
+
+
+    public function index(): JsonResponse
+{
+    $user = Auth::user();
+
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized. Provide valid Bearer token'
+        ], 401);
     }
+
+    // Base query with relationships
+    $query = Product::with([
+        'vendor',
+        'category',
+        'stocks',
+        'statistics',
+        'prices',
+        'images',
+        'media',
+        'variants'
+    ]);
+
+    /**
+     * ✅ Vendor Scope
+     */
+    if ($user->hasRole('Vendor')) {
+        $query->where('vendor_id', $user->id);
+    }
+
+    $products = $query->paginate(10);
+
+    return response()->json(
+        ProductResource::collection($products)
+    );
+}
+
 
     // Create new product (vendor scoped)
     // public function store(StoreProductRequest $request): JsonResponse
