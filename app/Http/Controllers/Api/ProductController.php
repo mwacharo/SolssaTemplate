@@ -224,7 +224,7 @@ class ProductController extends Controller
             $product->prices()->create([
                 'vendor_id' => $validated['vendor_id'],
                 'currency' => $validated['price']['currency'] ?? 'KSH',
-                'base_price' => $validated['base_price'],
+                'base_price' => $validated['base_price'] ?? null,
                 'discount_price' => $validated['price']['sale_price'] ?? null,
                 'is_active' => true,
             ]);
