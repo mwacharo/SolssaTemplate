@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\AfricasTalkingService;
-use App\Services\YourServiceClass; // <-- Update with your actual service class name
+// use App\Services\YourServiceClass; // <-- Update with your actual service class name
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,7 +25,6 @@ class GenerateDailyTokensJob implements ShouldQueue
                 'updated' => $result['totalUpdated'],
                 'failed'  => $result['totalFailed'],
             ]);
-
         } catch (\Exception $e) {
             Log::error('Daily token generation failed: ' . $e->getMessage());
         }

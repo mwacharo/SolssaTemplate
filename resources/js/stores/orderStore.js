@@ -685,6 +685,34 @@ export const useOrderStore = defineStore('orders', () => {
     }
   }
 
+const exportOrders = async (orderIds) => {
+
+  if (!orderIds || orderIds.length === 0) return
+
+  try {
+    const response = await axios.post('/api/v1/orders/export', {
+      order_ids: orderIds
+    }, {
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'orders.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+
+    notify.success('Orders exported successfully')
+
+  } catch (err) {
+    notify.error('Failed to export orders')
+    throw err
+  }
+}
+
+
   const initialize = async () => {
     if (initialized.value) return
 
@@ -762,6 +790,7 @@ export const useOrderStore = defineStore('orders', () => {
     loadOrder,
     createOrder,
     updateOrder,
+    exportOrders,
     updateOrderCustomer,
     updateOrderItems,
     deleteOrder,

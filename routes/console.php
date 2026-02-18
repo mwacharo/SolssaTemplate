@@ -6,11 +6,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
 use App\Jobs\GenerateDailyTokensJob;
-
-
-
-
-
+use App\Jobs\SyncGoogleSheetJob;
+use App\Models\GoogleSheet;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -25,12 +22,25 @@ Schedule::command('app:process-failed-calls-command')->everyMinute();
 // Your NEW scheduled job (Laravel 11)
 Schedule::job(new GenerateDailyTokensJob())
     ->dailyAt('00:00');
-    // ->everyMinute();
-        // ->everyTwoMinutes();
+// ->everyMinute();
+// ->everyTwoMinutes();
+
+
+//call the SyncGoogleSheetJob every 30 minutes
+
+
+// Schedule::call(function () {
+//     $sheets = GoogleSheet::all();
+//     foreach ($sheets as $sheet) {
+//         SyncGoogleSheetJob::dispatch($sheet->id);
+//     }
+// })->everyThirtyMinutes()
+//     ->name('sync-google-sheets');
+//     // ->withoutOverlapping();
 
 
 
-
-// Artisan::command('app:mark-agents-offline', function () {
-//     $this->call('app:mark-agents-offline');
-// })->describe('Mark agents as offline if they have been inactive for more than 1 minute');
+Schedule::job(new SyncGoogleSheetJob('16vEgiQ5fo_C41lVuX9CttygGMcUTjPlY8XyuxRtpfzg'))
+    ->dailyAt('00:00');
+// ->everyMinute();
+// ->everyTwoMinutes();

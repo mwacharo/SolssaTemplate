@@ -403,7 +403,7 @@
                                     d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"
                                 ></path>
                             </svg>
-                            Export Orders
+                            Export Orders({{ selectedOrders.length }})
                         </button>
 
                         <button
@@ -1647,7 +1647,7 @@ const deleteOrder = (order) => {
 };
 
 const exportOrders = () => {
-    orderStore.exportOrders();
+    orderStore.exportOrders(selectedOrders.value);
 };
 
 const bulkUpdateStatus = () => {
@@ -1662,34 +1662,6 @@ const associateAgents = () => {
     if (selectedOrders.value.length === 0) return;
     orderStore.openAssignCallCentreDialog(selectedOrders.value);
 };
-
-// const previousPage = async () => {
-//     if (orderStore.pagination.current_page > 1) {
-//         await orderStore.fetchOrders({
-//             page: orderStore.pagination.current_page - 1,
-//         });
-//         selectAll.value = false;
-//         selectedOrders.value = [];
-//     }
-// };
-
-// const nextPage = async () => {
-//     if (orderStore.pagination.current_page < orderStore.pagination.last_page) {
-//         await orderStore.fetchOrders({
-//             page: orderStore.pagination.current_page + 1,
-//         });
-//         selectAll.value = false;
-//         selectedOrders.value = [];
-//     }
-// };
-
-// const goToPage = async (page) => {
-//     if (page !== orderStore.pagination.current_page) {
-//         await orderStore.fetchOrders({ page });
-//         selectAll.value = false;
-//         selectedOrders.value = [];
-//     }
-// };
 
 const previousPage = async () => {
     if (orderStore.pagination.current_page > 1) {

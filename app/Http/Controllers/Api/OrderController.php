@@ -32,6 +32,11 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Validation\ValidationException;
 
 
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\OrdersExport;
+
+
+
 
 
 class OrderController extends Controller
@@ -1499,4 +1504,13 @@ class OrderController extends Controller
             ], 500);
         }
     }
+
+
+    public function export(Request $request)
+{
+    return Excel::download(
+        new OrdersExport($request->order_ids),
+        'orders.xlsx'
+    );
+}
 }

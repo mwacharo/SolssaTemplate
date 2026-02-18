@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGoogleSheetRequest;
 use App\Http\Requests\UpdateGoogleSheetRequest;
 use App\Http\Resources\GoogleSheetResource;
+use App\Jobs\SyncGoogleSheetJob;
 use App\Models\Customer;
 use App\Models\GoogleSheet;
 use App\Models\Order;
@@ -340,77 +341,85 @@ class GoogleSheetController extends Controller
 
 
 
-
-
-
-
-    public function updateSheet(string $id, Request $request): JsonResponse
+    public function updateSheet(string $id): JsonResponse
     {
-        Log::info("updateSheet: Start syncing orders", ['sheet_id' => $id]);
+        SyncGoogleSheetJob::dispatch($id);
 
-        try {
-            $sheet = $this->repository->findById($id);
-            if (!$sheet) {
-                Log::warning("updateSheet: Google Sheet integration not found", ['sheet_id' => $id]);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Google Sheet integration not found'
-                ], 404);
-            }
-
-            $vendorId = $sheet->vendor_id;
-            $spreadsheetId = $sheet->post_spreadsheet_id;
-            $sheetName = $sheet->sheet_name;
-
-            Log::info("updateSheet: Integration loaded", [
-                'vendor_id' => $vendorId,
-                'spreadsheet_id' => $spreadsheetId,
-                'sheet_name' => $sheetName
-            ]);
-
-            $orders = $this->fetchOrders($vendorId);
-            Log::info("updateSheet: Orders fetched", ['count' => $orders->count()]);
-
-            if ($orders->isEmpty()) {
-                Log::info("updateSheet: No recent changes to orders", ['vendor_id' => $vendorId]);
-                return response()->json(['message' => 'No recent changes'], 204);
-            }
-
-
-            $sheetMap = $this->fetchSheetOrders($spreadsheetId, $sheetName);
-            Log::info("updateSheet: Sheet map fetched", ['sheet_map_count' => count($sheetMap)]);
-
-            $changes = $this->getChangedOrders($orders, $sheetMap);
-            Log::info("updateSheet: Changes computed", ['changes_count' => count($changes)]);
-
-            if (empty($changes)) {
-                Log::info("updateSheet: Sheet already up to date", ['sheet_id' => $id]);
-                return response()->json(['message' => 'Sheet already up to date'], 200);
-            }
-
-            $result = $this->batchUpdateSheet($spreadsheetId, $sheetName, $changes);
-            Log::info("updateSheet: Batch update completed", [
-                'updated_rows' => count($changes),
-                'google_response' => $result
-            ]);
-
-            return response()->json([
-                'updated_rows' => count($changes),
-                'status' => 'Synced successfully'
-            ]);
-        } catch (\Exception $e) {
-            Log::error("updateSheet: Exception during sync", [
-                'sheet_id' => $id,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to sync sheet: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'status' => 'Sync job dispatched'
+        ]);
     }
+
+
+
+
+    // public function updateSheet(string $id, Request $request): JsonResponse
+    // {
+    //     Log::info("updateSheet: Start syncing orders", ['sheet_id' => $id]);
+
+    //     try {
+    //         $sheet = $this->repository->findById($id);
+    //         if (!$sheet) {
+    //             Log::warning("updateSheet: Google Sheet integration not found", ['sheet_id' => $id]);
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Google Sheet integration not found'
+    //             ], 404);
+    //         }
+
+    //         $vendorId = $sheet->vendor_id;
+    //         $spreadsheetId = $sheet->post_spreadsheet_id;
+    //         $sheetName = $sheet->sheet_name;
+
+    //         Log::info("updateSheet: Integration loaded", [
+    //             'vendor_id' => $vendorId,
+    //             'spreadsheet_id' => $spreadsheetId,
+    //             'sheet_name' => $sheetName
+    //         ]);
+
+    //         $orders = $this->fetchOrders($vendorId);
+    //         Log::info("updateSheet: Orders fetched", ['count' => $orders->count()]);
+
+    //         if ($orders->isEmpty()) {
+    //             Log::info("updateSheet: No recent changes to orders", ['vendor_id' => $vendorId]);
+    //             return response()->json(['message' => 'No recent changes'], 204);
+    //         }
+
+
+    //         $sheetMap = $this->fetchSheetOrders($spreadsheetId, $sheetName);
+    //         Log::info("updateSheet: Sheet map fetched", ['sheet_map_count' => count($sheetMap)]);
+
+    //         $changes = $this->getChangedOrders($orders, $sheetMap);
+    //         Log::info("updateSheet: Changes computed", ['changes_count' => count($changes)]);
+
+    //         if (empty($changes)) {
+    //             Log::info("updateSheet: Sheet already up to date", ['sheet_id' => $id]);
+    //             return response()->json(['message' => 'Sheet already up to date'], 200);
+    //         }
+
+    //         $result = $this->batchUpdateSheet($spreadsheetId, $sheetName, $changes);
+    //         Log::info("updateSheet: Batch update completed", [
+    //             'updated_rows' => count($changes),
+    //             'google_response' => $result
+    //         ]);
+
+    //         return response()->json([
+    //             'updated_rows' => count($changes),
+    //             'status' => 'Synced successfully'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error("updateSheet: Exception during sync", [
+    //             'sheet_id' => $id,
+    //             'message' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to sync sheet: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
 
     protected function fetchOrders($vendorId)
@@ -786,8 +795,4 @@ class GoogleSheetController extends Controller
 
         return collect($timestamps)->max();
     }
-
-
-
- 
 }

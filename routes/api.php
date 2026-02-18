@@ -165,6 +165,9 @@ Route::prefix('v1')->group(function () {
     // get orders by vendor
     Route::get('/orders/vendor/{vendorId}', [OrderController::class, 'getByVendor']);
 
+    // ExPort orders]
+    Route::post('/orders/export', [OrderController::class, 'export']);
+
 
     // shopifty 
 
