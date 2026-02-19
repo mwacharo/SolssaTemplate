@@ -143,7 +143,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/orders/{id}/timeline', [OrderController::class, 'timeline']);
 
 
-    
+    // waybills 
+    Route::post('/waybill', [OrderController::class, 'waybill']);
+
+
+
+
+
 
     // assign delivery agent
     Route::post('/orders/assign-rider', [OrderController::class, 'assignRider']);

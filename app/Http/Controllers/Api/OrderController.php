@@ -193,6 +193,79 @@ class OrderController extends Controller
 
 
 
+    public function waybill(Request $request, string $id = null)
+    {
+        try {
+            // Collect raw inputs (route id or request payload)
+            $idsRaw = $request->input('order_ids', $id ? [$id] : []);
+            $orderNosInput = $request->input('order_no') ?? $request->input('order_nos', null);
+
+            $ids = [];
+            $orderNos = [];
+
+            // Normalize order_ids which may contain numeric ids or order_no strings
+            foreach ((array) $idsRaw as $value) {
+                if ($value === null || $value === '') {
+                    continue;
+                }
+                if (is_numeric($value)) {
+                    $ids[] = (int) $value;
+                } else {
+                    $orderNos[] = (string) $value;
+                }
+            }
+
+            // If route $id provided and not included above (rare), handle it
+            if ($id !== null && empty($idsRaw)) {
+                if (is_numeric($id)) {
+                    $ids[] = (int) $id;
+                } else {
+                    $orderNos[] = (string) $id;
+                }
+            }
+
+            // Normalize order_no / order_nos request input
+            if ($orderNosInput !== null) {
+                if (is_array($orderNosInput)) {
+                    $orderNos = array_merge($orderNos, $orderNosInput);
+                } else {
+                    $orderNos[] = (string) $orderNosInput;
+                }
+            }
+
+            // Resolve order_no(s) to numeric ids
+            if (!empty($orderNos)) {
+                $resolved = Order::whereIn('order_no', array_values(array_filter($orderNos)))->pluck('id')->toArray();
+                if (empty($resolved)) {
+                    return response()->json([
+                        'error' => 'No orders found for provided order_no(s)',
+                    ], 404);
+                }
+                $ids = array_merge($ids, $resolved);
+            }
+
+            // Deduplicate and ensure we have ids
+            $ids = array_values(array_unique(array_filter($ids)));
+
+            if (empty($ids)) {
+                return response()->json([
+                    'error' => 'No order IDs provided',
+                ], 400);
+            }
+
+            $pdf = $this->orderService->printWaybills($ids);
+
+            return $pdf;
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to generate waybill(s)',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
     /**
      * Display the specified order.
      */
@@ -1507,10 +1580,10 @@ class OrderController extends Controller
 
 
     public function export(Request $request)
-{
-    return Excel::download(
-        new OrdersExport($request->order_ids),
-        'orders.xlsx'
-    );
-}
+    {
+        return Excel::download(
+            new OrdersExport($request->order_ids),
+            'orders.xlsx'
+        );
+    }
 }
