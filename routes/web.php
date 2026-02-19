@@ -195,6 +195,10 @@ Route::middleware([
     // Reports
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', fn() => Inertia::render('Reports/ViewReports'))->name('index');
+
+
+        // report order management routes
+        
         Route::get('/generate', fn() => Inertia::render('Reports/GenerateReport'))->name('generate');
         Route::get('/export', fn() => Inertia::render('Reports/Export'))->name('export');
         Route::get('/schedule', fn() => Inertia::render('Reports/Schedule'))->name('schedule');

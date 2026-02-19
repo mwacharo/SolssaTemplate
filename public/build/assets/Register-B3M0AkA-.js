@@ -1,0 +1,1 @@
+import{k as e,W as t,d as r,o}from"./app-CpVldMEC.js";const s={class:"text-center mt-10 text-gray-600"},i={__name:"Register",setup(a){return e(()=>{t.visit(route("home"),{method:"get",preserveState:!0,preserveScroll:!0})}),(c,n)=>(o(),r("div",s,"Redirecting..."))}};export{i as default};
