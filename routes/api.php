@@ -144,7 +144,7 @@ Route::prefix('v1')->group(function () {
 
 
     // waybills 
-    Route::post('/waybill', [OrderController::class, 'waybill']);
+    Route::post('/waybills', [OrderController::class, 'waybill']);
 
 
 
