@@ -76,7 +76,7 @@ const emit = defineEmits(["update:modelValue", "validation"]);
 const menu = ref(false);
 const touched = ref(props.validateOnMount);
 const internalValue = ref(
-    props.modelValue?.length ? [...props.modelValue] : []
+    props.modelValue?.length ? [...props.modelValue] : [],
 );
 
 // Watch for parent changes
@@ -88,7 +88,7 @@ watch(
         } else {
             internalValue.value = [];
         }
-    }
+    },
 );
 
 // Validation logic
@@ -154,26 +154,57 @@ const displayValue = computed(() => {
 });
 
 // Handle user selecting dates
+// const onPickerChange = (val) => {
+//     touched.value = true;
+
+//     let dates = [];
+//     if (Array.isArray(val)) {
+//         dates = val;
+//     } else if (val instanceof Date) {
+//         dates = [val];
+//     } else if (val) {
+//         dates = [val];
+//     }
+
+//     internalValue.value = dates;
+//     emit("update:modelValue", dates);
+
+//     // Emit validation state
+//     const valid = props.required ? dates.length === 2 : true;
+//     emit("validation", valid);
+
+//     // Auto-close when both dates are selected
+//     if (dates.length >= 2) {
+//         setTimeout(() => {
+//             menu.value = false;
+//         }, 300);
+//     }
+// };
+
 const onPickerChange = (val) => {
     touched.value = true;
 
     let dates = [];
+
     if (Array.isArray(val)) {
         dates = val;
-    } else if (val instanceof Date) {
-        dates = [val];
     } else if (val) {
         dates = [val];
+    }
+
+    // ⭐ SUPPORT SAME DAY RANGE
+    if (props.required && dates.length === 1) {
+        dates = [dates[0], dates[0]];
     }
 
     internalValue.value = dates;
     emit("update:modelValue", dates);
 
-    // Emit validation state
+    // Validation now supports same-day range
     const valid = props.required ? dates.length === 2 : true;
+
     emit("validation", valid);
 
-    // Auto-close when both dates are selected
     if (dates.length >= 2) {
         setTimeout(() => {
             menu.value = false;
