@@ -122,8 +122,8 @@
                                 >City</label
                             >
                             <v-autocomplete
-                                v-model="orderReportStore.filters.city"
-                                :items="orderReportStore.options.cities"
+                                v-model="orderStore.orderFilterCity"
+                                :items="orderStore.cityOptions"
                                 item-title="name"
                                 item-value="id"
                                 clearable
@@ -141,8 +141,8 @@
                                 >Delivery Person</label
                             >
                             <v-autocomplete
-                                v-model="orderReportStore.filters.rider"
-                                :items="orderReportStore.options.riders"
+                                v-model="orderStore.orderFilterRider"
+                                :items="orderStore.riderOptions"
                                 item-title="name"
                                 item-value="id"
                                 clearable
@@ -518,7 +518,9 @@ const paginationPages = computed(() => {
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 
-onMounted(() => {
+onMounted(async () => {
+        await orderStore.initialize();
+
     orderReportStore.fetchOptions();
 });
 </script>

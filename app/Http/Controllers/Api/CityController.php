@@ -51,8 +51,9 @@ class CityController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(City $city)
+    public function destroy($id)
     {
+        $city = City::findOrFail($id);
         $city->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

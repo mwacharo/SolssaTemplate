@@ -50,8 +50,9 @@ class ZoneController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Zone $zone)
+    public function destroy($id)
     {
+        $zone = Zone::findOrFail($id);
         $zone->delete();
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
