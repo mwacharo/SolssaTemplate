@@ -3,7 +3,16 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import axios from "axios";
 
+
+import { useOrderStore } from "@/stores/orderStore";
+
+
+
 const useOrderReportStore = defineStore("orderReport", () => {
+
+
+    const orderStore = useOrderStore();
+
     // ─── Report Types ─────────────────────────────────────────────────────────
     const reportTypes = [
         // { id: "delivery", name: "Delivery Report" },
@@ -26,6 +35,7 @@ const useOrderReportStore = defineStore("orderReport", () => {
         merchant:            ["merchant", "product", "zone", "city", "confirmationStatus", "shippingStatus", "orderDate"],
         product:             ["merchant", "product", "category", "zone", "city", "orderDate"],
         product_performance: ["merchant", "product", "category", "orderDate"],
+        city:                ["city", "zone", "orderDate", "shippingStatus"],
         zone:                ["zone", "city", "orderDate", "shippingStatus"],
     };
 
@@ -44,6 +54,8 @@ const useOrderReportStore = defineStore("orderReport", () => {
             { key: "scheduled_date",  label: "Scheduled Date" },
             { key: "delivery_date",   label: "Delivery Date" },
             { key: "rider",           label: "Rider" },
+            // add city
+            { key: "city",            label: "City" },
             { key: "zone",            label: "Zone" },
         ],
         merchant: [
@@ -61,6 +73,8 @@ const useOrderReportStore = defineStore("orderReport", () => {
             { key: "scheduled_date",        label: "Scheduled Date" },
             { key: "delivery_date",         label: "Delivery Date" },
             { key: "rider",                 label: "Rider" },
+            // add city 
+            { key: "city",                  label: "City" },
             { key: "zone",                  label: "Zone" },
             { key: "agent",                 label: "Agent" },
         ],
@@ -71,6 +85,9 @@ const useOrderReportStore = defineStore("orderReport", () => {
             { key: "receiver_phone",label: "Receiver Phone" },
             { key: "order_status",  label: "Order Status" },
             { key: "created_at",    label: "Created At" },
+            // add city 
+
+            { key: "city",          label: "City" },
             { key: "zone",          label: "Zone" },
         ],
     };
@@ -85,6 +102,7 @@ const useOrderReportStore = defineStore("orderReport", () => {
         zone:               null,
         city:               null,
         rider:              null,
+        agent:             null,
         confirmationStatus: null,
         shippingStatus:     null,
         orderDate:          null,
@@ -98,17 +116,18 @@ const useOrderReportStore = defineStore("orderReport", () => {
         zones:     [],
         cities:    [],
         riders:    [],
+        agents:    [],
         confirmationStatuses: [
-            { id: "pending",   name: "Pending" },
-            { id: "confirmed", name: "Confirmed" },
-            { id: "cancelled", name: "Cancelled" },
+            // { id: "pending",   name: "Pending" },
+            // { id: "confirmed", name: "Confirmed" },
+            // { id: "cancelled", name: "Cancelled" },
         ],
         shippingStatuses: [
-            { id: "pending",    name: "Pending" },
-            { id: "dispatched", name: "Dispatched" },
-            { id: "delivered",  name: "Delivered" },
-            { id: "returned",   name: "Returned" },
-            { id: "out_scan",   name: "Out Scan" },
+            // { id: "pending",    name: "Pending" },
+            // { id: "dispatched", name: "Dispatched" },
+            // { id: "delivered",  name: "Delivered" },
+            // { id: "returned",   name: "Returned" },
+            // { id: "out_scan",   name: "Out Scan" },
         ],
     });
 
@@ -142,6 +161,18 @@ const useOrderReportStore = defineStore("orderReport", () => {
             report_type: selectedReportType.value,
             page:        pagination.value.page,
             per_page:    pagination.value.perPage,
+            merchant: orderFilterVendor.value,
+            product: orderFilterProduct.value,
+            category: orderFilterCategory.value,
+            zone: orderFilterZone.value,
+            city: orderFilterCity.value,
+            rider: orderFilterRider.value,    
+            // agent: filters.value.agent,
+            confirmationStatus: filters.value.confirmationStatus,
+            // shippingStatus: filters.value.shippingStatus,
+            // orderDate: filters.value.orderDate,
+            // deliveryDate: filters.value.deliveryDate,
+
         };
         activeFilterFields.value.forEach((field) => {
             if (filters.value[field] !== null && filters.value[field] !== "") {
@@ -154,13 +185,14 @@ const useOrderReportStore = defineStore("orderReport", () => {
     async function fetchOptions() {
         loading.value.options = true;
         try {
-            const { data } = await axios.get("/api/reports/options");
+            const { data } = await axios.get("/api/v1/reports/options");
             options.value.merchants  = data.merchants  ?? [];
             options.value.products   = data.products   ?? [];
             options.value.categories = data.categories ?? [];
             options.value.zones      = data.zones      ?? [];
             options.value.cities     = data.cities     ?? [];
             options.value.riders     = data.riders     ?? [];
+            options.value.agents     = data.agents     ?? [];
         } catch (e) {
             console.error("Failed to load report options", e);
         } finally {
@@ -174,7 +206,7 @@ const useOrderReportStore = defineStore("orderReport", () => {
         loading.value.generate = true;
         pagination.value.page  = 1;
         try {
-            const { data } = await axios.get("/api/reports/generate", {
+            const { data } = await axios.get("/api/v1/reports/generate", {
                 params: buildParams(),
             });
             results.value            = data.data  ?? [];
@@ -196,7 +228,7 @@ const useOrderReportStore = defineStore("orderReport", () => {
         if (!selectedReportType.value) return;
         loading.value.download = true;
         try {
-            const response = await axios.get("/api/reports/download", {
+            const response = await axios.get("/api/v1/reports/download", {
                 params:       { ...buildParams(), format: "xlsx" },
                 responseType: "blob",
             });

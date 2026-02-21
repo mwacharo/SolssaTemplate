@@ -35,7 +35,7 @@ use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdersExport;
 
-
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
 
@@ -1585,5 +1585,101 @@ class OrderController extends Controller
             new OrdersExport($request->order_ids),
             'orders.xlsx'
         );
+    }
+
+
+    //     public function checkStatus($id): JsonResponse
+    //     {
+    //         try {
+    //             $order = Order::with('latestStatus.status')->findOrFail($id);
+
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'data' => [
+    //                     'order_id' => $order->id,
+    //                     'order_no' => $order->order_no,
+    //                     'latest_status' => $order->latestStatus ? $order->latestStatus->status->name : null,
+    //                     'status_updated_at' => $order->latestStatus ? $order->latestStatus->created_at : null,
+    //                 ]
+    //             ]);
+    //         } catch (ModelNotFoundException $e) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Order not found'
+    //             ], 404);
+    //         } catch (\Exception $e) {
+    //             Log::error('Failed to check order status', [
+    //                 'order_id' => $id,
+    //                 'error' => $e->getMessage()
+    //             ]);
+
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Failed to retrieve order status',
+    //                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+    //             ], 500);
+    //         }
+    //
+
+
+
+    public function checkStatus($identifier): JsonResponse
+    {
+        try {
+
+
+
+            $user = Auth::user();
+            Log::info('Authenticated user', ['user' => $user]);
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'allowed_origins. Please provide a valid vendor token.'
+                ], 401);
+            }
+
+            // ✅ Check if user is a vendor
+            if ($user->hasRole('Vendor')) {
+                $validated['vendor_id'] = $user->id;
+                Log::info('Vendor identified from Bearer token', ['vendor_id' => $user->id]);
+            }
+
+            $order = Order::with('latestStatus.status')
+                ->when(is_numeric($identifier), function ($query) use ($identifier) {
+                    return $query->where('id', $identifier);
+                }, function ($query) use ($identifier) {
+                    return $query->where('order_no', $identifier);
+                })
+                ->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'order_id' => $order->id,
+                    'order_no' => $order->order_no,
+                    'latest_status' => optional($order->latestStatus->status)->name,
+                    'status_updated_at' => optional($order->latestStatus)->created_at,
+                ]
+            ]);
+        } catch (ModelNotFoundException $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found'
+            ], 404);
+        } catch (\Exception $e) {
+
+            Log::error('Failed to check order status', [
+                'identifier' => $identifier,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve order status',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
     }
 }

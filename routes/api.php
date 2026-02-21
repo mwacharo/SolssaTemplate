@@ -41,7 +41,7 @@ use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
 
 use App\Http\Controllers\Api\ConditionTypeController;
-
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ServiceConditionController;
 
 use App\Http\Controllers\Api\VendorServicesController;
@@ -176,6 +176,15 @@ Route::prefix('v1')->group(function () {
 
     // ExPort orders]
     Route::post('/orders/export', [OrderController::class, 'export']);
+
+
+
+    //  check order status of an order 
+
+    // Route::get('/orders/{id}/status', [OrderController::class, 'checkStatus']); // Check status of an order by ID 
+
+    Route::get('/orders/{order_no}/status', [OrderController::class, 'checkStatus']); // Check status of an order by order number
+
 
 
     // shopifty 
@@ -597,6 +606,25 @@ Route::prefix('v1')->group(function () {
 
 // realtime open ai api 
 Route::post('/v1/realtime/session', [RealtimeController::class, 'createSession']);
+
+
+
+
+// / Reports Routes
+Route::prefix('/v1/reports')->middleware(['auth:sanctum'])->group(function () {
+
+    // Get filter options (merchants, products, zones, etc.)
+    Route::get('/options', [ReportController::class, 'getOptions']);
+
+    // Generate report with filters
+    Route::get('/generate', [ReportController::class, 'generate']);
+
+    // Download report as Excel/CSV
+    Route::get('/download', [ReportController::class, 'download']);
+
+    // Get report summary/statistics
+    Route::get('/summary', [ReportController::class, 'getSummary']);
+});
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
