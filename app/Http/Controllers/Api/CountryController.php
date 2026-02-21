@@ -55,16 +55,37 @@ class CountryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Country $country)
+    // public function destroy(Country $country)
+    // {
+    //     // Log the entire request
+    //     Log::info('Destroy Country Request', [
+    //         'request' => request()->all(),
+    //         'country_id' => $country->id,
+    //     ]);
+
+    //     $country->delete();
+    //     return response()->json(null, Response::HTTP_NO_CONTENT);
+    // }
+
+
+    public function destroy($id)
     {
-        // Log the entire request
-        Log::info('Destroy Country Request', [
-            'request' => request()->all(),
+        // Find or fail (automatically throws 404 if not found)
+        $country = Country::findOrFail($id);
+
+        // Log the delete action
+        Log::info('Country deleted', [
             'country_id' => $country->id,
+            'country_name' => $country->name ?? null,
+            'deleted_by' => auth()->id(),
+            'ip' => request()->ip(),
         ]);
 
         $country->delete();
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+
+        return response()->json([
+            'message' => 'Country deleted successfully.'
+        ], Response::HTTP_NO_CONTENT);
     }
 
     public function getSettings($id)
@@ -72,17 +93,17 @@ class CountryController extends Controller
         $country = Country::findOrFail($id);
         $settings = $country->waybillSettings; // Assuming a relationship exists
         return response()->json($settings);
-    } 
-    
-    
+    }
 
-        /**
+
+
+    /**
      * Store waybill settings for a specific country
      */
     // public function storeSettings(StoreWaybillSettingRequest $request, $id): JsonResponse
     // {
     //     $country = Country::findOrFail($id);
-        
+
     //     // Check if settings already exist for this country
     //     $existingSettings = WaybillSetting::where('country_id', $id)->first();
     //     if ($existingSettings) {
@@ -91,34 +112,34 @@ class CountryController extends Controller
     //             'data' => $existingSettings
     //         ], 409);
     //     }
-        
+
     //     // Add country_id to validated data
     //     $validatedData = $request->validated();
     //     $validatedData['country_id'] = $id;
-        
+
     //     $waybillSetting = WaybillSetting::create($validatedData);
     //     return response()->json(['data' => $waybillSetting], 201);
     // }
 
 
     public function storeSettings(StoreWaybillSettingRequest $request, $id): JsonResponse
-{
-    $country = Country::findOrFail($id);
+    {
+        $country = Country::findOrFail($id);
 
-    $validatedData = $request->validated();
-    $validatedData['country_id'] = $id;
+        $validatedData = $request->validated();
+        $validatedData['country_id'] = $id;
 
-    // Update if exists, create if not
-    $waybillSetting = WaybillSetting::updateOrCreate(
-        ['country_id' => $id], // condition
-        $validatedData          // values to update or create
-    );
+        // Update if exists, create if not
+        $waybillSetting = WaybillSetting::updateOrCreate(
+            ['country_id' => $id], // condition
+            $validatedData          // values to update or create
+        );
 
-    return response()->json([
-        'message' => 'Waybill settings saved successfully.',
-        'data' => $waybillSetting
-    ], 200);
-}
+        return response()->json([
+            'message' => 'Waybill settings saved successfully.',
+            'data' => $waybillSetting
+        ], 200);
+    }
 
 
     /**
@@ -145,16 +166,16 @@ class CountryController extends Controller
     public function destroySettings($id): JsonResponse
     {
         $country = Country::findOrFail($id);
-        
+
         $settings = WaybillSetting::where('country_id', $id)->first();
-        
+
         if (!$settings) {
             return response()->json([
                 'message' => 'No waybill settings found for this country',
                 'data' => null
             ], 404);
         }
-        
+
         $settings->delete();
         return response()->json(null, 204);
     }
