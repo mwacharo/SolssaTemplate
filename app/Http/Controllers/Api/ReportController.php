@@ -51,7 +51,7 @@ class ReportController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
 
             // Optional filters
-            'merchant' => 'nullable|integer|exists:vendors,id',
+            'merchant' => 'nullable|integer|exists:users,id',
             'product' => 'nullable|integer|exists:products,id',
             'category' => 'nullable|integer|exists:categories,id',
             'zone' => 'nullable|integer|exists:zones,id',
