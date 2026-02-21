@@ -519,7 +519,7 @@ const paginationPages = computed(() => {
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-        await orderStore.initialize();
+    await orderStore.initialize();
 
     orderReportStore.fetchOptions();
 });

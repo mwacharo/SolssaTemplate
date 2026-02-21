@@ -161,17 +161,19 @@ const useOrderReportStore = defineStore("orderReport", () => {
             report_type: selectedReportType.value,
             page:        pagination.value.page,
             per_page:    pagination.value.perPage,
-            merchant: orderFilterVendor.value,
-            product: orderFilterProduct.value,
-            category: orderFilterCategory.value,
-            zone: orderFilterZone.value,
-            city: orderFilterCity.value,
-            rider: orderFilterRider.value,    
-            // agent: filters.value.agent,
-            confirmationStatus: filters.value.confirmationStatus,
-            // shippingStatus: filters.value.shippingStatus,
-            // orderDate: filters.value.orderDate,
-            // deliveryDate: filters.value.deliveryDate,
+
+
+              merchant: orderStore.orderFilterVendor,
+        product: orderStore.orderFilterProduct,
+        category: orderStore.orderFilterCategory,
+        zone: orderStore.orderFilterZone,
+        city: orderStore.orderFilterCity,
+        rider: orderStore.orderFilterRider,
+
+        confirmationStatus: filters.value.confirmationStatus,
+        shippingStatus: filters.value.shippingStatus,
+        orderDate: filters.value.orderDate,
+        deliveryDate: filters.value.deliveryDate,
 
         };
         activeFilterFields.value.forEach((field) => {
