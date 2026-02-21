@@ -352,7 +352,7 @@
         }
         
         .footer-content { 
-            font-size: 6px; 
+            font-size: 7px; 
             color: #6b7280; 
             line-height: 1.3; 
         }
