@@ -76,8 +76,8 @@ export const ROUTES = {
   },
   REPORTS: {
     INDEX: 'reports.index',
+    EXPORT: 'reports.export',
     // GENERATE: 'reports.generate',
-    // EXPORT: 'reports.export',
     // SCHEDULE: 'reports.schedule',
   },
   BRANCHES: {
@@ -377,6 +377,10 @@ export const useNavStore = defineStore('nav', {
         permissions: ['reports_view', 'reports_create', 'reports_export', 'reports_schedule', 'reports_share'],
         children: [
           { title: 'View Reports', route: ROUTES.REPORTS.INDEX, icon: 'mdi-chart-box-outline', permission: 'reports_view' },
+          // add reports/export
+
+          { title: 'Generate Report', route: ROUTES.REPORTS.EXPORT, icon: 'mdi-chart-bar', permission: 'reports_view' },
+
         ],
       },
 
