@@ -205,7 +205,7 @@ class ReportService
         // Confirmation Status filter
         if (!empty($filters['confirmationStatus'])) {
             $query->whereHas('latestStatus.status', function ($q) use ($filters) {
-                $q->where('name', $filters['confirmationStatus']);
+                $q->where('id', $filters['confirmationStatus']);
             });
         }
 
