@@ -32,7 +32,7 @@ const useOrderReportStore = defineStore("orderReport", () => {
         dispatch:            ["merchant", "zone", "city", "orderDate"],
         out_scan:            ["zone", "city", "rider", "deliveryDate"],
         undispatched:        ["merchant", "product", "zone", "city", "orderDate"],
-        merchant:            ["merchant", "product", "zone", "city", "confirmationStatus", "shippingStatus", "orderDate"],
+        merchant:            ["merchant", "product", "zone", "city", "confirmationStatus", "shippingStatus", "orderDate",'statusDate'],
         product:             ["merchant", "product", "category", "zone", "city", "orderDate"],
         product_performance: ["merchant", "product", "category", "orderDate"],
         city:                ["city", "zone", "orderDate", "shippingStatus"],
@@ -85,8 +85,6 @@ const useOrderReportStore = defineStore("orderReport", () => {
             { key: "receiver_phone",label: "Receiver Phone" },
             { key: "order_status",  label: "Order Status" },
             { key: "created_at",    label: "Created At" },
-            // add city 
-
             { key: "city",          label: "City" },
             { key: "zone",          label: "Zone" },
         ],
@@ -118,17 +116,9 @@ const useOrderReportStore = defineStore("orderReport", () => {
         riders:    [],
         agents:    [],
         confirmationStatuses: [
-            // { id: "pending",   name: "Pending" },
-            // { id: "confirmed", name: "Confirmed" },
-            // { id: "cancelled", name: "Cancelled" },
+         
         ],
-        shippingStatuses: [
-            // { id: "pending",    name: "Pending" },
-            // { id: "dispatched", name: "Dispatched" },
-            // { id: "delivered",  name: "Delivered" },
-            // { id: "returned",   name: "Returned" },
-            // { id: "out_scan",   name: "Out Scan" },
-        ],
+       
     });
 
     const results    = ref([]);
@@ -163,17 +153,18 @@ const useOrderReportStore = defineStore("orderReport", () => {
             per_page:    pagination.value.perPage,
 
 
-              merchant: orderStore.orderFilterVendor,
+        merchant: orderStore.orderFilterVendor,
         product: orderStore.orderFilterProduct,
         category: orderStore.orderFilterCategory,
         zone: orderStore.orderFilterZone,
         city: orderStore.orderFilterCity,
         rider: orderStore.orderFilterRider,
+        agent: orderStore.orderFilterAgent,
 
-        confirmationStatus: filters.value.confirmationStatus,
-        shippingStatus: filters.value.shippingStatus,
-        orderDate: filters.value.orderDate,
-        deliveryDate: filters.value.deliveryDate,
+        confirmationStatus: orderStore.orderFilterStatus,
+        statusDate: orderStore.statusDateRange,
+        deliveryDate: orderStore.deliveryDateRange,
+        orderDate: orderStore.createdDateRange,
 
         };
         activeFilterFields.value.forEach((field) => {

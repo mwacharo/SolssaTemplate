@@ -204,7 +204,7 @@ class ReportService
 
         // Confirmation Status filter
         if (!empty($filters['confirmationStatus'])) {
-            $query->whereHas('latest_status.status', function ($q) use ($filters) {
+            $query->whereHas('latestStatus.status', function ($q) use ($filters) {
                 $q->where('name', $filters['confirmationStatus']);
             });
         }
@@ -233,6 +233,21 @@ class ReportService
             }
             if (!empty($filters['deliveryDate']['end'])) {
                 $query->whereDate('delivery_date', '<=', $filters['deliveryDate']['end']);
+            }
+        }
+
+
+        // status date range filter
+        if (!empty($filters['statusDate'])) {
+            if (!empty($filters['statusDate']['start'])) {
+                $query->whereHas('latest_status', function ($q) use ($filters) {
+                    $q->whereDate('created_at', '>=', $filters['statusDate']['start']);
+                });
+            }
+            if (!empty($filters['statusDate']['end'])) {
+                $query->whereHas('latest_status', function ($q) use ($filters) {
+                    $q->whereDate('created_at', '<=', $filters['statusDate']['end']);
+                });
             }
         }
 

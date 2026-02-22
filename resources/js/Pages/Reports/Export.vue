@@ -172,37 +172,26 @@
                             />
                         </div>
 
-                        <!-- Shipping Status -->
-                        <!-- <div v-if="showFilter('shippingStatus')">
+                        <!-- Status Date -->
+
+                        <div v-if="showFilter('statusDate')">
                             <label
                                 class="block text-xs font-semibold text-red-600 mb-1 uppercase tracking-wider"
-                                >Shipping Status</label
+                                >Status Date</label
                             >
-                            <v-autocomplete
-                                v-model="
-                                    orderReportStore.filters.shippingStatus
-                                "
-                                :items="
-                                    orderReportStore.options.shippingStatuses
-                                "
-                                item-title="name"
-                                item-value="id"
-                                clearable
-                                dense
-                                outlined
-                                placeholder="Select shipping status..."
-                                class="w-full"
+                            <DateRangePicker
+                                v-model="orderStore.statusDateRange"
                             />
-                        </div> -->
+                        </div>
 
                         <!-- Order Date -->
                         <div v-if="showFilter('orderDate')">
                             <label
                                 class="block text-xs font-semibold text-red-600 mb-1 uppercase tracking-wider"
-                                >Order Date</label
+                                >Created Date</label
                             >
                             <DateRangePicker
-                                v-model="orderReportStore.filters.orderDate"
+                                v-model="orderStore.createdDateRange"
                             />
                         </div>
 
@@ -213,7 +202,7 @@
                                 >Delivery Date</label
                             >
                             <DateRangePicker
-                                v-model="orderReportStore.filters.deliveryDate"
+                                v-model="orderStore.filters.deliveryDate"
                             />
                         </div>
                     </template>
@@ -454,8 +443,7 @@
 <script setup>
 import { computed, onMounted } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-// import DateRangePicker from "@/Components/DateRangePicker.vue";
-// import { useReportStore } from "@/stores/reportStore";
+import DateRangePicker from "@/Components/DualDatePicker.vue";
 
 import { useOrderStore } from "@/stores/orderStore";
 
