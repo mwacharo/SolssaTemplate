@@ -436,7 +436,7 @@
                         "
                         :class="[
                             'w-8 h-8 rounded flex items-center justify-center text-sm font-medium transition-colors',
-                            page === reportStore.pagination.page
+                            page === orderReportStore.pagination.page
                                 ? 'bg-blue-600 text-white'
                                 : page === '...'
                                   ? 'text-gray-400 cursor-default'
