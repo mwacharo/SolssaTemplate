@@ -22,7 +22,7 @@ class StoreServiceRateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vendor_service_id'     => ['required', 'integer', 'exists:vendor_services,id'],
+            // 'vendor_service_id'     => ['required', 'integer', 'exists:vendor_services,id'],
             'service_condition_id'  => ['required', 'integer', 'exists:service_conditions,id'],
             'custom_rate'           => ['required', 'numeric', 'min:0'],
             'rate_type'             => ['required', 'string', 'in:fixed,percentage'],

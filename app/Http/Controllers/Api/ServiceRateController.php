@@ -18,7 +18,7 @@ class ServiceRateController extends Controller
         return response()->json(
             ServiceRate::with([
                 'vendorService',
-                'serviceCondition'
+                'condition'
             ])->latest()->paginate(20)
         );
     }
@@ -26,13 +26,39 @@ class ServiceRateController extends Controller
     /**
      * Store or Update Override (UPSERT)
      */
-    public function store(StoreServiceRateRequest $request): JsonResponse
+    // public function store(StoreServiceRateRequest $request): JsonResponse
+    // {
+    //     $data = $request->validated();
+
+    //     $rate = ServiceRate::updateOrCreate(
+    //         [
+    //             'vendor_service_id' => $data['vendor_service_id'],
+    //             'service_condition_id' => $data['service_condition_id'],
+    //         ],
+    //         [
+    //             'custom_rate' => $data['custom_rate'],
+    //             'rate_type' => $data['rate_type'],
+    //         ]
+    //     );
+
+    //     return response()->json([
+    //         'message' => 'Override saved successfully',
+    //         'data' => $rate->load([
+    //             'vendorService',
+    //             'serviceCondition'
+    //         ])
+    //     ], 201);
+    // }
+
+
+
+    public function store(StoreServiceRateRequest $request, $vendorServiceId): JsonResponse
     {
         $data = $request->validated();
 
         $rate = ServiceRate::updateOrCreate(
             [
-                'vendor_service_id' => $data['vendor_service_id'],
+                'vendor_service_id' => $vendorServiceId, // ✅ from route
                 'service_condition_id' => $data['service_condition_id'],
             ],
             [
@@ -47,10 +73,10 @@ class ServiceRateController extends Controller
                 'vendorService',
                 'serviceCondition'
             ])
-        ], 201);
+        ], 200); // use 200 for updateOrCreate
     }
 
-   
+
     /**
      * Update override explicitly
      */

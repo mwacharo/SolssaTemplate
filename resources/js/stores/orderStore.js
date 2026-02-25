@@ -139,24 +139,69 @@ export const useOrderStore = defineStore('orders', () => {
     if (orderFilterZone.value) filters.zone_id = orderFilterZone.value
     if (orderFilterAgent.value) filters.agent_id = orderFilterAgent.value
     if (orderFilterRider.value) filters.rider_id = orderFilterRider.value
-    if (orderFilterVendor.value) filters.vendor_id = orderFilterVendor.value
+    if (orderFilterVendor.value) filters.vendostatusDateRanger_id = orderFilterVendor.value
     if (orderFilterCity.value) filters.city_id = orderFilterCity.value
     if (orderFilterCategory.value) filters.category_id = orderFilterCategory.value
     if (orderSearch.value) filters.search = orderSearch.value
 
     // Format dates properly
-    if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
-      filters.delivery_from = formatDate(deliveryDateRange.value[0])
-      filters.delivery_to = formatDate(deliveryDateRange.value[1])
-    }
-    if (statusDateRange.value && statusDateRange.value.length === 2) {
-      filters.status_from = formatDate(statusDateRange.value[0])
-      filters.status_to = formatDate(statusDateRange.value[1])
-    }
-    if (createdDateRange.value && createdDateRange.value.length === 2) {
-      filters.created_from = formatDate(createdDateRange.value[0])
-      filters.created_to = formatDate(createdDateRange.value[1])
-    }
+    // if (deliveryDateRange.value && deliveryDateRange.value.length === 2) {
+    //   filters.delivery_from = formatDate(deliveryDateRange.value[0])
+    //   filters.delivery_to = formatDate(deliveryDateRange.value[1])
+    // }
+    // if (statusDateRange.value && statusDateRange.value.length === 2) {
+    //   filters.status_from = formatDate(statusDateRange.value[0])
+    //   filters.status_to = formatDate(statusDateRange.value[1])
+    // }
+    // if (createdDateRange.value && createdDateRange.value.length === 2) {
+    //   filters.created_from = formatDate(createdDateRange.value[0])
+    //   filters.created_to = formatDate(createdDateRange.value[1])
+    // }
+
+
+//     // Delivery date range
+// if (deliveryDateRange.value && deliveryDateRange.value.length > 0) {
+//   filters.delivery_from = formatDate(deliveryDateRange.value[0]);
+//   filters.delivery_to = deliveryDateRange.value.length > 1
+//     ? formatDate(deliveryDateRange.value[1])
+//     : formatDate(deliveryDateRange.value[0]); // same-day if only one
+// }applyFilters
+
+// // Status date range
+// if (statusDateRange.value && statusDateRange.value.length > 0) {
+//   filters.status_from = formatDate(statusDateRange.value[0]);
+//   filters.status_to = statusDateRange.value.length > 1
+//     ? formatDate(statusDateRange.value[1])
+//     : formatDate(statusDateRange.value[0]); // same-day if only one
+// }
+// // Created date range
+// if (createdDateRange.value && createdDateRange.value.length > 0) {
+//   filters.created_from = formatDate(createdDateRange.value[0]);
+//   filters.created_to = createdDateRange.value.length > 1
+//     ? formatDate(createdDateRange.value[1])
+//     : formatDate(createdDateRange.value[0]);
+// }
+
+// Delivery date range
+if (deliveryDateRange.value && deliveryDateRange.value.length > 0) {
+  const delivery = deliveryDateRange.value;
+  filters.delivery_from = formatDate(delivery[0]);
+  filters.delivery_to = formatDate(delivery[delivery.length - 1]);
+}
+
+// Status date range
+if (statusDateRange.value && statusDateRange.value.length > 0) {
+  const status = statusDateRange.value;
+  filters.status_from = formatDate(status[0]);
+  filters.status_to = formatDate(status[status.length - 1]);
+}
+
+// Created date range
+if (createdDateRange.value && createdDateRange.value.length > 0) {
+  const created = createdDateRange.value;
+  filters.created_from = formatDate(created[0]);
+  filters.created_to = formatDate(created[created.length - 1]);
+}
 
     return filters
   }

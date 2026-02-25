@@ -59,7 +59,7 @@ class ReportController extends Controller
             'rider' => 'nullable|integer|exists:users,id',
             'confirmationStatus' => 'nullable|string',
             'shippingStatus' => 'nullable|string',
-            'orderDate' => 'nullable|array',
+            // 'orderDate' => 'nullable|array',
             'orderDate.start' => 'nullable|date',
             'orderDate.end' => 'nullable|date',
             'deliveryDate' => 'nullable|array',

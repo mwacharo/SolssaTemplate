@@ -201,8 +201,12 @@
                                 class="block text-xs font-semibold text-red-600 mb-1 uppercase tracking-wider"
                                 >Delivery Date</label
                             >
-                            <DateRangePicker
+                            <!-- <DateRangePicker
                                 v-model="orderStore.filters.deliveryDate"
+                            /> -->
+
+                            <DateRangePicker
+                                v-model="orderStore.deliveryDateRange"
                             />
                         </div>
                     </template>

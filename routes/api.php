@@ -591,7 +591,18 @@ Route::prefix('v1')->group(function () {
     // seriverates 
 
     Route::get('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'index']);
-    Route::post('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
+    // Route::post('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
+
+    //                 `/api/v1/vendors/${selectedVendorId.value}/services/${vendorServiceId}/rates`,
+
+    // Route::post('/vendors/{vendorId}/services/{vendorServiceId}/rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
+
+
+    Route::post(
+        '/vendors/{vendor}/services/{vendorService}/rates',
+        [ServiceRateController::class, 'store']
+    );
+
     Route::get('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'show']);
     Route::put('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'update']);
     Route::delete('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'destroy']);

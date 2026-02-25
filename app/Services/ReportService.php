@@ -155,9 +155,6 @@ class ReportService
         return $query;
     }
 
-    /**
-     * Apply filters to query
-     */
     protected function applyFilters($query, array $filters, string $reportType)
     {
         // Merchant filter
@@ -180,14 +177,13 @@ class ReportService
         }
 
         // Zone filter
-        // Zone filter (customer's zone)
         if (!empty($filters['zone'])) {
             $query->whereHas('customer', function ($q) use ($filters) {
                 $q->where('zone_id', $filters['zone']);
             });
         }
 
-        // City filter (customer's city)
+        // City filter
         if (!empty($filters['city'])) {
             $query->whereHas('customer', function ($q) use ($filters) {
                 $q->where('city_id', $filters['city']);
@@ -209,51 +205,36 @@ class ReportService
             });
         }
 
-        // Shipping Status filter
-        if (!empty($filters['shippingStatus'])) {
-            $query->whereHas('latest_status.status', function ($q) use ($filters) {
-                $q->where('name', $filters['shippingStatus']);
+        // Status date range
+        if (!empty($filters['status_from']) || !empty($filters['status_to'])) {
+            $query->whereHas('statusTimestamps', function ($q) use ($filters) {
+                if (!empty($filters['status_from'])) {
+                    $q->whereDate('created_at', '>=', $filters['status_from']);
+                }
+                if (!empty($filters['status_to'])) {
+                    $q->whereDate('created_at', '<=', $filters['status_to']);
+                }
             });
         }
 
-        // Order Date range
-        if (!empty($filters['orderDate'])) {
-            if (!empty($filters['orderDate']['start'])) {
-                $query->whereDate('created_at', '>=', $filters['orderDate']['start']);
-            }
-            if (!empty($filters['orderDate']['end'])) {
-                $query->whereDate('created_at', '<=', $filters['orderDate']['end']);
-            }
+        // Delivery date range
+        if (!empty($filters['delivery_from'])) {
+            $query->whereDate('delivery_date', '>=', $filters['delivery_from']);
+        }
+        if (!empty($filters['delivery_to'])) {
+            $query->whereDate('delivery_date', '<=', $filters['delivery_to']);
         }
 
-        // Delivery Date range
-        if (!empty($filters['deliveryDate'])) {
-            if (!empty($filters['deliveryDate']['start'])) {
-                $query->whereDate('delivery_date', '>=', $filters['deliveryDate']['start']);
-            }
-            if (!empty($filters['deliveryDate']['end'])) {
-                $query->whereDate('delivery_date', '<=', $filters['deliveryDate']['end']);
-            }
+        // Created date range
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
         }
-
-
-        // status date range filter
-        if (!empty($filters['statusDate'])) {
-            if (!empty($filters['statusDate']['start'])) {
-                $query->whereHas('latest_status', function ($q) use ($filters) {
-                    $q->whereDate('created_at', '>=', $filters['statusDate']['start']);
-                });
-            }
-            if (!empty($filters['statusDate']['end'])) {
-                $query->whereHas('latest_status', function ($q) use ($filters) {
-                    $q->whereDate('created_at', '<=', $filters['statusDate']['end']);
-                });
-            }
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
         return $query->orderBy('created_at', 'desc');
     }
-
     /**
      * Format report data based on type
      */

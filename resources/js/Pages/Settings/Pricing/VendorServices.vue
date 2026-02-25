@@ -149,7 +149,11 @@
                                             @click="
                                                 handleSaveOverride(
                                                     vs.id,
+                                                    // pass service_condition_id
+
                                                     condition.id,
+                                                    // custom_rate
+                                                    // rate_type
                                                 )
                                             "
                                             class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"

@@ -29,9 +29,17 @@
             </template>
 
             <v-card>
-                <v-date-picker
+                <!-- <v-date-picker
                     v-model="internalValue"
                     :multiple="2"
+                    show-adjacent-months
+                    color="primary"
+                    @update:model-value="onPickerChange"
+                /> -->
+
+                <v-date-picker
+                    v-model="internalValue"
+                    multiple="range"
                     show-adjacent-months
                     color="primary"
                     @update:model-value="onPickerChange"
@@ -121,6 +129,69 @@ const labelClass = computed(() => {
 });
 
 // Format the display text
+// const displayValue = computed(() => {
+//     if (
+//         !Array.isArray(internalValue.value) ||
+//         internalValue.value.length === 0
+//     ) {
+//         return "";
+//     }
+
+//     const sortedDates = [...internalValue.value].sort((a, b) => {
+//         const dateA = a instanceof Date ? a : new Date(a);
+//         const dateB = b instanceof Date ? b : new Date(b);
+//         return dateA - dateB;
+//     });
+
+//     const dates = sortedDates.map((d) => {
+//         const date = d instanceof Date ? d : new Date(d);
+//         return date.toLocaleDateString("en-US", {
+//             month: "short",
+//             day: "2-digit",
+//             default: "Select date range",
+//             year: "numeric",
+//         });
+//     });
+
+//     const [start, end] = dates;
+
+//     if (start && end) return `${start} → ${end}`;
+//     if (start) return `${start} → ...`;
+
+//     return "";
+// });
+
+// const onPickerChange = (val) => {
+//     touched.value = true;
+
+//     let dates = [];
+
+//     if (Array.isArray(val)) {
+//         dates = val;
+//     } else if (val) {
+//         dates = [val];
+//     }
+
+//     // ⭐ SUPPORT SAME DAY RANGE
+//     // if (props.required && dates.length === 1) {
+//     //     dates = [dates[0], dates[0]];
+//     // }
+
+//     internalValue.value = dates;
+//     emit("update:modelValue", dates);
+
+//     // Validation now supports same-day range
+//     const valid = props.required ? dates.length === 2 : true;
+
+//     emit("validation", valid);
+
+//     if (dates.length >= 2) {
+//         setTimeout(() => {
+//             menu.value = false;
+//         }, 300);
+//     }
+// };
+
 const displayValue = computed(() => {
     if (
         !Array.isArray(internalValue.value) ||
@@ -129,83 +200,39 @@ const displayValue = computed(() => {
         return "";
     }
 
-    const sortedDates = [...internalValue.value].sort((a, b) => {
-        const dateA = a instanceof Date ? a : new Date(a);
-        const dateB = b instanceof Date ? b : new Date(b);
-        return dateA - dateB;
-    });
-
-    const dates = sortedDates.map((d) => {
+    const arr = internalValue.value;
+    const format = (d) => {
         const date = d instanceof Date ? d : new Date(d);
         return date.toLocaleDateString("en-US", {
             month: "short",
             day: "2-digit",
-            default: "Select date range",
             year: "numeric",
         });
-    });
+    };
 
-    const [start, end] = dates;
+    const startDate = format(arr[0]);
+    const endDate = arr.length >= 2 ? format(arr[arr.length - 1]) : null;
 
-    if (start && end) return `${start} → ${end}`;
-    if (start) return `${start} → ...`;
-
-    return "";
+    return endDate ? `${startDate} → ${endDate}` : `${startDate} → ...`;
 });
-
-// Handle user selecting dates
-// const onPickerChange = (val) => {
-//     touched.value = true;
-
-//     let dates = [];
-//     if (Array.isArray(val)) {
-//         dates = val;
-//     } else if (val instanceof Date) {
-//         dates = [val];
-//     } else if (val) {
-//         dates = [val];
-//     }
-
-//     internalValue.value = dates;
-//     emit("update:modelValue", dates);
-
-//     // Emit validation state
-//     const valid = props.required ? dates.length === 2 : true;
-//     emit("validation", valid);
-
-//     // Auto-close when both dates are selected
-//     if (dates.length >= 2) {
-//         setTimeout(() => {
-//             menu.value = false;
-//         }, 300);
-//     }
-// };
 
 const onPickerChange = (val) => {
     touched.value = true;
 
-    let dates = [];
+    const arr = Array.isArray(val) ? val : val ? [val] : [];
 
-    if (Array.isArray(val)) {
-        dates = val;
-    } else if (val) {
-        dates = [val];
-    }
+    const startDate = arr[0];
+    const endDate = arr[arr.length - 1];
 
-    // ⭐ SUPPORT SAME DAY RANGE
-    if (props.required && dates.length === 1) {
-        dates = [dates[0], dates[0]];
-    }
+    const dates = arr.length >= 2 ? [startDate, endDate] : arr;
 
     internalValue.value = dates;
     emit("update:modelValue", dates);
 
-    // Validation now supports same-day range
     const valid = props.required ? dates.length === 2 : true;
-
     emit("validation", valid);
 
-    if (dates.length >= 2) {
+    if (dates.length === 2) {
         setTimeout(() => {
             menu.value = false;
         }, 300);

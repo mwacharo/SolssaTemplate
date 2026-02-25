@@ -32,7 +32,7 @@ const useOrderReportStore = defineStore("orderReport", () => {
         dispatch:            ["merchant", "zone", "city", "orderDate"],
         out_scan:            ["zone", "city", "rider", "deliveryDate"],
         undispatched:        ["merchant", "product", "zone", "city", "orderDate"],
-        merchant:            ["merchant", "product", "zone", "city", "confirmationStatus", "shippingStatus", "orderDate",'statusDate'],
+        merchant:            ["merchant", "product", "zone", "city", "confirmationStatus", "orderDate",'statusDate'],
         product:             ["merchant", "product", "category", "zone", "city", "orderDate"],
         product_performance: ["merchant", "product", "category", "orderDate"],
         city:                ["city", "zone", "orderDate", "shippingStatus"],
@@ -105,6 +105,8 @@ const useOrderReportStore = defineStore("orderReport", () => {
         shippingStatus:     null,
         orderDate:          null,
         deliveryDate:       null,
+        statusDate:         null,
+
     });
 
     const options = ref({
@@ -146,34 +148,64 @@ const useOrderReportStore = defineStore("orderReport", () => {
         pagination.value = { page: 1, perPage: 25, total: 0 };
     }
 
-    function buildParams() {
-        const params = {
-            report_type: selectedReportType.value,
-            page:        pagination.value.page,
-            per_page:    pagination.value.perPage,
 
 
-        merchant: orderStore.orderFilterVendor,
-        product: orderStore.orderFilterProduct,
-        category: orderStore.orderFilterCategory,
-        zone: orderStore.orderFilterZone,
-        city: orderStore.orderFilterCity,
-        rider: orderStore.orderFilterRider,
-        agent: orderStore.orderFilterAgent,
+    // Helper function to format dates
+  const formatDate = (date) => {
+    if (!date) return null
+    const d = new Date(date)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+  
 
-        confirmationStatus: orderStore.orderFilterStatus,
-        statusDate: orderStore.statusDateRange,
-        deliveryDate: orderStore.deliveryDateRange,
-        orderDate: orderStore.createdDateRange,
 
-        };
-        activeFilterFields.value.forEach((field) => {
-            if (filters.value[field] !== null && filters.value[field] !== "") {
-                params[field] = filters.value[field];
-            }
-        });
-        return params;
+   function buildParams() {
+  function getDateRangeValues(rangeArray) {
+    if (!Array.isArray(rangeArray) || !rangeArray[0]) {
+      return { from: null, to: null };
     }
+
+    const from = formatDate(rangeArray[0]);
+    const to = formatDate(rangeArray[rangeArray.length - 1]);
+
+    return { from, to };
+  }
+
+  const statusRange   = getDateRangeValues(orderStore.statusDateRange);
+  const deliveryRange = getDateRangeValues(orderStore.deliveryDateRange);
+  const orderRange    = getDateRangeValues(orderStore.createdDateRange);
+
+  return {
+    report_type: selectedReportType.value,
+    page: pagination.value.page,
+    per_page: pagination.value.perPage,
+
+    merchant:           orderStore.orderFilterVendor,
+    product:            orderStore.orderFilterProduct,
+    category:           orderStore.orderFilterCategory,
+    zone:               orderStore.orderFilterZone,
+    city:               orderStore.orderFilterCity,
+    rider:              orderStore.orderFilterRider,
+    agent:              orderStore.orderFilterAgent,
+    confirmationStatus: orderStore.orderFilterStatus,
+
+    status_from:   statusRange.from,
+    status_to:     statusRange.to,
+
+    delivery_from: deliveryRange.from,
+    delivery_to:   deliveryRange.to,
+
+    date_from: orderRange.from,
+    date_to:   orderRange.to,
+  };
+}
+
+
+
+
 
     async function fetchOptions() {
         loading.value.options = true;
@@ -193,7 +225,61 @@ const useOrderReportStore = defineStore("orderReport", () => {
         }
     }
 
-    async function generateReport() {
+//     async function generateReport() {
+//         if (!selectedReportType.value) return;
+//         error.value = null;
+//         loading.value.generate = true;
+//         pagination.value.page  = 1;
+//         try {
+
+//             const params = buildParams();
+//         console.log("📦 Sending report params:", params);
+
+//         const { data } = await axios.get("/api/v1/reports/generate", {
+//                 params: buildParams(),
+//             });
+//             results.value            = data.data  ?? [];
+//             pagination.value.total   = data.total ?? 0;
+//         } 
+//         // catch (e) {
+//         //     error.value   = e.response?.data?.message ?? "Failed to generate report.";
+//         //     results.value = [];
+//         // } finally {
+//         //     loading.value.generate = false;
+//         // }
+
+//         catch (e) {
+//     console.group("🚨 Report Generation Error");
+
+//     console.log("Full error object:", e);
+
+//     if (e.response) {
+//         console.log("Status:", e.response.status);
+//         console.log("Headers:", e.response.headers);
+//         console.log("Response data:", e.response.data);
+//         console.log("Backend message:", e.response.data?.message);
+//         console.log("Validation errors:", e.response.data?.errors);
+//     } else if (e.request) {
+//         console.log("No response received. Request:", e.request);
+//     } else {
+//         console.log("Error message:", e.message);
+//     }
+
+//     console.log("Request params:", buildParams());
+//     console.groupEnd();
+
+//     error.value =
+//         e.response?.data?.message ||
+//         JSON.stringify(e.response?.data?.errors) ||
+//         e.message ||
+//         "Failed to generate report.";
+
+//     results.value = [];
+// }
+//     }
+
+
+   async function generateReport() {
         if (!selectedReportType.value) return;
         error.value = null;
         loading.value.generate = true;
@@ -222,6 +308,8 @@ const useOrderReportStore = defineStore("orderReport", () => {
         loading.value.download = true;
         try {
             const response = await axios.get("/api/v1/reports/download", {
+
+
                 params:       { ...buildParams(), format: "xlsx" },
                 responseType: "blob",
             });
