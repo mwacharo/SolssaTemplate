@@ -83,7 +83,7 @@ class ProductController extends Controller
             $query->where('vendor_id', $user->id);
         }
 
-        $products = $query->paginate(20);
+        $products = $query->paginate(50);
 
         return response()->json(
             ProductResource::collection($products)
