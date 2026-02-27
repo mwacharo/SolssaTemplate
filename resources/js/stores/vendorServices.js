@@ -34,6 +34,8 @@ export const useVendorServicesStore = defineStore('vendorServices', () => {
             const res = await axios.get(`/api/v1/vendors/${vendorId}/services`);
             vendorServices.value = res.data;
 
+            
+
             // Initialize override map
             vendorServices.value.forEach((vs) => {
                 overrides.value[vs.id] = {};

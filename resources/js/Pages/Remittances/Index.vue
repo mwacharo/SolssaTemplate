@@ -26,16 +26,15 @@
 
                 <v-col cols="12" md="4">
                     <v-autocomplete
-                        v-model="orderStore.orderFilterVendor"
+                        v-model="orderStore.vendor"
                         :items="orderStore.vendorOptions"
                         item-title="name"
                         item-value="id"
                         clearable
-                        dense
-                        outlined
-                        placeholder="Search sellers..."
+                        label="Search sellers..."
+                        variant="outlined"
+                        density="comfortable"
                         class="w-full"
-                        autocomplete
                     />
                 </v-col>
 
@@ -59,7 +58,7 @@
                         <thead>
                             <tr>
                                 <th>Invoice No</th>
-                                <th>Agent</th>
+                                <th>Vendor</th>
                                 <th>Period</th>
                                 <th>Orders</th>
                                 <th>Commission</th>
@@ -70,7 +69,7 @@
                         <tbody>
                             <tr v-for="invoice in invoices" :key="invoice.id">
                                 <td>{{ invoice.invoice_no }}</td>
-                                <td>{{ invoice.agent_name }}</td>
+                                <td>{{ invoice.vendor_name }}</td>
                                 <td>{{ invoice.period }}</td>
                                 <td>{{ invoice.order_count }}</td>
                                 <td>
@@ -111,7 +110,7 @@
         <v-dialog v-model="dialog" max-width="1000" persistent>
             <v-card>
                 <v-card-title class="d-flex justify-space-between align-center">
-                    <span>Generate Call Agent Invoice</span>
+                    <span>Generate Vendor Invoice</span>
                     <v-btn
                         icon="mdi-close"
                         variant="text"
@@ -120,14 +119,15 @@
                 </v-card-title>
 
                 <v-card-text>
-                    <!-- Agent Info -->
+                    <!-- Vendor Info -->
                     <v-alert
                         type="info"
                         variant="tonal"
                         class="mb-4"
-                        v-if="selectedAgent"
+                        v-if="selectedVendor"
                     >
-                        <strong>Agent:</strong> {{ selectedAgent.name }} <br />
+                        <strong>Vendor:</strong> {{ selectedVendor.name }}
+                        <br />
                         <strong>Period:</strong>
                         {{ formatDate(filters.from) }} to
                         {{ formatDate(filters.to) }}
@@ -163,14 +163,19 @@
                             <tr>
                                 <th>Order No</th>
                                 <th>Customer</th>
-                                <th>phone</th>
+                                <th>Phone</th>
                                 <th>COD</th>
-                                <th>status date</th>
-                                <th>quantity</th>
-                                <th>product</th>
-                                <th>address</th>
-                                <!-- <th>zone</th>
-                                <th>city</th> -->
+                                <!-- order status  -->
+
+                                <th>Latest Status</th>
+                                <th>Status Date</th>
+                                <th>Quantity</th>
+                                <th>Product</th>
+                                <th>Address</th>
+                                <!-- city -->
+                                <th>City</th>
+                                <!-- zone -->
+                                <th>Zone</th>
                                 <th>Payment</th>
                                 <th>Commission</th>
                             </tr>
@@ -188,6 +193,13 @@
                                             order.cod_amount ||
                                                 order.total_price,
                                         )
+                                    }}
+                                </td>
+
+                                <td>
+                                    {{
+                                        order.latest_status?.status?.name ||
+                                        "N/A"
                                     }}
                                 </td>
                                 <td>
@@ -226,20 +238,23 @@
                                         "N/A"
                                     }}
                                 </td>
-                                <!-- <td>
+
+                                <!-- city  -->
+                                <td>
                                     {{
-                                        order.zone?.name ||
-                                        order.customer?.zone_id ||
+                                        order.customer?.city ||
+                                        order.shipping_address?.city ||
                                         "N/A"
                                     }}
                                 </td>
+                                <!-- zone -->
                                 <td>
                                     {{
-                                        order.city?.name ||
-                                        order.customer?.city_id ||
+                                        order.zone?.name ||
+                                        order.customer?.zone?.name ||
                                         "N/A"
                                     }}
-                                </td> -->
+                                </td>
                                 <td>
                                     {{
                                         order.payment_method ||
@@ -255,7 +270,7 @@
 
                     <!-- No Orders Message -->
                     <v-alert v-else type="warning" variant="tonal" class="mt-4">
-                        No orders found for the selected period and agent.
+                        No orders found for the selected period and vendor.
                     </v-alert>
 
                     <!-- Summary -->
@@ -325,19 +340,20 @@ const snackbarColor = ref("success");
 const filters = ref({
     from: "",
     to: "",
-    agent: null,
 });
 
 const rate = ref(100); // Default commission rate
 const filteredOrders = ref([]);
 
 // Computed
+
+// Reads vendor selection from the store (where the v-autocomplete binds)
 const canGenerateInvoice = computed(() => {
-    return filters.value.from && filters.value.to && filters.value.agent;
+    return filters.value.from && filters.value.to && orderStore.vendor;
 });
 
-const selectedAgent = computed(() => {
-    return orderStore.agentOptions.find((a) => a.id === filters.value.agent);
+const selectedVendor = computed(() => {
+    return orderStore.vendorOptions.find((v) => v.id === orderStore.vendor);
 });
 
 const totalCommission = computed(() => {
@@ -347,7 +363,7 @@ const totalCommission = computed(() => {
 // Methods
 const openDialog = async () => {
     if (!canGenerateInvoice.value) {
-        showSnackbar("Please select date range and agent", "error");
+        showSnackbar("Please select date range and vendor", "error");
         return;
     }
 
@@ -355,9 +371,8 @@ const openDialog = async () => {
     loading.value = true;
 
     try {
-        // Fetch orders for the selected agent and date range
         const response = await fetch(
-            `/api/v1/orders/agent/${filters.value.agent}?from=${filters.value.from}&to=${filters.value.to}`,
+            `/api/v1/orders/vendor/${orderStore.vendor}?from=${filters.value.from}&to=${filters.value.to}`,
         );
         const data = await response.json();
 
@@ -385,9 +400,9 @@ const generateInvoice = async () => {
 
     try {
         await router.post(
-            "/call-agent-invoices",
+            "/vendor-invoices",
             {
-                agent_id: filters.value.agent,
+                vendor_id: orderStore.vendor,
                 from: filters.value.from,
                 to: filters.value.to,
                 rate: rate.value,
@@ -398,8 +413,9 @@ const generateInvoice = async () => {
                 onSuccess: () => {
                     showSnackbar("Invoice generated successfully", "success");
                     closeDialog();
-                    // Reset filters
-                    filters.value = { from: "", to: "", agent: null };
+                    // Reset filters and vendor selection
+                    filters.value = { from: "", to: "" };
+                    orderStore.vendor = null;
                 },
                 onError: (errors) => {
                     showSnackbar("Error generating invoice", "error");
@@ -413,11 +429,11 @@ const generateInvoice = async () => {
 };
 
 const viewInvoice = (invoice) => {
-    router.visit(`/call-agent-invoices/${invoice.id}`);
+    router.visit(`/vendor-invoices/${invoice.id}`);
 };
 
-const downloadInvoice = async (invoice) => {
-    window.open(`/call-agent-invoices/${invoice.id}/download`, "_blank");
+const downloadInvoice = (invoice) => {
+    window.open(`/vendor-invoices/${invoice.id}/download`, "_blank");
 };
 
 const showSnackbar = (text, color = "success") => {
@@ -454,11 +470,9 @@ const getStatusColor = (status) => {
 
 // Lifecycle hooks
 onMounted(async () => {
-    // Initialize the order store if not already initialized
     if (!orderStore.initialized) {
         await orderStore.initialize();
     } else {
-        // If already initialized, just fetch dropdown options to ensure we have agents
         await orderStore.fetchDropdownOptions();
     }
 });

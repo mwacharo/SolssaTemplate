@@ -18,12 +18,14 @@
                 <h2 class="text-lg font-semibold mb-4">
                     {{ isEditing ? "Edit Condition" : "Add New Condition" }}
                 </h2>
-                
+
                 <form @submit.prevent="handleSubmit">
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Service -->
                         <div>
-                            <label class="block mb-1 font-medium">Service</label>
+                            <label class="block mb-1 font-medium"
+                                >Service</label
+                            >
                             <select
                                 v-model="form.service_id"
                                 class="w-full border rounded p-2"
@@ -42,7 +44,9 @@
 
                         <!-- Condition Type -->
                         <div>
-                            <label class="block mb-1 font-medium">Condition Type</label>
+                            <label class="block mb-1 font-medium"
+                                >Condition Type</label
+                            >
                             <select
                                 v-model="form.condition_type_id"
                                 class="w-full border rounded p-2"
@@ -61,7 +65,9 @@
 
                         <!-- Min Value -->
                         <div>
-                            <label class="block mb-1 font-medium">Min Value</label>
+                            <label class="block mb-1 font-medium"
+                                >Min Value</label
+                            >
                             <input
                                 type="number"
                                 v-model.number="form.min_value"
@@ -72,7 +78,9 @@
 
                         <!-- Max Value -->
                         <div>
-                            <label class="block mb-1 font-medium">Max Value</label>
+                            <label class="block mb-1 font-medium"
+                                >Max Value</label
+                            >
                             <input
                                 type="number"
                                 v-model.number="form.max_value"
@@ -94,7 +102,9 @@
 
                         <!-- Rate Type -->
                         <div>
-                            <label class="block mb-1 font-medium">Rate Type</label>
+                            <label class="block mb-1 font-medium"
+                                >Rate Type</label
+                            >
                             <select
                                 v-model="form.rate_type"
                                 class="w-full border rounded p-2"
@@ -120,7 +130,9 @@
 
                         <!-- Priority -->
                         <div>
-                            <label class="block mb-1 font-medium">Priority</label>
+                            <label class="block mb-1 font-medium"
+                                >Priority</label
+                            >
                             <input
                                 type="number"
                                 v-model.number="form.priority"
@@ -147,9 +159,15 @@
                             :disabled="isSubmitting"
                             class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
                         >
-                            {{ isSubmitting ? "Saving..." : (isEditing ? "Update Condition" : "Save Condition") }}
+                            {{
+                                isSubmitting
+                                    ? "Saving..."
+                                    : isEditing
+                                      ? "Update Condition"
+                                      : "Save Condition"
+                            }}
                         </button>
-                        
+
                         <button
                             v-if="isEditing"
                             type="button"
@@ -183,35 +201,34 @@
                     <tbody>
                         <tr
                             v-for="condition in conditions"
-                            :key="condition.id"
                             class="border-t hover:bg-gray-50"
                         >
                             <td class="p-3">
-                                {{ condition.service?.service_name || 'N/A' }}
+                                {{ condition.service?.service_name || "N/A" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.condition_type?.name || 'N/A' }}
+                                {{ condition.condition_type?.name || "N/A" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.min_value ?? '-' }}
+                                {{ condition.min_value ?? "-" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.max_value ?? '-' }}
+                                {{ condition.max_value ?? "-" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.rate ?? '-' }}
+                                {{ condition.rate ?? "-" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.rate_type || '-' }}
+                                {{ condition.rate_type || "-" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.value ?? '-' }}
+                                {{ condition.value ?? "-" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.priority ?? '-' }}
+                                {{ condition.priority ?? "-" }}
                             </td>
                             <td class="p-3">
-                                {{ condition.unit || '-' }}
+                                {{ condition.unit || "-" }}
                             </td>
                             <td class="p-3">
                                 <div class="flex gap-2">
@@ -305,7 +322,7 @@ const cancelEdit = () => {
 const editCondition = (condition) => {
     showForm.value = true;
     isEditing.value = true;
-    
+
     form.value = {
         id: condition.id,
         service_id: condition.service_id,
@@ -322,7 +339,7 @@ const editCondition = (condition) => {
 
 const handleSubmit = async () => {
     isSubmitting.value = true;
-    
+
     try {
         const payload = {
             service_id: form.value.service_id,

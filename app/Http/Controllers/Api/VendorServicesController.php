@@ -80,8 +80,10 @@ class VendorServicesController extends Controller
     {
         return VendorService::with([
             'service',
-            // 'service.serviceConditions',
-            // 'rates.condition'
+            'serviceRates.serviceCondition' // 👈 load nested relationship
+
+
+
         ])
             ->where('vendor_id', $id)
             ->get();

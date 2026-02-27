@@ -27,10 +27,10 @@ class ServiceRate extends Model
         return $this->belongsTo(VendorService::class);
     }
 
-    public function condition()
-    {
-        return $this->belongsTo(ServiceCondition::class, 'service_condition_id');
-    }
+    // public function condition()
+    // {
+    //     return $this->belongsTo(ServiceCondition::class, 'service_condition_id');
+    // }
 
     // serviceCondition
 

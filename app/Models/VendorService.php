@@ -29,8 +29,18 @@ class VendorService extends Model
         return $this->belongsTo(Service::class);
     }
 
-    public function servserviceRatesiceRates()
+  
+    // has many servicerates and service conditions
+
+    public function serviceRates()
     {
         return $this->hasMany(ServiceRate::class);
     }
+
+
+
+    // public function serviceConditions()
+    // {
+    //     return $this->hasMany(ServiceCondition::class);
+    // }
 }

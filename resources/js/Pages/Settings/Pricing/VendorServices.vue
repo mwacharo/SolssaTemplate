@@ -26,6 +26,7 @@
 
             <template v-else>
                 <!-- Assign New Service -->
+                <!-- if -->
                 <div class="flex gap-2 mb-6">
                     <v-autocomplete
                         v-model="selectedService"
@@ -94,12 +95,12 @@
 
                             <tbody>
                                 <!-- if service rates available show them else loop all the (conditions)service_conditions for user to overider and store the records in service rates    -->
-                                <tr
+
+                                <!-- <tr
                                     v-for="condition in conditions"
                                     :key="condition.id"
                                     class="border-t hover:bg-gray-50"
                                 >
-                                    <!-- condition name -->
 
                                     <td class="p-2">
                                         {{ condition.condition_type.name }}
@@ -113,7 +114,6 @@
                                         </span>
                                     </td>
 
-                                    <!-- value -->
                                     <td class="p-2 text-center">
                                         <span
                                             class="text-gray-500 text-xs ml-1"
@@ -161,6 +161,71 @@
                                             Save
                                         </button>
                                     </td>
+                                </tr> -->
+
+                                <tr
+                                    v-for="condition in getConditionsForService(
+                                        vs.service_id,
+                                    )"
+                                    :key="condition.id"
+                                    class="border-t hover:bg-gray-50"
+                                >
+                                    <td class="p-2">
+                                        {{ condition.condition_type.name }}
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        {{ condition.rate_type }}
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        {{ condition.value }}
+                                    </td>
+
+                                    <td class="p-2">
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            :value="
+                                                getExistingRate(
+                                                    vs,
+                                                    condition.id,
+                                                )?.custom_rate ??
+                                                store.overrides[vs.id]?.[
+                                                    condition.id
+                                                ]?.custom_rate
+                                            "
+                                            @input="
+                                                handleOverrideChange(
+                                                    vs.id,
+                                                    condition.id,
+                                                    'custom_rate',
+                                                    $event.target.value,
+                                                )
+                                            "
+                                            class="border p-1 w-24 rounded text-center"
+                                            placeholder="custom rate"
+                                        />
+                                    </td>
+
+                                    <td class="p-2 text-center">
+                                        <button
+                                            @click="
+                                                handleSaveOverride(
+                                                    vs.id,
+                                                    condition.id,
+                                                )
+                                            "
+                                            class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
+                                        >
+                                            {{
+                                                getExistingRate(
+                                                    vs,
+                                                    condition.id,
+                                                )
+                                                    ? "Update"
+                                                    : "Save"
+                                            }}
+                                        </button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -195,6 +260,19 @@ const selectedRateType = ref("");
 const custom_rate = ref("");
 
 // Methods
+
+const getConditionsForService = (serviceId) => {
+    return conditionStore.conditions.filter((c) => c.service_id === serviceId);
+};
+
+// Check if a service_rate already exists for this condition
+const getExistingRate = (vendorService, conditionId) => {
+    return (
+        vendorService.service_rates?.find(
+            (r) => r.service_condition_id === conditionId,
+        ) ?? null
+    );
+};
 const handleAssignService = async () => {
     if (!selectedService.value) return;
 
@@ -240,11 +318,11 @@ onMounted(async () => {
         console.error("Error loading services:", error);
     }
 
-    try {
-        await store.fetchVendorServices();
-    } catch (error) {
-        console.error("Error loading vendor services:", error);
-    }
+    // try {
+    //     await store.fetchVendorServices();
+    // } catch (error) {
+    //     console.error("Error loading vendor services:", error);
+    // }
 
     try {
         await conditionTypeStore.fetchAll();

@@ -1579,6 +1579,47 @@ class OrderController extends Controller
     }
 
 
+    // getby vendor
+
+
+    public function getByVendor(Request $request, $vendorId): JsonResponse
+    {
+        try {
+            $orders = Order::with([
+                'warehouse',
+                'country',
+                'agent',
+                'createdBy',
+                'rider',
+                'zone',
+                'orderItems.product',
+                'addresses',
+                'shippingAddress',
+                'pickupAddress',
+                'assignments.user',
+                'payments',
+                'latestStatus.status',
+                'customer'
+            ])->where('vendor_id', $vendorId)->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $orders
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch vendor orders', [
+                'vendor_id' => $vendorId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve orders',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
     public function export(Request $request)
     {
         return Excel::download(

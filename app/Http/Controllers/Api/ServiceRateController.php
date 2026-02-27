@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreServiceRateRequest;
 use App\Http\Requests\UpdateServiceRateRequest;
 use App\Models\ServiceRate;
+use App\Models\VendorService;
 use Illuminate\Http\JsonResponse;
 
 class ServiceRateController extends Controller
@@ -52,13 +53,47 @@ class ServiceRateController extends Controller
 
 
 
-    public function store(StoreServiceRateRequest $request, $vendorServiceId): JsonResponse
-    {
+    // public function store(StoreServiceRateRequest $request, $vendorServiceId): JsonResponse
+    // {
+    //     $data = $request->validated();
+
+    //     $rate = ServiceRate::updateOrCreate(
+    //         [
+    //             'vendor_service_id' => $vendorServiceId, // ✅ from route
+    //             'service_condition_id' => $data['service_condition_id'],
+    //         ],
+    //         [
+    //             'custom_rate' => $data['custom_rate'],
+    //             'rate_type' => $data['rate_type'],
+    //         ]
+    //     );
+
+    //     return response()->json([
+    //         'message' => 'Override saved successfully',
+    //         'data' => $rate->load([
+    //             'vendorService',
+    //             'serviceCondition'
+    //         ])
+    //     ], 200); // use 200 for updateOrCreate
+    // }
+
+
+
+    public function store(
+        StoreServiceRateRequest $request,
+        $vendorId,
+        $vendorServiceId
+    ): JsonResponse {
+
+        $vendorService = VendorService::where('vendor_id', $vendorId)
+            ->where('id', $vendorServiceId)
+            ->firstOrFail();
+
         $data = $request->validated();
 
         $rate = ServiceRate::updateOrCreate(
             [
-                'vendor_service_id' => $vendorServiceId, // ✅ from route
+                'vendor_service_id' => $vendorService->id,
                 'service_condition_id' => $data['service_condition_id'],
             ],
             [
@@ -69,11 +104,8 @@ class ServiceRateController extends Controller
 
         return response()->json([
             'message' => 'Override saved successfully',
-            'data' => $rate->load([
-                'vendorService',
-                'serviceCondition'
-            ])
-        ], 200); // use 200 for updateOrCreate
+            'data' => $rate->load(['vendorService', 'serviceCondition'])
+        ], 200);
     }
 
 
