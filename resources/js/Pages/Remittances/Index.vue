@@ -144,27 +144,20 @@
                     </div>
 
                     <!-- Orders Table -->
-                    <v-table v-else-if="filteredOrders.length > 0" class="mt-4">
+                    <!-- <v-table v-else-if="filteredOrders.length > 0" class="mt-4">
                         <thead>
                             <tr>
                                 <th>Order No</th>
                                 <th>Customer</th>
                                 <th>Phone</th>
                                 <th>COD</th>
-                                <!-- order status  -->
-
                                 <th>Latest Status</th>
                                 <th>Status Date</th>
                                 <th>Quantity</th>
                                 <th>Product</th>
                                 <th>Address</th>
-                                <!-- city -->
                                 <th>City</th>
-                                <!-- zone -->
                                 <th>Zone</th>
-                                <!-- <th>Payment</th> -->
-                                <!-- <th>Commission</th> -->
-                                <!-- status notes -->
                                 <th>Status Notes</th>
                             </tr>
                         </thead>
@@ -227,7 +220,6 @@
                                     }}
                                 </td>
 
-                                <!-- city  -->
                                 <td>
                                     {{
                                         order.customer?.city ||
@@ -235,7 +227,6 @@
                                         "N/A"
                                     }}
                                 </td>
-                                <!-- zone -->
                                 <td>
                                     {{
                                         order.zone?.name ||
@@ -243,20 +234,137 @@
                                         "N/A"
                                     }}
                                 </td>
-                                <!-- <td>
-                                    {{
-                                        order.payment_method ||
-                                        (Number(order.amount_paid || 0) > 0
-                                            ? "Prepaid"
-                                            : "COD")
-                                    }}
-                                </td> -->
-                                <!-- <td>{{ formatCurrency(rate) }}</td> -->
+                         
 
                                 <td>
                                     {{
                                         order.latest_status?.status_notes ||
                                         "N/A"
+                                    }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </v-table> -->
+
+                    <v-table v-else-if="filteredOrders.length > 0" class="mt-4">
+                        <thead>
+                            <tr>
+                                <th>Order No</th>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th>COD</th>
+                                <th>Latest Status</th>
+                                <th>Status Date</th>
+                                <th>Quantity</th>
+                                <th>Product</th>
+                                <th>Address</th>
+                                <th>City</th>
+                                <th>Zone</th>
+                                <!-- Dynamic service columns -->
+                                <th v-for="vs in vendorServices" :key="vs.id">
+                                    {{ vs.service.service_name }}
+                                </th>
+                                <th>Total Remittance</th>
+                                <th>Status Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="order in filteredOrders" :key="order.id">
+                                <td>{{ order.order_no }}</td>
+                                <td>
+                                    {{ order.customer?.full_name || "N/A" }}
+                                </td>
+                                <td>{{ order.customer?.phone || "N/A" }}</td>
+                                <td>
+                                    {{
+                                        formatCurrency(
+                                            order.cod_amount ??
+                                                order.total_price,
+                                        )
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        order.latest_status?.status?.name ||
+                                        "N/A"
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        formatDate(
+                                            order.latest_status?.created_at,
+                                        )
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        (order.order_items || []).reduce(
+                                            (sum, it) =>
+                                                sum +
+                                                (Number(it.quantity) || 0),
+                                            0,
+                                        )
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        (order.order_items || [])
+                                            .map(
+                                                (it) =>
+                                                    it.product?.product_name ||
+                                                    it.sku ||
+                                                    "N/A",
+                                            )
+                                            .join(", ")
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        order.customer?.address ||
+                                        order.shipping_address?.address ||
+                                        "N/A"
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        order.customer?.city ||
+                                        order.shipping_address?.city ||
+                                        "N/A"
+                                    }}
+                                </td>
+                                <td>
+                                    {{
+                                        order.zone?.name ||
+                                        order.customer?.zone?.name ||
+                                        "N/A"
+                                    }}
+                                </td>
+                                <!-- Dynamic service rate cells -->
+                                <td v-for="vs in vendorServices" :key="vs.id">
+                                    <span
+                                        v-if="
+                                            computeRemittance(order, vs) !==
+                                            null
+                                        "
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                computeRemittance(order, vs),
+                                            )
+                                        }}
+                                    </span>
+                                    <span v-else class="text-grey">—</span>
+                                </td>
+                                <td>
+                                    <strong>{{
+                                        formatCurrency(
+                                            orderTotalRemittance(order),
+                                        )
+                                    }}</strong>
+                                </td>
+                                <td>
+                                    {{
+                                        order.latest_status?.status_notes || "—"
                                     }}
                                 </td>
                             </tr>
@@ -314,6 +422,60 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import { router } from "@inertiajs/vue3";
 import { useOrderStore } from "@/stores/orderStore";
 
+// Compute remittance for a given order + vendorService
+const computeRemittance = (order, vendorService) => {
+    if (
+        !vendorService.service_rates ||
+        vendorService.service_rates.length === 0
+    ) {
+        return null; // No rates configured
+    }
+
+    const codAmount = parseFloat(order.cod_amount ?? order.total_price ?? 0);
+
+    // Find applicable rate by matching COD amount to condition range
+    const applicable = vendorService.service_rates.find((sr) => {
+        const cond = sr.service_condition;
+        if (!cond) return false;
+        if (cond.operator === "between") {
+            return (
+                codAmount >= parseFloat(cond.min_value) &&
+                codAmount <= parseFloat(cond.max_value)
+            );
+        }
+        return false;
+    });
+
+    if (!applicable) return null;
+
+    const condition = applicable.service_condition;
+    const rateType = applicable.rate_type ?? condition.rate_type ?? "fixed";
+    const rateValue =
+        applicable.custom_rate !== null && applicable.custom_rate !== undefined
+            ? parseFloat(applicable.custom_rate)
+            : parseFloat(condition.value ?? 0);
+
+    if (rateType === "percentage") {
+        return parseFloat(((codAmount * rateValue) / 100).toFixed(2));
+    }
+    return parseFloat(rateValue.toFixed(2));
+};
+
+// Total remittance per order across all services
+const orderTotalRemittance = (order) => {
+    return vendorServices.value.reduce((sum, vs) => {
+        const amount = computeRemittance(order, vs);
+        return sum + (amount ?? 0);
+    }, 0);
+};
+
+// Grand total across all orders
+const totalCommission = computed(() => {
+    return filteredOrders.value.reduce((sum, order) => {
+        return sum + orderTotalRemittance(order);
+    }, 0);
+});
+
 // Props
 const props = defineProps({
     invoices: {
@@ -351,11 +513,48 @@ const selectedVendor = computed(() => {
     return orderStore.vendorOptions.find((v) => v.id === orderStore.vendor);
 });
 
-const totalCommission = computed(() => {
-    return filteredOrders.value.length * rate.value;
-});
+// const totalCommission = computed(() => {
+//     return filteredOrders.value.length * rate.value;
+// });
 
 // Methods
+// const openDialog = async () => {
+//     if (!canGenerateInvoice.value) {
+//         showSnackbar("Please select date range and vendor", "error");
+//         return;
+//     }
+
+//     dialog.value = true;
+//     loading.value = true;
+
+//     try {
+//         const response = await fetch(
+//             `/api/v1/orders/vendor/${orderStore.vendor}?from=${filters.value.from}&to=${filters.value.to}`,
+//         );
+//         const data = await response.json();
+
+//         if (data.success) {
+//             filteredOrders.value = data.data.data || [];
+//         } else {
+//             throw new Error(data.message || "Failed to fetch orders");
+//         }
+//     } catch (error) {
+//         console.error("Error fetching orders:", error);
+//         showSnackbar("Error loading orders", "error");
+//         filteredOrders.value = [];
+//     } finally {
+//         loading.value = false;
+//     }
+// };
+
+// const closeDialog = () => {
+//     dialog.value = false;
+//     filteredOrders.value = [];
+// };
+
+// Add to state
+const vendorServices = ref([]);
+
 const openDialog = async () => {
     if (!canGenerateInvoice.value) {
         showSnackbar("Please select date range and vendor", "error");
@@ -366,20 +565,35 @@ const openDialog = async () => {
     loading.value = true;
 
     try {
-        const response = await fetch(
-            `/api/v1/orders/vendor/${orderStore.vendor}?from=${filters.value.from}&to=${filters.value.to}`,
-        );
-        const data = await response.json();
+        // Fetch vendor services AND orders in parallel
+        const [ordersRes, servicesRes] = await Promise.all([
+            fetch(
+                `/api/v1/orders/vendor/${orderStore.vendor}?from=${filters.value.from}&to=${filters.value.to}`,
+            ),
+            fetch(`/api/v1/vendors/${orderStore.vendor}/services`),
+        ]);
 
-        if (data.success) {
-            filteredOrders.value = data.data.data || [];
+        const [ordersData, servicesData] = await Promise.all([
+            ordersRes.json(),
+            servicesRes.json(),
+        ]);
+
+        if (ordersData.success) {
+            filteredOrders.value = ordersData.data.data || [];
         } else {
-            throw new Error(data.message || "Failed to fetch orders");
+            throw new Error(ordersData.message || "Failed to fetch orders");
         }
+
+        // Store only active outbound services (inbound=0) for column display
+        // Filter to only services with is_active=1
+        vendorServices.value = Array.isArray(servicesData)
+            ? servicesData.filter((vs) => vs.is_active === 1)
+            : [];
     } catch (error) {
-        console.error("Error fetching orders:", error);
+        console.error("Error fetching data:", error);
         showSnackbar("Error loading orders", "error");
         filteredOrders.value = [];
+        vendorServices.value = [];
     } finally {
         loading.value = false;
     }
@@ -388,6 +602,7 @@ const openDialog = async () => {
 const closeDialog = () => {
     dialog.value = false;
     filteredOrders.value = [];
+    vendorServices.value = [];
 };
 
 const generateInvoice = async () => {
