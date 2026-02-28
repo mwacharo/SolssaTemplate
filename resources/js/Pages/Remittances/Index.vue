@@ -133,20 +133,6 @@
                         {{ formatDate(filters.to) }}
                     </v-alert>
 
-                    <!-- Commission Rate -->
-                    <v-row class="mb-4">
-                        <v-col cols="12" md="6">
-                            <v-text-field
-                                v-model.number="rate"
-                                label="Commission Rate (per order)"
-                                type="number"
-                                prefix="KES"
-                                variant="outlined"
-                                density="comfortable"
-                            />
-                        </v-col>
-                    </v-row>
-
                     <!-- Loading State -->
                     <div v-if="loading" class="text-center py-8">
                         <v-progress-circular
@@ -176,8 +162,10 @@
                                 <th>City</th>
                                 <!-- zone -->
                                 <th>Zone</th>
-                                <th>Payment</th>
-                                <th>Commission</th>
+                                <!-- <th>Payment</th> -->
+                                <!-- <th>Commission</th> -->
+                                <!-- status notes -->
+                                <th>Status Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -255,15 +243,22 @@
                                         "N/A"
                                     }}
                                 </td>
-                                <td>
+                                <!-- <td>
                                     {{
                                         order.payment_method ||
                                         (Number(order.amount_paid || 0) > 0
                                             ? "Prepaid"
                                             : "COD")
                                     }}
+                                </td> -->
+                                <!-- <td>{{ formatCurrency(rate) }}</td> -->
+
+                                <td>
+                                    {{
+                                        order.latest_status?.status_notes ||
+                                        "N/A"
+                                    }}
                                 </td>
-                                <td>{{ formatCurrency(rate) }}</td>
                             </tr>
                         </tbody>
                     </v-table>
@@ -283,7 +278,7 @@
                                     {{ filteredOrders.length }}
                                 </v-col>
                                 <v-col cols="6" class="text-right">
-                                    <strong>Total Commission:</strong>
+                                    <strong>Total Remmitance:</strong>
                                     {{ formatCurrency(totalCommission) }}
                                 </v-col>
                             </v-row>
@@ -377,7 +372,7 @@ const openDialog = async () => {
         const data = await response.json();
 
         if (data.success) {
-            filteredOrders.value = data.data || [];
+            filteredOrders.value = data.data.data || [];
         } else {
             throw new Error(data.message || "Failed to fetch orders");
         }

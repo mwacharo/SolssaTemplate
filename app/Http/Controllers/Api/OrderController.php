@@ -34,7 +34,7 @@ use Illuminate\Validation\ValidationException;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdersExport;
-
+use App\Models\Status;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
@@ -1579,43 +1579,195 @@ class OrderController extends Controller
     }
 
 
-    // getby vendor
+    // getby vendor only
 
 
-    public function getByVendor(Request $request, $vendorId): JsonResponse
+    // delivered 
+    // returned
+    // canceled
+
+    // public function getByVendor(Request $request, $vendorId): JsonResponse
+    // {
+    //     try {
+    //         $orders = Order::with([
+    //             'warehouse',
+    //             'country',
+    //             'agent',
+    //             'createdBy',
+    //             'rider',
+    //             'zone',
+    //             'orderItems.product',
+    //             'addresses',
+    //             'shippingAddress',
+    //             'pickupAddress',
+    //             'assignments.user',
+    //             'payments',
+    //             'latestStatus.status',
+    //             'customer'
+    //         ])->where('vendor_id', $vendorId)->get();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $orders
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to fetch vendor orders', [
+    //             'vendor_id' => $vendorId,
+    //             'error' => $e->getMessage()
+    //         ]);
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to retrieve orders',
+    //             'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+    //         ], 500);
+    //     }
+    // }
+
+
+
+    // public function getByVendor(Request $request, int $vendorId): JsonResponse
+    // {
+    //     try {
+
+    //         // Validate input
+    //         $validated = $request->validate([
+    //             'from'     => ['required', 'date'],
+    //             'to'       => ['required', 'date', 'after_or_equal:from'],
+    //             'per_page' => ['nullable', 'integer', 'min:1'],
+    //         ]);
+
+    //         $perPage = $validated['per_page'] ?? 50;
+
+    //         // Get status IDs for filtering
+    //         $statusIds = Status::whereIn('name', ['Delivered', 'Returned', 'Canceled'])
+    //             ->pluck('id')
+    //             ->toArray();
+
+    //         // Fetch orders for vendor
+    //         $orders = Order::query()
+    //             ->where('vendor_id', $vendorId)
+    //             ->whereHas('latestStatus', function ($query) use ($statusIds, $validated) {
+    //                 $query->whereIn('status_id', $statusIds)
+    //                     ->whereBetween('order_status_timestamps.created_at', [
+    //                         $validated['from'] . ' 00:00:00',
+    //                         $validated['to'] . ' 23:59:59',
+    //                     ]);
+    //             })
+    //             ->with([
+
+    //                 'customer',
+    //                 'latestStatus.status',
+    //             ])
+    //             ->orderBy('created_at', 'desc')
+    //             ->paginate($perPage);
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'data'    => $orders,
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to fetch vendor remittance orders', [
+    //             'vendor_id' => $vendorId,
+    //             'error'     => $e->getMessage(),
+    //         ]);
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to retrieve vendor remittance orders',
+    //             'error'   => config('app.debug') ? $e->getMessage() : 'Internal server error',
+    //         ], 500);
+    //     }
+    // }
+
+
+    public function getByVendor(Request $request, int $vendorId): JsonResponse
     {
+        Log::debug('getByVendor called', [
+            'vendor_id' => $vendorId,
+            'params'    => $request->all(),
+        ]);
+
         try {
-            $orders = Order::with([
-                'warehouse',
-                'country',
-                'agent',
-                'createdBy',
-                'rider',
-                'zone',
-                'orderItems.product',
-                'addresses',
-                'shippingAddress',
-                'pickupAddress',
-                'assignments.user',
-                'payments',
-                'latestStatus.status',
-                'customer'
-            ])->where('vendor_id', $vendorId)->get();
+            // Validate input
+            $validated = $request->validate([
+                'from'     => ['required', 'date'],
+                'to'       => ['required', 'date', 'after_or_equal:from'],
+                'per_page' => ['nullable', 'integer', 'min:1'],
+            ]);
+
+            Log::debug('Validation passed', ['validated' => $validated]);
+
+            $perPage = $validated['per_page'] ?? 50;
+
+            // Get status IDs for filtering
+            $statusIds = Status::whereIn('name', ['Delivered', 'Returned', 'Canceled'])
+                ->pluck('id')
+                ->toArray();
+
+            Log::debug('Status IDs resolved', ['status_ids' => $statusIds]);
+
+            if (empty($statusIds)) {
+                Log::warning('No status IDs found for Delivered/Returned/Canceled — query will return no results');
+            }
+
+            // Fetch orders for vendor
+            $query = Order::query()
+                ->where('vendor_id', $vendorId)
+                ->whereHas('latestStatus', function ($query) use ($statusIds, $validated) {
+                    $query->whereIn('status_id', $statusIds)
+                        ->whereBetween('order_status_timestamps.created_at', [
+                            $validated['from'] . ' 00:00:00',
+                            $validated['to'] . ' 23:59:59',
+                        ]);
+                })
+                ->with([
+                    'customer',
+                    'latestStatus.status',
+                    // with orderitems and product details
+                    'orderItems.product',
+                ])
+                ->orderBy('created_at', 'desc');
+
+            Log::debug('Order query SQL', [
+                'sql'      => $query->toSql(),
+                'bindings' => $query->getBindings(),
+            ]);
+
+            $orders = $query->paginate($perPage);
+
+            Log::debug('Orders fetched', [
+                'total'        => $orders->total(),
+                'current_page' => $orders->currentPage(),
+                'per_page'     => $orders->perPage(),
+                'count'        => $orders->count(),
+            ]);
 
             return response()->json([
                 'success' => true,
-                'data' => $orders
+                'data'    => $orders,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to fetch vendor orders', [
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('Validation failed in getByVendor', [
                 'vendor_id' => $vendorId,
-                'error' => $e->getMessage()
+                'errors'    => $e->errors(),
+            ]);
+
+            throw $e; // Let Laravel handle the 422 response normally
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch vendor remittance orders', [
+                'vendor_id' => $vendorId,
+                'error'     => $e->getMessage(),
+                'file'      => $e->getFile(),
+                'line'      => $e->getLine(),
+                'trace'     => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve orders',
-                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+                'message' => 'Failed to retrieve vendor remittance orders',
+                'error'   => config('app.debug') ? $e->getMessage() : 'Internal server error',
             ], 500);
         }
     }
