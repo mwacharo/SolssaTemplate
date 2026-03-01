@@ -358,7 +358,7 @@ class OrderBulkActionService
         ])
             ->whereIn('id', $ids)
             ->whereNull('deleted_at')
-            ->get();Print
+            ->get();
 
         if ($orders->isEmpty()) {
             throw new \Exception("No orders found for given IDs");
