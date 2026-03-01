@@ -358,7 +358,7 @@ class OrderBulkActionService
         ])
             ->whereIn('id', $ids)
             ->whereNull('deleted_at')
-            ->get();
+            ->get();Print
 
         if ($orders->isEmpty()) {
             throw new \Exception("No orders found for given IDs");
@@ -434,19 +434,19 @@ class OrderBulkActionService
 
         // It will dump everything to Laravel log so you can see exactly what's wrong.
 
-        // $logoRel    = $company->logo_path ?? $company->logo ?? 'images/rushbin-logo.png';
-        // $logoRel    = ltrim($logoRel, '/');
-        // $logoAbs    = public_path($logoRel);
-        // $logoExists = file_exists($logoAbs);
+        $logoRel    = $company->logo_path ?? $company->logo ?? 'images/rushbin-logo.png';
+        $logoRel    = ltrim($logoRel, '/');
+        $logoAbs    = public_path($logoRel);
+        $logoExists = file_exists($logoAbs);
 
-        // Log::debug('=== LOGO DEBUG ===', [
-        //     'company->logo_path'   => $company->logo_path ?? 'NOT SET',
-        //     'company->logo'        => $company->logo       ?? 'NOT SET',
-        //     'resolved_relative'    => $logoRel,
-        //     'resolved_absolute'    => $logoAbs,
-        //     'file_exists'          => $logoExists ? 'YES ✅' : 'NO ❌',
-        //     'public_path()'        => public_path(),
-        // ]);
+        Log::debug('=== LOGO DEBUG ===', [
+            'company->logo_path'   => $company->logo_path ?? 'NOT SET',
+            'company->logo'        => $company->logo       ?? 'NOT SET',
+            'resolved_relative'    => $logoRel,
+            'resolved_absolute'    => $logoAbs,
+            'file_exists'          => $logoExists ? 'YES ✅' : 'NO ❌',
+            'public_path()'        => public_path(),
+        ]);
 
 
         // Load Blade template with multiple orders
