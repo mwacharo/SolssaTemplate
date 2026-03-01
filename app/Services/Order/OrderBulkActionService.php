@@ -430,6 +430,25 @@ class OrderBulkActionService
             $paperSize = strtolower($company->options->size);
         }
 
+
+
+        // It will dump everything to Laravel log so you can see exactly what's wrong.
+
+        // $logoRel    = $company->logo_path ?? $company->logo ?? 'images/rushbin-logo.png';
+        // $logoRel    = ltrim($logoRel, '/');
+        // $logoAbs    = public_path($logoRel);
+        // $logoExists = file_exists($logoAbs);
+
+        // Log::debug('=== LOGO DEBUG ===', [
+        //     'company->logo_path'   => $company->logo_path ?? 'NOT SET',
+        //     'company->logo'        => $company->logo       ?? 'NOT SET',
+        //     'resolved_relative'    => $logoRel,
+        //     'resolved_absolute'    => $logoAbs,
+        //     'file_exists'          => $logoExists ? 'YES ✅' : 'NO ❌',
+        //     'public_path()'        => public_path(),
+        // ]);
+
+
         // Load Blade template with multiple orders
         $pdf = Pdf::loadView('waybill.bulk-template', [
             'waybills' => $waybills,
@@ -440,7 +459,10 @@ class OrderBulkActionService
                 'dpi' => 150,
                 'defaultFont' => 'sans-serif',
                 'isHtml5ParserEnabled' => true,
-                'isPhpEnabled' => false,
+                // 'isPhpEnabled' => false,
+                'isPhpEnabled'         => true,   // ← was false, change to true
+                'chroot'               => realpath(base_path('public')), // ← add this
+
                 'margin-top' => 0,
                 'margin-right' => 0,
                 'margin-bottom' => 0,

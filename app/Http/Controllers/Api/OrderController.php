@@ -1701,7 +1701,7 @@ class OrderController extends Controller
             $perPage = $validated['per_page'] ?? 50;
 
             // Get status IDs for filtering
-            $statusIds = Status::whereIn('name', ['Delivered', 'Returned', 'Canceled'])
+            $statusIds = Status::whereIn('name', ['Delivered', 'Returned', 'Return', 'Cancelled'])
                 ->pluck('id')
                 ->toArray();
 
@@ -1722,7 +1722,8 @@ class OrderController extends Controller
                         ]);
                 })
                 ->with([
-                    'customer',
+                    'customer.city',      // Add this
+                    'customer.zone',      // Add this
                     'latestStatus.status',
                     // with orderitems and product details
                     'orderItems.product',

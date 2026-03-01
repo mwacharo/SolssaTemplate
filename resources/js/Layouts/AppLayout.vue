@@ -59,7 +59,7 @@ const navItems = computed(() => {
         userRoles.value,
         userPlan,
         enabledFeatures,
-        userPermissions.value
+        userPermissions.value,
     );
 
     console.log("Filtered nav items:", filtered);
@@ -109,7 +109,7 @@ const switchToTeam = (team) => {
         },
         {
             preserveState: false,
-        }
+        },
     );
 };
 
@@ -170,11 +170,13 @@ watch(darkMode, (newValue) => {
                 <v-list-item class="px-2 py-4">
                     <template v-slot:prepend>
                         <ApplicationMark height="32" />
+
+                        <!-- assume logo exist from waybill_settings  attribute is logo_pathh -->
                     </template>
-                    <v-list-item-title class="text-h6"> CRM </v-list-item-title>
+                    <!-- <v-list-item-title class="text-h6"> CRM </v-list-item-title>
                     <v-list-item-subtitle>
                         We tailor your coat
-                    </v-list-item-subtitle>
+                    </v-list-item-subtitle> -->
                 </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
@@ -385,7 +387,7 @@ watch(darkMode, (newValue) => {
                         :href="
                             route(
                                 'teams.show',
-                                $page.props.auth.user.current_team
+                                $page.props.auth.user.current_team,
                             )
                         "
                         link
