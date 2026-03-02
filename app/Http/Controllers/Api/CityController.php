@@ -24,10 +24,19 @@ class CityController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(StoreCityRequest $request)
+    // {
+    //     $city = City::create($request->validated());
+    //     return new CityResource($city);
+    // }
+
+    /**
+     * Check if a city name already exists.
+     */
     public function store(StoreCityRequest $request)
     {
-        $city = City::create($request->validated());
-        return new CityResource($city);
+        $exists = City::where('name', $request->validated()['name'])->exists();
+        return response()->json(['exists' => $exists]);
     }
 
     /**
