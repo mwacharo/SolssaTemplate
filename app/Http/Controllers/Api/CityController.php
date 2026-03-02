@@ -35,8 +35,11 @@ class CityController extends Controller
      */
     public function store(StoreCityRequest $request)
     {
-        $exists = City::where('name', $request->validated()['name'])->exists();
-        return response()->json(['exists' => $exists]);
+        $city = City::updateOrCreate(
+            ['name' => $request->validated()['name']],
+            $request->validated()
+        );
+        return new CityResource($city);
     }
 
     /**
