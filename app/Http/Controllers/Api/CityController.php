@@ -17,7 +17,7 @@ class CityController extends Controller
     public function index()
     {
         return CityResource::collection(
-            City::with('country')->paginate(15)
+            City::with('country')->paginate(300)
         );
     }
 

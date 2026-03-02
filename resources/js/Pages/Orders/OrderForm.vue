@@ -117,7 +117,7 @@
                                     prepend-inner-icon="mdi-devices"
                                     variant="outlined"
                                     density="comfortable"
-                                    :rules="[rules.required]"
+                                    :x="[rules.required]"
                                 />
                             </v-col>
 
@@ -180,7 +180,8 @@
                                     density="comfortable"
                                     :rules="[rules.required]"
                                     @update:model-value="onVendorChange"
-                                />
+                                />                            @update:model-value="onAddressTypeChange"
+
                             </v-col>
 
                             <v-col cols="12" md="6">
@@ -655,51 +656,7 @@
                         </v-btn>
                     </div>
 
-                    <!-- <div class="mt-4">
-                        <v-row>
-                            <v-col cols="12" md="4">
-                                <v-text-field
-                                    :model-value="calculateTotal()"
-                                    @update:model-value="
-                                        orderEdit.total_price = $event
-                                    "
-                                    label="Total"
-                                    variant="outlined"
-                                    density="comfortable"
-                                    readonly
-                                />
-                            </v-col>
-                            <v-col cols="12" md="4">
-                                <v-text-field
-                                    v-model="orderEdit.shipping_charges"
-                                    label="Shipping Charges"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    variant="outlined"
-                                    density="comfortable"
-                                    @update:model-value="updateTotals()"
-                                />
-                            </v-col>
-
-                            <v-col cols="12" md="4">
-                                <v-text-field
-                                    :model-value="
-                                        (
-                                            parseFloat(calculateTotal()) +
-                                            parseFloat(
-                                                orderEdit.shipping_charges || 0,
-                                            )
-                                        ).toFixed(2)
-                                    "
-                                    label="Grand Total"
-                                    variant="outlined"
-                                    density="comfortable"
-                                    readonly
-                                />
-                            </v-col>
-                        </v-row>
-                    </div> -->
+                    
 
                     <div class="mt-4">
                         <v-row>
