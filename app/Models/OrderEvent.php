@@ -10,6 +10,8 @@ class OrderEvent extends Model
         'order_id',
         'event_type',
         'event_data',
+        'actor_id',
+        'notes',
     ];
 
     protected $casts = [

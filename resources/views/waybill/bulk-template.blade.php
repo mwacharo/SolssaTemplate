@@ -13,8 +13,10 @@
         }
 
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: sans-serif;
             font-size: 13px;
+            font-weight: 700;
+
             color: #000;
         }
 
