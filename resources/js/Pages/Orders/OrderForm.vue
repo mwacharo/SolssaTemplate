@@ -180,8 +180,8 @@
                                     density="comfortable"
                                     :rules="[rules.required]"
                                     @update:model-value="onVendorChange"
-                                />                            @update:model-value="onAddressTypeChange"
-
+                                />
+                                <!-- @update:model-value="onAddressTypeChange" -->
                             </v-col>
 
                             <v-col cols="12" md="6">
@@ -292,7 +292,6 @@
                                             prepend-inner-icon="mdi-city"
                                             variant="outlined"
                                             density="comfortable"
-                                            :rules="[rules.required]"
                                             class="mb-3"
                                         />
                                         <v-select
@@ -655,8 +654,6 @@
                             Add Item
                         </v-btn>
                     </div>
-
-                    
 
                     <div class="mt-4">
                         <v-row>

@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRemittanceRequest;
 use App\Http\Requests\UpdateRemittanceRequest;
 use App\Models\Remittance;
+use App\Services\Remittance\RemittanceCalculationService;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class RemittanceController extends Controller
 {
@@ -14,7 +18,12 @@ class RemittanceController extends Controller
      */
     public function index()
     {
-        //
+        $remittances = Remittance::with('orders', 'vendor')->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'data' => $remittances
+        ]);
     }
 
     /**
@@ -28,10 +37,29 @@ class RemittanceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(StoreRemittanceRequest $request)
+    // {
+    //     //
+    // }
     public function store(StoreRemittanceRequest $request)
     {
-        //
+        $service = new RemittanceCalculationService(
+            $request->vendor_id,
+            $request->orders,
+            $request->from,
+            $request->to
+        );
+
+        $remittance = $service->generate();
+
+        return response()->json([
+            'success' => true,
+            'data' => $remittance
+        ]);
     }
+
+
+
 
     /**
      * Display the specified resource.

@@ -197,7 +197,8 @@ class Order extends Model
     // belongs to remittance
     public function remittance()
     {
-        return $this->belongsTo(Remittance::class);
+        // return $this->belongsTo(Remittance::class);
+        return $this->belongsTo(\App\Models\Remittance::class, 'remittance_id');
     }
 
 

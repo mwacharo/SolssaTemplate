@@ -51,7 +51,7 @@
             </v-row>
 
             <!-- Current Invoices Table -->
-            <v-card class="mt-6" v-if="invoices.length > 0">
+            <v-card class="mt-6" v-if="props.invoices.length > 0">
                 <v-card-title>Recent Invoices</v-card-title>
                 <v-card-text>
                     <v-table>
@@ -60,38 +60,56 @@
                                 <th>Invoice No</th>
                                 <th>Vendor</th>
                                 <th>Period</th>
-                                <th>Orders</th>
-                                <th>Commission</th>
+                                <th>Total Amount</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="invoice in invoices" :key="invoice.id">
-                                <td>{{ invoice.invoice_no }}</td>
-                                <td>{{ invoice.vendor_name }}</td>
-                                <td>{{ invoice.period }}</td>
-                                <td>{{ invoice.order_count }}</td>
+                            <tr
+                                v-for="invoice in props.invoices"
+                                :key="invoice.id"
+                            >
+                                <td>{{ invoice.invoice_number }}</td>
+                                <td>{{ invoice.vendor?.name || "N/A" }}</td>
                                 <td>
                                     {{
-                                        formatCurrency(invoice.total_commission)
+                                        formatDate(invoice.payment_period_start)
                                     }}
+                                    to
+                                    {{ formatDate(invoice.payment_period_end) }}
+                                </td>
+                                <td>
+                                    {{ formatCurrency(invoice.total_amount) }}
                                 </td>
                                 <td>
                                     <v-chip
-                                        :color="getStatusColor(invoice.status)"
+                                        :color="
+                                            getStatusColor(
+                                                invoice.approval_status,
+                                            )
+                                        "
                                         size="small"
                                     >
-                                        {{ invoice.status }}
+                                        {{ invoice.approval_status }}
                                     </v-chip>
                                 </td>
                                 <td>
-                                    <v-btn
+                                    <!-- <v-btn
                                         icon="mdi-eye"
                                         size="small"
                                         variant="text"
                                         @click="viewInvoice(invoice)"
+                                    /> 
+                                    -->
+
+                                    <v-btn
+                                        icon="mdi-eye"
+                                        size="small"
+                                        variant="text"
+                                        @click="openDialog(invoice)"
                                     />
+
                                     <v-btn
                                         icon="mdi-download"
                                         size="small"
@@ -173,12 +191,7 @@
                                 </td>
                                 <td>{{ order.customer?.phone || "N/A" }}</td>
                                 <td>
-                                    {{
-                                        formatCurrency(
-                                            order.cod_amount ??
-                                                order.total_price,
-                                        )
-                                    }}
+                                    {{ formatCurrency(order.total_price) }}
                                 </td>
                                 <td>
                                     {{
@@ -237,11 +250,28 @@
                                     }}
                                 </td>
                                 <!-- Dynamic service rate cells -->
-                                <td v-for="vs in vendorServices" :key="vs.id">
+                                <!-- <td v-for="vs in vendorServices" :key="vs.id">
                                     <span
                                         v-if="
                                             computeRemittance(order, vs) !==
                                             null
+                                        "
+                                    >
+                                        {{
+                                            formatCurrency(
+                                                computeRemittance(order, vs),
+                                            )
+                                        }}
+                                    </span>
+                                    <span v-else class="text-grey">—</span>
+                                </td> -->
+
+                                <td v-for="vs in vendorServices" :key="vs.id">
+                                    <span
+                                        v-if="
+                                            applicableServices(order).some(
+                                                (s) => s.id === vs.id,
+                                            )
                                         "
                                     >
                                         {{
@@ -346,6 +376,7 @@ import { ref, computed, onMounted } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import { router } from "@inertiajs/vue3";
 import { useOrderStore } from "@/stores/orderStore";
+import axios from "axios";
 
 const props = defineProps({
     invoices: { type: Array, default: () => [] },
@@ -365,6 +396,54 @@ const filteredOrders = ref([]);
 const vendorServices = ref([]); // vendor-specific service config + overrides
 const serviceConditions = ref([]); // global default pricing conditions
 
+const getFinalStatus = (order) => {
+    return order.latest_status?.status?.name?.toLowerCase() ?? null;
+};
+
+const applicableServices = (order) => {
+    const status = getFinalStatus(order);
+
+    const inbound =
+        order.customer?.zone?.inbound === 1 ||
+        order.shipping_address?.zone?.inbound === 1 ||
+        order.customer?.city?.inbound === 1 ||
+        order.shipping_address?.city?.inbound === 1;
+
+    return vendorServices.value.filter((vs) => {
+        const name = vs.service?.service_name;
+
+        if (!name) return false;
+
+        // 🚨 Ensure vendor has a rate configured
+        const hasRate =
+            (vs.service_rates && vs.service_rates.length > 0) ||
+            serviceConditions.value.some(
+                (pc) => pc.service_id === vs.service_id,
+            );
+
+        // ───── DELIVERED ─────
+        if (status === "delivered") {
+            if (name === "COD") return true;
+            if (name === "Fulfillment Fee") return true;
+
+            if (inbound && name === "Inbound Delivery Fee") return true;
+            if (!inbound && name === "Outbound Delivery Fee") return true;
+        }
+
+        // ───── RETURNED ─────
+        if (status === "returned" || status === "return") {
+            if (inbound && name === "Inbound Return Fee") return true;
+            if (!inbound && name === "Outbound Return Fee") return true;
+        }
+
+        // ───── CANCELLED ─────
+        if (status === "cancelled") {
+            if (name === "Fulfillment Fee") return true;
+        }
+
+        return false;
+    });
+};
 // ─── Remittance Logic ────────────────────────────────────────────────────────
 
 /**
@@ -376,7 +455,7 @@ const serviceConditions = ref([]); // global default pricing conditions
  *  3. null → no fee (show —)
  */
 const computeRemittance = (order, vendorService) => {
-    const orderValue = parseFloat(order.cod_amount ?? order.total_price ?? 0);
+    const orderValue = parseFloat(order.total_price ?? 0);
     const serviceId = vendorService.service_id;
 
     // ── 1. Check vendor-specific override ──────────────────────────────────
@@ -426,6 +505,7 @@ const conditionMatches = (condition, orderValue) => {
             condition.min_value !== null
                 ? parseFloat(condition.min_value)
                 : -Infinity;
+        computeRemittance;
         const max =
             condition.max_value !== null
                 ? parseFloat(condition.max_value)
@@ -443,13 +523,11 @@ const applyRate = (orderValue, rateValue, rateType) => {
     return parseFloat(rateValue.toFixed(2));
 };
 
-// Total fees for a single order across all vendor services
 const orderTotalRemittance = (order) => {
-    return vendorServices.value.reduce((sum, vs) => {
+    return applicableServices(order).reduce((sum, vs) => {
         return sum + (computeRemittance(order, vs) ?? 0);
     }, 0);
 };
-
 // Grand total fees across all orders
 const totalCommission = computed(() =>
     filteredOrders.value.reduce(
@@ -458,10 +536,15 @@ const totalCommission = computed(() =>
     ),
 );
 
-// Total COD collected across all orders
 const totalCollected = computed(() =>
     filteredOrders.value.reduce((sum, order) => {
-        return sum + parseFloat(order.cod_amount ?? order.total_price ?? 0);
+        const status = getFinalStatus(order);
+
+        if (status === "delivered") {
+            return sum + parseFloat(order.total_price ?? 0);
+        }
+
+        return sum;
     }, 0),
 );
 
@@ -539,30 +622,22 @@ const closeDialog = () => {
 const generateInvoice = async () => {
     submitting.value = true;
     try {
-        await router.post(
-            "/vendor-invoices",
-            {
-                vendor_id: orderStore.vendor,
-                from: filters.value.from,
-                to: filters.value.to,
-                orders: filteredOrders.value.map((o) => o.id),
-                total_commission: totalCommission.value,
-                total_collected: totalCollected.value,
-                total_remit: totalCollected.value - totalCommission.value,
-            },
-            {
-                onSuccess: () => {
-                    showSnackbar("Invoice generated successfully", "success");
-                    closeDialog();
-                    filters.value = { from: "", to: "" };
-                    orderStore.vendor = null;
-                },
-                onError: (errors) => {
-                    showSnackbar("Error generating invoice", "error");
-                    console.error(errors);
-                },
-            },
-        );
+        await axios.post("/api/v1/remittances", {
+            vendor_id: orderStore.vendor,
+            from: filters.value.from,
+            to: filters.value.to,
+            orders: filteredOrders.value.map((o) => o.id),
+            total_commission: totalCommission.value,
+            total_collected: totalCollected.value,
+            total_remit: totalCollected.value - totalCommission.value,
+        });
+        showSnackbar("Invoice generated successfully", "success");
+        closeDialog();
+        filters.value = { from: "", to: "" };
+        orderStore.vendor = null;
+    } catch (error) {
+        showSnackbar("Error generating invoice", "error");
+        console.error(error);
     } finally {
         submitting.value = false;
     }
@@ -605,251 +680,31 @@ const getStatusColor = (status) => {
     return colors[status?.toLowerCase()] || "default";
 };
 
-onMounted(async () => {
-    if (!orderStore.initialized) {
-        await orderStore.initialize();
-    } else {
-        await orderStore.fetchDropdownOptions();
-    }
-});
-
-// a delivered order is charged cod ,either outbound or inbound delivery fee depending on the zone the order has its inbound bolean and cod charges
-
-// a returned order is charged cod ,either outbound or inbound return fee depending on the zone the order has its inbound bolean and cod charges
-
-// a cancelled order is charged fufiilment/cancellation only
-// an order not charged all it depends with its final status
-</script>
-
-<!-- <script setup>
-import { ref, computed, onMounted } from "vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import { router } from "@inertiajs/vue3";
-import { useOrderStore } from "@/stores/orderStore";
-
-// Compute remittance for a given order + vendorService
-const computeRemittance = (order, vendorService) => {
-    if (
-        !vendorService.service_rates ||
-        vendorService.service_rates.length === 0
-    ) {
-        return null; // No rates configured
-    }
-
-    const codAmount = parseFloat(order.cod_amount ?? order.total_price ?? 0);
-
-    // Find applicable rate by matching COD amount to condition range
-    const applicable = vendorService.service_rates.find((sr) => {
-        const cond = sr.service_condition;
-        if (!cond) return false;
-        if (cond.operator === "between") {
-            return (
-                codAmount >= parseFloat(cond.min_value) &&
-                codAmount <= parseFloat(cond.max_value)
-            );
-        }
-        return false;
-    });
-
-    if (!applicable) return null;
-
-    const condition = applicable.service_condition;
-    const rateType = applicable.rate_type ?? condition.rate_type ?? "fixed";
-    const rateValue =
-        applicable.custom_rate !== null && applicable.custom_rate !== undefined
-            ? parseFloat(applicable.custom_rate)
-            : parseFloat(condition.value ?? 0);
-
-    if (rateType === "percentage") {
-        return parseFloat(((codAmount * rateValue) / 100).toFixed(2));
-    }
-    return parseFloat(rateValue.toFixed(2));
-};
-
-// Total remittance per order across all services
-const orderTotalRemittance = (order) => {
-    return vendorServices.value.reduce((sum, vs) => {
-        const amount = computeRemittance(order, vs);
-        return sum + (amount ?? 0);
-    }, 0);
-};
-
-// Grand total across all orders
-const totalCommission = computed(() => {
-    return filteredOrders.value.reduce((sum, order) => {
-        return sum + orderTotalRemittance(order);
-    }, 0);
-});
-
-// Props
-const props = defineProps({
-    invoices: {
-        type: Array,
-        default: () => [],
-    },
-});
-
-const orderStore = useOrderStore();
-
-// State
-const dialog = ref(false);
-const loading = ref(false);
-const submitting = ref(false);
-const snackbar = ref(false);
-const snackbarText = ref("");
-const snackbarColor = ref("success");
-
-const filters = ref({
-    from: "",
-    to: "",
-});
-
-const rate = ref(100); // Default commission rate
-const filteredOrders = ref([]);
-
-// Computed
-
-// Reads vendor selection from the store (where the v-autocomplete binds)
-const canGenerateInvoice = computed(() => {
-    return filters.value.from && filters.value.to && orderStore.vendor;
-});
-
-const selectedVendor = computed(() => {
-    return orderStore.vendorOptions.find((v) => v.id === orderStore.vendor);
-});
-
-// Add to state
-const vendorServices = ref([]);
-
-const openDialog = async () => {
-    if (!canGenerateInvoice.value) {
-        showSnackbar("Please select date range and vendor", "error");
-        return;
-    }
-
-    dialog.value = true;
-    loading.value = true;
-
+const fetchInvoices = async () => {
     try {
-        // Fetch vendor services AND orders in parallel
-        const [ordersRes, servicesRes] = await Promise.all([
-            fetch(
-                `/api/v1/orders/vendor/${orderStore.vendor}?from=${filters.value.from}&to=${filters.value.to}`,
-            ),
-            fetch(`/api/v1/vendors/${orderStore.vendor}/services`),
-        ]);
-
-        const [ordersData, servicesData] = await Promise.all([
-            ordersRes.json(),
-            servicesRes.json(),
-        ]);
-
-        if (ordersData.success) {
-            filteredOrders.value = ordersData.data.data || [];
+        const res = await fetch("/api/v1/remittances");
+        const data = await res.json();
+        if (data.success) {
+            // Assuming the API returns an array of invoices directly or wrapped in a data object
+            props.invoices = Array.isArray(data.data)
+                ? data.data
+                : data.data?.data || [];
         } else {
-            throw new Error(ordersData.message || "Failed to fetch orders");
+            throw new Error(data.message || "Failed to fetch invoices");
         }
-
-        // Store only active outbound services (inbound=0) for column display
-        // Filter to only services with is_active=1
-        vendorServices.value = Array.isArray(servicesData)
-            ? servicesData.filter((vs) => vs.is_active === 1)
-            : [];
     } catch (error) {
-        console.error("Error fetching data:", error);
-        showSnackbar("Error loading orders", "error");
-        filteredOrders.value = [];
-        vendorServices.value = [];
-    } finally {
-        loading.value = false;
+        console.error("Error fetching invoices:", error);
+        showSnackbar("Error loading invoices", "error");
     }
 };
 
-const closeDialog = () => {
-    dialog.value = false;
-    filteredOrders.value = [];
-    vendorServices.value = [];
-};
-
-const generateInvoice = async () => {
-    submitting.value = true;
-
-    try {
-        await router.post(
-            "/vendor-invoices",
-            {
-                vendor_id: orderStore.vendor,
-                from: filters.value.from,
-                to: filters.value.to,
-                rate: rate.value,
-                orders: filteredOrders.value.map((o) => o.id),
-                total_commission: totalCommission.value,
-            },
-            {
-                onSuccess: () => {
-                    showSnackbar("Invoice generated successfully", "success");
-                    closeDialog();
-                    // Reset filters and vendor selection
-                    filters.value = { from: "", to: "" };
-                    orderStore.vendor = null;
-                },
-                onError: (errors) => {
-                    showSnackbar("Error generating invoice", "error");
-                    console.error(errors);
-                },
-            },
-        );
-    } finally {
-        submitting.value = false;
-    }
-};
-
-const viewInvoice = (invoice) => {
-    router.visit(`/vendor-invoices/${invoice.id}`);
-};
-
-const downloadInvoice = (invoice) => {
-    window.open(`/vendor-invoices/${invoice.id}/download`, "_blank");
-};
-
-const showSnackbar = (text, color = "success") => {
-    snackbarText.value = text;
-    snackbarColor.value = color;
-    snackbar.value = true;
-};
-
-const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-KE", {
-        style: "currency",
-        currency: "KES",
-    }).format(amount);
-};
-
-const formatDate = (date) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-KE", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
-};
-
-const getStatusColor = (status) => {
-    const colors = {
-        pending: "warning",
-        paid: "success",
-        cancelled: "error",
-        processing: "info",
-    };
-    return colors[status?.toLowerCase()] || "default";
-};
-
-// Lifecycle hooks
 onMounted(async () => {
     if (!orderStore.initialized) {
         await orderStore.initialize();
     } else {
         await orderStore.fetchDropdownOptions();
     }
+    // fetch existing  invoices
+    await fetchInvoices();
 });
-</script> -->
+</script>

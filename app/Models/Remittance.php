@@ -92,7 +92,7 @@ class Remittance extends Model
      */
     public function orders()
     {
-        return $this->hasMany(Order::class, 'invoice_id');
+        return $this->hasMany(Order::class, 'remittance_id');
     }
 
     /**
@@ -100,7 +100,7 @@ class Remittance extends Model
      */
     public function vendor()
     {
-        return $this->belongsTo(User::class, 'vendor_id');
+        return $this->belongsTo(User::class, 'seller_id');
     }
 
     /**

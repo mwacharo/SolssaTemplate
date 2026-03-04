@@ -195,4 +195,10 @@ class User extends Authenticatable
             'call_history_id' // foreign key on CallTranscript
         );
     }
+
+
+    public function services()
+    {
+        return $this->hasMany(\App\Models\VendorService::class, 'vendor_id');
+    }
 }
