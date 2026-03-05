@@ -134,6 +134,9 @@ export const useOrderStore = defineStore('orders', () => {
   const buildFilterParams = () => {
     const filters = {}
 
+    // add vendor filter if vendor is selected 
+    if (orderFilterVendor.value) filters.vendor_id = orderFilterVendor.value
+
     if (orderFilterStatus.value) filters.status = orderFilterStatus.value
     if (orderFilterProduct.value) filters.product_id = orderFilterProduct.value
     if (orderFilterZone.value) filters.zone_id = orderFilterZone.value

@@ -48,6 +48,10 @@ class RemittanceCalculationService
             $remittance = $this->createRemittance($summary);
             Log::info('Remittance created', ['remittance_id' => $remittance->id]);
 
+
+            $this->createRemittanceOrders($orders, $remittance);
+
+
             $this->attachOrders($orders, $remittance);
 
             return $remittance->load('orders');
@@ -136,5 +140,46 @@ class RemittanceCalculationService
     protected function generateInvoiceNumber(): string
     {
         return 'INV-' . now()->format('Ymd') . '-' . Str::random(4);
+    }
+
+
+    protected function createRemittanceOrders($orders, Remittance $remittance)
+    {
+        $resolver = new ServiceFeeResolver($this->vendorId);
+
+        foreach ($orders as $order) {
+
+            $fees = $resolver->calculateOrderFees($order);
+
+            $totalFees = array_sum($fees);
+
+            $cod = strtolower(optional($order->latest_status->status)->name) === 'delivered'
+                ? $order->total_price
+                : 0;
+
+            $remittanceOrder = \App\Models\RemittanceOrder::create([
+                'remittance_id' => $remittance->id,
+                'order_id' => $order->id,
+                'cod_amount' => $cod,
+                'total_charges' => $totalFees,
+                'net_remit' => $cod - $totalFees
+            ]);
+
+            $this->createOrderCharges($remittanceOrder, $fees);
+        }
+    }
+
+
+
+    protected function createOrderCharges($remittanceOrder, array $fees)
+    {
+        foreach ($fees as $service => $amount) {
+
+            \App\Models\RemittanceOrderCharge::create([
+                'remittance_order_id' => $remittanceOrder->id,
+                'service_name' => $service,
+                'amount' => $amount
+            ]);
+        }
     }
 }
