@@ -793,21 +793,55 @@ class OrderController extends Controller
     /**
      * Apply search to the query
      */
-    private function applySearch($query, string $search): void
-    {
-        $query->where(function ($q) use ($search) {
-            $q->where('order_no', 'like', "%{$search}%")
-                ->orWhereHas('customer', function ($customerQuery) use ($search) {
-                    $customerQuery->where('full_name', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                })
-                ->orWhereHas('orderItems.product', function ($productQuery) use ($search) {
-                    $productQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
-                });
-        });
-    }
+    // private function applySearch($query, string $search): void
+    // {
+    //     $query->where(function ($q) use ($search) {
+    //         $q->where('order_no', 'like', "%{$search}%")
+    //             ->orWhereHas('customer', function ($customerQuery) use ($search) {
+    //                 $customerQuery->where('full_name', 'like', "%{$search}%")
+    //                     ->orWhere('phone', 'like', "%{$search}%")
+    //                     ->orWhere('email', 'like', "%{$search}%");
+    //             })
+    //             ->orWhereHas('orderItems.product', function ($productQuery) use ($search) {
+    //                 $productQuery->where('name', 'like', "%{$search}%")
+    //                     ->orWhere('sku', 'like', "%{$search}%");
+    //             });
+    //     });
+    // }
+
+
+    /**
+ * Apply search to the query
+ */
+private function applySearch($query, string $search): void
+{
+    $terms = collect(preg_split('/[\s,]+/', $search))
+        ->filter()
+        ->values();
+
+    $query->where(function ($q) use ($terms) {
+
+        foreach ($terms as $term) {
+
+            $q->orWhere(function ($subQuery) use ($term) {
+
+                $subQuery->where('order_no', 'like', "%{$term}%")
+                    ->orWhereHas('customer', function ($customerQuery) use ($term) {
+                        $customerQuery->where('full_name', 'like', "%{$term}%")
+                            ->orWhere('phone', 'like', "%{$term}%")
+                            ->orWhere('email', 'like', "%{$term}%");
+                    })
+                    ->orWhereHas('orderItems.product', function ($productQuery) use ($term) {
+                        $productQuery->where('name', 'like', "%{$term}%")
+                            ->orWhere('sku', 'like', "%{$term}%");
+                    });
+
+            });
+
+        }
+
+    });
+}
 
     /**
      * Apply additional filters for vendor_id, city, category_id, created_from, created_to
