@@ -44,7 +44,8 @@ class AfricasTalkingService
     private function getCallConfig(): array
     {
 
-        $settings = CallCenterSetting::first();
+        // $settings = CallCenterSetting::first();
+        // $settings = CallCenterSetting::where('country_id', 8)->first();
 
         return [
             'africastalking' => [
@@ -843,39 +844,39 @@ class AfricasTalkingService
      * Create dial response for outgoing calls
      */
 
-   /**
- * Create dial response for outgoing calls
- */
-private function createDialResponse(string $phoneNumber): void
-{
-    // Prepare optional attributes with safe spacing
-    $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
-    $ringbackAttr = '';
+    /**
+     * Create dial response for outgoing calls
+     */
+    private function createDialResponse(string $phoneNumber): void
+    {
+        // Prepare optional attributes with safe spacing
+        $recordAttr = $this->config['voice']['recording_enabled'] ? 'record="true"' : '';
+        $ringbackAttr = '';
 
-    if (!empty($this->config['urls']['ringback_tone'])) {
-        $ringbackTone = trim($this->config['urls']['ringback_tone']);
-        $ringbackAttr = 'ringbackTone="' . htmlspecialchars($ringbackTone, ENT_QUOTES) . '"';
+        if (!empty($this->config['urls']['ringback_tone'])) {
+            $ringbackTone = trim($this->config['urls']['ringback_tone']);
+            $ringbackAttr = 'ringbackTone="' . htmlspecialchars($ringbackTone, ENT_QUOTES) . '"';
+        }
+
+        // ✅ Join attributes cleanly with a single space between non-empty parts
+        $attrParts = array_filter([$recordAttr, $ringbackAttr]);
+        $attrString = implode(' ', $attrParts);
+
+        // ✅ Build final XML string (proper spacing guaranteed)
+        $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            . "<Response>\n"
+            . "  <Dial $attrString sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
+            . "</Response>";
+
+        // Optional: log the generated XML for debugging
+        Log::info('Generated Dial XML', ['xml' => $xml]);
+
+        // Send to Africa’s Talking
+        while (@ob_end_clean());
+        header('Content-Type: application/xml');
+        echo $xml;
+        exit;
     }
-
-    // ✅ Join attributes cleanly with a single space between non-empty parts
-    $attrParts = array_filter([$recordAttr, $ringbackAttr]);
-    $attrString = implode(' ', $attrParts);
-
-    // ✅ Build final XML string (proper spacing guaranteed)
-    $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-         . "<Response>\n"
-         . "  <Dial $attrString sequential=\"true\" phoneNumbers=\"$phoneNumber\" />\n"
-         . "</Response>";
-
-    // Optional: log the generated XML for debugging
-    Log::info('Generated Dial XML', ['xml' => $xml]);
-
-    // Send to Africa’s Talking
-    while (@ob_end_clean());
-    header('Content-Type: application/xml');
-    echo $xml;
-    exit;
-}
 
 
 

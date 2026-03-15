@@ -94,7 +94,7 @@
                                             variant="text"
                                             @click="
                                                 copyToClipboard(
-                                                    orderEdit.customer.phone
+                                                    orderEdit.customer.phone,
                                                 )
                                             "
                                             class="ml-1"
@@ -215,7 +215,7 @@
                                                         (val) =>
                                                             updateProductSelection(
                                                                 item,
-                                                                val
+                                                                val,
                                                             )
                                                     "
                                                 />
@@ -317,11 +317,11 @@
                                             :model-value="
                                                 (
                                                     parseFloat(
-                                                        calculateTotal()
+                                                        calculateTotal(),
                                                     ) +
                                                     parseFloat(
                                                         order.shipping_charges ||
-                                                            0
+                                                            0,
                                                     )
                                                 ).toFixed(2)
                                             "
@@ -590,14 +590,14 @@
                                                             {{
                                                                 call.callStartTime
                                                                     ? formatDateTime(
-                                                                          call.callStartTime
+                                                                          call.callStartTime,
                                                                       )
                                                                     : call.created_at
-                                                                    ? formatDateTime(
-                                                                          call.created_at
-                                                                      )
-                                                                    : call.timestamp ||
-                                                                      ""
+                                                                      ? formatDateTime(
+                                                                            call.created_at,
+                                                                        )
+                                                                      : call.timestamp ||
+                                                                        ""
                                                             }}
                                                         </div>
 
@@ -611,12 +611,12 @@
                                                                     null
                                                                     ? `${Math.floor(
                                                                           call.durationInSeconds /
-                                                                              60
+                                                                              60,
                                                                       )
                                                                           .toString()
                                                                           .padStart(
                                                                               2,
-                                                                              "0"
+                                                                              "0",
                                                                           )}:${(
                                                                           call.durationInSeconds %
                                                                           60
@@ -624,7 +624,7 @@
                                                                           .toString()
                                                                           .padStart(
                                                                               2,
-                                                                              "0"
+                                                                              "0",
                                                                           )}`
                                                                     : call.duration ||
                                                                       "00:00"
@@ -657,7 +657,7 @@
                                                         @click="
                                                             showSnackbar(
                                                                 'Open call details not implemented',
-                                                                'info'
+                                                                'info',
                                                             )
                                                         "
                                                     >
@@ -831,7 +831,7 @@
                                                     {{
                                                         formatDateTime(
                                                             order.latest_status
-                                                                .created_at
+                                                                .created_at,
                                                         )
                                                     }}
                                                 </div>
@@ -989,7 +989,7 @@
                                                 >
                                                     {{
                                                         formatDateTime(
-                                                            status.created_at
+                                                            status.created_at,
                                                         )
                                                     }}
                                                     <span v-if="status.user">
@@ -1097,7 +1097,7 @@ const removeOrderItem = (index) => {
 };
 
 const selectedStatus = orderStore.statusOptions.find(
-    (s) => s.id === orderEdit.value.status_id
+    (s) => s.id === orderEdit.value.status_id,
 );
 
 const updateTotals = () => {
@@ -1231,7 +1231,7 @@ const statusCategories = ref([]);
 
 // initialize with an empty array to avoid undefined entries being iterated
 const recentCalls = ref(
-    order.value?.call_logs ? [...order.value.call_logs] : []
+    order.value?.call_logs ? [...order.value.call_logs] : [],
 );
 
 watch(
@@ -1239,7 +1239,7 @@ watch(
     (newOrder) => {
         recentCalls.value = newOrder?.call_logs ? [...newOrder.call_logs] : [];
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 const statusHistory = ref([]);
@@ -1250,13 +1250,13 @@ const notes = ref([]);
 const filteredStatusCategories = computed(() => {
     if (!orderEdit.value.status_id) return [];
     return statusCategories.value.filter(
-        (cat) => cat.status_id === orderEdit.value.status_id
+        (cat) => cat.status_id === orderEdit.value.status_id,
     );
 });
 
 const shouldShowRecallDate = computed(() => {
     const selectedCategory = statusCategories.value.find(
-        (cat) => cat.id === orderEdit.value.status_category_id
+        (cat) => cat.id === orderEdit.value.status_category_id,
     );
     return selectedCategory?.name === "Follow Up";
 });
@@ -1298,7 +1298,7 @@ watch(
         }
     },
 
-    { immediate: true }
+    { immediate: true },
 );
 
 const updateProductSelection = (item, productId) => {
@@ -1394,7 +1394,7 @@ const startCallTimer = () => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         callDuration.value = `${String(mins).padStart(2, "0")}:${String(
-            secs
+            secs,
         ).padStart(2, "0")}`;
     }, 1000);
 };
@@ -1403,7 +1403,7 @@ const toggleMute = () => {
     muted.value = !muted.value;
     showSnackbar(
         muted.value ? "Microphone muted" : "Microphone unmuted",
-        "info"
+        "info",
     );
 };
 
@@ -1488,14 +1488,14 @@ const sendMessage = async () => {
             userId.value,
             contactData,
             store.messageText,
-            templateId
+            templateId,
         );
 
         // Safely handle undefined/null results and unsuccessful responses
         if (result && result.success) {
             showSnackbar(
                 `${messageType.value.toUpperCase()} sent successfully`,
-                "success"
+                "success",
             );
 
             // Reset form
@@ -1514,7 +1514,7 @@ const sendMessage = async () => {
             error?.response?.data?.message ||
                 error?.message ||
                 "Failed to send message",
-            "error"
+            "error",
         );
     } finally {
         sending.value = false;
@@ -1536,7 +1536,7 @@ const updateStatus = async () => {
 
         // Add to status history
         const selectedStatus = statusOptions.value.find(
-            (s) => s.id === orderEdit.value.status_id
+            (s) => s.id === orderEdit.value.status_id,
         );
         statusHistory.value.unshift({
             status_name: selectedStatus.name,
@@ -1549,13 +1549,30 @@ const updateStatus = async () => {
         emit("status-updated", orderEdit.value);
 
         // Reset form
+        // orderEdit.value = {
+        //     status_id: null,
+        //     status_category_id: null,
+        //     status_notes: "",
+        //     recall_date: "",
+        //     notifyCustomer: true,
+        //     notificationMethod: "sms",
+        // };
+
+        // Inside updateStatus(), replace the reset at the bottom:
         orderEdit.value = {
+            id: orderEdit.value.id, // preserve id
+            customer: { ...orderEdit.value.customer }, // preserve customer
+            order_items: [...orderEdit.value.order_items],
+            shipping_charges: orderEdit.value.shipping_charges,
+            total_price: orderEdit.value.total_price,
+            sub_total: orderEdit.value.sub_total,
+            order_no: orderEdit.value.order_no,
             status_id: null,
             status_category_id: null,
             status_notes: "",
             recall_date: "",
-            notifyCustomer: true,
-            notificationMethod: "sms",
+            delivery_date: "",
+            customer_notes: orderEdit.value.customer_notes,
         };
     }, 1500);
 };
@@ -1643,13 +1660,41 @@ const closeDialog = () => {
         content: "",
         attachments: [],
     };
+    // orderEdit.value = {
+    //     status_id: null,
+    //     status_category_id: null,
+    //     status_notes: "",
+    //     recall_date: "",
+    //     notifyCustomer: true,
+    //     notificationMethod: "sms",
+    // };
+
+
+
+     // ✅ Reset with full structure including customer object
     orderEdit.value = {
+        id: null,
+        customer: {
+            id: null,
+            full_name: "",
+            phone: "",
+            phone_number: "",
+            email: "",
+            city_id: null,
+            zone_id: null,
+            address: "",
+        },
+        order_items: [],
+        shipping_charges: 0,
+        total_price: 0,
+        sub_total: 0,
+        order_no: "",
         status_id: null,
         status_category_id: null,
         status_notes: "",
         recall_date: "",
-        notifyCustomer: true,
-        notificationMethod: "sms",
+        delivery_date: "",
+        customer_notes: "",
     };
     noteForm.value = {
         type: "General",
