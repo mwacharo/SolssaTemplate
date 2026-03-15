@@ -16,6 +16,7 @@ use App\Models\Ticket;
 use App\Models\Contact;
 use App\Models\CallCenterSetting;
 use App\Models\Customer;
+use App\Models\UserCountryAccount;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,6 +26,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Ticket as AttributesTicket;
 
+
+
 class AfricasTalkingService
 {
     protected $africastalking;
@@ -33,8 +36,67 @@ class AfricasTalkingService
 
     public function __construct(CallStatsService $callStatsService)
     {
+        // $this->callStatsService = $callStatsService;
+        // $this->config = $this->getCallConfig();
+        // $this->initializeAfricasTalking();
+
         $this->callStatsService = $callStatsService;
-        $this->config = $this->getCallConfig();
+    }
+
+
+
+
+
+    public function loadCountryConfig(int $countryId): void
+    {
+        $settings = CallCenterSetting::where('country_id', $countryId)->first();
+
+
+        // skip 
+        if (!$settings) {
+            Log::error("Call center settings not found for country ID {$countryId}");
+            // Skip if settings not found
+            return;
+        }
+
+        // if (!$settings) {
+        //     throw new \Exception("Call center settings not found for country ID {$countryId}");
+        // }
+
+        $this->config = [
+            'africastalking' => [
+                'country_id' => $settings->country_id,
+                'username'   => $settings->username,
+                'api_key'    => $settings->api_key,
+                'phone'      => $settings->phone,
+                'sandbox'    => (bool) $settings->sandbox,
+            ],
+            'voice' => [
+                'default_voice'     => $settings->default_voice ?? 'woman',
+                'timeout'           => (int) ($settings->timeout ?? 3),
+                'recording_enabled' => (bool) $settings->recording_enabled,
+            ],
+            'urls' => [
+                'callback_url'       => $settings->callback_url,
+                'event_callback_url' => $settings->event_callback_url,
+                'ringback_tone'      => $settings->ringback_tone,
+                'voicemail_callback' => $settings->voicemail_callback,
+            ],
+            'messages' => [
+                'welcome'          => $settings->welcome_message ?? 'Welcome to our service.',
+                'no_input'         => $settings->no_input_message ?? 'We did not receive input.',
+                'invalid_option'   => $settings->invalid_option_message ?? 'Invalid option.',
+                'connecting_agent' => $settings->connecting_agent_message ?? 'Connecting you.',
+                'agents_busy'      => $settings->agents_busy_message ?? 'All agents busy.',
+                'voicemail_prompt' => $settings->voicemail_prompt ?? 'Leave message after tone.',
+            ],
+            'fallback_number'        => $settings->fallback_number,
+            'default_forward_number' => $settings->default_forward_number,
+            'debug_mode'             => (bool) $settings->debug_mode,
+            'log_level'              => $settings->log_level ?? 'info',
+        ];
+
+        // IMPORTANT: initialize SDK AFTER config is loaded
         $this->initializeAfricasTalking();
     }
 
@@ -1303,11 +1365,25 @@ class AfricasTalkingService
                         throw new Exception("AT Error: " . ($response['message'] ?? 'Unknown API error'));
                     }
 
-                    // ✅ Save token + FULL client_name (with prefix) in DB
-                    $user->update([
+
+                    $account = UserCountryAccount::where('user_id', $user->id)
+                        ->where('country_id', $this->config['africastalking']['country_id'])
+                        ->first();
+
+                    if (!$account) {
+                        throw new Exception("User not configured for this country");
+                    }
+
+                    $account->update([
                         'token' => $response['token'],
                         'client_name' => $username . '.' . $user->username,
                     ]);
+
+                    // ✅ Save token + FULL client_name (with prefix) in DB
+                    // $user->update([
+                    //     'token' => $response['token'],
+                    //     'client_name' => $username . '.' . $user->username,
+                    // ]);
 
                     Log::info("Token updated successfully for user {$user->id}");
 

@@ -33,21 +33,23 @@ class HandleInertiaRequests extends Middleware
      *
      * @return array<string, mixed>
      */
-   
 
 
- public function share(Request $request): array
-{
-    return array_merge(parent::share($request), [
-        'authUser' => fn () => $request->user() ? [
-            'id'          => $request->user()->id,
-            'name'        => $request->user()->name,
-            'email'       => $request->user()->email,
-            'roles'       => $request->user()->roles->pluck('name'),
-            'permissions' => $request->user()->getPermissionsViaRoles()->pluck('name'),
-        ] : null,
-    ]);
-}
+
+    public function share(Request $request): array
+    {
+        return array_merge(parent::share($request), [
+            'authUser' => fn() => $request->user() ? [
+                'id'          => $request->user()->id,
+                'name'        => $request->user()->name,
+                'email'       => $request->user()->email,
+                'roles'       => $request->user()->roles->pluck('name'),
+                'permissions' => $request->user()->getPermissionsViaRoles()->pluck('name'),
 
 
+                // 🔥 Correct token source
+                'webrtc_token' => optional($request->user()->activeCountryAccount)->token,
+            ] : null,
+        ]);
+    }
 }

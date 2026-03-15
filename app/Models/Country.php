@@ -18,35 +18,35 @@ class Country extends Model
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',
         'updated_at' => 'datetime:Y-m-d H:i:s',
-                'is_active' => 'boolean',
+        'is_active' => 'boolean',
 
     ];
 
-  
+
 
     public function vendors()
-{
-    return $this->belongsToMany(Vendor::class)
-                ->using(CountryVendor::class)
-                ->withPivot('sku')
-                ->withTimestamps();
-}
+    {
+        return $this->belongsToMany(Vendor::class)
+            ->using(CountryVendor::class)
+            ->withPivot('sku')
+            ->withTimestamps();
+    }
 
 
-// public function products()
-// {
-//     return $this->belongsToMany(Product::class)->withPivot('price', 'tax_rate', 'country_sku')->withTimestamps();
-// }
+    // public function products()
+    // {
+    //     return $this->belongsToMany(Product::class)->withPivot('price', 'tax_rate', 'country_sku')->withTimestamps();
+    // }
 
 
     public function branches()
     {
         return $this->hasMany(Branch::class);
     }
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
+    // public function users()
+    // {
+    //     return $this->hasMany(User::class);
+    // }
     public function orders()
     {
         return $this->hasMany(Order::class);
@@ -113,5 +113,32 @@ class Country extends Model
     public function waybillSettings()
     {
         return $this->hasOne(WaybillSetting::class);
+    }
+
+
+
+    public function userAccounts()
+    {
+        return $this->hasMany(UserCountryAccount::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_country_accounts'
+        )->withPivot([
+            'client_name',
+            'token',
+            'phone_number',
+            'alt_number',
+            'country_code',
+            'is_default'
+        ])->withTimestamps();
+    }
+
+    public function callSettings()
+    {
+        return $this->hasOne(CallCenterSetting::class);
     }
 }

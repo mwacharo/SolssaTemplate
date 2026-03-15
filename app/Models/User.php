@@ -201,4 +201,33 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\VendorService::class, 'vendor_id');
     }
+
+
+
+    public function countryAccounts()
+    {
+        return $this->hasMany(UserCountryAccount::class);
+    }
+
+    public function countries()
+    {
+        return $this->belongsToMany(
+            Country::class,
+            'user_country_accounts'
+        )->withPivot([
+            'client_name',
+            'token',
+            'phone_number',
+            'alt_number',
+            'country_code',
+            'is_default'
+        ])->withTimestamps();
+    }
+
+    public function getActiveCountryAccountAttribute()
+    {
+        return $this->countryAccounts()
+            ->where('country_id', $this->country_id)
+            ->first();
+    }
 }

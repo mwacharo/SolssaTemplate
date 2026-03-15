@@ -17,7 +17,11 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     // console.debug("Page props:", JSON.stringify(page.props));
 
     const userToken = computed(() => {
-        const token = page.props.auth?.user?.token;
+        // const token = page.props.auth?.user?.token;
+            return page.props.authUser?.webrtc_token;
+
+
+
         // console.debug("✅ Computed userToken:", token);
         return token;
     });
