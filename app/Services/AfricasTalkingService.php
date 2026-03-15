@@ -44,7 +44,7 @@ class AfricasTalkingService
     private function getCallConfig(): array
     {
 
-        // $settings = CallCenterSetting::first();
+        $settings = CallCenterSetting::first();
         // $settings = CallCenterSetting::where('country_id', 8)->first();
 
         return [
