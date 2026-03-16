@@ -724,19 +724,11 @@ const dialpadNumbers = [
     { digit: "#", letters: "" },
 ];
 
-// const contacts = computed(() => callCenterStore.contacts)
-// const contacts = computed(() => {
-//   return contactsStore.contacts?.data?.data ?? []
-// })
+
 
 const contacts = computed(() => contactsStore.contacts); // ✅ Reactive
 
-// Sample data
-// const contacts = ref([
-//   { name: 'John Doe', phone: '+1234567890', email: 'john@example.com' },
-//   { name: 'Jane Smith', phone: '+1234567891', email: 'jane@example.com' },
-//   { name: 'Mike Johnson', phone: '+1234567892', email: 'mike@example.com' }
-// ])
+
 
 const callerIds = ref([
     "+1 (555) 000-0001",

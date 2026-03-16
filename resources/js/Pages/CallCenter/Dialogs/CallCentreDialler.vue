@@ -935,7 +935,7 @@
                                                 class="mb-3"
                                             />
 
-                                            <v-btn
+                                            <!-- <v-btn
                                                 block
                                                 color="primary"
                                                 size="large"
@@ -946,7 +946,7 @@
                                                     >mdi-update</v-icon
                                                 >
                                                 Update Status
-                                            </v-btn>
+                                            </v-btn> -->
                                         </v-form>
 
                                         <!-- Status History -->
@@ -1669,9 +1669,7 @@ const closeDialog = () => {
     //     notificationMethod: "sms",
     // };
 
-
-
-     // ✅ Reset with full structure including customer object
+    // ✅ Reset with full structure including customer object
     orderEdit.value = {
         id: null,
         customer: {
