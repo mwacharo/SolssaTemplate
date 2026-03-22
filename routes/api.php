@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
 
 use App\Http\Controllers\Api\ConditionTypeController;
+use App\Http\Controllers\Api\OrderTrackingController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ServiceConditionController;
 
@@ -84,7 +85,14 @@ Route::post('/v1/get-vendor-token', [VendorAuthController::class, 'getToken']);
 
 
 Route::post('/form/{order_no}', [OrderConfirmationController::class, 'submit']);
+
+
+// tracking order
+
+Route::get('/v1/track/{tracking}', [OrderTrackingController::class, 'track']);
 Route::get('/v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order
+
+
 
 
 Route::post('/mpesa/stk/callback', [MpesaStkPushController::class, 'callback']);
