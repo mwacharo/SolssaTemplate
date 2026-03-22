@@ -10,64 +10,315 @@
                                 Vendor Expenses
                             </h1>
                             <p class="text-gray-600 mt-1">
-                                {{ filteredExpenses.length }} total expenses •
-                                {{ formatCurrency(totalAmount) }} total amount
+                                {{ expenseStore.pagination.total }} total
+                                expenses •
+                                {{ formatCurrency(expenseStore.totalAmount) }}
+                                net amount
                             </p>
                         </div>
+
+                        <div class="flex items-center gap-3">
+                            <!-- Export current filters -->
+                            <button
+                                @click="handleExport"
+                                :disabled="
+                                    expenseStore.exporting ||
+                                    expenseStore.loading
+                                "
+                                class="flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Export visible results to CSV"
+                            >
+                                <p
+                                    v-if="activeFilterCount > 0"
+                                    class="text-xs text-gray-400 mt-1"
+                                >
+                                    Exporting
+                                    {{ expenseStore.pagination.total }} filtered
+                                    rows
+                                </p>
+                                <Loader
+                                    v-if="expenseStore.exporting"
+                                    class="animate-spin"
+                                    :size="18"
+                                />
+                                <Download v-else :size="18" />
+                                {{
+                                    expenseStore.exporting
+                                        ? "Exporting…"
+                                        : "Export CSV"
+                                }}
+                            </button>
+
+                            <!-- Add Expense (unchanged) -->
+                            <button
+                                @click="openModal('create')"
+                                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                            >
+                                <Plus :size="20" />
+                                Add Expense
+                            </button>
+                        </div>
+
+                        <!--                         
                         <button
                             @click="openModal('create')"
-                            expenseTypesStore
                             class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                         >
                             <Plus :size="20" />
                             Add Expense
-                        </button>
+                        </button> -->
                     </div>
 
-                    <!-- Search and Filters -->
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <div class="flex-1 relative">
-                            <Search
-                                class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                                :size="20"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Search by description, vendor, or email..."
-                                class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                v-model="searchQuery"
-                                @input="currentPage = 1"
-                            />
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <Filter :size="20" class="text-gray-400" />
+                    <!-- ── Search & Filters ── -->
+                    <div class="space-y-3">
+                        <!-- Row 1: text search + status + type -->
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <div class="flex-1 relative">
+                                <Search
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                                    :size="18"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Search description…"
+                                    class="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                    v-model="localSearch"
+                                    @input="debouncedSearch"
+                                />
+                            </div>
+
                             <select
-                                class="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                v-model="filterStatus"
-                                @change="currentPage = 1"
+                                class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                v-model="localFilters.status"
+                                @change="applyAndReset"
                             >
-                                <option value="all">All Status</option>
+                                <option value="">All Status</option>
                                 <option value="not_applied">Not Applied</option>
                                 <option value="applied">Applied</option>
                                 <option value="approved">Approved</option>
                                 <option value="rejected">Rejected</option>
                             </select>
+
                             <select
-                                class="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                v-model="filterType"
-                                @change="currentPage = 1"
+                                class="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                v-model="localFilters.expense_type"
+                                @change="applyAndReset"
                             >
-                                <option value="all">All Types</option>
+                                <option value="">All Types</option>
                                 <option value="expense">Expense</option>
                                 <option value="income">Income</option>
                             </select>
                         </div>
+                        <p
+                            v-if="activeFilterCount > 0"
+                            class="text-xs text-gray-400 mt-1"
+                        >
+                            Exporting
+                            {{ expenseStore.pagination.total }} filtered rows
+                        </p>
+                        <!-- Row 2: advanced filters (collapsible) -->
+                        <div>
+                            <button
+                                type="button"
+                                class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                                @click="showAdvanced = !showAdvanced"
+                            >
+                                <SlidersHorizontal :size="15" />
+                                {{ showAdvanced ? "Hide" : "Show" }} advanced
+                                filters
+                                <ChevronDown
+                                    :size="15"
+                                    :class="showAdvanced ? 'rotate-180' : ''"
+                                    class="transition-transform"
+                                />
+                            </button>
+
+                            <div
+                                v-if="showAdvanced"
+                                class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3"
+                            >
+                                <!-- Vendor -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Vendor</label
+                                    >
+                                    <v-select
+                                        v-model="localFilters.vendor_id"
+                                        :items="vendorOptions"
+                                        item-title="name"
+                                        item-value="id"
+                                        clearable
+                                        density="comfortable"
+                                        variant="outlined"
+                                        placeholder="All vendors"
+                                        @update:modelValue="applyAndReset"
+                                    />
+                                </div>
+
+                                <!-- Expense Type ID -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Expense Category</label
+                                    >
+                                    <v-autocomplete
+                                        v-model="localFilters.expense_type_id"
+                                        :items="expenseTypeItems"
+                                        item-title="display_name"
+                                        item-value="id"
+                                        clearable
+                                        density="comfortable"
+                                        variant="outlined"
+                                        placeholder="All categories"
+                                        @update:modelValue="applyAndReset"
+                                    />
+                                </div>
+
+                                <!-- Remittance ID -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Remittance ID</label
+                                    >
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.remittance_id"
+                                        placeholder="e.g. 42"
+                                        @change="applyAndReset"
+                                    />
+                                </div>
+
+                                <!-- Incurred On (range) -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Incurred From</label
+                                    >
+                                    <input
+                                        type="date"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.incurred_on_from"
+                                        @change="applyAndReset"
+                                    />
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Incurred To</label
+                                    >
+                                    <input
+                                        type="date"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.incurred_on_to"
+                                        @change="applyAndReset"
+                                    />
+                                </div>
+
+                                <!-- Created At (range) -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Created From</label
+                                    >
+                                    <input
+                                        type="date"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.created_at_from"
+                                        @change="applyAndReset"
+                                    />
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Created To</label
+                                    >
+                                    <input
+                                        type="date"
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.created_at_to"
+                                        @change="applyAndReset"
+                                    />
+                                </div>
+
+                                <!-- Sort -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Sort By</label
+                                    >
+                                    <select
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.sort_by"
+                                        @change="applyAndReset"
+                                    >
+                                        <option value="created_at">
+                                            Created Date
+                                        </option>
+                                        <option value="incurred_on">
+                                            Incurred On
+                                        </option>
+                                        <option value="amount">Amount</option>
+                                        <option value="status">Status</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-medium text-gray-600 mb-1"
+                                        >Direction</label
+                                    >
+                                    <select
+                                        class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        v-model="localFilters.sort_dir"
+                                        @change="applyAndReset"
+                                    >
+                                        <option value="desc">
+                                            Newest first
+                                        </option>
+                                        <option value="asc">
+                                            Oldest first
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active filter chips + clear all -->
+                        <div
+                            v-if="activeFilterCount > 0"
+                            class="flex flex-wrap gap-2 items-center"
+                        >
+                            <span class="text-xs text-gray-500"
+                                >Active filters:</span
+                            >
+                            <span
+                                v-for="chip in filterChips"
+                                :key="chip.key"
+                                class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+                            >
+                                {{ chip.label }}
+                                <button
+                                    @click="removeFilter(chip.key)"
+                                    class="hover:text-blue-900"
+                                >
+                                    <X :size="11" />
+                                </button>
+                            </span>
+                            <button
+                                class="text-xs text-red-500 hover:text-red-700 underline ml-1"
+                                @click="clearAll"
+                            >
+                                Clear all
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Expenses Table -->
+                <!-- ── Table ── -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <!-- Loading State -->
+                    <!-- Loading -->
                     <div
                         v-if="expenseStore.loading"
                         class="flex items-center justify-center py-12"
@@ -76,10 +327,10 @@
                             class="animate-spin text-blue-600 mr-2"
                             :size="24"
                         />
-                        <span class="text-gray-600">Loading expenses...</span>
+                        <span class="text-gray-600">Loading expenses…</span>
                     </div>
 
-                    <!-- Error State -->
+                    <!-- Error -->
                     <div v-else-if="expenseStore.error" class="p-6 text-center">
                         <div class="text-red-600 mb-2">
                             <AlertCircle class="inline-block mr-2" :size="20" />
@@ -102,7 +353,6 @@
                             <thead class="bg-blue-600 text-white">
                                 <tr>
                                     <th class="px-4 py-3 text-left">ID</th>
-                                    <!-- name -->
                                     <th class="px-4 py-3 text-left">Expense</th>
                                     <th class="px-4 py-3 text-left">
                                         Description
@@ -121,7 +371,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-if="paginatedExpenses.length === 0">
+                                <tr v-if="expenseStore.expenses.length === 0">
                                     <td
                                         colspan="10"
                                         class="px-4 py-8 text-center text-gray-500"
@@ -132,7 +382,7 @@
                                 <tr
                                     v-for="(
                                         expense, index
-                                    ) in paginatedExpenses"
+                                    ) in expenseStore.expenses"
                                     :key="expense.id"
                                     :class="
                                         index % 2 === 0
@@ -143,8 +393,7 @@
                                     <td class="px-4 py-3 font-medium">
                                         #{{ expense.id }}
                                     </td>
-
-                                    <td class="px-4 py-3 text-left font-medium">
+                                    <td class="px-4 py-3 font-medium">
                                         {{
                                             expense.expense_type
                                                 ?.display_name || "N/A"
@@ -209,22 +458,12 @@
                                                         ?.first_name?.[0] || "U"
                                                 }}
                                             </div>
-                                            <div>
-                                                <p class="text-sm font-medium">
-                                                    {{
-                                                        expense.vendor
-                                                            ?.username || "N/A"
-                                                    }}
-                                                </p>
-                                                <!-- <p
-                                                    class="text-xs text-gray-500"
-                                                >
-                                                    {{
-                                                        expense.vendor?.email ||
-                                                        "N/A"
-                                                    }}
-                                                </p> -->
-                                            </div>
+                                            <p class="text-sm font-medium">
+                                                {{
+                                                    expense.vendor?.username ||
+                                                    "N/A"
+                                                }}
+                                            </p>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3">
@@ -262,7 +501,7 @@
                                                     openModal('view', expense)
                                                 "
                                                 class="p-2 hover:bg-gray-100 rounded-lg transition"
-                                                title="View Details"
+                                                title="View"
                                             >
                                                 <Eye
                                                     :size="18"
@@ -300,39 +539,49 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
+                    <!-- Pagination — server-driven -->
                     <div
-                        v-if="totalPages > 1"
+                        v-if="expenseStore.pagination.lastPage > 1"
                         class="border-t p-4 flex justify-between items-center"
                     >
                         <div class="text-sm text-gray-600">
                             Showing
-                            {{ (currentPage - 1) * itemsPerPage + 1 }} to
+                            {{
+                                (expenseStore.pagination.currentPage - 1) *
+                                    expenseStore.pagination.perPage +
+                                1
+                            }}
+                            –
                             {{
                                 Math.min(
-                                    currentPage * itemsPerPage,
-                                    filteredExpenses.length,
+                                    expenseStore.pagination.currentPage *
+                                        expenseStore.pagination.perPage,
+                                    expenseStore.pagination.total,
                                 )
                             }}
-                            of {{ filteredExpenses.length }} expenses
+                            of {{ expenseStore.pagination.total }} expenses
                         </div>
                         <div class="flex gap-2">
                             <button
                                 @click="
-                                    currentPage = Math.max(1, currentPage - 1)
+                                    expenseStore.goToPage(
+                                        expenseStore.pagination.currentPage - 1,
+                                    )
                                 "
-                                :disabled="currentPage === 1"
+                                :disabled="
+                                    expenseStore.pagination.currentPage === 1
+                                "
                                 class="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                             >
                                 Previous
                             </button>
                             <button
-                                v-for="page in totalPages"
+                                v-for="page in expenseStore.pagination.lastPage"
                                 :key="page"
-                                @click="currentPage = page"
+                                @click="expenseStore.goToPage(page)"
                                 :class="[
                                     'px-4 py-2 rounded-lg transition',
-                                    currentPage === page
+                                    expenseStore.pagination.currentPage === page
                                         ? 'bg-blue-600 text-white'
                                         : 'border hover:bg-gray-50',
                                 ]"
@@ -341,12 +590,14 @@
                             </button>
                             <button
                                 @click="
-                                    currentPage = Math.min(
-                                        totalPages,
-                                        currentPage + 1,
+                                    expenseStore.goToPage(
+                                        expenseStore.pagination.currentPage + 1,
                                     )
                                 "
-                                :disabled="currentPage === totalPages"
+                                :disabled="
+                                    expenseStore.pagination.currentPage ===
+                                    expenseStore.pagination.lastPage
+                                "
                                 class="px-4 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                             >
                                 Next
@@ -356,7 +607,7 @@
                 </div>
             </div>
 
-            <!-- Modal -->
+            <!-- ── Modal (unchanged logic, kept compact) ── -->
             <div
                 v-if="showModal"
                 class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -398,30 +649,28 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Status</p>
-                                    <div class="mt-1">
-                                        <span
-                                            :class="[
-                                                'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-white',
+                                    <span
+                                        :class="[
+                                            'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs text-white mt-1',
+                                            getStatusConfig(
+                                                selectedExpense.status,
+                                            ).bg,
+                                        ]"
+                                    >
+                                        <component
+                                            :is="
                                                 getStatusConfig(
                                                     selectedExpense.status,
-                                                ).bg,
-                                            ]"
-                                        >
-                                            <component
-                                                :is="
-                                                    getStatusConfig(
-                                                        selectedExpense.status,
-                                                    ).icon
-                                                "
-                                                :size="12"
-                                            />
-                                            {{
-                                                getStatusConfig(
-                                                    selectedExpense.status,
-                                                ).text
-                                            }}
-                                        </span>
-                                    </div>
+                                                ).icon
+                                            "
+                                            :size="12"
+                                        />
+                                        {{
+                                            getStatusConfig(
+                                                selectedExpense.status,
+                                            ).text
+                                        }}
+                                    </span>
                                 </div>
                                 <div class="col-span-2">
                                     <p class="text-sm text-gray-600">
@@ -443,42 +692,38 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Type</p>
-                                    <div class="mt-1">
-                                        <span
-                                            :class="[
-                                                'px-2 py-1 rounded text-xs font-medium',
-                                                selectedExpense.expense_type ===
-                                                'expense'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-green-100 text-green-800',
-                                            ]"
-                                        >
-                                            {{
-                                                selectedExpense.expense_type ===
-                                                "expense"
-                                                    ? "Expense"
-                                                    : "Income"
-                                            }}
-                                        </span>
-                                    </div>
+                                    <span
+                                        :class="[
+                                            'px-2 py-1 rounded text-xs font-medium mt-1 inline-block',
+                                            selectedExpense.expense_type ===
+                                            'expense'
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-green-100 text-green-800',
+                                        ]"
+                                    >
+                                        {{
+                                            selectedExpense.expense_type ===
+                                            "expense"
+                                                ? "Expense"
+                                                : "Income"
+                                        }}
+                                    </span>
                                 </div>
                                 <div class="col-span-2">
                                     <p class="text-sm text-gray-600 mb-2">
-                                        Vendor Information
+                                        Vendor
                                     </p>
                                     <div class="bg-gray-50 rounded-lg p-4">
                                         <p class="font-medium">
                                             {{
-                                                selectedExpense.vendor?.name ||
-                                                "N/A"
+                                                selectedExpense.vendor
+                                                    ?.username || "N/A"
                                             }}
                                         </p>
                                     </div>
                                 </div>
                                 <div>
-                                    <p class="text-sm text-gray-600">
-                                        Created Date
-                                    </p>
+                                    <p class="text-sm text-gray-600">Created</p>
                                     <p class="font-semibold">
                                         {{
                                             formatDate(
@@ -488,9 +733,7 @@
                                     </p>
                                 </div>
                                 <div>
-                                    <p class="text-sm text-gray-600">
-                                        Last Updated
-                                    </p>
+                                    <p class="text-sm text-gray-600">Updated</p>
                                     <p class="font-semibold">
                                         {{
                                             formatDate(
@@ -502,7 +745,7 @@
                             </div>
                         </div>
 
-                        <!-- Create/Edit Form -->
+                        <!-- Create / Edit Form -->
                         <form
                             v-else
                             @submit.prevent="
@@ -512,7 +755,6 @@
                             "
                             class="space-y-4"
                         >
-                            <!-- Error Message -->
                             <div
                                 v-if="errors.submit"
                                 class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
@@ -520,37 +762,28 @@
                                 {{ errors.submit }}
                             </div>
 
-                            <!--expense name-->
-
                             <div>
-                                <label
-                                    class="block text-sm font-medium text-red-600 mb-1"
-                                    >Expense</label
+                                <label class="block text-sm font-medium mb-1"
+                                    >Expense Category</label
                                 >
                                 <v-autocomplete
                                     v-model="formData.expense_type_id"
-                                    :items="
-                                        expenseTypesStore.types &&
-                                        expenseTypesStore.types.data
-                                            ? expenseTypesStore.types.data
-                                            : expenseTypesStore.types
-                                    "
+                                    :items="expenseTypeItems"
                                     item-title="display_name"
                                     item-value="id"
                                     clearable
                                     dense
                                     outlined
-                                    placeholder="Search expenses..."
+                                    placeholder="Search expenses…"
                                     class="w-full"
-                                    autocomplete
                                 />
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium mb-2">
-                                    Description
-                                    <span class="text-red-500">*</span>
-                                </label>
+                                <label class="block text-sm font-medium mb-2"
+                                    >Description
+                                    <span class="text-red-500">*</span></label
+                                >
                                 <textarea
                                     :class="[
                                         'w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none',
@@ -559,7 +792,6 @@
                                             : '',
                                     ]"
                                     rows="3"
-                                    formData
                                     v-model="formData.description"
                                     @input="clearError('description')"
                                     placeholder="Enter expense description"
@@ -576,10 +808,11 @@
                                 <div>
                                     <label
                                         class="block text-sm font-medium mb-2"
+                                        >Amount (KES)
+                                        <span class="text-red-500"
+                                            >*</span
+                                        ></label
                                     >
-                                        Amount (KES)
-                                        <span class="text-red-500">*</span>
-                                    </label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -605,9 +838,11 @@
                                 <div>
                                     <label
                                         class="block text-sm font-medium mb-2"
+                                        >Type
+                                        <span class="text-red-500"
+                                            >*</span
+                                        ></label
                                     >
-                                        Type <span class="text-red-500">*</span>
-                                    </label>
                                     <select
                                         class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                         v-model="formData.expense_type"
@@ -620,8 +855,8 @@
                                 <div>
                                     <label
                                         class="block text-sm font-medium mb-2"
-                                        >Vendor
-                                    </label>
+                                        >Vendor</label
+                                    >
                                     <v-select
                                         v-model="formData.vendor_id"
                                         :items="vendorOptions"
@@ -633,33 +868,6 @@
                                         density="comfortable"
                                     />
                                 </div>
-
-                                <!-- <div>
-                                    <label
-                                        class="block text-sm font-medium mb-2"
-                                    >
-                                        Country ID
-                                        <span class="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        :class="[
-                                            'w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none',
-                                            errors.country_id
-                                                ? 'border-red-500'
-                                                : '',
-                                        ]"
-                                        v-model="formData.country_id"
-                                        @input="clearError('country_id')"
-                                        placeholder="Enter country ID"
-                                    />
-                                    <p
-                                        v-if="errors.country_id"
-                                        class="text-red-500 text-sm mt-1"
-                                    >
-                                        {{ errors.country_id }}
-                                    </p>
-                                </div> -->
 
                                 <div>
                                     <label
@@ -683,12 +891,11 @@
                                     </select>
                                 </div>
 
-                                <div>
+                                <div class="col-span-2">
                                     <label
                                         class="block text-sm font-medium mb-2"
+                                        >Incurred On (Optional)</label
                                     >
-                                        Incurred On (Optional)
-                                    </label>
                                     <v-text-field
                                         v-model="formData.incurred_on"
                                         label="Incurred On"
@@ -697,12 +904,6 @@
                                         variant="outlined"
                                         density="comfortable"
                                     />
-                                    <p
-                                        v-if="errors.incurred_on"
-                                        class="text-red-500 text-sm mt-1"
-                                    >
-                                        {{ errors.incurred_on }}
-                                    </p>
                                 </div>
                             </div>
 
@@ -711,14 +912,14 @@
                                     type="button"
                                     @click="closeModal"
                                     :disabled="expenseStore.loading"
-                                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     :disabled="expenseStore.loading"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
                                 >
                                     <Loader
                                         v-if="expenseStore.loading"
@@ -743,48 +944,40 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useVendorExpensesStore } from "@/stores/vendorExpenses";
-import AppLayout from "@/Layouts/AppLayout.vue";
 import { useOrderStore } from "@/stores/orderStore";
-
 import { useExpenseTypeStore } from "@/stores/expenseTypeStore.js";
-
-// expenseTypes.js
-
+import AppLayout from "@/Layouts/AppLayout.vue";
 import {
-    DollarSign,
     Plus,
     Search,
-    Filter,
     Edit,
     Trash2,
     Eye,
     X,
-    Calendar,
-    User,
     FileText,
     CheckCircle,
     XCircle,
     AlertCircle,
     Loader,
+    SlidersHorizontal,
+    ChevronDown,
 } from "lucide-vue-next";
 
-// Store
+// ── Stores ────────────────────────────────────────────────────────────────────
 const expenseStore = useVendorExpensesStore();
 const orderStore = useOrderStore();
-
 const expenseTypesStore = useExpenseTypeStore();
 
 const vendorOptions = computed(() => orderStore.vendorOptions);
+const expenseTypeItems = computed(() => {
+    const raw = expenseTypesStore.types;
+    return raw?.data ?? raw ?? [];
+});
 
-// Local State
-const searchQuery = ref("");
-const filterStatus = ref("all");
-const filterType = ref("all");
-const currentPage = ref(1);
+// ── Modal state ───────────────────────────────────────────────────────────────
 const showModal = ref(false);
 const modalMode = ref("create");
 const selectedExpense = ref(null);
-const itemsPerPage = 10;
 
 const formData = ref({
     description: "",
@@ -796,109 +989,131 @@ const formData = ref({
     status: "not_applied",
     incurred_on: "",
 });
-
 const errors = ref({});
 
-// Fetch expenses on mount
+// ── Filter state (local mirror of store.filters) ──────────────────────────────
+const localSearch = ref("");
+const showAdvanced = ref(false);
+
+const localFilters = ref({
+    status: "",
+    expense_type: "",
+    vendor_id: "",
+    expense_type_id: "",
+    remittance_id: "",
+    incurred_on_from: "",
+    incurred_on_to: "",
+    created_at_from: "",
+    created_at_to: "",
+    sort_by: "created_at",
+    sort_dir: "desc",
+});
+
+// ── Debounce helper (no external dep needed) ──────────────────────────────────
+let searchTimer = null;
+const debouncedSearch = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        expenseStore.applyFilters({ search: localSearch.value });
+    }, 350);
+};
+
+/** Push all local filter state to the store and re-fetch. */
+const applyAndReset = () => {
+    expenseStore.applyFilters({ ...localFilters.value });
+};
+
+const clearAll = async () => {
+    localSearch.value = "";
+    localFilters.value = {
+        status: "",
+        expense_type: "",
+        vendor_id: "",
+        expense_type_id: "",
+        remittance_id: "",
+        incurred_on_from: "",
+        incurred_on_to: "",
+        created_at_from: "",
+        created_at_to: "",
+        sort_by: "created_at",
+        sort_dir: "desc",
+    };
+    await expenseStore.clearFilters();
+};
+
+const removeFilter = (key) => {
+    if (key === "search") {
+        localSearch.value = "";
+    } else {
+        localFilters.value[key] = "";
+    }
+    applyAndReset();
+};
+
+// ── Active filter chips ───────────────────────────────────────────────────────
+const CHIP_LABELS = {
+    search: "Description",
+    status: "Status",
+    expense_type: "Type",
+    vendor_id: "Vendor",
+    expense_type_id: "Category",
+    remittance_id: "Remittance",
+    incurred_on_from: "Incurred ≥",
+    incurred_on_to: "Incurred ≤",
+    created_at_from: "Created ≥",
+    created_at_to: "Created ≤",
+};
+
+const filterChips = computed(() => {
+    const chips = [];
+    if (localSearch.value)
+        chips.push({
+            key: "search",
+            label: `Description: "${localSearch.value}"`,
+        });
+    for (const [k, v] of Object.entries(localFilters.value)) {
+        if (v && k !== "sort_by" && k !== "sort_dir") {
+            chips.push({ key: k, label: `${CHIP_LABELS[k] ?? k}: ${v}` });
+        }
+    }
+    return chips;
+});
+
+const activeFilterCount = computed(() => filterChips.value.length);
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
     await expenseStore.fetchExpenses();
     await orderStore.fetchDropdownOptions();
     await expenseTypesStore.fetchExpenseTypes();
 });
 
-// Computed
-const filteredExpenses = computed(() => {
-    let filtered = expenseStore.expenses;
-
-    if (searchQuery.value) {
-        const query = searchQuery.value.toLowerCase();
-        filtered = filtered.filter(
-            (exp) =>
-                exp.description?.toLowerCase().includes(query) ||
-                exp.vendor?.username?.toLowerCase().includes(query) ||
-                exp.vendor?.email?.toLowerCase().includes(query),
-        );
-    }
-
-    if (filterStatus.value !== "all") {
-        filtered = filtered.filter((exp) => exp.status === filterStatus.value);
-    }
-
-    if (filterType.value !== "all") {
-        filtered = filtered.filter(
-            (exp) => exp.expense_type === filterType.value,
-        );
-    }
-
-    return filtered;
-});
-
-const totalPages = computed(() =>
-    Math.ceil(filteredExpenses.value.length / itemsPerPage),
-);
-
-const paginatedExpenses = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = currentPage.value * itemsPerPage;
-    return filteredExpenses.value.slice(start, end);
-});
-
-const totalAmount = computed(() =>
-    filteredExpenses.value.reduce(
-        (sum, exp) => sum + parseFloat(exp.amount),
-        0,
-    ),
-);
-
-// Methods
+// ── CRUD ──────────────────────────────────────────────────────────────────────
 const validateForm = () => {
-    const newErrors = {};
-
-    // expense_type_id validation
-    if (!formData.value.expense_type_id) {
-        newErrors.expense_type_id = "Expense selection is required";
-    }
-
-    if (!formData.value.description?.trim()) {
-        newErrors.description = "Description is required";
-    }
-
-    if (!formData.value.amount || parseFloat(formData.value.amount) <= 0) {
-        newErrors.amount = "Valid amount is required";
-    }
-
-    if (!formData.value.vendor_id) {
-        newErrors.vendor_id = "vendor is required";
-    }
-
-    // if (!formData.value.country_id) {
-    //     newErrors.country_id = "Country is required";
-    // }
-
-    if (!formData.value.expense_type_id) {
-        newErrors.expense_type_id = "Expense type is required";
-    }
-
-    errors.value = newErrors;
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (!formData.value.expense_type_id)
+        e.expense_type_id = "Expense selection is required";
+    if (!formData.value.description?.trim())
+        e.description = "Description is required";
+    if (!formData.value.amount || parseFloat(formData.value.amount) <= 0)
+        e.amount = "Valid amount is required";
+    if (!formData.value.vendor_id) e.vendor_id = "Vendor is required";
+    errors.value = e;
+    return Object.keys(e).length === 0;
 };
 
 const handleCreate = async () => {
     if (!validateForm()) return;
-
     try {
         await expenseStore.createExpense(formData.value);
         closeModal();
     } catch (err) {
-        errors.value = {
-            submit: err.message || "Failed to create expense",
-        };
+        errors.value = { submit: err.message || "Failed to create expense" };
     }
 };
 
 const handleUpdate = async () => {
     if (!validateForm()) return;
-
     try {
         await expenseStore.updateExpense(
             selectedExpense.value.id,
@@ -906,53 +1121,56 @@ const handleUpdate = async () => {
         );
         closeModal();
     } catch (err) {
-        errors.value = {
-            submit: err.message || "Failed to update expense",
-        };
+        errors.value = { submit: err.message || "Failed to update expense" };
     }
 };
 
 const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-        try {
-            await expenseStore.deleteExpense(id);
-        } catch (err) {
-            alert(err.message || "Failed to delete expense");
-        }
+    if (!window.confirm("Are you sure you want to delete this expense?"))
+        return;
+    try {
+        await expenseStore.deleteExpense(id);
+    } catch (err) {
+        alert(err.message || "Failed to delete expense");
+    }
+};
+
+const handleExport = async () => {
+    try {
+        await expenseStore.exportExpenses();
+    } catch {
+        // error already shown via notify in the store
     }
 };
 
 const openModal = (mode, expense = null) => {
     modalMode.value = mode;
     selectedExpense.value = expense;
-
-    if (mode === "create") {
-        formData.value = {
-            description: "",
-            amount: "",
-            expense_type: "expense",
-            vendor_id: "",
-            country_id: "",
-            status: "not_applied",
-            incurred_on: "",
-            expense_type_id: "",
-        };
-    } else if (expense) {
-        formData.value = {
-            description: expense.description,
-            amount: expense.amount.toString(),
-            expense_type: expense.expense_type,
-            vendor_id: expense.vendor_id.toString(),
-            country_id: expense.country_id.toString(),
-            status: expense.status,
-            incurred_on: expense.incurred_on ? expense.incurred_on : "",
-            expense_type_id: expense.expense_type_id
-                ? expense.expense_type_id
-                : "",
-        };
-    }
-
     errors.value = {};
+
+    formData.value =
+        mode === "create"
+            ? {
+                  description: "",
+                  amount: "",
+                  expense_type: "expense",
+                  expense_type_id: "",
+                  vendor_id: "",
+                  country_id: "",
+                  status: "not_applied",
+                  incurred_on: "",
+              }
+            : {
+                  description: expense.description,
+                  amount: expense.amount.toString(),
+                  expense_type: expense.expense_type,
+                  vendor_id: expense.vendor_id?.toString() ?? "",
+                  country_id: expense.country_id?.toString() ?? "",
+                  status: expense.status,
+                  incurred_on: expense.incurred_on ?? "",
+                  expense_type_id: expense.expense_type_id ?? "",
+              };
+
     showModal.value = true;
 };
 
@@ -961,15 +1179,12 @@ const closeModal = () => {
     selectedExpense.value = null;
     errors.value = {};
 };
-
 const clearError = (field) => {
-    if (errors.value[field]) {
-        delete errors.value[field];
-    }
+    delete errors.value[field];
 };
 
-const getStatusConfig = (status) => {
-    const configs = {
+const getStatusConfig = (status) =>
+    ({
         not_applied: {
             bg: "bg-gray-500",
             icon: AlertCircle,
@@ -978,24 +1193,22 @@ const getStatusConfig = (status) => {
         applied: { bg: "bg-blue-500", icon: CheckCircle, text: "Applied" },
         approved: { bg: "bg-green-500", icon: CheckCircle, text: "Approved" },
         rejected: { bg: "bg-red-500", icon: XCircle, text: "Rejected" },
-    };
-    return configs[status] || configs.not_applied;
-};
+    })[status] ?? { bg: "bg-gray-500", icon: AlertCircle, text: "Not Applied" };
 
-const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
-};
+const formatDate = (d) =>
+    d
+        ? new Date(d).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+          })
+        : "—";
 
-const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
+const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "KES",
     }).format(amount);
-};
 </script>
 
 <style scoped>
