@@ -34,9 +34,9 @@ Status at Jan 21, 2026, 11:14 AM
  -->
     <!-- <img src="/images/rushbin.jpeg" alt="Company Logo" class="logo-img" /> -->
 
-    <img src="/images/bringitlogo.png " alt="Company Logo" class="logo-img" />
+    <!-- <img src="/images/bringitlogo.png " alt="Company Logo" class="logo-img" /> -->
 
-    <!-- <img src="/images/rushbin-logo.png" alt="Company Logo" class="logo-img" /> -->
+    <img src="/images/rushbin-logo.png" alt="Company Logo" class="logo-img" />
 </template>
 
 <style>

@@ -612,11 +612,18 @@
                                     ]"
                                 >
                                     <td class="px-4 py-3">
-                                        <input
+                                        <!-- <input
                                             type="checkbox"
                                             v-model="selectedOrders"
                                             :value="order.id"
                                             class="rounded"
+                                        /> -->
+
+                                        <input
+                                            type="checkbox"
+                                            v-model="selectedOrders"
+                                            :value="order.id"
+                                            class="appearance-auto w-5 h-5 accent-blue-600 border-2 border-gray-600 bg-white"
                                         />
                                     </td>
                                     <td class="px-4 py-3 font-mono text-sm">
