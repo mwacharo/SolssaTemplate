@@ -321,7 +321,7 @@ const statusConfig = [
         icon: "ClockIcon",
     },
     {
-        label: "Shipped",
+        label: "Shipped" || "In transit",
         color: "#3B82F6",
         bgClass: "bg-blue-50 border-blue-200 hover:border-blue-300",
         iconBgClass: "bg-blue-100 group-hover:bg-blue-200",
@@ -563,7 +563,7 @@ const statusBreakdown = computed(() => {
         percentage:
             totalOrders.value > 0
                 ? Math.round(
-                      (safeStatus.value[index] / totalOrders.value) * 100
+                      (safeStatus.value[index] / totalOrders.value) * 100,
                   )
                 : 0,
     }));
