@@ -202,7 +202,7 @@ export const useNavStore = defineStore('nav', {
         features: ['dashboard'],
         permissions: ['dashboard_view', 'dashboard_export'],
         children: [
-          { title: 'Overview', route: ROUTES.DASHBOARD.INDEX, icon: 'mdi-view-dashboard-outline', permission: 'dashboard_view' },
+          { title: 'Overview', route: ROUTES.DASHBOARD.INDEX, icon: 'mdi-view-dashboard-outline', permission: 'callcentre_dashboard' },
           { title: 'Metrics', route: ROUTES.DASHBOARD.METRICS, icon: 'mdi-chart-line', permission: 'dashboard_view' },
         ],
       },
@@ -346,7 +346,7 @@ export const useNavStore = defineStore('nav', {
         permissions: ['orders_view', 'orders_create', 'orders_edit', 'orders_delete', 'orders_ship', 'orders_dispatch', 'orders_scan', 'orders_track', 'orders_update_status', 'orders_refund'],
         children: [
           { title: 'All Orders', route: ROUTES.ORDERS.INDEX, icon: 'mdi-cart-outline', permission: 'orders_view' },
-          { title: 'Shipping', route: ROUTES.ORDERS.SHIPPING, icon: 'mdi-truck-outline', permission: 'orders_ship' },
+          // { title: 'Shipping', route: ROUTES.ORDERS.SHIPPING, icon: 'mdi-truck-outline', permission: 'orders_ship' },
           { title: 'Scan & Dispatch', route: ROUTES.ORDERS.SCAN_DISPATCH, icon: 'mdi-barcode-scan', permission: 'orders_scan' },
           { title: 'Dispatch List', route: ROUTES.ORDERS.DISPATCH_LIST, icon: 'mdi-format-list-bulleted', permission: 'orders_dispatch' },
         ],
@@ -410,8 +410,8 @@ export const useNavStore = defineStore('nav', {
         children: [
           { title: 'Warehouse', route: ROUTES.WAREHOUSE.INDEX, icon: 'mdi-warehouse', permission: 'warehouse_view' },
           { title: 'Products', route: ROUTES.WAREHOUSE.PRODUCTS, icon: 'mdi-package-variant-closed', permission: 'products_view' },
-          { title: 'Inventory', route: ROUTES.WAREHOUSE.INVENTORY, icon: 'mdi-warehouse', permission: 'inventory_view' },
-          { title: 'Statistics', route: ROUTES.WAREHOUSE.STATISTICS, icon: 'mdi-chart-bar', permission: 'warehouse_view' },
+          // { title: 'Inventory', route: ROUTES.WAREHOUSE.INVENTORY, icon: 'mdi-warehouse', permission: 'inventory_view' },
+          // { title: 'Statistics', route: ROUTES.WAREHOUSE.STATISTICS, icon: 'mdi-chart-bar', permission: 'warehouse_view' },
           { title: 'Category', route: ROUTES.WAREHOUSE.CATEGORY, icon: 'mdi-tag-multiple', permission: 'categories_manage' },
         ],
       },
@@ -462,52 +462,52 @@ export const useNavStore = defineStore('nav', {
         ],
       },
 
-      {
-        title: 'Billing',
-        icon: 'mdi-credit-card',
-        route: ROUTES.BILLING.PLANS,
-        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
-        plans: ['Pro', 'Enterprise'],
-        features: ['billing'],
-        permissions: ['billing_view', 'billing_manage', 'invoices_view', 'invoices_create', 'payments_view', 'payments_process'],
-        children: [
-          { title: 'Plans & Pricing', route: ROUTES.BILLING.PLANS, icon: 'mdi-card-account-details', permission: 'billing_view' },
-          { title: 'Payment Methods', route: ROUTES.BILLING.PAYMENTS, icon: 'mdi-credit-card-outline', permission: 'payments_view' },
-          { title: 'Invoices', route: ROUTES.BILLING.INVOICES, icon: 'mdi-receipt', permission: 'invoices_view' },
-          { title: 'Usage Metering', route: ROUTES.BILLING.USAGE, icon: 'mdi-gauge', permission: 'billing_view' },
-          { title: 'License Management', route: ROUTES.BILLING.LICENSES, icon: 'mdi-license', permission: 'billing_manage' },
-        ],
-      },
+      // {
+      //   title: 'Billing',
+      //   icon: 'mdi-credit-card',
+      //   route: ROUTES.BILLING.PLANS,
+      //   roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
+      //   plans: ['Pro', 'Enterprise'],
+      //   features: ['billing'],
+      //   permissions: ['billing_view', 'billing_manage', 'invoices_view', 'invoices_create', 'payments_view', 'payments_process'],
+      //   children: [
+      //     { title: 'Plans & Pricing', route: ROUTES.BILLING.PLANS, icon: 'mdi-card-account-details', permission: 'billing_view' },
+      //     { title: 'Payment Methods', route: ROUTES.BILLING.PAYMENTS, icon: 'mdi-credit-card-outline', permission: 'payments_view' },
+      //     { title: 'Invoices', route: ROUTES.BILLING.INVOICES, icon: 'mdi-receipt', permission: 'invoices_view' },
+      //     { title: 'Usage Metering', route: ROUTES.BILLING.USAGE, icon: 'mdi-gauge', permission: 'billing_view' },
+      //     { title: 'License Management', route: ROUTES.BILLING.LICENSES, icon: 'mdi-license', permission: 'billing_manage' },
+      //   ],
+      // },
 
-      {
-        title: 'Notifications',
-        icon: 'mdi-bell',
-        route: ROUTES.NOTIFICATIONS.CENTER,
-        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
-        plans: ['Pro', 'Enterprise'],
-        features: ['notifications'],
-        permissions: ['notifications_view', 'notifications_create', 'notifications_manage'],
-        children: [
-          { title: 'Notification Center', route: ROUTES.NOTIFICATIONS.CENTER, icon: 'mdi-bell-outline', permission: 'notifications_view' },
-          { title: 'Activity Trail', route: ROUTES.NOTIFICATIONS.ACTIVITY, icon: 'mdi-timeline', permission: 'notifications_view' },
-          { title: 'Read/Unread', route: ROUTES.NOTIFICATIONS.STATUS, icon: 'mdi-bell-check', permission: 'notifications_view' },
-        ],
-      },
+      // {
+      //   title: 'Notifications',
+      //   icon: 'mdi-bell',
+      //   route: ROUTES.NOTIFICATIONS.CENTER,
+      //   roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
+      //   plans: ['Pro', 'Enterprise'],
+      //   features: ['notifications'],
+      //   permissions: ['notifications_view', 'notifications_create', 'notifications_manage'],
+      //   children: [
+      //     { title: 'Notification Center', route: ROUTES.NOTIFICATIONS.CENTER, icon: 'mdi-bell-outline', permission: 'notifications_view' },
+      //     { title: 'Activity Trail', route: ROUTES.NOTIFICATIONS.ACTIVITY, icon: 'mdi-timeline', permission: 'notifications_view' },
+      //     { title: 'Read/Unread', route: ROUTES.NOTIFICATIONS.STATUS, icon: 'mdi-bell-check', permission: 'notifications_view' },
+      //   ],
+      // },
 
-      {
-        title: 'Audit Logs',
-        icon: 'mdi-clipboard-text-clock',
-        route: ROUTES.AUDIT.LOGINS,
-        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
-        plans: ['Enterprise'],
-        features: ['audit-trail'],
-        permissions: ['audit_logs_view', 'login_history_view', 'system_changes_view', 'security_settings_manage'],
-        children: [
-          { title: 'Login History', route: ROUTES.AUDIT.LOGINS, icon: 'mdi-account-clock', permission: 'login_history_view' },
-          { title: 'User Actions', route: ROUTES.AUDIT.ACTIONS, icon: 'mdi-account-edit', permission: 'audit_logs_view' },
-          { title: 'System Changes', route: ROUTES.AUDIT.SYSTEM, icon: 'mdi-cog-clockwise', permission: 'system_changes_view' },
-        ],
-      },
+      // {
+      //   title: 'Audit Logs',
+      //   icon: 'mdi-clipboard-text-clock',
+      //   route: ROUTES.AUDIT.LOGINS,
+      //   roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
+      //   plans: ['Enterprise'],
+      //   features: ['audit-trail'],
+      //   permissions: ['audit_logs_view', 'login_history_view', 'system_changes_view', 'security_settings_manage'],
+      //   children: [
+      //     { title: 'Login History', route: ROUTES.AUDIT.LOGINS, icon: 'mdi-account-clock', permission: 'login_history_view' },
+      //     { title: 'User Actions', route: ROUTES.AUDIT.ACTIONS, icon: 'mdi-account-edit', permission: 'audit_logs_view' },
+      //     { title: 'System Changes', route: ROUTES.AUDIT.SYSTEM, icon: 'mdi-cog-clockwise', permission: 'system_changes_view' },
+      //   ],
+      // },
 
       {
         title: 'Developer Tools',
@@ -519,9 +519,9 @@ export const useNavStore = defineStore('nav', {
         permissions: ['developer_tools_access', 'api_manage', 'webhooks_manage', 'sandbox_access', 'feature_flags_manage'],
         children: [
           { title: 'API Docs', route: ROUTES.DEVELOPER.DOCS, icon: 'mdi-book-open-variant', permission: 'developer_tools_access' },
-          { title: 'SDKs', route: ROUTES.DEVELOPER.SDKS, icon: 'mdi-package-variant', permission: 'developer_tools_access' },
-          { title: 'Sandbox Mode', route: ROUTES.DEVELOPER.SANDBOX, icon: 'mdi-play-box-outline', permission: 'sandbox_access' },
-          { title: 'Usage Stats', route: ROUTES.DEVELOPER.STATS, icon: 'mdi-chart-line-variant', permission: 'developer_tools_access' },
+          // { title: 'SDKs', route: ROUTES.DEVELOPER.SDKS, icon: 'mdi-package-variant', permission: 'developer_tools_access' },
+          // { title: 'Sandbox Mode', route: ROUTES.DEVELOPER.SANDBOX, icon: 'mdi-play-box-outline', permission: 'sandbox_access' },
+          // { title: 'Usage Stats', route: ROUTES.DEVELOPER.STATS, icon: 'mdi-chart-line-variant', permission: 'developer_tools_access' },
         ],
       },
 
@@ -540,20 +540,20 @@ export const useNavStore = defineStore('nav', {
       //   ],
       // },
 
-      {
-        title: 'Help & Support',
-        icon: 'mdi-lifebuoy',
-        route: ROUTES.SUPPORT.FAQS,
-        roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
-        plans: ['Free', 'Pro', 'Enterprise'],
-        features: [],
-        children: [
-          { title: 'FAQs / Knowledge Base', route: ROUTES.SUPPORT.FAQS, icon: 'mdi-help-circle-outline' },
-          { title: 'Contact Support', route: ROUTES.SUPPORT.CONTACT, icon: 'mdi-email-outline' },
-          { title: 'Live Chat', route: ROUTES.SUPPORT.CHAT, icon: 'mdi-chat-outline' },
-          { title: 'Submit a Ticket', route: ROUTES.SUPPORT.TICKET, icon: 'mdi-ticket-plus-outline' },
-        ],
-      },
+      // {
+      //   title: 'Help & Support',
+      //   icon: 'mdi-lifebuoy',
+      //   route: ROUTES.SUPPORT.FAQS,
+      //   roles: ['Admin', 'Manager', 'CallAgent', 'Vendor', 'Delivery Agent'],
+      //   plans: ['Free', 'Pro', 'Enterprise'],
+      //   features: [],
+      //   children: [
+      //     { title: 'FAQs / Knowledge Base', route: ROUTES.SUPPORT.FAQS, icon: 'mdi-help-circle-outline' },
+      //     { title: 'Contact Support', route: ROUTES.SUPPORT.CONTACT, icon: 'mdi-email-outline' },
+      //     { title: 'Live Chat', route: ROUTES.SUPPORT.CHAT, icon: 'mdi-chat-outline' },
+      //     { title: 'Submit a Ticket', route: ROUTES.SUPPORT.TICKET, icon: 'mdi-ticket-plus-outline' },
+      //   ],
+      // },
     ],
   }),
 

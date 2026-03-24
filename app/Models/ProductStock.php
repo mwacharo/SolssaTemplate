@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class ProductStock extends Model
 {
     use HasFactory;
-        use BelongsToUserAndCountry;
+    use BelongsToUserAndCountry;
 
 
     protected $fillable = [
@@ -108,19 +108,33 @@ class ProductStock extends Model
             ->log("Marked {$quantity} stock as defected");
     }
 
-    /*
-     |--------------------------------------------------------------------------
-     | Helpers
-     |--------------------------------------------------------------------------
-     */
-    public function isLowStock(): bool
-    {
-        return $this->current_stock <= $this->stock_threshold;
-    }
+
+
 
     public function availableStock(): int
     {
-        return $this->current_stock;
+        return $this->current_stock - $this->committed_stock;
+    }
+
+
+    public function isLowStock(): bool
+    {
+        return $this->availableStock() <= $this->stock_threshold;
+    }
+
+
+    public function markAsDelivered(int $quantity): void
+    {
+        if ($this->committed_stock < $quantity) {
+            throw new \Exception("Not enough committed stock to deliver.");
+        }
+
+        $this->decrement('committed_stock', $quantity);
+        $this->increment('stock_delivered', $quantity);
+
+        activity()
+            ->performedOn($this)
+            ->withProperties(['quantity' => $quantity])
+            ->log("Delivered {$quantity} stock");
     }
 }
-

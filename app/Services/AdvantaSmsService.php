@@ -34,7 +34,8 @@ class AdvantaSmsService
             ];
         }
 
-     AdvantaSmsJob:dispatch($data['chat_id'], $data['message'], $data['user_id']);
+        AdvantaSmsJob:
+        dispatch($data['chat_id'], $data['message'], $data['user_id']);
 
         Log::info('Single sms dispatched', [
             'chat_id' => $data['chat_id'],
@@ -68,7 +69,7 @@ class AdvantaSmsService
             'contacts'      => 'nullable|array',
             // Accept chatId or phone_number or phone for each contact
             'contacts.*.chatId'      => 'required_without_all:contacts.*.phone_number,contacts.*.phone|string',
-            'contacts.*.phone_number'=> 'required_without_all:contacts.*.chatId,contacts.*.phone|string',
+            'contacts.*.phone_number' => 'required_without_all:contacts.*.chatId,contacts.*.phone|string',
             'contacts.*.phone'       => 'required_without_all:contacts.*.chatId,contacts.*.phone_number|string',
             'template_id'   => 'nullable|integer',
             'template'      => 'nullable|array',
@@ -228,7 +229,7 @@ class AdvantaSmsService
     //     return preg_replace('/\D/', '', $phone) . '@c.us';
     // }
 
-  
+
     private function processMessagePlaceholders($messageTemplate, $order = null, $contact = null)
     {
         $placeholders = [];
@@ -308,7 +309,4 @@ class AdvantaSmsService
 
         return $processedMessage;
     }
-
-
-
 }

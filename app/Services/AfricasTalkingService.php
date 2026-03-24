@@ -1216,7 +1216,8 @@ class AfricasTalkingService
 
             // associate with user who made the call
 
-            $user = User::where('client_name', $payload['callerNumber'] ?? null)->first();
+            // $user = User::where('client_name', $payload['callerNumber'] ?? null)->first();
+            $user = UserCountryAccount::where('client_name', $payload['callerNumber'])->first();
 
             if ($user) {
                 Log::info('Associating call history with user', [

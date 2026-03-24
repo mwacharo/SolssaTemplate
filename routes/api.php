@@ -43,6 +43,7 @@ use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\ConditionTypeController;
 use App\Http\Controllers\Api\OrderTrackingController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\ScanDispatchController;
 use App\Http\Controllers\Api\ServiceConditionController;
 
 use App\Http\Controllers\Api\VendorServicesController;
@@ -184,6 +185,19 @@ Route::prefix('v1')->group(function () {
 
     // ExPort orders]
     Route::post('/orders/export', [OrderController::class, 'export']);
+
+
+
+
+    // scan and dispatch 
+
+
+    Route::post('/orders/dispatch', [ScanDispatchController::class, 'dispatch']);
+
+
+    // `/api/v1/orders/by-tracking/${tracking}`
+
+    Route::get('/orders/by-tracking/{tracking}', [ScanDispatchController::class, 'findByTracking']);
 
 
 
