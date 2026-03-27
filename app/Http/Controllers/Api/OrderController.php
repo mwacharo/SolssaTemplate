@@ -116,6 +116,33 @@ class OrderController extends Controller
     }
 
 
+    public function events(string $id): JsonResponse
+
+    {
+        try {
+
+
+            $events = $this->orderTimelineService->orderEvents($id);
+
+
+
+
+            return response()->json([
+                'success' => true,
+                'data' => $events
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching order events: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch order events',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+
 
     public function assignRider(BulkOrderActionRequest $request)
     {
@@ -1742,7 +1769,7 @@ class OrderController extends Controller
     }
 
 
-   
+
 
 
     public function checkStatus($identifier): JsonResponse

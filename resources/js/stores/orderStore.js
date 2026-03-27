@@ -30,6 +30,7 @@ export const useOrderStore = defineStore('orders', () => {
   const notifications = ref([])
   const dialog = ref(false)
     const dialog1 = ref(false)
+    const dialog2 = ref(false)
 
   const bulkActionDialog = ref(false)
   const selectedOrderId = ref(null)
@@ -383,6 +384,22 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
     }
   }
 
+  const loadOrderEvents = async (id) => {
+    loading.value.orders = true
+    error.value = null  
+    try { 
+      const orderEvents = await getOrderEvents(id) // Assuming order details include events  
+      selectedOrder.value = orderEvents   
+      selectedOrderId.value = id  
+      return orderEvents
+    } catch (err) { 
+      error.value = err.message || 'Failed to load order events'
+      throw err
+    } finally {
+      loading.value.orders = false
+    } 
+  }
+
   const createOrder = async (orderData) => {
     loading.value.creating = true
     error.value = null
@@ -497,6 +514,27 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
       throw new Error(message)
     }
   }
+
+
+  const getOrderEvents = async (id) => {
+    try {
+      const response = await axios.get(`/api/v1/orders/${id}/events`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch order events')
+      }
+
+      return result.data
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Failed to fetch order events'
+      throw new Error(message)
+    }
+    }
 
   const getOrderHistory = async (id) => {
     try {
@@ -620,6 +658,17 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
 
     if (orderId) {
       const order = await loadOrderhistory(orderId)
+      selectedOrder.value = order
+      return order
+    }
+  }
+
+  const openOrderEventsDialog = async (orderId) => {
+    selectedOrderId.value = orderId
+    dialog2.value = true
+
+    if (orderId) {
+      const order = await loadOrderEvents(orderId)
       selectedOrder.value = order
       return order
     }
@@ -835,6 +884,7 @@ const exportOrders = async (orderIds) => {
     notifications,
     dialog,
       dialog1,
+      dialog2,
     bulkActionDialog,
     selectedOrderId,
     selectedOrder,
@@ -911,6 +961,7 @@ const exportOrders = async (orderIds) => {
     handleBulkAction,
     closeDialog,
     openViewDialog,
+    openOrderEventsDialog,
     clearAllFilters,
     applyFilters,
     changePerPage,

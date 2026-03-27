@@ -155,6 +155,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/bulk-print-waybills', [OrderController::class, 'printWaybill'])->name('orders.bulk-print-waybills');
     Route::get('/orders/{id}/timeline', [OrderController::class, 'timeline']);
 
+    // order events
+
+    Route::get('/orders/{id}/events', [\App\Http\Controllers\Api\OrderController::class, 'events']); // Get order events
+
 
     // waybills 
     Route::post('/waybills', [OrderController::class, 'waybill']);

@@ -929,6 +929,29 @@
                                                 </svg>
                                             </button>
 
+                                            <!-- orderjourney fetch events-->
+
+                                            <button
+                                                @click="viewOrderEvents(order)"
+                                                class="p-1 text-teal-600 hover:bg-teal-100 rounded"
+                                                title="View Order Events"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    class="w-5 h-5"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    stroke-width="2"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                    />
+                                                </svg>
+                                            </button>
+
                                             <!-- recordings -->
                                             <!-- Microphone with Soundwaves Icon -->
                                             <button
@@ -1311,6 +1334,8 @@
             </div>
         </div>
 
+        <OrderJourney ref="orderJourneyDialog" />
+
         <OrderHistory ref="orderHistoryDialog" />
 
         <OrderExpenses ref="orderExpensesDialog" />
@@ -1387,6 +1412,7 @@ import DateRangePicker from "@/Components/DualDatePicker.vue";
 // import orderhistory
 
 import OrderHistory from "./OrderHistory.vue";
+import OrderJourney from "./OrderJourney.vue";
 
 const props = defineProps({ order: Object });
 
@@ -1653,6 +1679,12 @@ const viewOrder = (order) => {
     // Open the view dialog for the selected order
     console.log("Viewing order:", order);
     orderStore.openViewDialog(order.id);
+};
+
+const viewOrderEvents = (order) => {
+    // Open the order events dialog for the selected order
+    console.log("Viewing order events for:", order);
+    orderStore.openOrderEventsDialog(order.id);
 };
 
 const duplicateOrder = (order) => {

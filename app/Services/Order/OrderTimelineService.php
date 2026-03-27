@@ -9,6 +9,77 @@ use App\Models\Customer;
 
 class OrderTimelineService
 {
+
+
+    // get order events 
+
+
+
+   public function orderEvents(int $orderId): array
+{
+    $order = Order::findOrFail($orderId);
+
+    $result = [];
+    $previousEvent = null;
+
+    $events = $order->events()
+        ->with('actor:id,name')
+        ->orderBy('created_at')
+        ->cursor();
+
+    foreach ($events as $event) {
+
+        $meta = $event->event_data;
+
+        if (!is_array($meta)) {
+            $meta = json_decode($meta, true) ?? [];
+        }
+
+        $event->event_data = $meta;
+
+        $result[] = [
+            'type'    => $event->event_type,
+            'changes' => $event->diffWith($previousEvent),
+            'actor'   => optional($event->actor)->name ?? 'user',
+            'time'    => $event->created_at->toDateTimeString(),
+        ];
+
+        $previousEvent = $event;
+    }
+
+    return $result; // ✅ RETURN ARRAY ONLY
+}
+
+
+    private function formatEventTitle($event): string
+    {
+        $data = $event->event_data ?? [];
+
+        return match ($event->event_type) {
+
+            'created' => 'Order Created',
+
+            'status_changed' =>
+            isset($data['from'], $data['to'])
+                ? "Status changed from {$data['from']} to {$data['to']}"
+                : 'Status Updated',
+
+            'scheduled' =>
+            isset($data['date'])
+                ? "Order scheduled for {$data['date']}"
+                : 'Order Scheduled',
+
+            'dispatched' => 'Order Dispatched',
+
+            'delivered' => 'Order Delivered',
+
+            'cancelled' => 'Order Cancelled',
+
+            default => ucfirst(str_replace('_', ' ', $event->event_type)),
+        };
+    }
+
+
     public function getTimeline(int $orderId)
     {
         $order = Order::findOrFail($orderId);

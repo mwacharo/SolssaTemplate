@@ -1,6 +1,8 @@
 <template>
     <v-dialog v-model="dialog1" max-width="900" scrollable>
         <v-card>
+            <v-btn icon="mdi-close" variant="text" @click="closeDialog" />
+
             <div class="p-4">
                 <h2 class="text-xl font-bold mb-4">Order History</h2>
 
@@ -69,18 +71,17 @@ const orderStore = useOrderStore();
 
 const dialog1 = computed({
     get: () => orderStore.dialog1,
-    set: (val) => (orderStore.dialog = val),
+    set: (val) => (orderStore.dialog1 = val),
 });
+
+const closeDialog = () => {
+    dialog1.value = false;
+    orderStore.selectedOrder = null; // Clear selected order when closing
+};
 
 const loading = computed(() => orderStore.loading.orders);
 const error = computed(() => orderStore.error);
 const history = computed(() => orderStore.selectedOrder || []);
-// const orderId = ""; // you can make this dynamic via props
-// const history = ref([]);
-// const loading = ref(true);
-// const error = ref(null);
-
-// const dialog = ref(false);
 
 // Fetch order history from API
 const fetchHistory = async () => {
