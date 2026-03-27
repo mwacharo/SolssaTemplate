@@ -515,7 +515,6 @@
                                         prepend-inner-icon="mdi-city"
                                         variant="outlined"
                                         density="comfortable"
-                                        :rules="[rules.required]"
                                     />
                                 </v-col>
 
@@ -544,7 +543,6 @@
                                         variant="outlined"
                                         density="comfortable"
                                         rows="2"
-                                        :rules="[rules.required]"
                                     />
                                 </v-col>
                             </v-row>

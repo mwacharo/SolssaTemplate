@@ -35,9 +35,11 @@ use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdersExport;
 use App\Models\Status;
+use App\Services\Order\OrderTimelineService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
+// /home/mwacharo/Desktop/Projects/CustomerSupport/app/Services/Order/OrderTimelineService.php
 
 class OrderController extends Controller
 {
@@ -53,7 +55,8 @@ class OrderController extends Controller
 
         protected OrderBulkActionService $orderService,
 
-        protected StockService $stockService
+        protected StockService $stockService,
+        protected OrderTimelineService $orderTimelineService,
 
     ) {
 
@@ -64,6 +67,33 @@ class OrderController extends Controller
         // $this->middleware('can:update,App\Models\Order')->only(['update']);
         // $this->middleware('can:delete,App\Models\Order')->only(['destroy']);
     }
+
+
+
+    public function history(string $id): JsonResponse
+    {
+
+        // app/Services/OrderTimelineService.php
+
+        // call getTimeline method from OrderService and return response
+        try {
+            $timeline = $this->orderTimelineService->getTimeline($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $timeline
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching order timeline: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch order timeline',
+                'error' => app()->isLocal() ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
 
     public function timeline($id): JsonResponse
     {
@@ -811,37 +841,34 @@ class OrderController extends Controller
 
 
     /**
- * Apply search to the query
- */
-private function applySearch($query, string $search): void
-{
-    $terms = collect(preg_split('/[\s,]+/', $search))
-        ->filter()
-        ->values();
+     * Apply search to the query
+     */
+    private function applySearch($query, string $search): void
+    {
+        $terms = collect(preg_split('/[\s,]+/', $search))
+            ->filter()
+            ->values();
 
-    $query->where(function ($q) use ($terms) {
+        $query->where(function ($q) use ($terms) {
 
-        foreach ($terms as $term) {
+            foreach ($terms as $term) {
 
-            $q->orWhere(function ($subQuery) use ($term) {
+                $q->orWhere(function ($subQuery) use ($term) {
 
-                $subQuery->where('order_no', 'like', "%{$term}%")
-                    ->orWhereHas('customer', function ($customerQuery) use ($term) {
-                        $customerQuery->where('full_name', 'like', "%{$term}%")
-                            ->orWhere('phone', 'like', "%{$term}%")
-                            ->orWhere('email', 'like', "%{$term}%");
-                    })
-                    ->orWhereHas('orderItems.product', function ($productQuery) use ($term) {
-                        $productQuery->where('name', 'like', "%{$term}%")
-                            ->orWhere('sku', 'like', "%{$term}%");
-                    });
-
-            });
-
-        }
-
-    });
-}
+                    $subQuery->where('order_no', 'like', "%{$term}%")
+                        ->orWhereHas('customer', function ($customerQuery) use ($term) {
+                            $customerQuery->where('full_name', 'like', "%{$term}%")
+                                ->orWhere('phone', 'like', "%{$term}%")
+                                ->orWhere('email', 'like', "%{$term}%");
+                        })
+                        ->orWhereHas('orderItems.product', function ($productQuery) use ($term) {
+                            $productQuery->where('name', 'like', "%{$term}%")
+                                ->orWhere('sku', 'like', "%{$term}%");
+                        });
+                });
+            }
+        });
+    }
 
     /**
      * Apply additional filters for vendor_id, city, category_id, created_from, created_to
@@ -1613,107 +1640,6 @@ private function applySearch($query, string $search): void
     }
 
 
-    // getby vendor only
-
-
-    // delivered 
-    // returned
-    // canceled
-
-    // public function getByVendor(Request $request, $vendorId): JsonResponse
-    // {
-    //     try {
-    //         $orders = Order::with([
-    //             'warehouse',
-    //             'country',
-    //             'agent',
-    //             'createdBy',
-    //             'rider',
-    //             'zone',
-    //             'orderItems.product',
-    //             'addresses',
-    //             'shippingAddress',
-    //             'pickupAddress',
-    //             'assignments.user',
-    //             'payments',
-    //             'latestStatus.status',
-    //             'customer'
-    //         ])->where('vendor_id', $vendorId)->get();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data' => $orders
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to fetch vendor orders', [
-    //             'vendor_id' => $vendorId,
-    //             'error' => $e->getMessage()
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to retrieve orders',
-    //             'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-    //         ], 500);
-    //     }
-    // }
-
-
-
-    // public function getByVendor(Request $request, int $vendorId): JsonResponse
-    // {
-    //     try {
-
-    //         // Validate input
-    //         $validated = $request->validate([
-    //             'from'     => ['required', 'date'],
-    //             'to'       => ['required', 'date', 'after_or_equal:from'],
-    //             'per_page' => ['nullable', 'integer', 'min:1'],
-    //         ]);
-
-    //         $perPage = $validated['per_page'] ?? 50;
-
-    //         // Get status IDs for filtering
-    //         $statusIds = Status::whereIn('name', ['Delivered', 'Returned', 'Canceled'])
-    //             ->pluck('id')
-    //             ->toArray();
-
-    //         // Fetch orders for vendor
-    //         $orders = Order::query()
-    //             ->where('vendor_id', $vendorId)
-    //             ->whereHas('latestStatus', function ($query) use ($statusIds, $validated) {
-    //                 $query->whereIn('status_id', $statusIds)
-    //                     ->whereBetween('order_status_timestamps.created_at', [
-    //                         $validated['from'] . ' 00:00:00',
-    //                         $validated['to'] . ' 23:59:59',
-    //                     ]);
-    //             })
-    //             ->with([
-
-    //                 'customer',
-    //                 'latestStatus.status',
-    //             ])
-    //             ->orderBy('created_at', 'desc')
-    //             ->paginate($perPage);
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'data'    => $orders,
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to fetch vendor remittance orders', [
-    //             'vendor_id' => $vendorId,
-    //             'error'     => $e->getMessage(),
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to retrieve vendor remittance orders',
-    //             'error'   => config('app.debug') ? $e->getMessage() : 'Internal server error',
-    //         ], 500);
-    //     }
-    // }
-
 
     public function getByVendor(Request $request, int $vendorId): JsonResponse
     {
@@ -1816,39 +1742,7 @@ private function applySearch($query, string $search): void
     }
 
 
-    //     public function checkStatus($id): JsonResponse
-    //     {
-    //         try {
-    //             $order = Order::with('latestStatus.status')->findOrFail($id);
-
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'data' => [
-    //                     'order_id' => $order->id,
-    //                     'order_no' => $order->order_no,
-    //                     'latest_status' => $order->latestStatus ? $order->latestStatus->status->name : null,
-    //                     'status_updated_at' => $order->latestStatus ? $order->latestStatus->created_at : null,
-    //                 ]
-    //             ]);
-    //         } catch (ModelNotFoundException $e) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Order not found'
-    //             ], 404);
-    //         } catch (\Exception $e) {
-    //             Log::error('Failed to check order status', [
-    //                 'order_id' => $id,
-    //                 'error' => $e->getMessage()
-    //             ]);
-
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Failed to retrieve order status',
-    //                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
-    //             ], 500);
-    //         }
-    //
-
+   
 
 
     public function checkStatus($identifier): JsonResponse

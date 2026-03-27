@@ -137,6 +137,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order by ID
     Route::get('/orders/order_no/{order_no}', [\App\Http\Controllers\Api\OrderController::class, 'showByOrderNo']); // Show a specific order by order_no
 
+
+    // orderhistory 
+    Route::get('/orders/{id}/history', [\App\Http\Controllers\Api\OrderController::class, 'history']); // Get order history
+
     // delete 
     Route::delete('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']);
     // Update a specific order

@@ -1311,6 +1311,8 @@
             </div>
         </div>
 
+        <OrderHistory ref="orderHistoryDialog" />
+
         <OrderExpenses ref="orderExpensesDialog" />
 
         <OrderCallHistory ref="viewRecordingsDialog" />
@@ -1382,6 +1384,10 @@ import Stkpush from "./Stkpush.vue";
 import DateRangePicker from "@/Components/DualDatePicker.vue";
 // orderjourney
 
+// import orderhistory
+
+import OrderHistory from "./OrderHistory.vue";
+
 const props = defineProps({ order: Object });
 
 // Initialize store
@@ -1393,6 +1399,7 @@ const callCentreDiallerStore = usecallCentreDiallerStore();
 const stkpushStore = useStkpushStore();
 const stkpushDialog = ref(null); // Add template ref
 const viewRecordingsDialog = ref(null);
+const orderHistoryDialog = ref(null);
 const orderExpensesDialog = ref(null);
 
 const createMode = ref(false);
@@ -1403,6 +1410,8 @@ const isCreateMode = ref(false);
 const callDialogType = ref("");
 
 const selectedPhoneNumber = ref("");
+
+// const orderHistoryDialog = ref(null);
 
 // Handle opening call dialog from order form
 // const handleOpenCallDialog = (phoneNumber) => {
@@ -1642,6 +1651,7 @@ const getAgentByRole = (order, role) => {
 
 const viewOrder = (order) => {
     // Open the view dialog for the selected order
+    console.log("Viewing order:", order);
     orderStore.openViewDialog(order.id);
 };
 

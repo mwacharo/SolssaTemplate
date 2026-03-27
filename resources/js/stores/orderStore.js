@@ -29,6 +29,8 @@ export const useOrderStore = defineStore('orders', () => {
   const error = ref(null)
   const notifications = ref([])
   const dialog = ref(false)
+    const dialog1 = ref(false)
+
   const bulkActionDialog = ref(false)
   const selectedOrderId = ref(null)
   const selectedOrder = ref(null)
@@ -279,6 +281,8 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
     }
   }
 
+
+
   // MODIFIED: Apply filters and save them
   const applyFilters = async () => {
     const filters = buildFilterParams()
@@ -357,6 +361,22 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
       return order
     } catch (err) {
       error.value = err.message || 'Failed to load order'
+      throw err
+    } finally {
+      loading.value.orders = false
+    }
+  }
+
+  const loadOrderhistory = async (id) => {
+    loading.value.orders = true
+    error.value = null
+    try {
+      const orderhistory = await getOrderHistory(id)
+      selectedOrder.value = orderhistory
+      selectedOrderId.value = id
+      return orderhistory
+    } catch (err) {
+      error.value = err.message || 'Failed to load order history'
       throw err
     } finally {
       loading.value.orders = false
@@ -478,6 +498,26 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
     }
   }
 
+  const getOrderHistory = async (id) => {
+    try {
+      const response = await axios.get(`/api/v1/orders/${id}/history`, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+
+      const result = response.data
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch order history')
+      }
+
+      return result.data
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Failed to fetch order history'
+      throw new Error(message)
+    }
+  }
+
   const updateOrderCustomer = async (id, customerData) => {
     return updateOrder(id, { customer: customerData })
   }
@@ -568,6 +608,18 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
 
     if (orderId) {
       const order = await loadOrder(orderId)
+      selectedOrder.value = order
+      return order
+    }
+  }
+
+
+  const openViewDialog = async (orderId) => {
+    selectedOrderId.value = orderId
+    dialog1.value = true
+
+    if (orderId) {
+      const order = await loadOrderhistory(orderId)
       selectedOrder.value = order
       return order
     }
@@ -782,6 +834,7 @@ const exportOrders = async (orderIds) => {
     error,
     notifications,
     dialog,
+      dialog1,
     bulkActionDialog,
     selectedOrderId,
     selectedOrder,
@@ -836,6 +889,7 @@ const exportOrders = async (orderIds) => {
     printOrders,
     fetchOrders,
     loadOrder,
+    loadOrderhistory,
     createOrder,
     updateOrder,
     exportOrders,
@@ -856,6 +910,7 @@ const exportOrders = async (orderIds) => {
     closeBulkActionDialog,
     handleBulkAction,
     closeDialog,
+    openViewDialog,
     clearAllFilters,
     applyFilters,
     changePerPage,
