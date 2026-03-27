@@ -51,79 +51,120 @@
                             By: {{ event.actor }}
                         </div>
 
-                        <!-- Changes -->
-                        <div v-if="event.type === 'order_updated'">
-                            <div v-if="!Object.keys(event.changes).length">
-                                <em class="text-grey">No changes recorded</em>
+                        <!-- Changes block -->
+                        <div v-if="event.type === 'order_updated'" class="mt-1">
+                            <div
+                                v-if="
+                                    !getMeaningfulChanges(event.changes).length
+                                "
+                            >
+                                <em class="text-grey text-caption"
+                                    >No significant changes</em
+                                >
                             </div>
 
-                            <div
-                                v-for="(change, key) in event.changes"
-                                :key="key"
-                                class="mb-2"
-                            >
-                                <!-- ORDER ITEMS -->
-                                <div v-if="key === 'order_items'">
-                                    <div
-                                        v-for="(item, i) in getItemDiff(
-                                            change.old,
-                                            change.new,
-                                        )"
-                                        :key="i"
-                                        class="d-flex align-center gap-2 mb-1"
-                                    >
-                                        <v-chip
-                                            size="x-small"
-                                            :color="badgeColor(item.type)"
-                                            variant="tonal"
+                            <template v-else>
+                                <div
+                                    v-for="(
+                                        change, key
+                                    ) in getMeaningfulChangesMap(event.changes)"
+                                    :key="key"
+                                    class="mb-2"
+                                >
+                                    <!-- ORDER ITEMS -->
+                                    <div v-if="key === 'order_items'">
+                                        <div
+                                            class="text-caption font-weight-bold mb-1"
                                         >
-                                            {{ item.type }}
-                                        </v-chip>
+                                            Items:
+                                        </div>
+                                        <div
+                                            v-for="(item, i) in getItemDiff(
+                                                change.old,
+                                                change.new,
+                                            )"
+                                            :key="i"
+                                            class="d-flex align-center gap-2 mb-1"
+                                        >
+                                            <v-chip
+                                                size="x-small"
+                                                :color="badgeColor(item.type)"
+                                                variant="tonal"
+                                            >
+                                                {{ item.type }}
+                                            </v-chip>
+                                            <span class="text-body-2">{{
+                                                item.sku
+                                            }}</span>
+                                            <span
+                                                v-if="item.type === 'updated'"
+                                                class="text-caption"
+                                            >
+                                                qty:
+                                                <s class="text-red">{{
+                                                    item.oldQty
+                                                }}</s>
+                                                →
+                                                <span class="text-green">{{
+                                                    item.newQty
+                                                }}</span>
+                                            </span>
+                                            <span
+                                                v-else-if="
+                                                    item.type ===
+                                                    'price_changed'
+                                                "
+                                                class="text-caption"
+                                            >
+                                                price:
+                                                <s class="text-red">{{
+                                                    item.oldPrice
+                                                }}</s>
+                                                →
+                                                <span class="text-green">{{
+                                                    item.newPrice
+                                                }}</span>
+                                            </span>
+                                            <span
+                                                v-else-if="
+                                                    item.type === 'added'
+                                                "
+                                                class="text-caption text-green"
+                                            >
+                                                qty: {{ item.newQty }}
+                                            </span>
+                                            <span
+                                                v-else-if="
+                                                    item.type === 'removed'
+                                                "
+                                                class="text-caption text-red"
+                                            >
+                                                qty: {{ item.oldQty }}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                        <span>{{ item.sku }}</span>
-
-                                        <span v-if="item.type === 'updated'">
-                                            ({{ item.oldQty }} →
-                                            {{ item.newQty }})
+                                    <!-- DEFAULT FIELD CHANGES -->
+                                    <div
+                                        v-else
+                                        class="d-flex align-center gap-2 flex-wrap"
+                                    >
+                                        <span
+                                            class="text-caption font-weight-bold"
+                                            >{{ formatKey(key) }}:</span
+                                        >
+                                        <span
+                                            class="text-caption text-red text-decoration-line-through"
+                                        >
+                                            {{ formatValue(key, change.old) }}
                                         </span>
-
-                                        <span v-if="item.type === 'added'">
-                                            (qty {{ item.newQty }})
-                                        </span>
-
-                                        <span v-if="item.type === 'removed'">
-                                            (qty {{ item.oldQty }})
+                                        <span class="text-caption">→</span>
+                                        <span class="text-caption text-green">
+                                            {{ formatValue(key, change.new) }}
                                         </span>
                                     </div>
                                 </div>
-
-                                <!-- DEFAULT FIELD CHANGES -->
-                                <div v-else class="d-flex align-center gap-2">
-                                    <strong>{{ key }}:</strong>
-
-                                    <span
-                                        v-if="
-                                            change.old !== null &&
-                                            change.old !== undefined
-                                        "
-                                        class="text-red text-decoration-line-through"
-                                    >
-                                        {{ change.old }}
-                                    </span>
-
-                                    <span
-                                        v-if="
-                                            change.old !== null &&
-                                            change.old !== undefined
-                                        "
-                                        >→</span
-                                    >
-
-                                    <span class="text-green">
-                                        {{ change.new ?? "added" }}
-                                    </span>
-                                </div>
-                            </div>
+                            </template>
                         </div>
                     </v-timeline-item>
                 </v-timeline>
@@ -164,14 +205,12 @@ const closeDialog = () => {
 
 const fetchEvents = async () => {
     if (!orderNo.value) return;
-
     loading.value = true;
     try {
         const res = await axios.get(`/api/v1/orders/${orderNo.value}/events`);
-
-        // Normalize: ensure changes is always a plain object, never an array
         events.value = (res.data.data || []).map((event) => ({
             ...event,
+            // Normalize: changes must always be a plain object, never an array
             changes: Array.isArray(event.changes) ? {} : (event.changes ?? {}),
         }));
     } catch (err) {
@@ -182,7 +221,7 @@ const fetchEvents = async () => {
     }
 };
 
-// Watch orderNo so we fetch even if selectedOrder is set after mount
+// Watch orderNo — fires immediately if set, or when selectedOrder changes after mount
 watch(
     orderNo,
     (val) => {
@@ -191,9 +230,67 @@ watch(
     { immediate: true },
 );
 
+// ─── Formatters ──────────────────────────────────────────────────────────────
+
 const formatType = (type) => type.replaceAll("_", " ").toUpperCase();
 
 const formatDate = (date) => new Date(date).toLocaleString();
+
+const formatKey = (key) =>
+    key.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const formatValue = (key, val) => {
+    if (val === null || val === undefined) return "—";
+    if (key.includes("date")) return new Date(val).toLocaleString();
+    return val;
+};
+
+// ─── Semantic equality ───────────────────────────────────────────────────────
+
+/**
+ * True if two values represent the same thing despite type/format differences.
+ * Handles: "6290.00" == 6290, "2026-03-27T10:59" == "2026-03-27 10:59:00", etc.
+ */
+const semanticallyEqual = (a, b) => {
+    if (a === b) return true;
+    if (a === null || b === null || a === undefined || b === undefined)
+        return false;
+    // Numeric comparison: "6290.00" === 6290
+    const na = Number(a),
+        nb = Number(b);
+    if (!isNaN(na) && !isNaN(nb) && na === nb) return true;
+    // Date comparison: different ISO formats for the same moment
+    const da = new Date(a),
+        db = new Date(b);
+    if (!isNaN(da) && !isNaN(db) && da.getTime() === db.getTime()) return true;
+    return false;
+};
+
+// ─── Meaningful change filtering ─────────────────────────────────────────────
+
+/**
+ * Returns a filtered changes map, omitting:
+ * - Fields where old and new are semantically equal (type coercion noise)
+ * - order_items entries where the item diff is empty (backend re-save noise)
+ */
+const getMeaningfulChangesMap = (changes) => {
+    const result = {};
+    for (const [key, change] of Object.entries(changes)) {
+        if (key === "order_items") {
+            if (getItemDiff(change.old, change.new).length > 0) {
+                result[key] = change;
+            }
+        } else if (!semanticallyEqual(change.old, change.new)) {
+            result[key] = change;
+        }
+    }
+    return result;
+};
+
+const getMeaningfulChanges = (changes) =>
+    Object.keys(getMeaningfulChangesMap(changes));
+
+// ─── Colors ──────────────────────────────────────────────────────────────────
 
 const getColor = (type) =>
     ({
@@ -209,24 +306,52 @@ const badgeColor = (type) =>
         added: "green",
         removed: "red",
         updated: "orange",
-    })[type];
+        price_changed: "blue",
+    })[type] ?? "grey";
 
+// ─── Item Diff ────────────────────────────────────────────────────────────────
+
+/**
+ * Diffs old vs new item arrays.
+ * Reports only MEANINGFUL changes:
+ *   added         — SKU appears in new but not old
+ *   removed       — SKU appears in old but not new
+ *   updated       — quantity changed
+ *   price_changed — unit_price changed
+ *
+ * Silently ignores items that only differ by DB id / timestamps (backend re-save noise).
+ */
 const getItemDiff = (oldItems = [], newItems = []) => {
-    const oldMap = Object.fromEntries((oldItems ?? []).map((i) => [i.sku, i]));
-    const newMap = Object.fromEntries((newItems ?? []).map((i) => [i.sku, i]));
+    const safeOld = oldItems ?? [];
+    const safeNew = newItems ?? [];
+
+    const oldMap = Object.fromEntries(safeOld.map((i) => [i.sku, i]));
+    const newMap = Object.fromEntries(safeNew.map((i) => [i.sku, i]));
 
     const result = [];
 
     for (const sku in newMap) {
         if (!oldMap[sku]) {
             result.push({ type: "added", sku, newQty: newMap[sku].quantity });
-        } else if (oldMap[sku].quantity !== newMap[sku].quantity) {
-            result.push({
-                type: "updated",
-                sku,
-                oldQty: oldMap[sku].quantity,
-                newQty: newMap[sku].quantity,
-            });
+        } else {
+            const o = oldMap[sku];
+            const n = newMap[sku];
+            if (o.quantity !== n.quantity) {
+                result.push({
+                    type: "updated",
+                    sku,
+                    oldQty: o.quantity,
+                    newQty: n.quantity,
+                });
+            } else if (!semanticallyEqual(o.unit_price, n.unit_price)) {
+                result.push({
+                    type: "price_changed",
+                    sku,
+                    oldPrice: o.unit_price,
+                    newPrice: n.unit_price,
+                });
+            }
+            // ID/timestamp-only diff = backend re-save noise → skip
         }
     }
 
