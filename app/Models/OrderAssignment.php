@@ -5,10 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class OrderAssignment extends Model
 {
+
+
+    use LogsActivity;
+
     /** @use HasFactory<\Database\Factories\OrderAssignmentFactory> */
     use HasFactory;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('order_assignment');
+    }
+
 
     protected $fillable = [
         'order_id',
@@ -21,7 +37,7 @@ class OrderAssignment extends Model
     ];
 
 
-     public function user()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

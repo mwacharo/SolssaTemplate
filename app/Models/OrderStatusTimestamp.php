@@ -4,9 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class OrderStatusTimestamp extends Model
 {
+
+    use LogsActivity;
+
     //
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->useLogName('order_status_timestamp');
+    }
+
+
 
     protected $fillable = [
         'order_id',

@@ -6,6 +6,7 @@ use Spatie\Activitylog\Models\Activity;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Customer;
+use App\Models\OrderStatusTimestamp;
 
 class OrderTimelineService
 {
@@ -15,40 +16,40 @@ class OrderTimelineService
 
 
 
-   public function orderEvents(int $orderId): array
-{
-    $order = Order::findOrFail($orderId);
+    public function orderEvents(int $orderId): array
+    {
+        $order = Order::findOrFail($orderId);
 
-    $result = [];
-    $previousEvent = null;
+        $result = [];
+        $previousEvent = null;
 
-    $events = $order->events()
-        ->with('actor:id,name')
-        ->orderBy('created_at')
-        ->cursor();
+        $events = $order->events()
+            ->with('actor:id,name')
+            ->orderBy('created_at')
+            ->cursor();
 
-    foreach ($events as $event) {
+        foreach ($events as $event) {
 
-        $meta = $event->event_data;
+            $meta = $event->event_data;
 
-        if (!is_array($meta)) {
-            $meta = json_decode($meta, true) ?? [];
+            if (!is_array($meta)) {
+                $meta = json_decode($meta, true) ?? [];
+            }
+
+            $event->event_data = $meta;
+
+            $result[] = [
+                'type'    => $event->event_type,
+                'changes' => $event->diffWith($previousEvent),
+                'actor'   => optional($event->actor)->name ?? 'user',
+                'time'    => $event->created_at->toDateTimeString(),
+            ];
+
+            $previousEvent = $event;
         }
 
-        $event->event_data = $meta;
-
-        $result[] = [
-            'type'    => $event->event_type,
-            'changes' => $event->diffWith($previousEvent),
-            'actor'   => optional($event->actor)->name ?? 'user',
-            'time'    => $event->created_at->toDateTimeString(),
-        ];
-
-        $previousEvent = $event;
+        return $result; // ✅ RETURN ARRAY ONLY
     }
-
-    return $result; // ✅ RETURN ARRAY ONLY
-}
 
 
     private function formatEventTitle($event): string
@@ -111,6 +112,18 @@ class OrderTimelineService
                 // 4. Customer logs
                 $query->where('subject_type', Customer::class)
                     ->where('subject_id', $customerId);
+            })
+
+
+            ->orWhere(function ($query) use ($orderId) {
+                $query->where('subject_type', OrderStatusTimestamp::class)
+                    ->whereRaw("JSON_EXTRACT(properties, '$.attributes.order_id') = ?", [$orderId]);
+            })
+
+            // OrderAssignment
+            ->orWhere(function ($query) use ($orderId) {
+                $query->where('subject_type', 'App\Models\OrderAssignment')
+                    ->whereRaw("JSON_EXTRACT(properties, '$.attributes.order_id') = ?", [$orderId]);
             })
             ->with('causer')
             ->latest()

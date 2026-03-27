@@ -513,36 +513,82 @@ class OrderController extends Controller
             $order->update(collect($validated)->except(['order_items'])->toArray());
 
             // Update order items if provided
-            if (isset($validated['order_items']) && is_array($validated['order_items'])) {
-                // Delete existing items
-                OrderItem::where('order_id', $order->id)->delete();
+            // if (isset($validated['order_items']) && is_array($validated['order_items'])) {
+            //     // Delete existing items
+            //     OrderItem::where('order_id', $order->id)->delete();
 
-                // Create new items
-                foreach ($validated['order_items'] as $item) {
-                    $itemData = [
-                        'order_id' => $order->id,
-                        'product_id' => $item['product_id'] ?? null,
-                        'sku' => $item['sku'] ?? null,
-                        'name' => $item['name'] ?? null,
-                        'quantity' => $item['quantity'] ?? 1,
-                        'unit_price' => $item['unit_price'] ?? 0,
-                        'total_price' => $item['total_price'] ?? 0,
-                        'discount' => $item['discount'] ?? 0,
-                        'currency' => $item['currency'] ?? 'KSH',
-                        'weight' => $item['weight'] ?? null,
-                        'delivered_quantity' => $item['delivered_quantity'] ?? 0,
-                    ];
+            //     // Create new items
+            //     foreach ($validated['order_items'] as $item) {
+            //         $itemData = [
+            //             'order_id' => $order->id,
+            //             'product_id' => $item['product_id'] ?? null,
+            //             'sku' => $item['sku'] ?? null,
+            //             'name' => $item['name'] ?? null,
+            //             'quantity' => $item['quantity'] ?? 1,
+            //             'unit_price' => $item['unit_price'] ?? 0,
+            //             'total_price' => $item['total_price'] ?? 0,
+            //             'discount' => $item['discount'] ?? 0,
+            //             'currency' => $item['currency'] ?? 'KSH',
+            //             'weight' => $item['weight'] ?? null,
+            //             'delivered_quantity' => $item['delivered_quantity'] ?? 0,
+            //         ];
 
-                    // Try to resolve product_id by SKU if not provided
-                    if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
-                        $product = Product::where('sku', $itemData['sku'])->first();
-                        if ($product) {
-                            $itemData['product_id'] = $product->id;
-                        }
-                    }
+            //         // Try to resolve product_id by SKU if not provided
+            //         if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
+            //             $product = Product::where('sku', $itemData['sku'])->first();
+            //             if ($product) {
+            //                 $itemData['product_id'] = $product->id;
+            //             }
+            //         }
 
-                    OrderItem::create($itemData);
+            //         OrderItem::create($itemData);
+            //     }
+            // }
+
+
+
+
+
+            $orderItemIds = $order->orderItems()->pluck('id')->toArray();
+            $submittedIds = [];
+
+            foreach ($validated['order_items'] as $item) {
+                $itemData = [
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'] ?? null,
+                    'sku' => $item['sku'] ?? null,
+                    'name' => $item['name'] ?? null,
+                    'quantity' => $item['quantity'] ?? 1,
+                    'unit_price' => $item['unit_price'] ?? 0,
+                    'total_price' => $item['total_price'] ?? 0,
+                    'discount' => $item['discount'] ?? 0,
+                    'currency' => $item['currency'] ?? 'KSH',
+                    'weight' => $item['weight'] ?? null,
+                    'delivered_quantity' => $item['delivered_quantity'] ?? 0,
+                ];
+
+                // Resolve product_id if missing
+                if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
+                    $product = Product::where('sku', $itemData['sku'])->first();
+                    if ($product) $itemData['product_id'] = $product->id;
                 }
+
+                if (!empty($item['id']) && in_array($item['id'], $orderItemIds)) {
+                    // Update existing item
+                    $orderItem = OrderItem::find($item['id']);
+                    $orderItem->update($itemData);
+                    $submittedIds[] = $orderItem->id;
+                } else {
+                    // Create new item
+                    $newItem = OrderItem::create($itemData);
+                    $submittedIds[] = $newItem->id;
+                }
+            }
+
+            // Soft-delete removed items (optional)
+            $itemsToRemove = array_diff($orderItemIds, $submittedIds);
+            if (!empty($itemsToRemove)) {
+                OrderItem::whereIn('id', $itemsToRemove)->delete(); // soft delete
             }
 
             // Update status timestamp if status_id changed
