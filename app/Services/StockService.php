@@ -51,7 +51,9 @@ class StockService
                     'scheduled' =>
                     $stock->commitStock($item->quantity),
 
-                    // ✅ Release if cancelled or pending
+                    //not really
+
+                    // ✅ Release if cancelled or pending if it was previously reserved ie previous status was scheduled
                     'cancelled', 'pending' =>
                     $stock->releaseCommittedStock($item->quantity),
 

@@ -470,15 +470,17 @@ class MessageTemplateService
 
         // Try to find by slug
         if ($templateSlug) {
-            $template = Template::where('slug', $templateSlug)->first();
+            $template = Template::where('name', $templateSlug)->first();
             if ($template) {
                 return $template;
             }
         }
 
         // Fallback to default template
-        return Template::where('is_default', true)->first()
-            ?? Template::first();
+        return
+            // Template::where('is_default', true)->first()
+            //     ??
+            Template::first();
     }
 
 
