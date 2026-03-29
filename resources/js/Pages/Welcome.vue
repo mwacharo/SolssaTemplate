@@ -46,17 +46,16 @@ const togglePasswordVisibility = () => {
                 <v-row no-gutters class="fill-height">
                     <!-- Left Side (Brand) -->
                     <!-- #E4572E -->
-                    <!-- <v-col
-                        cols="12"
-                        md="6"
-                        class="bg-primary d-flex align-center"
-                    > -->
-
                     <v-col
                         cols="12"
                         md="6"
-                        class="bg-custom-orange d-flex align-center"
+                        class="bg-primary d-flex align-center"
                     >
+                        <!-- <v-col
+                        cols="12"
+                        md="6"
+                        class="bg-custom-orange d-flex align-center"
+                    > -->
                         <v-container>
                             <v-row
                                 justify="center"
@@ -156,7 +155,7 @@ const togglePasswordVisibility = () => {
                                     ></v-checkbox>
 
                                     <!-- Submit Button -->
-                                    <!-- <v-btn
+                                    <v-btn
                                         @click="submit"
                                         color="primary"
                                         block
@@ -165,9 +164,9 @@ const togglePasswordVisibility = () => {
                                         class="mb-4"
                                     >
                                         Log In
-                                    </v-btn> -->
+                                    </v-btn>
 
-                                    <v-btn
+                                    <!-- <v-btn
                                         @click="submit"
                                         block
                                         size="large"
@@ -175,7 +174,7 @@ const togglePasswordVisibility = () => {
                                         class="mb-4 bg-custom-orange text-white"
                                     >
                                         Log In
-                                    </v-btn>
+                                    </v-btn> -->
 
                                     <!-- Links -->
                                     <div class="d-flex flex-column gap-2 mt-4">

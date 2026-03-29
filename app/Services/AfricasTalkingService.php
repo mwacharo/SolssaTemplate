@@ -215,6 +215,10 @@ class AfricasTalkingService
         $clientDialedNumber = $request->input('clientDialedNumber', '');
         $callSessionState = $request->input('callSessionState', '');
 
+
+            $this->ensureConfigLoaded($destinationNumber ?: $clientDialedNumber);
+
+
         $isOutgoing = $this->isOutgoingCall($callerNumber);
 
         if ($isOutgoing) {
@@ -1821,5 +1825,44 @@ class AfricasTalkingService
         }
 
         throw new \Exception("Invalid phone number format: {$number}");
+    }
+
+
+
+    /**
+     * Resolve country_id from a phone number's E.164 prefix,
+     * then bootstrap $this->config and the AT SDK.
+     */
+    private function ensureConfigLoaded(string $destinationNumber): void
+    {
+        if ($this->config !== null) {
+            return; // already loaded (e.g. outgoing call path)
+        }
+
+        // Strip leading + and try progressively shorter prefixes (e.g. 254, 25, 2)
+        $digits = ltrim($destinationNumber, '+');
+
+        $setting = null;
+        for ($len = 4; $len >= 1; $len--) {
+            $prefix = substr($digits, 0, $len);
+            $setting = CallCenterSetting::whereHas('country', function ($q) use ($prefix) {
+                $q->where('phone_code', $prefix);
+            })->first();
+
+            if ($setting) {
+                break;
+            }
+        }
+
+        // Fall back to the first/only setting if prefix match fails
+        if (!$setting) {
+            $setting = CallCenterSetting::first();
+        }
+
+        if (!$setting) {
+            throw new \Exception("No CallCenterSetting found for destination: {$destinationNumber}");
+        }
+
+        $this->loadCountryConfig($setting->country_id);
     }
 }

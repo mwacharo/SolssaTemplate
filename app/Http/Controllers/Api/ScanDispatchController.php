@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 
 use App\Http\Controllers\Controller;
+use App\Jobs\AdvantaSmsJob;
 use App\Models\Order;
 use App\Models\OrderAssignment;
 use App\Models\OrderStatusTimestamp;
@@ -13,6 +14,9 @@ use App\Services\AdvantaSmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
+use App\Services\MessageTemplateService;
+
 
 class ScanDispatchController extends Controller
 {
@@ -82,8 +86,134 @@ class ScanDispatchController extends Controller
      *   "courrier_id": null     // nullable
      * }
      */
+    // public function dispatch(Request $request)
+    // {
+
+
+    //         $templateService = app(MessageTemplateService::class);
+
+    //     $validated = $request->validate([
+    //         'order_ids'   => ['required', 'array', 'min:1'],
+    //         'order_ids.*' => ['integer', 'exists:orders,id'],
+    //         'city_from'   => ['nullable', 'integer', 'exists:cities,id'],
+    //         'zone_from'   => ['nullable', 'integer', 'exists:zones,id'],
+    //         'city_to'     => ['required', 'integer', 'exists:cities,id'],
+    //         'zone_to'     => ['nullable', 'integer', 'exists:zones,id'],
+    //         'rider_id'    => ['required', 'integer', 'exists:users,id'],
+    //         'courrier_id' => ['nullable', 'integer'],
+    //     ]);
+
+
+    //     $city_from = 1;
+
+    //     // Determine inbound vs outbound:
+    //     // Same city  → "Dispatched / In Transit (Inbound)"
+    //     // Diff city  → "In Transit (Outbound)"
+    //     $isOutbound = (int) $city_from !== (int) $validated['city_to'];
+
+    //     $dispatchedStatus = $this->resolveStatus($isOutbound
+    //         ? 'In transit'
+    //         : 'Dispatched');
+
+    //     if (! $dispatchedStatus) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Dispatch status not configured in the system.',
+    //         ], 500);
+    //     }
+
+    //     $orders = Order::with(['assignments', 'customer', 'shippingAddress'])
+    //         ->whereIn('id', $validated['order_ids'])
+    //         ->get();
+
+    //     $dispatched = [];
+    //     $failed     = [];
+
+    //     DB::beginTransaction();
+    //     try {
+    //         foreach ($orders as $order) {
+    //             try {
+    //                 // 1. Record new status timestamp
+    //                 OrderStatusTimestamp::create([
+    //                     'order_id'           => $order->id,
+    //                     'status_id'          => $dispatchedStatus->id,
+    //                     'status_category_id' => $dispatchedStatus->status_category_id ?? null,
+    //                     'status_notes'       => $isOutbound
+    //                         ? 'Order dispatched — outbound (inter-city)'
+    //                         : 'Order dispatched to delivery agent',
+    //                 ]);
+
+    //                 // 2. Ensure rider assignment exists / update it
+    //                 OrderAssignment::updateOrCreate(
+    //                     [
+    //                         'order_id' => $order->id,
+    //                         'role'     => 'Delivery Agent',
+    //                     ],
+    //                     [
+    //                         'user_id' => $validated['rider_id'],
+    //                         'status'  => 'in_progress',
+    //                     ]
+    //                 );
+
+
+
+    //                 // ✅ Generate message using template + order_id
+    //                 $result = $templateService->generateMessage(
+    //                     phone: $phone,
+    //                     templateSlug: $statusTemplateMap[$statusId],
+    //                     additionalData: [
+    //                         'order_id' => $orderId
+    //                     ]
+    //                 );
+
+    //                 // 3. Send SMS to customer
+
+
+
+    //                 AdvantaSmsJob::dispatch(
+    //                     //   recipient phone number
+
+    //                     //   message content
+    //                     // userid
+    //                 );
+
+
+
+    //                 $dispatched[] = $order->id;
+    //             } catch (\Throwable $e) {
+    //                 Log::error("Dispatch failed for order #{$order->id}: " . $e->getMessage());
+    //                 $failed[] = [
+    //                     'order_id' => $order->id,
+    //                     'reason'   => $e->getMessage(),
+    //                 ];
+    //             }
+    //         }
+
+    //         DB::commit();
+    //     } catch (\Throwable $e) {
+    //         DB::rollBack();
+    //         Log::error('Dispatch transaction failed: ' . $e->getMessage());
+
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Dispatch failed: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+
+    //     return response()->json([
+    //         'success'    => true,
+    //         'message'    => count($dispatched) . ' order(s) dispatched successfully.',
+    //         'dispatched' => $dispatched,
+    //         'failed'     => $failed,
+    //     ]);
+    // }
+
+
+
     public function dispatch(Request $request)
     {
+        $templateService = app(MessageTemplateService::class);
+
         $validated = $request->validate([
             'order_ids'   => ['required', 'array', 'min:1'],
             'order_ids.*' => ['integer', 'exists:orders,id'],
@@ -95,17 +225,25 @@ class ScanDispatchController extends Controller
             'courrier_id' => ['nullable', 'integer'],
         ]);
 
+        $city_from = $validated['city_from'] ?? 1;
 
-        $city_from = 1;
-
-        // Determine inbound vs outbound:
-        // Same city  → "Dispatched / In Transit (Inbound)"
-        // Diff city  → "In Transit (Outbound)"
         $isOutbound = (int) $city_from !== (int) $validated['city_to'];
 
-        $dispatchedStatus = $this->resolveStatus($isOutbound
-            ? 'In transit'
-            : 'Dispatched');
+        // $templateSlug = $isOutbound ? 'In transit' : 'Dispatched';
+
+        // only proceed with intransit 
+
+        if ($isOutbound) {
+            $templateSlug = 'In transit';
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'message will be sent later for',
+            ], 422);
+        }
+
+
+        $dispatchedStatus = $this->resolveStatus($isOutbound ? 'In transit' : 'Dispatched');
 
         if (! $dispatchedStatus) {
             return response()->json([
@@ -147,8 +285,35 @@ class ScanDispatchController extends Controller
                         ]
                     );
 
-                    // 3. Send SMS to customer
-                    $this->sendDispatchSms($order, $validated['rider_id']);
+                    // 3. Resolve customer phone
+                    $phone = $order->customer?->phone
+                        ?? $order->customer?->alt_phone
+                        ?? null;
+
+                    if (! $phone) {
+                        Log::warning("No phone found for order #{$order->id}, skipping SMS.");
+                        $dispatched[] = $order->id;
+                        continue;
+                    }
+
+                    // 4. Generate message using template + order_id
+                    $result = $templateService->generateMessage(
+                        phone: $phone,
+                        templateSlug: $templateSlug,
+                        additionalData: [
+                            'order_id' => $order->id,
+                        ]
+                    );
+
+                    // 5. Dispatch SMS job
+                    AdvantaSmsJob::dispatch(
+                        $phone,
+                        $result['message'],
+                        // $validated['rider_id']   // userId — the acting rider/user
+
+                        // pass user_id 1
+                        1,
+                    );
 
                     $dispatched[] = $order->id;
                 } catch (\Throwable $e) {

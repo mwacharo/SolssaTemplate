@@ -32,7 +32,7 @@ Status at Jan 21, 2026, 11:14 AM
     <!-- /public/images/rushbin-logo.png -->
     <!--                        <img src="{{ public_path($company->logo_path) }}" 
  -->
-    <img src="/images/rushbin.jpeg" alt="Company Logo" class="logo-img" />
+    <!-- <img src="/images/rushbin.jpeg" alt="Company Logo" class="logo-img" /> -->
 
     <!-- <img src="/images/bringitlogo.png " alt="Company Logo" class="logo-img" /> -->
 
