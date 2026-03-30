@@ -116,7 +116,7 @@ const formatDate = (date) => {
     return new Date(date).toLocaleString();
 };
 
-onMounted(fetchHistory);
+// onMounted(fetchHistory);
 </script>
 
 <style scoped>
