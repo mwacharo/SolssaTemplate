@@ -81,9 +81,9 @@ const togglePasswordVisibility = () => {
                                             class="mt-4"
                                             rounded="md"
                                         >
-                                            <!-- We Tailor Your Coat → -->
+                                            We Tailor Your Coat →
 
-                                            Africa's Premier Fulfillment Partner
+                                            <!-- Africa's Premier Fulfillment Partner -->
                                         </v-btn>
                                     </div>
                                 </v-col>

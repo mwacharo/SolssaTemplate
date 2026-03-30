@@ -182,19 +182,22 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-red-600 mb-1"
-                            >SHIPPING STATUS</label
+                        <label
+                            class="block text-xs font-bold text-red-600 mb-1"
                         >
-                        <select
-                            v-model="filters.shippingStatus"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            STATUS</label
                         >
-                            <option value="">Shipping status</option>
-                            <option value="awaiting">Awaiting Dispatch</option>
-                            <option value="dispatched">Dispatched</option>
-                            <option value="in_transit">In Transit</option>
-                            <option value="delivered">Delivered</option>
-                        </select>
+                        <v-autocomplete
+                            v-model="filters.status"
+                            :items="statusOptions"
+                            item-title="name"
+                            item-value="id"
+                            clearable
+                            dense
+                            outlined
+                            placeholder="Search statuses..."
+                            class="w-full"
+                        />
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-red-600 mb-1"
@@ -351,6 +354,7 @@
                     <div class="flex flex-wrap gap-2">
                         <button
                             class="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
+                            @click="downloadDispatchPDF"
                         >
                             <svg
                                 class="w-4 h-4"
@@ -369,6 +373,7 @@
                         </button>
                         <button
                             class="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-lg transition-colors"
+                            @click="downloadDispatchExcel"
                         >
                             <svg
                                 class="w-4 h-4"
@@ -387,6 +392,7 @@
                         </button>
                         <button
                             class="flex items-center gap-2 px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition-colors"
+                            @click="sendToInTransit"
                         >
                             <svg
                                 class="w-4 h-4"
@@ -454,16 +460,16 @@
                                 >
                                     CITY TO
                                 </th>
-                                <th
+                                <!-- <th
                                     class="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
                                 >
                                     TRACKING NUMBER
-                                </th>
-                                <th
+                                </th> -->
+                                <!-- <th
                                     class="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
                                 >
                                     CITY FROM
-                                </th>
+                                </th> -->
                                 <th
                                     class="px-4 py-3 text-left text-xs font-semibold whitespace-nowrap"
                                 >
@@ -533,14 +539,14 @@
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     {{ order.cityTo }}
                                 </td>
-                                <td
+                                <!-- <td
                                     class="px-4 py-3 text-sm font-mono text-gray-700"
                                 >
                                     {{ order.trackingNumber }}
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     {{ order.cityFrom }}
-                                </td>
+                                </td> -->
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     {{ order.deliveryMan }}
                                 </td>
@@ -1051,6 +1057,7 @@ const zoneOptions = ref([]);
 const riderOptions = ref([]);
 const courrierOptions = ref([]);
 const sellerOptions = ref([]);
+const statusOptions = ref([]);
 
 // ─── Dialog State ─────────────────────────────────────────────────────────────
 const dialogOpen = ref(false);
@@ -1073,12 +1080,24 @@ const form = ref({
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 onMounted(async () => {
     try {
-        const [citiesRes, zonesRes, ridersRes, sellersRes] = await Promise.all([
-            axios.get("/api/v1/cities").catch(() => ({ data: { data: [] } })),
-            axios.get("/api/v1/zones").catch(() => ({ data: { data: [] } })),
-            axios.get("/api/v1/riders").catch(() => ({ data: { data: [] } })),
-            axios.get("/api/v1/sellers").catch(() => ({ data: { data: [] } })),
-        ]);
+        const [citiesRes, zonesRes, ridersRes, sellersRes, statusesRes] =
+            await Promise.all([
+                axios
+                    .get("/api/v1/cities")
+                    .catch(() => ({ data: { data: [] } })),
+                axios
+                    .get("/api/v1/zones")
+                    .catch(() => ({ data: { data: [] } })),
+                axios
+                    .get("/api/v1/riders")
+                    .catch(() => ({ data: { data: [] } })),
+                axios
+                    .get("/api/v1/vendors")
+                    .catch(() => ({ data: { data: [] } })),
+                axios
+                    .get("/api/v1/statuses")
+                    .catch(() => ({ data: { data: [] } })),
+            ]);
         const normalize = (res) => {
             const d = res?.data;
             if (Array.isArray(d)) return d;
@@ -1089,6 +1108,7 @@ onMounted(async () => {
         zoneOptions.value = normalize(zonesRes);
         riderOptions.value = normalize(ridersRes);
         sellerOptions.value = normalize(sellersRes);
+        statusOptions.value = normalize(statusesRes);
     } catch (e) {
         console.error("Failed to load options", e);
     }
@@ -1102,7 +1122,7 @@ const applyFilters = async () => {
     }
     showDateWarning.value = false;
     try {
-        const res = await axios.get("/api/v1/orders/dispatched", {
+        const res = await axios.get("/api/v1/dispatched", {
             params: filters.value,
         });
         const d = res.data?.data;
@@ -1126,13 +1146,110 @@ const resetFilters = () => {
         deliveryMan: "",
         courrier: "",
         seller: "",
-        shippingStatus: "",
+        status: "",
         dispatchedOn: "",
         shippedOn: "",
     };
     searchQuery.value = "";
     orders.value = [];
     showDateWarning.value = true;
+};
+
+// const downloadDispatchExcel = async () => {
+//     try {
+//         const res = await axios.post("/api/v1/orders/dispatch/excel", {
+//             responseType: "blob",
+//         });
+//         const url = window.URL.createObjectURL(new Blob([res.data]));
+//         const link = document.createElement("a");
+//         link.href = url;
+//         link.setAttribute("download", "dispatch.xlsx");
+//         document.body.appendChild(link);
+//         link.click();
+//     } catch (err) {
+//         console.error("Failed to download dispatch Excel", err);
+//     }
+// };
+
+// const downloadDispatchPDF = async () => {
+//     try {
+//         const res = await axios.post("/api/v1/orders/dispatch/pdf", {
+//             responseType: "blob",
+//         });
+//         const url = window.URL.createObjectURL(new Blob([res.data]));
+//         const link = document.createElement("a");
+//         link.href = url;
+//         link.setAttribute("download", "dispatch.pdf");
+//         document.body.appendChild(link);
+//         link.click();
+//     } catch (err) {
+//         console.error("Failed to download dispatch PDF", err);
+//     }
+// };
+
+const downloadDispatchExcel = async () => {
+    try {
+        const res = await axios.post(
+            "/api/v1/orders/dispatch/excel",
+            {
+                order_ids: selectedOrders.value, // ✅ FIX HERE
+            },
+            {
+                responseType: "blob",
+            },
+        );
+
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "dispatch.xlsx");
+        document.body.appendChild(link);
+        link.click();
+
+        window.URL.revokeObjectURL(url);
+        link.remove();
+    } catch (err) {
+        console.error("Failed to download dispatch Excel", err);
+    }
+};
+
+const downloadDispatchPDF = async () => {
+    try {
+        const res = await axios.post(
+            "/api/v1/orders/dispatch/pdf",
+            {
+                order_ids: selectedOrders.value, // ✅ FIX HERE
+            },
+            {
+                responseType: "blob",
+            },
+        );
+
+        const url = window.URL.createObjectURL(new Blob([res.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "dispatch.pdf");
+        document.body.appendChild(link);
+        link.click();
+
+        window.URL.revokeObjectURL(url);
+        link.remove();
+    } catch (err) {
+        console.error("Failed to download dispatch PDF", err);
+    }
+};
+
+const sendToInTransit = async () => {
+    if (selectedOrders.value.length === 0) return;
+    try {
+        await axios.post("/api/v1/orders/send-in-transit", {
+            order_ids: selectedOrders.value,
+        });
+        selectedOrders.value = [];
+        await applyFilters();
+    } catch (err) {
+        console.error("Failed to send orders to In Transit", err);
+    }
 };
 
 // ─── Dialog ───────────────────────────────────────────────────────────────────

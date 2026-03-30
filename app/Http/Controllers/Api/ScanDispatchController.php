@@ -10,17 +10,28 @@ use App\Models\OrderAssignment;
 use App\Models\OrderStatusTimestamp;
 use App\Models\Status;
 use App\Services\AdvantaSmsService;
-
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use App\Services\MessageTemplateService;
 
+use App\Services\Order\DispatchService;
+
+
+// 
+// TODO: Verify this class exists at app/Services/Order/DispatchService.php
+
 
 class ScanDispatchController extends Controller
 {
-    public function __construct(protected AdvantaSmsService $smsService) {}
+    public function __construct(
+        protected AdvantaSmsService $smsService,
+        protected DispatchService $dispatchService
+
+    ) 
+    {}
 
     /**
      * Look up a single order by tracking number.
@@ -70,143 +81,361 @@ class ScanDispatchController extends Controller
         ]);
     }
 
-    /**
-     * Dispatch one or more scanned orders.
-     *
-     * POST /api/v1/orders/dispatch
-     *
-     * Body:
-     * {
-     *   "order_ids":   [1, 2, 3],
-     *   "city_from":   1,
-     *   "zone_from":   1,       // nullable
-     *   "city_to":     2,
-     *   "zone_to":     2,       // nullable
-     *   "rider_id":    5,
-     *   "courrier_id": null     // nullable
-     * }
-     */
-    // public function dispatch(Request $request)
+
+    // // orders dispatched or in transit
+
+
+
+    // public function dispatched(Request $request): JsonResponse
     // {
-
-
-    //         $templateService = app(MessageTemplateService::class);
-
-    //     $validated = $request->validate([
-    //         'order_ids'   => ['required', 'array', 'min:1'],
-    //         'order_ids.*' => ['integer', 'exists:orders,id'],
-    //         'city_from'   => ['nullable', 'integer', 'exists:cities,id'],
-    //         'zone_from'   => ['nullable', 'integer', 'exists:zones,id'],
-    //         'city_to'     => ['required', 'integer', 'exists:cities,id'],
-    //         'zone_to'     => ['nullable', 'integer', 'exists:zones,id'],
-    //         'rider_id'    => ['required', 'integer', 'exists:users,id'],
-    //         'courrier_id' => ['nullable', 'integer'],
-    //     ]);
-
-
-    //     $city_from = 1;
-
-    //     // Determine inbound vs outbound:
-    //     // Same city  → "Dispatched / In Transit (Inbound)"
-    //     // Diff city  → "In Transit (Outbound)"
-    //     $isOutbound = (int) $city_from !== (int) $validated['city_to'];
-
-    //     $dispatchedStatus = $this->resolveStatus($isOutbound
-    //         ? 'In transit'
-    //         : 'Dispatched');
-
-    //     if (! $dispatchedStatus) {
+    //     // ── Require at least one date filter ──────────────────────────────────────
+    //     if (! $request->filled('dispatchedOn') && ! $request->filled('shippedOn')) {
     //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Dispatch status not configured in the system.',
+    //             'message' => 'At least one date filter (dispatchedOn or shippedOn) is required.',
+    //         ], 422);
+    //     }
+
+    //     // ── Resolve the IDs for "Dispatched" and "In Transit" statuses ────────────
+    //     // "dispatched_at" doesn't exist as a column — we derive it from
+    //     // OrderStatusTimestamp rows whose status name is Dispatched or In Transit.
+    //     $dispatchedStatusIds = Status::whereIn('name', [
+    //         'Dispatched',
+    //         'In Transit',
+    //     ])->pluck('id');
+
+    //     if ($dispatchedStatusIds->isEmpty()) {
+    //         return response()->json([
+    //             'message' => 'Could not resolve Dispatched / In Transit status IDs. Check order_statuses table.',
     //         ], 500);
     //     }
 
-    //     $orders = Order::with(['assignments', 'customer', 'shippingAddress'])
-    //         ->whereIn('id', $validated['order_ids'])
-    //         ->get();
+    //     // ── Base query: only orders that have at least one Dispatched/In-Transit
+    //     //    status timestamp ──────────────────────────────────────────────────────
+    //     $query = Order::query()
+    //         ->with([
+    //             // vendor & rider are both Users
+    //             'vendor:id,name',
+    //             'rider:id,name,phone',
 
-    //     $dispatched = [];
-    //     $failed     = [];
+    //             // customer carries city, zone, address, phone
+    //             'customer:id,full_name,phone,city_id,zone_id,address',
+    //             'customer.city:id,name',
+    //             'customer.zone:id,name',
 
-    //     DB::beginTransaction();
-    //     try {
-    //         foreach ($orders as $order) {
-    //             try {
-    //                 // 1. Record new status timestamp
-    //                 OrderStatusTimestamp::create([
-    //                     'order_id'           => $order->id,
-    //                     'status_id'          => $dispatchedStatus->id,
-    //                     'status_category_id' => $dispatchedStatus->status_category_id ?? null,
-    //                     'status_notes'       => $isOutbound
-    //                         ? 'Order dispatched — outbound (inter-city)'
-    //                         : 'Order dispatched to delivery agent',
-    //                 ]);
+    //             // order-level zone (zone_id on orders table)
+    //             'zone:id,name',
 
-    //                 // 2. Ensure rider assignment exists / update it
-    //                 OrderAssignment::updateOrCreate(
-    //                     [
-    //                         'order_id' => $order->id,
-    //                         'role'     => 'Delivery Agent',
-    //                     ],
-    //                     [
-    //                         'user_id' => $validated['rider_id'],
-    //                         'status'  => 'in_progress',
-    //                     ]
-    //                 );
+    //             // latest status timestamp + its parent status
+    //             'latestStatus.status:id,name',
+    //         ])
+    //         // ->whereHas('statusTimestamps', function ($q) use ($dispatchedStatusIds) {
+    //         //     $q->whereIn('status_id', $dispatchedStatusIds);
+    //         // });
 
+    //         // ✅ NEW — "latest status IS dispatched/in-transit right now"
+    //         ->whereHas(
+    //             'latestStatus',
+    //             fn($q) =>
+    //             $q->whereIn('status_id', $dispatchedStatusIds)
+    //         );
 
-
-    //                 // ✅ Generate message using template + order_id
-    //                 $result = $templateService->generateMessage(
-    //                     phone: $phone,
-    //                     templateSlug: $statusTemplateMap[$statusId],
-    //                     additionalData: [
-    //                         'order_id' => $orderId
-    //                     ]
-    //                 );
-
-    //                 // 3. Send SMS to customer
-
-
-
-    //                 AdvantaSmsJob::dispatch(
-    //                     //   recipient phone number
-
-    //                     //   message content
-    //                     // userid
-    //                 );
-
-
-
-    //                 $dispatched[] = $order->id;
-    //             } catch (\Throwable $e) {
-    //                 Log::error("Dispatch failed for order #{$order->id}: " . $e->getMessage());
-    //                 $failed[] = [
-    //                     'order_id' => $order->id,
-    //                     'reason'   => $e->getMessage(),
-    //                 ];
-    //             }
-    //         }
-
-    //         DB::commit();
-    //     } catch (\Throwable $e) {
-    //         DB::rollBack();
-    //         Log::error('Dispatch transaction failed: ' . $e->getMessage());
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Dispatch failed: ' . $e->getMessage(),
-    //         ], 500);
+    //     // ── Full-text search (id, order_no, customer name, phone, address) ────────
+    //     if ($request->filled('search')) {
+    //         $term = '%' . $request->search . '%';
+    //         $query->where(function ($q) use ($term) {
+    //             $q->where('orders.id', 'like', $term)
+    //                 ->orWhere('order_no', 'like', $term)
+    //                 ->orWhereHas('customer', function ($cq) use ($term) {
+    //                     $cq->where('name', 'like', $term)
+    //                         ->orWhere('phone', 'like', $term)
+    //                         ->orWhere('address', 'like', $term);
+    //                 });
+    //         });
     //     }
+
+    //     // ── Dropdown filters ──────────────────────────────────────────────────────
+
+    //     // CITY TO  — city lives on the customer
+    //     if ($request->filled('cityTo')) {
+    //         $query->whereHas(
+    //             'customer',
+    //             fn($q) =>
+    //             $q->where('city_id', $request->cityTo)
+    //         );
+    //     }
+
+    //     // ZONE TO — zone lives on the customer
+    //     if ($request->filled('zoneTo')) {
+    //         $query->whereHas(
+    //             'customer',
+    //             fn($q) =>
+    //             $q->where('zone_id', $request->zoneTo)
+    //         );
+    //     }
+
+    //     // DELIVERY MAN — rider_id on orders
+    //     if ($request->filled('deliveryMan')) {
+    //         $query->whereHas(
+    //             'assignments',
+    //             fn($q) =>
+    //             $q->where('role', 'Delivery Agent')
+    //                 ->where('user_id', $request->deliveryMan)
+    //         );
+    //     }
+
+    //     // COURRIER — courrier_id on orders (if column exists)
+    //     if ($request->filled('courrier')) {
+    //         $query->where('courrier_id', $request->courrier);
+    //     }
+
+    //     // SELLER — vendor_id on orders
+    //     if ($request->filled('seller')) {
+    //         $query->where('vendor_id', $request->seller);
+    //     }
+
+    //     // STATUS — filter by the *latest* status id
+    //     if ($request->filled('status')) {
+    //         $query->whereHas(
+    //             'latestStatus',
+    //             fn($q) =>
+    //             $q->where('status_id', $request->status)
+    //         );
+    //     }
+
+    //     // ── Date filters — look inside OrderStatusTimestamp, NOT a column ─────────
+
+    //     // DISPATCHED ON — date when the order first received a "Dispatched" status
+    //     if ($request->filled('dispatchedOn')) {
+    //         $query->whereHas('statusTimestamps', function ($q) use ($request, $dispatchedStatusIds) {
+    //             $q->whereIn('status_id', $dispatchedStatusIds)
+    //                 ->whereDate('created_at', $request->dispatchedOn);
+    //         });
+    //     }
+
+    //     // SHIPPED ON — kept for compatibility; treated the same way
+    //     if ($request->filled('shippedOn')) {
+    //         $query->whereHas('statusTimestamps', function ($q) use ($request, $dispatchedStatusIds) {
+    //             $q->whereIn('status_id', $dispatchedStatusIds)
+    //                 ->whereDate('created_at', $request->shippedOn);
+    //         });
+    //     }
+
+    //     // ── Paginate, ordering by when the order was dispatched (desc) ────────────
+    //     // We join the earliest dispatch timestamp so we can order by it cleanly.
+    //     $query->orderByDesc(
+    //         \App\Models\OrderStatusTimestamp::select('created_at')
+    //             ->whereColumn('order_id', 'orders.id')
+    //             ->whereIn('status_id', $dispatchedStatusIds)
+    //             ->oldest()          // first dispatch event
+    //             ->limit(1)
+    //     );
+
+    //     $perPage   = (int) $request->get('per_page', 25);
+    //     $paginated = $query->paginate($perPage);
+
+    //     // ── Shape rows to match every frontend column ──────────────────────────────
+    //     $rows = $paginated->getCollection()->map(function (Order $order) use ($dispatchedStatusIds) {
+
+    //         // The "dispatched on" date = created_at of the first Dispatched/In-Transit
+    //         // status timestamp for this order
+    //         $dispatchedAt = $order->statusTimestamps
+    //             ->whereIn('status_id', $dispatchedStatusIds->all())
+    //             ->sortBy('created_at')
+    //             ->first()
+    //             ?->created_at
+    //             ?->format('Y-m-d');
+
+    //         return [
+    //             'id'             => $order->id,
+    //             'orderNo'        => $order->order_no,
+    //             // 'trackingNumber' => $order->reference,         
+    //             'customer'       => $order->customer?->full_name,
+    //             'address'        => $order->customer?->address,
+    //             'seller'         => $order->vendor?->name,
+    //             'details'        => $order->customer_notes,
+    //             'dispatchedOn'   => $dispatchedAt,
+    //             'cityFrom'       => null,
+    //             'cityTo'         => $order->customer?->city?->name,
+    //             'zoneFrom'       => $order->zone?->name,
+    //             'zoneTo'         => $order->customer?->zone?->name,
+    //             'deliveryMan'    => $order->assignments
+    //                 ->firstWhere('role', 'Delivery Agent')
+    //                 ?->user
+    //                 ?->name,
+
+    //             'totalPrice'     => number_format((float) $order->total_price, 2),
+    //             'status'         => $order->latestStatus?->status?->name ?? '—',
+    //         ];
+    //     });
 
     //     return response()->json([
-    //         'success'    => true,
-    //         'message'    => count($dispatched) . ' order(s) dispatched successfully.',
-    //         'dispatched' => $dispatched,
-    //         'failed'     => $failed,
+    //         'data'       => $rows,
+    //         'pagination' => [
+    //             'from'         => $paginated->firstItem() ?? 0,
+    //             'to'           => $paginated->lastItem()  ?? 0,
+    //             'total'        => $paginated->total(),
+    //             'current_page' => $paginated->currentPage(),
+    //             'last_page'    => $paginated->lastPage(),
+    //             'per_page'     => $paginated->perPage(),
+    //         ],
     //     ]);
     // }
+
+
+
+    public function dispatched(Request $request): JsonResponse
+    {
+        // ── Require at least one date filter ──────────────────────────────────────
+        if (! $request->filled('dispatchedOn') && ! $request->filled('shippedOn')) {
+            return response()->json([
+                'message' => 'At least one date filter (dispatchedOn or shippedOn) is required.',
+            ], 422);
+        }
+
+        // ── Resolve status IDs ────────────────────────────────────────────────────
+        $dispatchedStatusIds = Status::whereIn('name', ['Dispatched', 'In transit'])
+            ->pluck('id');
+
+        if ($dispatchedStatusIds->isEmpty()) {
+            return response()->json([
+                'message' => 'Dispatched / In Transit statuses not found.',
+            ], 500);
+        }
+
+        $date = $request->dispatchedOn ?? $request->shippedOn;
+
+        // ── Base query ────────────────────────────────────────────────────────────
+        $query = Order::query()
+            ->with([
+                'vendor:id,name',
+                'rider:id,name,phone',
+                'customer:id,full_name,phone,city_id,zone_id,address',
+                'customer.city:id,name',
+                'customer.zone:id,name',
+                'zone:id,name',
+                'latestStatus.status:id,name',
+                'assignments.user:id,name'
+            ])
+
+            // ✅ ONLY orders whose CURRENT (latest) status is dispatched/in-transit
+            ->whereHas('latestStatus', function ($q) use ($dispatchedStatusIds, $date) {
+                $q->whereIn('status_id', $dispatchedStatusIds)
+                    ->whereDate('created_at', $date); // ✅ filter by latest timestamp date
+            });
+
+        // ── Search ────────────────────────────────────────────────────────────────
+        if ($request->filled('search')) {
+            $term = '%' . $request->search . '%';
+
+            $query->where(function ($q) use ($term) {
+                $q->where('orders.id', 'like', $term)
+                    ->orWhere('order_no', 'like', $term)
+                    ->orWhereHas('customer', function ($cq) use ($term) {
+                        $cq->where('full_name', 'like', $term)
+                            ->orWhere('phone', 'like', $term)
+                            ->orWhere('address', 'like', $term);
+                    });
+            });
+        }
+
+        // ── Filters ───────────────────────────────────────────────────────────────
+        if ($request->filled('cityTo')) {
+            $query->whereHas(
+                'customer',
+                fn($q) =>
+                $q->where('city_id', $request->cityTo)
+            );
+        }
+
+        if ($request->filled('zoneTo')) {
+            $query->whereHas(
+                'customer',
+                fn($q) =>
+                $q->where('zone_id', $request->zoneTo)
+            );
+        }
+
+        if ($request->filled('deliveryMan')) {
+            $query->whereHas(
+                'assignments',
+                fn($q) =>
+                $q->where('role', 'Delivery Agent')
+                    ->where('user_id', $request->deliveryMan)
+            );
+        }
+
+        if ($request->filled('courrier')) {
+            $query->where('courrier_id', $request->courrier);
+        }
+
+        if ($request->filled('seller')) {
+            $query->where('vendor_id', $request->seller);
+        }
+
+        if ($request->filled('status')) {
+            $query->whereHas(
+                'latestStatus',
+                fn($q) =>
+                $q->where('status_id', $request->status)
+            );
+        }
+
+        // ── Order by latest dispatch timestamp ─────────────────────────────────────
+        $query->orderByDesc(
+            \App\Models\OrderStatusTimestamp::select('created_at')
+                ->whereColumn('order_id', 'orders.id')
+                ->whereIn('status_id', $dispatchedStatusIds)
+                ->latest()
+                ->limit(1)
+        );
+
+        // ── Pagination ────────────────────────────────────────────────────────────
+        $perPage   = (int) $request->get('per_page', 25);
+        $paginated = $query->paginate($perPage);
+
+        // ── Transform ─────────────────────────────────────────────────────────────
+        $rows = $paginated->getCollection()->map(function (Order $order) use ($dispatchedStatusIds) {
+
+            // ✅ Get latest dispatched/in-transit timestamp (DB-level, no collection scan)
+            $dispatchedAt = \App\Models\OrderStatusTimestamp::where('order_id', $order->id)
+                ->whereIn('status_id', $dispatchedStatusIds)
+                ->latest('created_at')
+                ->value('created_at');
+
+            return [
+                'id'           => $order->id,
+                'orderNo'      => $order->order_no,
+                'customer'     => $order->customer?->full_name,
+                'address'      => $order->customer?->address,
+                'seller'       => $order->vendor?->name,
+                'details'      => $order->customer_notes,
+                'dispatchedOn' => optional($dispatchedAt)->format('Y-m-d'),
+                'cityFrom'     => null,
+                'cityTo'       => $order->customer?->city?->name,
+                'zoneFrom'     => $order->zone?->name,
+                'zoneTo'       => $order->customer?->zone?->name,
+                'deliveryMan'  => $order->assignments
+                    ->firstWhere('role', 'Delivery Agent')
+                    ?->user
+                    ?->name,
+                'totalPrice'   => number_format((float) $order->total_price, 2),
+                'status'       => $order->latestStatus?->status?->name ?? '—',
+            ];
+        });
+
+        return response()->json([
+            'data' => $rows,
+            'pagination' => [
+                'from'         => $paginated->firstItem() ?? 0,
+                'to'           => $paginated->lastItem() ?? 0,
+                'total'        => $paginated->total(),
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'per_page'     => $paginated->perPage(),
+            ],
+        ]);
+    }
+
 
 
 
@@ -463,5 +692,46 @@ class ScanDispatchController extends Controller
                 'name' => optional($deliveryAgent->user)->name,
             ] : null,
         ];
+    }
+
+
+
+    public function sendToInTransit(Request $request): JsonResponse
+    {
+        $request->validate([
+            'order_ids'   => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['required', 'integer', 'exists:orders,id'],
+        ]);
+
+        try {
+            $count = $this->dispatchService->sendToInTransit($request->order_ids);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'message' => "{$count} order(s) moved to In Transit.",
+            'count'   => $count,
+        ]);
+    }
+
+    public function downloadDispatchPDF(Request $request)
+    {
+        $request->validate([
+            'order_ids'   => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['required', 'integer', 'exists:orders,id'],
+        ]);
+
+        return $this->dispatchService->generateDispatchPDF($request->order_ids);
+    }
+
+    public function downloadDispatchExcel(Request $request)
+    {
+        $request->validate([
+            'order_ids'   => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['required', 'integer', 'exists:orders,id'],
+        ]);
+
+        return $this->dispatchService->generateDispatchExcel($request->order_ids);
     }
 }

@@ -125,7 +125,15 @@ Route::prefix('v1')->group(function () {
     // Route::post('/google-sheets/{id}/sync-products', [GoogleSheetController::class, 'syncProducts']);
 
 
+    Route::get('/dispatched', [ScanDispatchController::class, 'dispatched']);
 
+
+    // Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'generateDispatchPDF']);
+    // Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'generateDispatchExcel']);
+
+
+    Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'downloadDispatchPDF']);
+    Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'downloadDispatchExcel']);
 
     // Order APIs
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
@@ -206,6 +214,11 @@ Route::prefix('v1')->group(function () {
     // `/api/v1/orders/by-tracking/${tracking}`
 
     Route::get('/orders/by-tracking/{tracking}', [ScanDispatchController::class, 'findByTracking']);
+
+
+    // send order to in transit
+
+    Route::post('/orders/send-in-transit', [ScanDispatchController::class, 'sendToInTransit']);
 
 
 
