@@ -67,13 +67,13 @@ const togglePasswordVisibility = () => {
                                         class="pa-4 pa-md-8 text-center text-md-left"
                                     >
                                         <!-- <h1 class="text-h2 font-weight-bold text-white mb-4">Solssa</h1> -->
-                                        <!-- <h2 class="text-h4 text-white mb-8">
-                                            Customer Support
-                                        </h2> -->
-
                                         <h2 class="text-h4 text-white mb-8">
-                                            RushBin
+                                            Customer Support
                                         </h2>
+
+                                        <!-- <h2 class="text-h4 text-white mb-8">
+                                            RushBin
+                                        </h2> -->
                                         <v-btn
                                             variant="outlined"
                                             color="white"
