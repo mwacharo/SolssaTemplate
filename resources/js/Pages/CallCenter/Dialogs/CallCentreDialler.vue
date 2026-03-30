@@ -1450,31 +1450,25 @@ const removeAttachment = (index) => {
     messageText.value.attachments.splice(index, 1);
 };
 
-const sendMessage = async () => {
-    // if (!store.messageText.trim()) {
-    //     showSnackbar("Please enter a message", "error");
-    //     return;
-    // }
 
+
+
+
+const sendMessage = async () => {
     sending.value = true;
 
     try {
-        // Build complete contact object with order data
         const customerData = customer.value || {};
         const orderData = order.value || {};
 
         const contactData = {
             id: customerData.id || orderData.customer?.id || null,
-            name:
-                customerData.full_name ||
-                orderData.customer?.full_name ||
-                "Unknown",
+            name: customerData.full_name || orderData.customer?.full_name || "Unknown",
             phone:
                 customerData.phone ||
                 customerData.phone_number ||
                 orderData.customer?.phone_number ||
                 "",
-            // Include complete order data
             orderId: orderData.id || null,
             orderData: orderData,
             orderOid: orderData.order_no || "N/A",
@@ -1482,27 +1476,32 @@ const sendMessage = async () => {
 
         console.log("📤 Sending message with context:", contactData);
 
-        // Use the WhatsApp store's sendSingleMessage method
         const templateId = templateStore.selectedTemplate?.id || null;
+        
+        // ✅ FIX: Use storeMessageText.value (the computed) instead of store.messageText
+        const messageToSend = storeMessageText.value;
+        
+        if (!messageToSend?.trim()) {
+            showSnackbar("Please enter a message", "error");
+            return;
+        }
+
         const result = await templateStore.sendSingleMessage(
             userId.value,
             contactData,
-            store.messageText,
+            messageToSend,  // ✅ Pass the resolved message text
             templateId,
         );
 
-        // Safely handle undefined/null results and unsuccessful responses
         if (result && result.success) {
             showSnackbar(
                 `${messageType.value.toUpperCase()} sent successfully`,
                 "success",
             );
-
-            // Reset form
             store.messageText = "";
+            templateStore.messageText = "";
             templateStore.selectedTemplate = null;
         } else {
-            console.warn("Send message returned unexpected result:", result);
             const message =
                 (result && (result.message || result.error)) ||
                 "Failed to send message";
