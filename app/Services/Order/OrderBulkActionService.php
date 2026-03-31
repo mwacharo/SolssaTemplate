@@ -316,7 +316,7 @@ class OrderBulkActionService
                     recipients: $phone,
                     messageContent: $message,
                     userId: $order->user_id,
-                    orderId: $orderId
+                    // orderId: $orderId
                 );
 
                 Log::info("SMS job dispatched successfully", [
