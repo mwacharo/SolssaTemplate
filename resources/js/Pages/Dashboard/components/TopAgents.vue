@@ -181,7 +181,7 @@
             </div>
         </div>
 
-        <!-- Performance Insights -->
+        <!-- e -->
         <div class="bg-gray-50 rounded-lg p-4 mb-4">
             <h4 class="font-medium text-gray-800 mb-3">Performance Insights</h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">

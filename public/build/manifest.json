@@ -1,18 +1,18 @@
 {
-  "_ActionMessage-COx90OJq.js": {
-    "file": "assets/ActionMessage-COx90OJq.js",
+  "_ActionMessage-BkbBJ8ql.js": {
+    "file": "assets/ActionMessage-BkbBJ8ql.js",
     "name": "ActionMessage",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_AppLayout-PtMAfcbJ.js": {
-    "file": "assets/AppLayout-PtMAfcbJ.js",
+  "_AppLayout-CbUX1MkI.js": {
+    "file": "assets/AppLayout-CbUX1MkI.js",
     "name": "AppLayout",
     "imports": [
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
+      "_webrtc-ZFzkgDwI.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -23,74 +23,74 @@
     "file": "assets/ApplicationMark-K1g9RyT_.css",
     "src": "_ApplicationMark-K1g9RyT_.css"
   },
-  "_AuthenticationCard-Dd5buaCk.js": {
-    "file": "assets/AuthenticationCard-Dd5buaCk.js",
+  "_AuthenticationCard-B33dNXa5.js": {
+    "file": "assets/AuthenticationCard-B33dNXa5.js",
     "name": "AuthenticationCard",
     "imports": [
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js"
     ]
   },
-  "_AuthenticationCardLogo-DqT30mGY.js": {
-    "file": "assets/AuthenticationCardLogo-DqT30mGY.js",
+  "_AuthenticationCardLogo-BIfPrrtc.js": {
+    "file": "assets/AuthenticationCardLogo-BIfPrrtc.js",
     "name": "AuthenticationCardLogo",
     "imports": [
       "resources/js/app.js"
-    ]
-  },
-  "_CallCentreDialler-BP9Y_BTn.js": {
-    "file": "assets/CallCentreDialler-BP9Y_BTn.js",
-    "name": "CallCentreDialler",
-    "isDynamicEntry": true,
-    "imports": [
-      "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
-      "_callCenter-Bogv_lRT.js",
-      "_whatsappStore-CidUo22K.js",
-      "_webrtc-Um8CemlU.js",
-      "_auth-B54Me1vB.js",
-      "__plugin-vue_export-helper-DlAUqK2U.js"
-    ],
-    "css": [
-      "assets/CallCentreDialler-BPUOD3zV.css"
     ]
   },
   "_CallCentreDialler-BPUOD3zV.css": {
     "file": "assets/CallCentreDialler-BPUOD3zV.css",
     "src": "_CallCentreDialler-BPUOD3zV.css"
   },
-  "_Checkbox-Bz97foi6.js": {
-    "file": "assets/Checkbox-Bz97foi6.js",
+  "_CallCentreDialler-Dl9kiUk1.js": {
+    "file": "assets/CallCentreDialler-Dl9kiUk1.js",
+    "name": "CallCentreDialler",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js",
+      "_orderStore-jz32Ib0-.js",
+      "_callCenter-Du2y3pyZ.js",
+      "_whatsappStore-BzPTBrQx.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_auth-Ch5r7jKj.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/CallCentreDialler-BPUOD3zV.css"
+    ]
+  },
+  "_Checkbox-B_tCDjGh.js": {
+    "file": "assets/Checkbox-B_tCDjGh.js",
     "name": "Checkbox",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_ConfirmationModal-D0e2lkUP.js": {
-    "file": "assets/ConfirmationModal-D0e2lkUP.js",
+  "_ConfirmationModal-DJhltWZZ.js": {
+    "file": "assets/ConfirmationModal-DJhltWZZ.js",
     "name": "ConfirmationModal",
     "imports": [
-      "_Modal-DC4HH8ZM.js",
+      "_Modal-CfXkFCjr.js",
       "resources/js/app.js"
     ]
   },
-  "_DangerButton-fd4GNrXl.js": {
-    "file": "assets/DangerButton-fd4GNrXl.js",
+  "_DangerButton-DhEQhUFl.js": {
+    "file": "assets/DangerButton-DhEQhUFl.js",
     "name": "DangerButton",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_DialogModal-BxLS06pw.js": {
-    "file": "assets/DialogModal-BxLS06pw.js",
+  "_DialogModal-BvS8R40D.js": {
+    "file": "assets/DialogModal-BvS8R40D.js",
     "name": "DialogModal",
     "imports": [
-      "_Modal-DC4HH8ZM.js",
+      "_Modal-CfXkFCjr.js",
       "resources/js/app.js"
     ]
   },
-  "_DualDatePicker-Bsvdrp1c.js": {
-    "file": "assets/DualDatePicker-Bsvdrp1c.js",
+  "_DualDatePicker-BZzWyVmE.js": {
+    "file": "assets/DualDatePicker-BZzWyVmE.js",
     "name": "DualDatePicker",
     "imports": [
       "__plugin-vue_export-helper-DlAUqK2U.js",
@@ -100,30 +100,30 @@
       "assets/DualDatePicker-tn0RQdqM.css"
     ]
   },
-  "_FormSection-BByWXcDQ.js": {
-    "file": "assets/FormSection-BByWXcDQ.js",
+  "_FormSection-rBTaKPy_.js": {
+    "file": "assets/FormSection-rBTaKPy_.js",
     "name": "FormSection",
     "imports": [
       "resources/js/app.js",
-      "_SectionTitle-DBPTslSq.js"
+      "_SectionTitle-CXnmwDnf.js"
     ]
   },
   "_IncomingCallDialog-BIwQZ6Cv.css": {
     "file": "assets/IncomingCallDialog-BIwQZ6Cv.css",
     "src": "_IncomingCallDialog-BIwQZ6Cv.css"
   },
-  "_InputLabel-B2A2gc9y.js": {
-    "file": "assets/InputLabel-B2A2gc9y.js",
+  "_InputLabel-BepWkbz2.js": {
+    "file": "assets/InputLabel-BepWkbz2.js",
     "name": "InputLabel",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_Modal-DC4HH8ZM.js": {
-    "file": "assets/Modal-DC4HH8ZM.js",
+  "_Modal-CfXkFCjr.js": {
+    "file": "assets/Modal-CfXkFCjr.js",
     "name": "Modal",
     "imports": [
-      "_SectionTitle-DBPTslSq.js",
+      "_SectionTitle-CXnmwDnf.js",
       "resources/js/app.js"
     ]
   },
@@ -131,45 +131,49 @@
     "file": "assets/OrderDialogs-ojKZquFM.css",
     "src": "_OrderDialogs-ojKZquFM.css"
   },
-  "_PrimaryButton-7xORbI9U.js": {
-    "file": "assets/PrimaryButton-7xORbI9U.js",
+  "_PrimaryButton-CjWzTk1P.js": {
+    "file": "assets/PrimaryButton-CjWzTk1P.js",
     "name": "PrimaryButton",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_SecondaryButton-CNiCQGKG.js": {
-    "file": "assets/SecondaryButton-CNiCQGKG.js",
+  "_SecondaryButton-BUS_PTGn.js": {
+    "file": "assets/SecondaryButton-BUS_PTGn.js",
     "name": "SecondaryButton",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_SectionBorder-BtfSWqBn.js": {
-    "file": "assets/SectionBorder-BtfSWqBn.js",
+  "_SectionBorder-1S2NCAmB.js": {
+    "file": "assets/SectionBorder-1S2NCAmB.js",
     "name": "SectionBorder",
     "imports": [
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js"
     ]
   },
-  "_SectionTitle-DBPTslSq.js": {
-    "file": "assets/SectionTitle-DBPTslSq.js",
+  "_SectionTitle-CXnmwDnf.js": {
+    "file": "assets/SectionTitle-CXnmwDnf.js",
     "name": "SectionTitle",
     "imports": [
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js"
     ]
   },
-  "_Sms-B_i7XnFc.js": {
-    "file": "assets/Sms-B_i7XnFc.js",
+  "_Sms-Dpt-6Dab.css": {
+    "file": "assets/Sms-Dpt-6Dab.css",
+    "src": "_Sms-Dpt-6Dab.css"
+  },
+  "_Sms-wY_fVJSF.js": {
+    "file": "assets/Sms-wY_fVJSF.js",
     "name": "Sms",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_whatsappStore-CidUo22K.js",
-      "_auth-B54Me1vB.js",
-      "_africastalking-CnRI2NWZ.js"
+      "_whatsappStore-BzPTBrQx.js",
+      "_auth-Ch5r7jKj.js",
+      "_africastalking-DRfX81P4.js"
     ],
     "css": [
       "assets/Sms-Dpt-6Dab.css",
@@ -179,16 +183,8 @@
       "assets/OrderDialogs-ojKZquFM.css"
     ]
   },
-  "_Sms-Dpt-6Dab.css": {
-    "file": "assets/Sms-Dpt-6Dab.css",
-    "src": "_Sms-Dpt-6Dab.css"
-  },
-  "_Stkpush-CBbHUIPX.css": {
-    "file": "assets/Stkpush-CBbHUIPX.css",
-    "src": "_Stkpush-CBbHUIPX.css"
-  },
-  "_Stkpush-D73Rxy1I.js": {
-    "file": "assets/Stkpush-D73Rxy1I.js",
+  "_Stkpush-BIwsM2rl.js": {
+    "file": "assets/Stkpush-BIwsM2rl.js",
     "name": "Stkpush",
     "isDynamicEntry": true,
     "imports": [
@@ -199,15 +195,23 @@
       "assets/Stkpush-CBbHUIPX.css"
     ]
   },
-  "_TextInput-DPC7wukV.js": {
-    "file": "assets/TextInput-DPC7wukV.js",
+  "_Stkpush-CBbHUIPX.css": {
+    "file": "assets/Stkpush-CBbHUIPX.css",
+    "src": "_Stkpush-CBbHUIPX.css"
+  },
+  "_TextInput-DYxJTu_G.js": {
+    "file": "assets/TextInput-DYxJTu_G.js",
     "name": "TextInput",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_UserPermissionDialog-BZltSgvO.js": {
-    "file": "assets/UserPermissionDialog-BZltSgvO.js",
+  "_UserPermissionDialog-DzrmWu-m.css": {
+    "file": "assets/UserPermissionDialog-DzrmWu-m.css",
+    "src": "_UserPermissionDialog-DzrmWu-m.css"
+  },
+  "_UserPermissionDialog-JNaXEL2t.js": {
+    "file": "assets/UserPermissionDialog-JNaXEL2t.js",
     "name": "UserPermissionDialog",
     "isDynamicEntry": true,
     "imports": [
@@ -218,216 +222,212 @@
       "assets/UserPermissionDialog-DzrmWu-m.css"
     ]
   },
-  "_UserPermissionDialog-DzrmWu-m.css": {
-    "file": "assets/UserPermissionDialog-DzrmWu-m.css",
-    "src": "_UserPermissionDialog-DzrmWu-m.css"
-  },
-  "_VendorServices-CfaHaazA.js": {
-    "file": "assets/VendorServices-CfaHaazA.js",
+  "_VendorServices-BWHF4-cP.js": {
+    "file": "assets/VendorServices-BWHF4-cP.js",
     "name": "VendorServices",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_servicesStore-B5oe2dZA.js",
-      "_condition-BP22CBKH.js",
-      "_conditionTypeStore-CBCNlX4y.js"
+      "_servicesStore-B_5hM_Pq.js",
+      "_condition-zFdeNpi8.js",
+      "_conditionTypeStore-tRGB4NQs.js"
     ]
   },
-  "_WhatsAppConversation-DZ0vd8ac.css": {
-    "file": "assets/WhatsAppConversation-DZ0vd8ac.css",
-    "src": "_WhatsAppConversation-DZ0vd8ac.css"
-  },
-  "_WhatsAppConversation-D_o9P8x4.js": {
-    "file": "assets/WhatsAppConversation-D_o9P8x4.js",
+  "_WhatsAppConversation-CopZlgr9.js": {
+    "file": "assets/WhatsAppConversation-CopZlgr9.js",
     "name": "WhatsAppConversation",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
-      "_whatsappStore-CidUo22K.js",
-      "_auth-B54Me1vB.js",
+      "_toast-CD11t3BQ.js",
+      "_whatsappStore-BzPTBrQx.js",
+      "_auth-Ch5r7jKj.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
       "assets/WhatsAppConversation-DZ0vd8ac.css"
     ]
   },
+  "_WhatsAppConversation-DZ0vd8ac.css": {
+    "file": "assets/WhatsAppConversation-DZ0vd8ac.css",
+    "src": "_WhatsAppConversation-DZ0vd8ac.css"
+  },
   "__plugin-vue_export-helper-DlAUqK2U.js": {
     "file": "assets/_plugin-vue_export-helper-DlAUqK2U.js",
     "name": "_plugin-vue_export-helper"
   },
-  "_africastalking-CnRI2NWZ.js": {
-    "file": "assets/africastalking-CnRI2NWZ.js",
+  "_africastalking-DRfX81P4.js": {
+    "file": "assets/africastalking-DRfX81P4.js",
     "name": "africastalking",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_auth-B54Me1vB.js": {
-    "file": "assets/auth-B54Me1vB.js",
+  "_auth-Ch5r7jKj.js": {
+    "file": "assets/auth-Ch5r7jKj.js",
     "name": "auth",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_callCenter-Bogv_lRT.js": {
-    "file": "assets/callCenter-Bogv_lRT.js",
+  "_callCenter-Du2y3pyZ.js": {
+    "file": "assets/callCenter-Du2y3pyZ.js",
     "name": "callCenter",
     "imports": [
       "resources/js/app.js",
-      "_webrtc-Um8CemlU.js",
-      "_toast-XlEZx6sG.js"
+      "_webrtc-ZFzkgDwI.js",
+      "_toast-CD11t3BQ.js"
     ]
   },
-  "_callCenterSettings-DAHOSgSo.js": {
-    "file": "assets/callCenterSettings-DAHOSgSo.js",
+  "_callCenterSettings-CBfx5cD_.js": {
+    "file": "assets/callCenterSettings-CBfx5cD_.js",
     "name": "callCenterSettings",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_categoryStore-D0iQLNRw.js": {
-    "file": "assets/categoryStore-D0iQLNRw.js",
+  "_categoryStore-Cdr02Xo7.js": {
+    "file": "assets/categoryStore-Cdr02Xo7.js",
     "name": "categoryStore",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_chevron-down-8uWq2qfi.js": {
-    "file": "assets/chevron-down-8uWq2qfi.js",
+  "_chevron-down-nRMP-CJS.js": {
+    "file": "assets/chevron-down-nRMP-CJS.js",
     "name": "chevron-down",
     "imports": [
-      "_createLucideIcon-hv9JquAB.js"
+      "_createLucideIcon-I2Pn3u3T.js"
     ]
   },
-  "_clientStore-CgrOIw5T.js": {
-    "file": "assets/clientStore-CgrOIw5T.js",
+  "_clientStore-DqutlDUj.js": {
+    "file": "assets/clientStore-DqutlDUj.js",
     "name": "clientStore",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_condition-BP22CBKH.js": {
-    "file": "assets/condition-BP22CBKH.js",
+  "_condition-zFdeNpi8.js": {
+    "file": "assets/condition-zFdeNpi8.js",
     "name": "condition",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_conditionTypeStore-CBCNlX4y.js": {
-    "file": "assets/conditionTypeStore-CBCNlX4y.js",
+  "_conditionTypeStore-tRGB4NQs.js": {
+    "file": "assets/conditionTypeStore-tRGB4NQs.js",
     "name": "conditionTypeStore",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_contact-BZ9_F7CS.js": {
-    "file": "assets/contact-BZ9_F7CS.js",
+  "_contact-Dq29XTyx.js": {
+    "file": "assets/contact-Dq29XTyx.js",
     "name": "contact",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_countries-qBt_5i5T.js": {
-    "file": "assets/countries-qBt_5i5T.js",
+  "_countries-DFCUfv33.js": {
+    "file": "assets/countries-DFCUfv33.js",
     "name": "countries",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_createLucideIcon-hv9JquAB.js": {
-    "file": "assets/createLucideIcon-hv9JquAB.js",
+  "_createLucideIcon-I2Pn3u3T.js": {
+    "file": "assets/createLucideIcon-I2Pn3u3T.js",
     "name": "createLucideIcon",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_expenseTypeStore-DstcK_rj.js": {
-    "file": "assets/expenseTypeStore-DstcK_rj.js",
+  "_expenseTypeStore-JWJF8uLv.js": {
+    "file": "assets/expenseTypeStore-JWJF8uLv.js",
     "name": "expenseTypeStore",
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ]
   },
-  "_funnel-DbrODZwm.js": {
-    "file": "assets/funnel-DbrODZwm.js",
+  "_funnel-NyzbG0kk.js": {
+    "file": "assets/funnel-NyzbG0kk.js",
     "name": "funnel",
     "imports": [
-      "_createLucideIcon-hv9JquAB.js"
+      "_createLucideIcon-I2Pn3u3T.js"
     ]
   },
-  "_orderStore-Cg-Ye88E.js": {
-    "file": "assets/orderStore-Cg-Ye88E.js",
+  "_orderStore-jz32Ib0-.js": {
+    "file": "assets/orderStore-jz32Ib0-.js",
     "name": "orderStore",
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ]
   },
-  "_reportStore-0cGTxa9C.js": {
-    "file": "assets/reportStore-0cGTxa9C.js",
+  "_reportStore-DLNw839z.js": {
+    "file": "assets/reportStore-DLNw839z.js",
     "name": "reportStore",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_search-D6kleNsY.js": {
-    "file": "assets/search-D6kleNsY.js",
+  "_search-600gHKTL.js": {
+    "file": "assets/search-600gHKTL.js",
     "name": "search",
     "imports": [
-      "_createLucideIcon-hv9JquAB.js"
+      "_createLucideIcon-I2Pn3u3T.js"
     ]
   },
-  "_servicesStore-B5oe2dZA.js": {
-    "file": "assets/servicesStore-B5oe2dZA.js",
+  "_servicesStore-B_5hM_Pq.js": {
+    "file": "assets/servicesStore-B_5hM_Pq.js",
     "name": "servicesStore",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_toast-XlEZx6sG.js": {
-    "file": "assets/toast-XlEZx6sG.js",
+  "_toast-CD11t3BQ.js": {
+    "file": "assets/toast-CD11t3BQ.js",
     "name": "toast",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_trash-2-7ESjSVu-.js": {
-    "file": "assets/trash-2-7ESjSVu-.js",
+  "_trash-2-BFLk7vcb.js": {
+    "file": "assets/trash-2-BFLk7vcb.js",
     "name": "trash-2",
     "imports": [
-      "_createLucideIcon-hv9JquAB.js"
+      "_createLucideIcon-I2Pn3u3T.js"
     ]
   },
-  "_truck-COnDGnSa.js": {
-    "file": "assets/truck-COnDGnSa.js",
+  "_truck-C7AIeIRy.js": {
+    "file": "assets/truck-C7AIeIRy.js",
     "name": "truck",
     "imports": [
-      "_createLucideIcon-hv9JquAB.js"
+      "_createLucideIcon-I2Pn3u3T.js"
     ]
   },
-  "_users-CsvqWHgB.js": {
-    "file": "assets/users-CsvqWHgB.js",
+  "_users-XjWFBdzm.js": {
+    "file": "assets/users-XjWFBdzm.js",
     "name": "users",
     "imports": [
       "resources/js/app.js"
     ]
   },
-  "_webrtc-Um8CemlU.js": {
-    "file": "assets/webrtc-Um8CemlU.js",
+  "_webrtc-ZFzkgDwI.js": {
+    "file": "assets/webrtc-ZFzkgDwI.js",
     "name": "webrtc",
     "imports": [
       "resources/js/app.js",
-      "_africastalking-CnRI2NWZ.js"
+      "_africastalking-DRfX81P4.js"
     ]
   },
-  "_whatsappStore-CidUo22K.js": {
-    "file": "assets/whatsappStore-CidUo22K.js",
+  "_whatsappStore-BzPTBrQx.js": {
+    "file": "assets/whatsappStore-BzPTBrQx.js",
     "name": "whatsappStore",
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ]
   },
   "node_modules/@mdi/font/fonts/materialdesignicons-webfont.eot": {
@@ -447,30 +447,30 @@
     "src": "node_modules/@mdi/font/fonts/materialdesignicons-webfont.woff2"
   },
   "resources/js/Pages/API/Index.vue": {
-    "file": "assets/Index-BymTD0EH.js",
+    "file": "assets/Index-BFZuqSdM.js",
     "name": "Index",
     "src": "resources/js/Pages/API/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/Pages/API/Partials/ApiTokenManager.vue",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_Modal-DC4HH8ZM.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_Modal-CfXkFCjr.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_Checkbox-Bz97foi6.js",
-      "_ConfirmationModal-D0e2lkUP.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_DialogModal-BxLS06pw.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionBorder-BtfSWqBn.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_Checkbox-B_tCDjGh.js",
+      "_ConfirmationModal-DJhltWZZ.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_DialogModal-BvS8R40D.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionBorder-1S2NCAmB.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -479,46 +479,46 @@
     ]
   },
   "resources/js/Pages/API/Partials/ApiTokenManager.vue": {
-    "file": "assets/ApiTokenManager-B_Z20c8_.js",
+    "file": "assets/ApiTokenManager-BrkUcG7e.js",
     "name": "ApiTokenManager",
     "src": "resources/js/Pages/API/Partials/ApiTokenManager.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_Modal-DC4HH8ZM.js",
-      "_Checkbox-Bz97foi6.js",
-      "_ConfirmationModal-D0e2lkUP.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_DialogModal-BxLS06pw.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionBorder-BtfSWqBn.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_Modal-CfXkFCjr.js",
+      "_Checkbox-B_tCDjGh.js",
+      "_ConfirmationModal-DJhltWZZ.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_DialogModal-BvS8R40D.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionBorder-1S2NCAmB.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Admin/Users/Index.vue": {
-    "file": "assets/Index-CSjiMF7L.js",
+    "file": "assets/Index-C-xIjS-_.js",
     "name": "Index",
     "src": "resources/js/Pages/Admin/Users/Index.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
-      "_VendorServices-CfaHaazA.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_VendorServices-BWHF4-cP.js",
+      "_toast-CD11t3BQ.js",
       "resources/js/app.js",
-      "_countries-qBt_5i5T.js",
+      "_countries-DFCUfv33.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_servicesStore-B5oe2dZA.js",
-      "_condition-BP22CBKH.js",
-      "_conditionTypeStore-CBCNlX4y.js"
+      "_servicesStore-B_5hM_Pq.js",
+      "_condition-zFdeNpi8.js",
+      "_conditionTypeStore-tRGB4NQs.js"
     ],
     "css": [
       "assets/Index-BwrlqybO.css",
@@ -527,23 +527,23 @@
     ]
   },
   "resources/js/Pages/Admin/Users/oldIndex.vue": {
-    "file": "assets/oldIndex-CW7rw8be.js",
+    "file": "assets/oldIndex-23FPiRFc.js",
     "name": "oldIndex",
     "src": "resources/js/Pages/Admin/Users/oldIndex.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_UserPermissionDialog-BZltSgvO.js",
-      "_users-CsvqWHgB.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_UserPermissionDialog-JNaXEL2t.js",
+      "_users-XjWFBdzm.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/RoleDialog.vue",
       "resources/js/Pages/ManageUserDialog.vue",
-      "_toast-XlEZx6sG.js",
+      "_toast-CD11t3BQ.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_countries-qBt_5i5T.js"
+      "_countries-DFCUfv33.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -551,16 +551,16 @@
     ]
   },
   "resources/js/Pages/Audit/Logins.vue": {
-    "file": "assets/Logins-RW5wSwfh.js",
+    "file": "assets/Logins-DHY9R7SW.js",
     "name": "Logins",
     "src": "resources/js/Pages/Audit/Logins.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -569,7 +569,7 @@
     ]
   },
   "resources/js/Pages/Audit/SystemChanges.vue": {
-    "file": "assets/SystemChanges-CYvoAME-.js",
+    "file": "assets/SystemChanges-Clz39lEr.js",
     "name": "SystemChanges",
     "src": "resources/js/Pages/Audit/SystemChanges.vue",
     "isDynamicEntry": true,
@@ -579,16 +579,16 @@
     ]
   },
   "resources/js/Pages/Audit/UserActions.vue": {
-    "file": "assets/UserActions-UgxTauwA.js",
+    "file": "assets/UserActions-BsTqjkZN.js",
     "name": "UserActions",
     "src": "resources/js/Pages/Audit/UserActions.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -597,53 +597,53 @@
     ]
   },
   "resources/js/Pages/Auth/ConfirmPassword.vue": {
-    "file": "assets/ConfirmPassword-D5CJQw8k.js",
+    "file": "assets/ConfirmPassword-CrMaIE10.js",
     "name": "ConfirmPassword",
     "src": "resources/js/Pages/Auth/ConfirmPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Auth/ForgotPassword.vue": {
-    "file": "assets/ForgotPassword-DSBKQI_Q.js",
+    "file": "assets/ForgotPassword-PHleNjp3.js",
     "name": "ForgotPassword",
     "src": "resources/js/Pages/Auth/ForgotPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-D4mmfT4a.js",
+    "file": "assets/Login-DeGfKlWO.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_Checkbox-Bz97foi6.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_Checkbox-B_tCDjGh.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Auth/Register.vue": {
-    "file": "assets/Register-FotLnsvl.js",
+    "file": "assets/Register-SU4nD8IM.js",
     "name": "Register",
     "src": "resources/js/Pages/Auth/Register.vue",
     "isDynamicEntry": true,
@@ -652,59 +652,59 @@
     ]
   },
   "resources/js/Pages/Auth/ResetPassword.vue": {
-    "file": "assets/ResetPassword-zrhKBcaY.js",
+    "file": "assets/ResetPassword-CpCnBjzF.js",
     "name": "ResetPassword",
     "src": "resources/js/Pages/Auth/ResetPassword.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Auth/TwoFactorChallenge.vue": {
-    "file": "assets/TwoFactorChallenge-DC1bC0li.js",
+    "file": "assets/TwoFactorChallenge-C_IijnDt.js",
     "name": "TwoFactorChallenge",
     "src": "resources/js/Pages/Auth/TwoFactorChallenge.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Auth/VerifyEmail.vue": {
-    "file": "assets/VerifyEmail-p8CuhAJR.js",
+    "file": "assets/VerifyEmail-HoTiBQ5m.js",
     "name": "VerifyEmail",
     "src": "resources/js/Pages/Auth/VerifyEmail.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Billing/Invoices.vue": {
-    "file": "assets/Invoices-Bb3itLDw.js",
+    "file": "assets/Invoices-D-9axcjQ.js",
     "name": "Invoices",
     "src": "resources/js/Pages/Billing/Invoices.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -713,16 +713,16 @@
     ]
   },
   "resources/js/Pages/Billing/Licenses.vue": {
-    "file": "assets/Licenses-BhHMmrRC.js",
+    "file": "assets/Licenses-Bvjs1kLz.js",
     "name": "Licenses",
     "src": "resources/js/Pages/Billing/Licenses.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -731,16 +731,16 @@
     ]
   },
   "resources/js/Pages/Billing/Payments.vue": {
-    "file": "assets/Payments-Cb7uhD9X.js",
+    "file": "assets/Payments-BHubuL5J.js",
     "name": "Payments",
     "src": "resources/js/Pages/Billing/Payments.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -749,16 +749,16 @@
     ]
   },
   "resources/js/Pages/Billing/Plans.vue": {
-    "file": "assets/Plans-BE3S8t1s.js",
+    "file": "assets/Plans-v2Pid6L6.js",
     "name": "Plans",
     "src": "resources/js/Pages/Billing/Plans.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -767,7 +767,7 @@
     ]
   },
   "resources/js/Pages/Billing/Usage.vue": {
-    "file": "assets/Usage-B0lE_u9Q.js",
+    "file": "assets/Usage-DfQCSn0z.js",
     "name": "Usage",
     "src": "resources/js/Pages/Billing/Usage.vue",
     "isDynamicEntry": true,
@@ -777,7 +777,7 @@
     ]
   },
   "resources/js/Pages/Branches/AddBranch.vue": {
-    "file": "assets/AddBranch-Dme-S1XM.js",
+    "file": "assets/AddBranch-Cp1UlerL.js",
     "name": "AddBranch",
     "src": "resources/js/Pages/Branches/AddBranch.vue",
     "isDynamicEntry": true,
@@ -787,17 +787,17 @@
     ]
   },
   "resources/js/Pages/Branches/City.vue": {
-    "file": "assets/City-LA58JgKT.js",
+    "file": "assets/City-xs37OKiq.js",
     "name": "City",
     "src": "resources/js/Pages/Branches/City.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -806,7 +806,7 @@
     ]
   },
   "resources/js/Pages/Branches/ManageLocations.vue": {
-    "file": "assets/ManageLocations-Db5Mvuws.js",
+    "file": "assets/ManageLocations-C0iyqrTj.js",
     "name": "ManageLocations",
     "src": "resources/js/Pages/Branches/ManageLocations.vue",
     "isDynamicEntry": true,
@@ -816,17 +816,17 @@
     ]
   },
   "resources/js/Pages/Branches/ViewBranches.vue": {
-    "file": "assets/ViewBranches-DMcQ7eTn.js",
+    "file": "assets/ViewBranches-CZBSRY02.js",
     "name": "ViewBranches",
     "src": "resources/js/Pages/Branches/ViewBranches.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_countries-qBt_5i5T.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_countries-DFCUfv33.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -836,17 +836,17 @@
     ]
   },
   "resources/js/Pages/Branches/Zone.vue": {
-    "file": "assets/Zone-B04fzw6C.js",
+    "file": "assets/Zone-35QoxRTf.js",
     "name": "Zone",
     "src": "resources/js/Pages/Branches/Zone.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -855,7 +855,7 @@
     ]
   },
   "resources/js/Pages/CallCenter/AgentDashboardCard.vue": {
-    "file": "assets/AgentDashboardCard-CMnEsIRJ.js",
+    "file": "assets/AgentDashboardCard-CNTyU6wr.js",
     "name": "AgentDashboardCard",
     "src": "resources/js/Pages/CallCenter/AgentDashboardCard.vue",
     "isDynamicEntry": true,
@@ -865,32 +865,32 @@
     ]
   },
   "resources/js/Pages/CallCenter/AssignDialog.vue": {
-    "file": "assets/AssignDialog-B0XWJxw6.js",
+    "file": "assets/AssignDialog-BvSY6tJU.js",
     "name": "AssignDialog",
     "src": "resources/js/Pages/CallCenter/AssignDialog.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_whatsappStore-CidUo22K.js",
+      "_whatsappStore-BzPTBrQx.js",
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ]
   },
   "resources/js/Pages/CallCenter/CallCentre.vue": {
-    "file": "assets/CallCentre-D7jisYWd.js",
+    "file": "assets/CallCentre-B8KvZ_oB.js",
     "name": "CallCentre",
     "src": "resources/js/Pages/CallCenter/CallCentre.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_callCenter-Bogv_lRT.js",
-      "_toast-XlEZx6sG.js",
-      "_webrtc-Um8CemlU.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_callCenter-Du2y3pyZ.js",
+      "_toast-CD11t3BQ.js",
+      "_webrtc-ZFzkgDwI.js",
       "resources/js/Pages/CallCenter/Dialogs/CallDialogs.vue",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_africastalking-CnRI2NWZ.js",
-      "_contact-BZ9_F7CS.js"
+      "_africastalking-DRfX81P4.js",
+      "_contact-Dq29XTyx.js"
     ],
     "css": [
       "assets/CallCentre-DRvxs_bo.css",
@@ -899,17 +899,17 @@
     ]
   },
   "resources/js/Pages/CallCenter/Clients.vue": {
-    "file": "assets/Clients-CnXQYUJp.js",
+    "file": "assets/Clients-akPVHg4y.js",
     "name": "Clients",
     "src": "resources/js/Pages/CallCenter/Clients.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_clientStore-CgrOIw5T.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_clientStore-DqutlDUj.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -918,17 +918,17 @@
     ]
   },
   "resources/js/Pages/CallCenter/Contacts.vue": {
-    "file": "assets/Contacts-DxQZyEe7.js",
+    "file": "assets/Contacts-BDj18qBG.js",
     "name": "Contacts",
     "src": "resources/js/Pages/CallCenter/Contacts.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_contact-BZ9_F7CS.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_contact-Dq29XTyx.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -938,66 +938,66 @@
     ]
   },
   "resources/js/Pages/CallCenter/Dialogs/CallDialogs.vue": {
-    "file": "assets/CallDialogs-DbPL27nU.js",
+    "file": "assets/CallDialogs-CLtZ4mWg.js",
     "name": "CallDialogs",
     "src": "resources/js/Pages/CallCenter/Dialogs/CallDialogs.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_callCenter-Bogv_lRT.js",
-      "_toast-XlEZx6sG.js",
-      "_webrtc-Um8CemlU.js",
-      "_contact-BZ9_F7CS.js",
+      "_callCenter-Du2y3pyZ.js",
+      "_toast-CD11t3BQ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_contact-Dq29XTyx.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_africastalking-CnRI2NWZ.js"
+      "_africastalking-DRfX81P4.js"
     ],
     "css": [
       "assets/CallDialogs-CCMww4m2.css"
     ]
   },
   "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue": {
-    "file": "assets/IncomingCallDialog-XI58xrqw.js",
+    "file": "assets/IncomingCallDialog-Be8wB7SP.js",
     "name": "IncomingCallDialog",
     "src": "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_webrtc-Um8CemlU.js",
+      "_webrtc-ZFzkgDwI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js",
-      "_africastalking-CnRI2NWZ.js"
+      "_africastalking-DRfX81P4.js"
     ],
     "css": [
       "assets/IncomingCallDialog-BIwQZ6Cv.css"
     ]
   },
   "resources/js/Pages/CallCenter/Dialogs/OrderDialogs.vue": {
-    "file": "assets/OrderDialogs-piaiR26M.js",
+    "file": "assets/OrderDialogs-CIDac79L.js",
     "name": "OrderDialogs",
     "src": "resources/js/Pages/CallCenter/Dialogs/OrderDialogs.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/OrderDialogs-ojKZquFM.css"
     ]
   },
   "resources/js/Pages/CallCenter/Emails.vue": {
-    "file": "assets/Emails-D2b0WLOz.js",
+    "file": "assets/Emails-DYCpJWOW.js",
     "name": "Emails",
     "src": "resources/js/Pages/CallCenter/Emails.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_users-CsvqWHgB.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_users-XjWFBdzm.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1006,7 +1006,7 @@
     ]
   },
   "resources/js/Pages/CallCenter/MainContentTabs.vue": {
-    "file": "assets/MainContentTabs-B8t_Edh2.js",
+    "file": "assets/MainContentTabs-nL3P2R9n.js",
     "name": "MainContentTabs",
     "src": "resources/js/Pages/CallCenter/MainContentTabs.vue",
     "isDynamicEntry": true,
@@ -1016,17 +1016,17 @@
     ]
   },
   "resources/js/Pages/CallCenter/Messages.vue": {
-    "file": "assets/Messages-B4A2-sWk.js",
+    "file": "assets/Messages-Cy0z_Z-K.js",
     "name": "Messages",
     "src": "resources/js/Pages/CallCenter/Messages.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1035,17 +1035,17 @@
     ]
   },
   "resources/js/Pages/CallCenter/Notes.vue": {
-    "file": "assets/Notes-Dq4G3sPu.js",
+    "file": "assets/Notes-AluEnspS.js",
     "name": "Notes",
     "src": "resources/js/Pages/CallCenter/Notes.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1055,7 +1055,7 @@
     ]
   },
   "resources/js/Pages/CallCenter/QuickActionsCard.vue": {
-    "file": "assets/QuickActionsCard-ICum1CmX.js",
+    "file": "assets/QuickActionsCard-DUhGXjNt.js",
     "name": "QuickActionsCard",
     "src": "resources/js/Pages/CallCenter/QuickActionsCard.vue",
     "isDynamicEntry": true,
@@ -1065,7 +1065,7 @@
     ]
   },
   "resources/js/Pages/CallCenter/Tables/CallHistoryTable.vue": {
-    "file": "assets/CallHistoryTable-5HkVzqYc.js",
+    "file": "assets/CallHistoryTable-CiYZVprk.js",
     "name": "CallHistoryTable",
     "src": "resources/js/Pages/CallCenter/Tables/CallHistoryTable.vue",
     "isDynamicEntry": true,
@@ -1075,7 +1075,7 @@
     ]
   },
   "resources/js/Pages/CallCenter/Tables/OrdersTable.vue": {
-    "file": "assets/OrdersTable-Bgh7Qd0J.js",
+    "file": "assets/OrdersTable-BwVO46ji.js",
     "name": "OrdersTable",
     "src": "resources/js/Pages/CallCenter/Tables/OrdersTable.vue",
     "isDynamicEntry": true,
@@ -1085,17 +1085,17 @@
     ]
   },
   "resources/js/Pages/CallCenter/Telegram.vue": {
-    "file": "assets/Telegram-CV8SNPjE.js",
+    "file": "assets/Telegram-BTGs14OD.js",
     "name": "Telegram",
     "src": "resources/js/Pages/CallCenter/Telegram.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1104,17 +1104,17 @@
     ]
   },
   "resources/js/Pages/CallCenter/Tickets.vue": {
-    "file": "assets/Tickets-DN2GtscT.js",
+    "file": "assets/Tickets-C3qysHJ5.js",
     "name": "Tickets",
     "src": "resources/js/Pages/CallCenter/Tickets.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1123,24 +1123,24 @@
     ]
   },
   "resources/js/Pages/CallCenter/WhatsApp.vue": {
-    "file": "assets/WhatsApp-BusSUYi7.js",
+    "file": "assets/WhatsApp-8hcPn6Nm.js",
     "name": "WhatsApp",
     "src": "resources/js/Pages/CallCenter/WhatsApp.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_whatsappStore-CidUo22K.js",
-      "_auth-B54Me1vB.js",
-      "_WhatsAppConversation-D_o9P8x4.js",
-      "_Sms-B_i7XnFc.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_whatsappStore-BzPTBrQx.js",
+      "_auth-Ch5r7jKj.js",
+      "_WhatsAppConversation-CopZlgr9.js",
+      "_Sms-wY_fVJSF.js",
       "resources/js/Pages/CallCenter/AssignDialog.vue",
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "resources/js/Pages/CallCenter/Dialogs/OrderDialogs.vue",
-      "_toast-XlEZx6sG.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1151,16 +1151,16 @@
     ]
   },
   "resources/js/Pages/Dashboard.vue": {
-    "file": "assets/Dashboard-BCncmzyv.js",
+    "file": "assets/Dashboard-DkXVn4MF.js",
     "name": "Dashboard",
     "src": "resources/js/Pages/Dashboard.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1170,7 +1170,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/Activity.vue": {
-    "file": "assets/Activity-Bmv2N9Gd.js",
+    "file": "assets/Activity-gY5T-z9K.js",
     "name": "Activity",
     "src": "resources/js/Pages/Dashboard/Activity.vue",
     "isDynamicEntry": true,
@@ -1180,12 +1180,12 @@
     ]
   },
   "resources/js/Pages/Dashboard/Metrics.vue": {
-    "file": "assets/Metrics-B5O9fx_K.js",
+    "file": "assets/Metrics-DVKrobAT.js",
     "name": "Metrics",
     "src": "resources/js/Pages/Dashboard/Metrics.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Dashboard/components/OrderStats.vue",
       "resources/js/Pages/Dashboard/components/OrderAnalytics.vue",
       "resources/js/Pages/Dashboard/components/InventoryStats.vue",
@@ -1197,8 +1197,8 @@
       "resources/js/Pages/Dashboard/components/TopAgents.vue",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1207,7 +1207,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/Overview.vue": {
-    "file": "assets/Overview-CajlWiQi.js",
+    "file": "assets/Overview-CKoq554d.js",
     "name": "Overview",
     "src": "resources/js/Pages/Dashboard/Overview.vue",
     "isDynamicEntry": true,
@@ -1217,7 +1217,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/Status.vue": {
-    "file": "assets/Status-lQ4ExCpy.js",
+    "file": "assets/Status-DYMbAzm9.js",
     "name": "Status",
     "src": "resources/js/Pages/Dashboard/Status.vue",
     "isDynamicEntry": true,
@@ -1227,7 +1227,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/DeliveryRate.vue": {
-    "file": "assets/DeliveryRate-CevcWOeo.js",
+    "file": "assets/DeliveryRate-CR5EaJ7c.js",
     "name": "DeliveryRate",
     "src": "resources/js/Pages/Dashboard/components/DeliveryRate.vue",
     "isDynamicEntry": true,
@@ -1240,7 +1240,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/InventoryStats.vue": {
-    "file": "assets/InventoryStats-DkVTi0YD.js",
+    "file": "assets/InventoryStats-CKX509nF.js",
     "name": "InventoryStats",
     "src": "resources/js/Pages/Dashboard/components/InventoryStats.vue",
     "isDynamicEntry": true,
@@ -1253,7 +1253,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/OrderAnalytics.vue": {
-    "file": "assets/OrderAnalytics-PxpG8E57.js",
+    "file": "assets/OrderAnalytics-D6pjYj6s.js",
     "name": "OrderAnalytics",
     "src": "resources/js/Pages/Dashboard/components/OrderAnalytics.vue",
     "isDynamicEntry": true,
@@ -1266,7 +1266,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/OrderStats.vue": {
-    "file": "assets/OrderStats-C5oeadma.js",
+    "file": "assets/OrderStats-C6vW3l23.js",
     "name": "OrderStats",
     "src": "resources/js/Pages/Dashboard/components/OrderStats.vue",
     "isDynamicEntry": true,
@@ -1288,7 +1288,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/StatusOverview.vue": {
-    "file": "assets/StatusOverview-ddqyvfl2.js",
+    "file": "assets/StatusOverview-Brbkj05X.js",
     "name": "StatusOverview",
     "src": "resources/js/Pages/Dashboard/components/StatusOverview.vue",
     "isDynamicEntry": true,
@@ -1301,7 +1301,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/TopAgents.vue": {
-    "file": "assets/TopAgents-BN_4X4Uf.js",
+    "file": "assets/TopAgents-B-HON4HB.js",
     "name": "TopAgents",
     "src": "resources/js/Pages/Dashboard/components/TopAgents.vue",
     "isDynamicEntry": true,
@@ -1310,11 +1310,11 @@
       "resources/js/app.js"
     ],
     "css": [
-      "assets/TopAgents-yLdyepnK.css"
+      "assets/TopAgents-wDnYR0Yz.css"
     ]
   },
   "resources/js/Pages/Dashboard/components/TopProducts.vue": {
-    "file": "assets/TopProducts-uyvrXUSQ.js",
+    "file": "assets/TopProducts-MFt01EP9.js",
     "name": "TopProducts",
     "src": "resources/js/Pages/Dashboard/components/TopProducts.vue",
     "isDynamicEntry": true,
@@ -1327,7 +1327,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/TopSellers.vue": {
-    "file": "assets/TopSellers-CqXMWT95.js",
+    "file": "assets/TopSellers-CrMWGPdf.js",
     "name": "TopSellers",
     "src": "resources/js/Pages/Dashboard/components/TopSellers.vue",
     "isDynamicEntry": true,
@@ -1340,7 +1340,7 @@
     ]
   },
   "resources/js/Pages/Dashboard/components/WalletEarnings.vue": {
-    "file": "assets/WalletEarnings-CaWqcIUT.js",
+    "file": "assets/WalletEarnings-CVpDC3ns.js",
     "name": "WalletEarnings",
     "src": "resources/js/Pages/Dashboard/components/WalletEarnings.vue",
     "isDynamicEntry": true,
@@ -1353,16 +1353,16 @@
     ]
   },
   "resources/js/Pages/Developer/APIDocs.vue": {
-    "file": "assets/APIDocs-cZVa_VAw.js",
+    "file": "assets/APIDocs-DZAHeykI.js",
     "name": "APIDocs",
     "src": "resources/js/Pages/Developer/APIDocs.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1371,16 +1371,16 @@
     ]
   },
   "resources/js/Pages/Developer/SDKs.vue": {
-    "file": "assets/SDKs-B488kTzq.js",
+    "file": "assets/SDKs-BJn6Cmvm.js",
     "name": "SDKs",
     "src": "resources/js/Pages/Developer/SDKs.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1389,16 +1389,16 @@
     ]
   },
   "resources/js/Pages/Developer/Sandbox.vue": {
-    "file": "assets/Sandbox-DE2OsBuj.js",
+    "file": "assets/Sandbox-CLFo6Rdq.js",
     "name": "Sandbox",
     "src": "resources/js/Pages/Developer/Sandbox.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1407,7 +1407,7 @@
     ]
   },
   "resources/js/Pages/Developer/UsageStats.vue": {
-    "file": "assets/UsageStats-C-yLQSdp.js",
+    "file": "assets/UsageStats-BMATd1Gq.js",
     "name": "UsageStats",
     "src": "resources/js/Pages/Developer/UsageStats.vue",
     "isDynamicEntry": true,
@@ -1417,23 +1417,23 @@
     ]
   },
   "resources/js/Pages/Expedition/Index.vue": {
-    "file": "assets/Index-D5IYIul_.js",
+    "file": "assets/Index-CkVsJ85w.js",
     "name": "Index",
     "src": "resources/js/Pages/Expedition/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_orderStore-Cg-Ye88E.js",
-      "_toast-XlEZx6sG.js",
-      "_trash-2-7ESjSVu-.js",
-      "_search-D6kleNsY.js",
-      "_funnel-DbrODZwm.js",
-      "_truck-COnDGnSa.js",
-      "_createLucideIcon-hv9JquAB.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_orderStore-jz32Ib0-.js",
+      "_toast-CD11t3BQ.js",
+      "_trash-2-BFLk7vcb.js",
+      "_search-600gHKTL.js",
+      "_funnel-NyzbG0kk.js",
+      "_truck-C7AIeIRy.js",
+      "_createLucideIcon-I2Pn3u3T.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1442,16 +1442,16 @@
     ]
   },
   "resources/js/Pages/Integrations/API.vue": {
-    "file": "assets/API-1VIdbmZG.js",
+    "file": "assets/API-C04TGOEa.js",
     "name": "API",
     "src": "resources/js/Pages/Integrations/API.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1460,18 +1460,18 @@
     ]
   },
   "resources/js/Pages/Integrations/Marketplace.vue": {
-    "file": "assets/Marketplace-2kuYqt1-.js",
+    "file": "assets/Marketplace-DZUM8FwS.js",
     "name": "Marketplace",
     "src": "resources/js/Pages/Integrations/Marketplace.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_clientStore-CgrOIw5T.js",
+      "_toast-CD11t3BQ.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_clientStore-DqutlDUj.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1481,16 +1481,16 @@
     ]
   },
   "resources/js/Pages/Integrations/Shopifty.vue": {
-    "file": "assets/Shopifty-BDk6qkAm.js",
+    "file": "assets/Shopifty-DGrJDGYn.js",
     "name": "Shopifty",
     "src": "resources/js/Pages/Integrations/Shopifty.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1500,7 +1500,7 @@
     ]
   },
   "resources/js/Pages/Integrations/ThirdPartyApps.vue": {
-    "file": "assets/ThirdPartyApps-GPAmuSFg.js",
+    "file": "assets/ThirdPartyApps-C73_Fwot.js",
     "name": "ThirdPartyApps",
     "src": "resources/js/Pages/Integrations/ThirdPartyApps.vue",
     "isDynamicEntry": true,
@@ -1510,7 +1510,7 @@
     ]
   },
   "resources/js/Pages/Integrations/Webhooks.vue": {
-    "file": "assets/Webhooks-D7vDtnfS.js",
+    "file": "assets/Webhooks-D2MxMOV4.js",
     "name": "Webhooks",
     "src": "resources/js/Pages/Integrations/Webhooks.vue",
     "isDynamicEntry": true,
@@ -1520,30 +1520,30 @@
     ]
   },
   "resources/js/Pages/Login.vue": {
-    "file": "assets/Login-DqzBF_pV.js",
+    "file": "assets/Login-CSspowHf.js",
     "name": "Login",
     "src": "resources/js/Pages/Login.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCard-Dd5buaCk.js",
-      "_AuthenticationCardLogo-DqT30mGY.js",
-      "_Checkbox-Bz97foi6.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
+      "_AuthenticationCard-B33dNXa5.js",
+      "_AuthenticationCardLogo-BIfPrrtc.js",
+      "_Checkbox-B_tCDjGh.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/ManageUserDialog.vue": {
-    "file": "assets/ManageUserDialog-GyQiFDGM.js",
+    "file": "assets/ManageUserDialog-Ddlunq9E.js",
     "name": "ManageUserDialog",
     "src": "resources/js/Pages/ManageUserDialog.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_users-CsvqWHgB.js",
-      "_countries-qBt_5i5T.js",
+      "_users-XjWFBdzm.js",
+      "_countries-DFCUfv33.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
@@ -1551,7 +1551,7 @@
     ]
   },
   "resources/js/Pages/Notifications/ActivityTrail.vue": {
-    "file": "assets/ActivityTrail-90H0XUal.js",
+    "file": "assets/ActivityTrail-Mkz5zGJm.js",
     "name": "ActivityTrail",
     "src": "resources/js/Pages/Notifications/ActivityTrail.vue",
     "isDynamicEntry": true,
@@ -1561,7 +1561,7 @@
     ]
   },
   "resources/js/Pages/Notifications/Center.vue": {
-    "file": "assets/Center-CMlTVDxr.js",
+    "file": "assets/Center-CKXfRAGW.js",
     "name": "Center",
     "src": "resources/js/Pages/Notifications/Center.vue",
     "isDynamicEntry": true,
@@ -1571,16 +1571,16 @@
     ]
   },
   "resources/js/Pages/Notifications/Status.vue": {
-    "file": "assets/Status-CWn6K36u.js",
+    "file": "assets/Status-CfMm54hX.js",
     "name": "Status",
     "src": "resources/js/Pages/Notifications/Status.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1589,16 +1589,16 @@
     ]
   },
   "resources/js/Pages/Offers/OfferDetails.vue": {
-    "file": "assets/OfferDetails-CdhtlpYV.js",
+    "file": "assets/OfferDetails-B65pEjiD.js",
     "name": "OfferDetails",
     "src": "resources/js/Pages/Offers/OfferDetails.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1607,16 +1607,16 @@
     ]
   },
   "resources/js/Pages/Offers/OfferForm.vue": {
-    "file": "assets/OfferForm-BLDonWuD.js",
+    "file": "assets/OfferForm-Fbwfbz_B.js",
     "name": "OfferForm",
     "src": "resources/js/Pages/Offers/OfferForm.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1625,16 +1625,16 @@
     ]
   },
   "resources/js/Pages/Offers/OfferList.vue": {
-    "file": "assets/OfferList-Dlu2c_Vb.js",
+    "file": "assets/OfferList-BNL0JASM.js",
     "name": "OfferList",
     "src": "resources/js/Pages/Offers/OfferList.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1643,7 +1643,7 @@
     ]
   },
   "resources/js/Pages/OnlineForm.vue": {
-    "file": "assets/OnlineForm-B5k_cG7q.js",
+    "file": "assets/OnlineForm-Ddm5FDeX.js",
     "name": "OnlineForm",
     "src": "resources/js/Pages/OnlineForm.vue",
     "isDynamicEntry": true,
@@ -1656,31 +1656,31 @@
     ]
   },
   "resources/js/Pages/Orders/BulkAction.vue": {
-    "file": "assets/BulkAction-Ca69A-yW.js",
+    "file": "assets/BulkAction-DDi3CRRW.js",
     "name": "BulkAction",
     "src": "resources/js/Pages/Orders/BulkAction.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/BulkAction-CL8a-_kP.css"
     ]
   },
   "resources/js/Pages/Orders/DispatchList.vue": {
-    "file": "assets/DispatchList-BNgEbPD8.js",
+    "file": "assets/DispatchList-CHPvwCAm.js",
     "name": "DispatchList",
     "src": "resources/js/Pages/Orders/DispatchList.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1690,34 +1690,34 @@
     ]
   },
   "resources/js/Pages/Orders/Index.vue": {
-    "file": "assets/Index-B61gy-Ka.js",
+    "file": "assets/Index-By97GHzM.js",
     "name": "Index",
     "src": "resources/js/Pages/Orders/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_WhatsAppConversation-D_o9P8x4.js",
-      "_orderStore-Cg-Ye88E.js",
-      "_africastalking-CnRI2NWZ.js",
-      "_CallCentreDialler-BP9Y_BTn.js",
-      "_Stkpush-D73Rxy1I.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_WhatsAppConversation-CopZlgr9.js",
+      "_orderStore-jz32Ib0-.js",
+      "_africastalking-DRfX81P4.js",
+      "_CallCentreDialler-Dl9kiUk1.js",
+      "_Stkpush-BIwsM2rl.js",
       "resources/js/Pages/Orders/OrderForm.vue",
       "resources/js/Pages/Orders/OrderCallHistory.vue",
       "resources/js/Pages/Orders/OrderExpenses.vue",
       "resources/js/Pages/Orders/BulkAction.vue",
       "resources/js/Pages/CallCenter/Dialogs/CallDialogs.vue",
-      "_DualDatePicker-Bsvdrp1c.js",
+      "_DualDatePicker-BZzWyVmE.js",
       "resources/js/Pages/Orders/OrderHistory.vue",
       "resources/js/Pages/Orders/OrderJourney.vue",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
+      "_webrtc-ZFzkgDwI.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_toast-XlEZx6sG.js",
-      "_whatsappStore-CidUo22K.js",
-      "_auth-B54Me1vB.js",
-      "_callCenter-Bogv_lRT.js",
-      "_contact-BZ9_F7CS.js"
+      "_toast-CD11t3BQ.js",
+      "_whatsappStore-BzPTBrQx.js",
+      "_auth-Ch5r7jKj.js",
+      "_callCenter-Du2y3pyZ.js",
+      "_contact-Dq29XTyx.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -1726,7 +1726,7 @@
     ]
   },
   "resources/js/Pages/Orders/OrderCallHistory.vue": {
-    "file": "assets/OrderCallHistory-z1ckuxSm.js",
+    "file": "assets/OrderCallHistory-B2ufCHyd.js",
     "name": "OrderCallHistory",
     "src": "resources/js/Pages/Orders/OrderCallHistory.vue",
     "isDynamicEntry": true,
@@ -1735,7 +1735,7 @@
     ]
   },
   "resources/js/Pages/Orders/OrderExpenses.vue": {
-    "file": "assets/OrderExpenses-BleFkr-Z.js",
+    "file": "assets/OrderExpenses-zjF3YZZf.js",
     "name": "OrderExpenses",
     "src": "resources/js/Pages/Orders/OrderExpenses.vue",
     "isDynamicEntry": true,
@@ -1744,14 +1744,14 @@
     ]
   },
   "resources/js/Pages/Orders/OrderForm.vue": {
-    "file": "assets/OrderForm-DnIQ6358.js",
+    "file": "assets/OrderForm-uttdLMpN.js",
     "name": "OrderForm",
     "src": "resources/js/Pages/Orders/OrderForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
-      "_toast-XlEZx6sG.js",
+      "_orderStore-jz32Ib0-.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
@@ -1759,42 +1759,42 @@
     ]
   },
   "resources/js/Pages/Orders/OrderHistory.vue": {
-    "file": "assets/OrderHistory-C0h-qmvG.js",
+    "file": "assets/OrderHistory-B3BA2vMY.js",
     "name": "OrderHistory",
     "src": "resources/js/Pages/Orders/OrderHistory.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/DualDatePicker-tn0RQdqM.css"
     ]
   },
   "resources/js/Pages/Orders/OrderJourney.vue": {
-    "file": "assets/OrderJourney-Do90_S2v.js",
+    "file": "assets/OrderJourney-CN3lq5cW.js",
     "name": "OrderJourney",
     "src": "resources/js/Pages/Orders/OrderJourney.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
-      "_toast-XlEZx6sG.js"
+      "_orderStore-jz32Ib0-.js",
+      "_toast-CD11t3BQ.js"
     ]
   },
   "resources/js/Pages/Orders/ScanDispatch.vue": {
-    "file": "assets/ScanDispatch-DTQ-0JZn.js",
+    "file": "assets/ScanDispatch-DPMRs6K2.js",
     "name": "ScanDispatch",
     "src": "resources/js/Pages/Orders/ScanDispatch.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1804,19 +1804,19 @@
     ]
   },
   "resources/js/Pages/Orders/Ship.vue": {
-    "file": "assets/Ship-B_srFy-9.js",
+    "file": "assets/Ship-CWVYdpfi.js",
     "name": "Ship",
     "src": "resources/js/Pages/Orders/Ship.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -1824,16 +1824,16 @@
     ]
   },
   "resources/js/Pages/Orders/Shipping.vue": {
-    "file": "assets/Shipping-DNh4_4yU.js",
+    "file": "assets/Shipping-4WGoTF_W.js",
     "name": "Shipping",
     "src": "resources/js/Pages/Orders/Shipping.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1842,29 +1842,29 @@
     ]
   },
   "resources/js/Pages/PrivacyPolicy.vue": {
-    "file": "assets/PrivacyPolicy-D3vVsyKh.js",
+    "file": "assets/PrivacyPolicy-C5vl4_qK.js",
     "name": "PrivacyPolicy",
     "src": "resources/js/Pages/PrivacyPolicy.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCardLogo-DqT30mGY.js"
+      "_AuthenticationCardLogo-BIfPrrtc.js"
     ]
   },
   "resources/js/Pages/Products/Index.vue": {
-    "file": "assets/Index-CQLmVMb-.js",
+    "file": "assets/Index-C-f8RH17.js",
     "name": "Index",
     "src": "resources/js/Pages/Products/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_categoryStore-D0iQLNRw.js",
-      "_clientStore-CgrOIw5T.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_categoryStore-Cdr02Xo7.js",
+      "_clientStore-DqutlDUj.js",
       "resources/js/Pages/Products/StockEditDialog.vue",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1873,17 +1873,17 @@
     ]
   },
   "resources/js/Pages/Products/ProductCategory.vue": {
-    "file": "assets/ProductCategory-BHI36Tns.js",
+    "file": "assets/ProductCategory-v_1K8vb2.js",
     "name": "ProductCategory",
     "src": "resources/js/Pages/Products/ProductCategory.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_categoryStore-D0iQLNRw.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_categoryStore-Cdr02Xo7.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1892,16 +1892,16 @@
     ]
   },
   "resources/js/Pages/Products/ProductDetails.vue": {
-    "file": "assets/ProductDetails-GlaN3X_U.js",
+    "file": "assets/ProductDetails-BbsN4ANX.js",
     "name": "ProductDetails",
     "src": "resources/js/Pages/Products/ProductDetails.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1910,16 +1910,16 @@
     ]
   },
   "resources/js/Pages/Products/ProductForm.vue": {
-    "file": "assets/ProductForm-DQErHLOE.js",
+    "file": "assets/ProductForm-DON37Ogs.js",
     "name": "ProductForm",
     "src": "resources/js/Pages/Products/ProductForm.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1928,16 +1928,16 @@
     ]
   },
   "resources/js/Pages/Products/ProductMedia.vue": {
-    "file": "assets/ProductMedia-BwKwTaDV.js",
+    "file": "assets/ProductMedia-Xuy6O4B1.js",
     "name": "ProductMedia",
     "src": "resources/js/Pages/Products/ProductMedia.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -1946,7 +1946,7 @@
     ]
   },
   "resources/js/Pages/Products/StockEditDialog.vue": {
-    "file": "assets/StockEditDialog-DI0KaemJ.js",
+    "file": "assets/StockEditDialog-Cm9tzYmD.js",
     "name": "StockEditDialog",
     "src": "resources/js/Pages/Products/StockEditDialog.vue",
     "isDynamicEntry": true,
@@ -1959,117 +1959,117 @@
     ]
   },
   "resources/js/Pages/Profile/Partials/DeleteUserForm.vue": {
-    "file": "assets/DeleteUserForm-Ch5tPFhj.js",
+    "file": "assets/DeleteUserForm-BD58PLWU.js",
     "name": "DeleteUserForm",
     "src": "resources/js/Pages/Profile/Partials/DeleteUserForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_Modal-DC4HH8ZM.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_DialogModal-BxLS06pw.js",
-      "_TextInput-DPC7wukV.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_Modal-CfXkFCjr.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_DialogModal-BvS8R40D.js",
+      "_TextInput-DYxJTu_G.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue": {
-    "file": "assets/LogoutOtherBrowserSessionsForm-DAcJSdTL.js",
+    "file": "assets/LogoutOtherBrowserSessionsForm-BFRey4W7.js",
     "name": "LogoutOtherBrowserSessionsForm",
     "src": "resources/js/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_Modal-DC4HH8ZM.js",
-      "_DialogModal-BxLS06pw.js",
-      "_TextInput-DPC7wukV.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_Modal-CfXkFCjr.js",
+      "_DialogModal-BvS8R40D.js",
+      "_TextInput-DYxJTu_G.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue": {
-    "file": "assets/TwoFactorAuthenticationForm-CvOYIZtJ.js",
+    "file": "assets/TwoFactorAuthenticationForm-DMkHYZlk.js",
     "name": "TwoFactorAuthenticationForm",
     "src": "resources/js/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_Modal-DC4HH8ZM.js",
-      "_DialogModal-BxLS06pw.js",
-      "_TextInput-DPC7wukV.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_Modal-CfXkFCjr.js",
+      "_DialogModal-BvS8R40D.js",
+      "_TextInput-DYxJTu_G.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_InputLabel-BepWkbz2.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/UpdatePasswordForm.vue": {
-    "file": "assets/UpdatePasswordForm-CEkqOIQc.js",
+    "file": "assets/UpdatePasswordForm-DmpPQERh.js",
     "name": "UpdatePasswordForm",
     "src": "resources/js/Pages/Profile/Partials/UpdatePasswordForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.vue": {
-    "file": "assets/UpdateProfileInformationForm-DD8ihIyy.js",
+    "file": "assets/UpdateProfileInformationForm-CWYkroCh.js",
     "name": "UpdateProfileInformationForm",
     "src": "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Profile/Show.vue": {
-    "file": "assets/Show-CqMHbtHW.js",
+    "file": "assets/Show-Ca_04L7C.js",
     "name": "Show",
     "src": "resources/js/Pages/Profile/Show.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Profile/Partials/DeleteUserForm.vue",
       "resources/js/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue",
-      "_SectionBorder-BtfSWqBn.js",
+      "_SectionBorder-1S2NCAmB.js",
       "resources/js/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue",
       "resources/js/Pages/Profile/Partials/UpdatePasswordForm.vue",
       "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.vue",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_Modal-DC4HH8ZM.js",
-      "_SectionTitle-DBPTslSq.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_DialogModal-BxLS06pw.js",
-      "_TextInput-DPC7wukV.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_ActionMessage-COx90OJq.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_FormSection-BByWXcDQ.js"
+      "_Modal-CfXkFCjr.js",
+      "_SectionTitle-CXnmwDnf.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_DialogModal-BvS8R40D.js",
+      "_TextInput-DYxJTu_G.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_InputLabel-BepWkbz2.js",
+      "_FormSection-rBTaKPy_.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -2077,19 +2077,19 @@
     ]
   },
   "resources/js/Pages/Remittances/AgentPayments.vue": {
-    "file": "assets/AgentPayments-B9kzF_Bw.js",
+    "file": "assets/AgentPayments-Tw2bdQX9.js",
     "name": "AgentPayments",
     "src": "resources/js/Pages/Remittances/AgentPayments.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -2097,19 +2097,19 @@
     ]
   },
   "resources/js/Pages/Remittances/Index.vue": {
-    "file": "assets/Index-DW_XpQmG.js",
+    "file": "assets/Index-CE_3U6ui.js",
     "name": "Index",
     "src": "resources/js/Pages/Remittances/Index.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -2117,19 +2117,19 @@
     ]
   },
   "resources/js/Pages/Remittances/RiderPayments.vue": {
-    "file": "assets/RiderPayments-D9Up1OSw.js",
+    "file": "assets/RiderPayments-BTa7CiqS.js",
     "name": "RiderPayments",
     "src": "resources/js/Pages/Remittances/RiderPayments.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -2137,12 +2137,12 @@
     ]
   },
   "resources/js/Pages/Reports/EmptyState.vue": {
-    "file": "assets/EmptyState-BFDTPnfg.js",
+    "file": "assets/EmptyState-C9QLC6u_.js",
     "name": "EmptyState",
     "src": "resources/js/Pages/Reports/EmptyState.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_reportStore-0cGTxa9C.js",
+      "_reportStore-DLNw839z.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js"
     ],
@@ -2151,20 +2151,20 @@
     ]
   },
   "resources/js/Pages/Reports/Export.vue": {
-    "file": "assets/Export-zdZ0EQdT.js",
+    "file": "assets/Export-CoSZ9ALh.js",
     "name": "Export",
     "src": "resources/js/Pages/Reports/Export.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
-      "_DualDatePicker-Bsvdrp1c.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_DualDatePicker-BZzWyVmE.js",
+      "_orderStore-jz32Ib0-.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_toast-XlEZx6sG.js"
+      "_toast-CD11t3BQ.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -2172,7 +2172,7 @@
     ]
   },
   "resources/js/Pages/Reports/GenerateReport.vue": {
-    "file": "assets/GenerateReport-CbYY0s7Y.js",
+    "file": "assets/GenerateReport-Du3bqoN5.js",
     "name": "GenerateReport",
     "src": "resources/js/Pages/Reports/GenerateReport.vue",
     "isDynamicEntry": true,
@@ -2182,56 +2182,56 @@
     ]
   },
   "resources/js/Pages/Reports/ReportFilters.vue": {
-    "file": "assets/ReportFilters-n7emhhpN.js",
+    "file": "assets/ReportFilters-DcPSVzzz.js",
     "name": "ReportFilters",
     "src": "resources/js/Pages/Reports/ReportFilters.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_reportStore-0cGTxa9C.js",
+      "_reportStore-DLNw839z.js",
       "resources/js/app.js"
     ]
   },
   "resources/js/Pages/Reports/ReportSelector.vue": {
-    "file": "assets/ReportSelector-D2wkQWvt.js",
+    "file": "assets/ReportSelector-jbHnVpwz.js",
     "name": "ReportSelector",
     "src": "resources/js/Pages/Reports/ReportSelector.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_reportStore-0cGTxa9C.js",
+      "_reportStore-DLNw839z.js",
       "resources/js/app.js"
     ]
   },
   "resources/js/Pages/Reports/ReportSummary.vue": {
-    "file": "assets/ReportSummary-DFSqA154.js",
+    "file": "assets/ReportSummary-9XpCU-5K.js",
     "name": "ReportSummary",
     "src": "resources/js/Pages/Reports/ReportSummary.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_reportStore-0cGTxa9C.js",
+      "_reportStore-DLNw839z.js",
       "resources/js/app.js"
     ]
   },
   "resources/js/Pages/Reports/ReportTable.vue": {
-    "file": "assets/ReportTable-C-7k1SWq.js",
+    "file": "assets/ReportTable-DGX-th5i.js",
     "name": "ReportTable",
     "src": "resources/js/Pages/Reports/ReportTable.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_reportStore-0cGTxa9C.js",
+      "_reportStore-DLNw839z.js",
       "resources/js/app.js"
     ]
   },
   "resources/js/Pages/Reports/Schedule.vue": {
-    "file": "assets/Schedule-CsVFZjzC.js",
+    "file": "assets/Schedule-Cr2cYHQX.js",
     "name": "Schedule",
     "src": "resources/js/Pages/Reports/Schedule.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2240,22 +2240,22 @@
     ]
   },
   "resources/js/Pages/Reports/ViewReports.vue": {
-    "file": "assets/ViewReports-DKTM_sxm.js",
+    "file": "assets/ViewReports-Tzg8yXmw.js",
     "name": "ViewReports",
     "src": "resources/js/Pages/Reports/ViewReports.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_reportStore-0cGTxa9C.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_reportStore-DLNw839z.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Reports/ReportSelector.vue",
       "resources/js/Pages/Reports/ReportFilters.vue",
       "resources/js/Pages/Reports/ReportSummary.vue",
       "resources/js/Pages/Reports/ReportTable.vue",
       "resources/js/Pages/Reports/EmptyState.vue",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2264,7 +2264,7 @@
     ]
   },
   "resources/js/Pages/RoleDialog.vue": {
-    "file": "assets/RoleDialog-BvUzNczU.js",
+    "file": "assets/RoleDialog-CXTqsObP.js",
     "name": "RoleDialog",
     "src": "resources/js/Pages/RoleDialog.vue",
     "isDynamicEntry": true,
@@ -2273,23 +2273,23 @@
     ]
   },
   "resources/js/Pages/SellerExpenses/Index.vue": {
-    "file": "assets/Index-CqziQg9j.js",
+    "file": "assets/Index-5JN_X0cE.js",
     "name": "Index",
     "src": "resources/js/Pages/SellerExpenses/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
-      "_orderStore-Cg-Ye88E.js",
-      "_expenseTypeStore-DstcK_rj.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_toast-CD11t3BQ.js",
+      "_orderStore-jz32Ib0-.js",
+      "_expenseTypeStore-JWJF8uLv.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_createLucideIcon-hv9JquAB.js",
-      "_trash-2-7ESjSVu-.js",
-      "_search-D6kleNsY.js",
-      "_chevron-down-8uWq2qfi.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_createLucideIcon-I2Pn3u3T.js",
+      "_trash-2-BFLk7vcb.js",
+      "_search-600gHKTL.js",
+      "_chevron-down-nRMP-CJS.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2299,7 +2299,7 @@
     ]
   },
   "resources/js/Pages/Settings/Branding.vue": {
-    "file": "assets/Branding-Dlh94Nma.js",
+    "file": "assets/Branding-WfYeBCQ7.js",
     "name": "Branding",
     "src": "resources/js/Pages/Settings/Branding.vue",
     "isDynamicEntry": true,
@@ -2309,13 +2309,13 @@
     ]
   },
   "resources/js/Pages/Settings/CallCenterModal.vue": {
-    "file": "assets/CallCenterModal-cf1hgYHz.js",
+    "file": "assets/CallCenterModal-C4eLxwu7.js",
     "name": "CallCenterModal",
     "src": "resources/js/Pages/Settings/CallCenterModal.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_callCenterSettings-DAHOSgSo.js",
+      "_callCenterSettings-CBfx5cD_.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
@@ -2323,12 +2323,12 @@
     ]
   },
   "resources/js/Pages/Settings/CallCenterViewModal.vue": {
-    "file": "assets/CallCenterViewModal-CvqYIfXN.js",
+    "file": "assets/CallCenterViewModal-D8hj_dMC.js",
     "name": "CallCenterViewModal",
     "src": "resources/js/Pages/Settings/CallCenterViewModal.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_callCenterSettings-DAHOSgSo.js",
+      "_callCenterSettings-CBfx5cD_.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
       "resources/js/app.js"
     ],
@@ -2337,19 +2337,19 @@
     ]
   },
   "resources/js/Pages/Settings/CallSettings.vue": {
-    "file": "assets/CallSettings-DG2LQy7i.js",
+    "file": "assets/CallSettings-BW4styzI.js",
     "name": "CallSettings",
     "src": "resources/js/Pages/Settings/CallSettings.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
-      "_callCenterSettings-DAHOSgSo.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_callCenterSettings-CBfx5cD_.js",
       "resources/js/Pages/Settings/CallCenterModal.vue",
       "resources/js/Pages/Settings/CallCenterViewModal.vue",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2359,7 +2359,7 @@
     ]
   },
   "resources/js/Pages/Settings/ChannelForm.vue": {
-    "file": "assets/ChannelForm-22RrDqrZ.js",
+    "file": "assets/ChannelForm-BVHty3GI.js",
     "name": "ChannelForm",
     "src": "resources/js/Pages/Settings/ChannelForm.vue",
     "isDynamicEntry": true,
@@ -2372,17 +2372,17 @@
     ]
   },
   "resources/js/Pages/Settings/ExpenseCategories.vue": {
-    "file": "assets/ExpenseCategories-B8srRHwd.js",
+    "file": "assets/ExpenseCategories-BVt13RfJ.js",
     "name": "ExpenseCategories",
     "src": "resources/js/Pages/Settings/ExpenseCategories.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_toast-CD11t3BQ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2391,18 +2391,18 @@
     ]
   },
   "resources/js/Pages/Settings/ExpenseTypes.vue": {
-    "file": "assets/ExpenseTypes-C5dYAOfj.js",
+    "file": "assets/ExpenseTypes-BkGcbi7Q.js",
     "name": "ExpenseTypes",
     "src": "resources/js/Pages/Settings/ExpenseTypes.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_expenseTypeStore-DstcK_rj.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_expenseTypeStore-JWJF8uLv.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2411,16 +2411,16 @@
     ]
   },
   "resources/js/Pages/Settings/FeatureToggles.vue": {
-    "file": "assets/FeatureToggles-B8TrLKiH.js",
+    "file": "assets/FeatureToggles-Ci7IR1_b.js",
     "name": "FeatureToggles",
     "src": "resources/js/Pages/Settings/FeatureToggles.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2429,17 +2429,17 @@
     ]
   },
   "resources/js/Pages/Settings/IVROptions.vue": {
-    "file": "assets/IVROptions-dUjVCH0H.js",
+    "file": "assets/IVROptions-KDZ10D7h.js",
     "name": "IVROptions",
     "src": "resources/js/Pages/Settings/IVROptions.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2449,18 +2449,18 @@
     ]
   },
   "resources/js/Pages/Settings/Integrations.vue": {
-    "file": "assets/Integrations-Bxnb5-XD.js",
+    "file": "assets/Integrations-Bfo597YA.js",
     "name": "Integrations",
     "src": "resources/js/Pages/Settings/Integrations.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Settings/ChannelForm.vue",
       "resources/js/app.js",
-      "_toast-XlEZx6sG.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2470,7 +2470,7 @@
     ]
   },
   "resources/js/Pages/Settings/Notifications.vue": {
-    "file": "assets/Notifications-CErrf-Zm.js",
+    "file": "assets/Notifications-Baghd6Um.js",
     "name": "Notifications",
     "src": "resources/js/Pages/Settings/Notifications.vue",
     "isDynamicEntry": true,
@@ -2480,16 +2480,16 @@
     ]
   },
   "resources/js/Pages/Settings/Organization.vue": {
-    "file": "assets/Organization-B9q9e3RD.js",
+    "file": "assets/Organization-B9Z0tzuU.js",
     "name": "Organization",
     "src": "resources/js/Pages/Settings/Organization.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2498,17 +2498,17 @@
     ]
   },
   "resources/js/Pages/Settings/Pricing/ConditionTypes.vue": {
-    "file": "assets/ConditionTypes-sx6jShSz.js",
+    "file": "assets/ConditionTypes-DkyQj2Zm.js",
     "name": "ConditionTypes",
     "src": "resources/js/Pages/Settings/Pricing/ConditionTypes.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_conditionTypeStore-CBCNlX4y.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_conditionTypeStore-tRGB4NQs.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2518,19 +2518,19 @@
     ]
   },
   "resources/js/Pages/Settings/Pricing/Conditions.vue": {
-    "file": "assets/Conditions-DOC4hTuj.js",
+    "file": "assets/Conditions-DAj9Lfx0.js",
     "name": "Conditions",
     "src": "resources/js/Pages/Settings/Pricing/Conditions.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_servicesStore-B5oe2dZA.js",
-      "_conditionTypeStore-CBCNlX4y.js",
-      "_condition-BP22CBKH.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_servicesStore-B_5hM_Pq.js",
+      "_conditionTypeStore-tRGB4NQs.js",
+      "_condition-zFdeNpi8.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2539,17 +2539,17 @@
     ]
   },
   "resources/js/Pages/Settings/Pricing/Services.vue": {
-    "file": "assets/Services--T8VwvsQ.js",
+    "file": "assets/Services-BHC023zT.js",
     "name": "Services",
     "src": "resources/js/Pages/Settings/Pricing/Services.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_servicesStore-B5oe2dZA.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_servicesStore-B_5hM_Pq.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2559,16 +2559,16 @@
     ]
   },
   "resources/js/Pages/Settings/Pricing/VendorAssignments.vue": {
-    "file": "assets/VendorAssignments-BMh2BrVP.js",
+    "file": "assets/VendorAssignments-B1m6VtsG.js",
     "name": "VendorAssignments",
     "src": "resources/js/Pages/Settings/Pricing/VendorAssignments.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2577,16 +2577,16 @@
     ]
   },
   "resources/js/Pages/Settings/Pricing/VendorOverriders.vue": {
-    "file": "assets/VendorOverriders-Dsh9vkeO.js",
+    "file": "assets/VendorOverriders-Da9GX0k3.js",
     "name": "VendorOverriders",
     "src": "resources/js/Pages/Settings/Pricing/VendorOverriders.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2595,7 +2595,7 @@
     ]
   },
   "resources/js/Pages/Settings/Profile.vue": {
-    "file": "assets/Profile-BJtwqHya.js",
+    "file": "assets/Profile-jyWqtZfc.js",
     "name": "Profile",
     "src": "resources/js/Pages/Settings/Profile.vue",
     "isDynamicEntry": true,
@@ -2605,17 +2605,17 @@
     ]
   },
   "resources/js/Pages/Settings/Status.vue": {
-    "file": "assets/Status-CakdIZ2h.js",
+    "file": "assets/Status-CHfaLcCC.js",
     "name": "Status",
     "src": "resources/js/Pages/Settings/Status.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2624,16 +2624,16 @@
     ]
   },
   "resources/js/Pages/Settings/Templates.vue": {
-    "file": "assets/Templates-CHeg4mLt.js",
+    "file": "assets/Templates-Do1gAFy3.js",
     "name": "Templates",
     "src": "resources/js/Pages/Settings/Templates.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2643,16 +2643,16 @@
     ]
   },
   "resources/js/Pages/Statistics/Index.vue": {
-    "file": "assets/Index-B4SESCpc.js",
+    "file": "assets/Index-k7fXjaYh.js",
     "name": "Index",
     "src": "resources/js/Pages/Statistics/Index.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2661,16 +2661,16 @@
     ]
   },
   "resources/js/Pages/Statistics/InventoryStats.vue": {
-    "file": "assets/InventoryStats-IJkLvgnS.js",
+    "file": "assets/InventoryStats-BtK3ksQ7.js",
     "name": "InventoryStats",
     "src": "resources/js/Pages/Statistics/InventoryStats.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2679,16 +2679,16 @@
     ]
   },
   "resources/js/Pages/Statistics/ProductPerformance.vue": {
-    "file": "assets/ProductPerformance-CwpxLeJ6.js",
+    "file": "assets/ProductPerformance-CQQ21xxs.js",
     "name": "ProductPerformance",
     "src": "resources/js/Pages/Statistics/ProductPerformance.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2697,16 +2697,16 @@
     ]
   },
   "resources/js/Pages/Statistics/SalesStats.vue": {
-    "file": "assets/SalesStats-DfqnKgN1.js",
+    "file": "assets/SalesStats-BR5l0RpM.js",
     "name": "SalesStats",
     "src": "resources/js/Pages/Statistics/SalesStats.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2715,23 +2715,23 @@
     ]
   },
   "resources/js/Pages/Stock/Index.vue": {
-    "file": "assets/Index-BEA6ybJb.js",
+    "file": "assets/Index-B5cOqUvA.js",
     "name": "Index",
     "src": "resources/js/Pages/Stock/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Stock/StatCard.vue",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_search-D6kleNsY.js",
-      "_chevron-down-8uWq2qfi.js",
-      "_createLucideIcon-hv9JquAB.js",
-      "_funnel-DbrODZwm.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_search-600gHKTL.js",
+      "_chevron-down-nRMP-CJS.js",
+      "_createLucideIcon-I2Pn3u3T.js",
+      "_funnel-NyzbG0kk.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_truck-COnDGnSa.js"
+      "_truck-C7AIeIRy.js"
     ],
     "css": [
       "assets/DualDatePicker-tn0RQdqM.css",
@@ -2740,16 +2740,16 @@
     ]
   },
   "resources/js/Pages/Stock/InventoryStats.vue": {
-    "file": "assets/InventoryStats-gqCgfMMQ.js",
+    "file": "assets/InventoryStats-Cf63QDgc.js",
     "name": "InventoryStats",
     "src": "resources/js/Pages/Stock/InventoryStats.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2758,16 +2758,16 @@
     ]
   },
   "resources/js/Pages/Stock/ProductPerformance.vue": {
-    "file": "assets/ProductPerformance-DeOJtIVe.js",
+    "file": "assets/ProductPerformance-BIY0eBOw.js",
     "name": "ProductPerformance",
     "src": "resources/js/Pages/Stock/ProductPerformance.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2776,16 +2776,16 @@
     ]
   },
   "resources/js/Pages/Stock/SalesStats.vue": {
-    "file": "assets/SalesStats-CUScmlNw.js",
+    "file": "assets/SalesStats-BU8LQfsr.js",
     "name": "SalesStats",
     "src": "resources/js/Pages/Stock/SalesStats.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2794,27 +2794,27 @@
     ]
   },
   "resources/js/Pages/Stock/StatCard.vue": {
-    "file": "assets/StatCard-Cf9w9ykA.js",
+    "file": "assets/StatCard-k1xwURrB.js",
     "name": "StatCard",
     "src": "resources/js/Pages/Stock/StatCard.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_truck-COnDGnSa.js",
-      "_createLucideIcon-hv9JquAB.js",
+      "_truck-C7AIeIRy.js",
+      "_createLucideIcon-I2Pn3u3T.js",
       "resources/js/app.js"
     ]
   },
   "resources/js/Pages/Support/Contact.vue": {
-    "file": "assets/Contact-B28tTFQE.js",
+    "file": "assets/Contact-DxbudV-S.js",
     "name": "Contact",
     "src": "resources/js/Pages/Support/Contact.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2823,16 +2823,16 @@
     ]
   },
   "resources/js/Pages/Support/FAQs.vue": {
-    "file": "assets/FAQs-C0yYVAov.js",
+    "file": "assets/FAQs-CJGIGrcc.js",
     "name": "FAQs",
     "src": "resources/js/Pages/Support/FAQs.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2841,16 +2841,16 @@
     ]
   },
   "resources/js/Pages/Support/LiveChat.vue": {
-    "file": "assets/LiveChat-2EMrXCGk.js",
+    "file": "assets/LiveChat-OACMwmqT.js",
     "name": "LiveChat",
     "src": "resources/js/Pages/Support/LiveChat.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2859,16 +2859,16 @@
     ]
   },
   "resources/js/Pages/Support/Ticket.vue": {
-    "file": "assets/Ticket-E1J4_spj.js",
+    "file": "assets/Ticket-yb3CQ8q-.js",
     "name": "Ticket",
     "src": "resources/js/Pages/Support/Ticket.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -2877,23 +2877,23 @@
     ]
   },
   "resources/js/Pages/Teams/Create.vue": {
-    "file": "assets/Create-q3WLhq8L.js",
+    "file": "assets/Create-Dejmry1O.js",
     "name": "Create",
     "src": "resources/js/Pages/Teams/Create.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Teams/Partials/CreateTeamForm.vue",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_FormSection-BByWXcDQ.js",
-      "_SectionTitle-DBPTslSq.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js"
+      "_FormSection-rBTaKPy_.js",
+      "_SectionTitle-CXnmwDnf.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -2901,100 +2901,100 @@
     ]
   },
   "resources/js/Pages/Teams/Partials/CreateTeamForm.vue": {
-    "file": "assets/CreateTeamForm-CLLkBOTu.js",
+    "file": "assets/CreateTeamForm-DuR3dVUt.js",
     "name": "CreateTeamForm",
     "src": "resources/js/Pages/Teams/Partials/CreateTeamForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Teams/Partials/DeleteTeamForm.vue": {
-    "file": "assets/DeleteTeamForm-CJVD3ZrC.js",
+    "file": "assets/DeleteTeamForm-74pglgpj.js",
     "name": "DeleteTeamForm",
     "src": "resources/js/Pages/Teams/Partials/DeleteTeamForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_Modal-DC4HH8ZM.js",
-      "_ConfirmationModal-D0e2lkUP.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_Modal-CfXkFCjr.js",
+      "_ConfirmationModal-DJhltWZZ.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Teams/Partials/TeamMemberManager.vue": {
-    "file": "assets/TeamMemberManager-0Opl4JzP.js",
+    "file": "assets/TeamMemberManager-ByBoKam8.js",
     "name": "TeamMemberManager",
     "src": "resources/js/Pages/Teams/Partials/TeamMemberManager.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_Modal-DC4HH8ZM.js",
-      "_ConfirmationModal-D0e2lkUP.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_DialogModal-BxLS06pw.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_SectionBorder-BtfSWqBn.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_Modal-CfXkFCjr.js",
+      "_ConfirmationModal-DJhltWZZ.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_DialogModal-BvS8R40D.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_SectionBorder-1S2NCAmB.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Teams/Partials/UpdateTeamNameForm.vue": {
-    "file": "assets/UpdateTeamNameForm-BnD1wWxY.js",
+    "file": "assets/UpdateTeamNameForm-BSpXipcQ.js",
     "name": "UpdateTeamNameForm",
     "src": "resources/js/Pages/Teams/Partials/UpdateTeamNameForm.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_ActionMessage-COx90OJq.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js",
-      "_SectionTitle-DBPTslSq.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js",
+      "_SectionTitle-CXnmwDnf.js",
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
   "resources/js/Pages/Teams/Show.vue": {
-    "file": "assets/Show-CY34LLgg.js",
+    "file": "assets/Show-Bn16g8sj.js",
     "name": "Show",
     "src": "resources/js/Pages/Teams/Show.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/Pages/Teams/Partials/DeleteTeamForm.vue",
-      "_SectionBorder-BtfSWqBn.js",
+      "_SectionBorder-1S2NCAmB.js",
       "resources/js/Pages/Teams/Partials/TeamMemberManager.vue",
       "resources/js/Pages/Teams/Partials/UpdateTeamNameForm.vue",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
-      "_Modal-DC4HH8ZM.js",
-      "_SectionTitle-DBPTslSq.js",
-      "_ConfirmationModal-D0e2lkUP.js",
-      "_DangerButton-fd4GNrXl.js",
-      "_SecondaryButton-CNiCQGKG.js",
-      "_ActionMessage-COx90OJq.js",
-      "_DialogModal-BxLS06pw.js",
-      "_FormSection-BByWXcDQ.js",
-      "_TextInput-DPC7wukV.js",
-      "_InputLabel-B2A2gc9y.js",
-      "_PrimaryButton-7xORbI9U.js"
+      "_Modal-CfXkFCjr.js",
+      "_SectionTitle-CXnmwDnf.js",
+      "_ConfirmationModal-DJhltWZZ.js",
+      "_DangerButton-DhEQhUFl.js",
+      "_SecondaryButton-BUS_PTGn.js",
+      "_ActionMessage-BkbBJ8ql.js",
+      "_DialogModal-BvS8R40D.js",
+      "_FormSection-rBTaKPy_.js",
+      "_TextInput-DYxJTu_G.js",
+      "_InputLabel-BepWkbz2.js",
+      "_PrimaryButton-CjWzTk1P.js"
     ],
     "css": [
       "assets/ApplicationMark-K1g9RyT_.css",
@@ -3002,17 +3002,17 @@
     ]
   },
   "resources/js/Pages/TermsOfService.vue": {
-    "file": "assets/TermsOfService-9k4-UTt6.js",
+    "file": "assets/TermsOfService-BO3UzX4W.js",
     "name": "TermsOfService",
     "src": "resources/js/Pages/TermsOfService.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AuthenticationCardLogo-DqT30mGY.js"
+      "_AuthenticationCardLogo-BIfPrrtc.js"
     ]
   },
   "resources/js/Pages/TrackingPage.vue": {
-    "file": "assets/TrackingPage-Cx6nvJrE.js",
+    "file": "assets/TrackingPage-DERJJdDB.js",
     "name": "TrackingPage",
     "src": "resources/js/Pages/TrackingPage.vue",
     "isDynamicEntry": true,
@@ -3025,16 +3025,16 @@
     ]
   },
   "resources/js/Pages/Users/Invitations.vue": {
-    "file": "assets/Invitations-0GXqhT-E.js",
+    "file": "assets/Invitations-C2SR-C_q.js",
     "name": "Invitations",
     "src": "resources/js/Pages/Users/Invitations.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -3043,17 +3043,17 @@
     ]
   },
   "resources/js/Pages/Users/Permissions.vue": {
-    "file": "assets/Permissions-D_wvVUcg.js",
+    "file": "assets/Permissions-D8j4O6jt.js",
     "name": "Permissions",
     "src": "resources/js/Pages/Users/Permissions.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -3063,16 +3063,16 @@
     ]
   },
   "resources/js/Pages/Users/Roles.vue": {
-    "file": "assets/Roles-CO00-l0V.js",
+    "file": "assets/Roles-CeAfhBZY.js",
     "name": "Roles",
     "src": "resources/js/Pages/Users/Roles.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -3081,7 +3081,7 @@
     ]
   },
   "resources/js/Pages/Users/Teams.vue": {
-    "file": "assets/Teams-DDQF3Nol.js",
+    "file": "assets/Teams-Bf7255NJ.js",
     "name": "Teams",
     "src": "resources/js/Pages/Users/Teams.vue",
     "isDynamicEntry": true,
@@ -3091,16 +3091,16 @@
     ]
   },
   "resources/js/Pages/Users/UserManagement.vue": {
-    "file": "assets/UserManagement-ClUV-rYx.js",
+    "file": "assets/UserManagement-KYBwAQ3F.js",
     "name": "UserManagement",
     "src": "resources/js/Pages/Users/UserManagement.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "resources/js/app.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -3136,16 +3136,16 @@
     ]
   },
   "resources/js/Pages/Vendor/Index.vue": {
-    "file": "assets/Index-CHbwsCLR.js",
+    "file": "assets/Index-BRBWnJd4.js",
     "name": "Index",
     "src": "resources/js/Pages/Vendor/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
+      "_AppLayout-CbUX1MkI.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -3155,19 +3155,19 @@
     ]
   },
   "resources/js/Pages/Warehouse/Index.vue": {
-    "file": "assets/Index-B9Q4VsEC.js",
+    "file": "assets/Index-BW19coUM.js",
     "name": "Index",
     "src": "resources/js/Pages/Warehouse/Index.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_AppLayout-PtMAfcbJ.js",
-      "_toast-XlEZx6sG.js",
-      "_countries-qBt_5i5T.js",
-      "_orderStore-Cg-Ye88E.js",
+      "_AppLayout-CbUX1MkI.js",
+      "_toast-CD11t3BQ.js",
+      "_countries-DFCUfv33.js",
+      "_orderStore-jz32Ib0-.js",
       "__plugin-vue_export-helper-DlAUqK2U.js",
-      "_webrtc-Um8CemlU.js",
-      "_africastalking-CnRI2NWZ.js",
+      "_webrtc-ZFzkgDwI.js",
+      "_africastalking-DRfX81P4.js",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue"
     ],
     "css": [
@@ -3204,7 +3204,7 @@
     ]
   },
   "resources/js/Pages/Welcome.vue": {
-    "file": "assets/Welcome-B22Xzr6J.js",
+    "file": "assets/Welcome-Bn6KVF4I.js",
     "name": "Welcome",
     "src": "resources/js/Pages/Welcome.vue",
     "isDynamicEntry": true,
@@ -3217,7 +3217,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CcSIhvG0.js",
+    "file": "assets/app-BIgQoejj.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -3251,7 +3251,7 @@
       "resources/js/Pages/CallCenter/CallCentre.vue",
       "resources/js/Pages/CallCenter/Clients.vue",
       "resources/js/Pages/CallCenter/Contacts.vue",
-      "_CallCentreDialler-BP9Y_BTn.js",
+      "_CallCentreDialler-Dl9kiUk1.js",
       "resources/js/Pages/CallCenter/Dialogs/CallDialogs.vue",
       "resources/js/Pages/CallCenter/Dialogs/IncomingCallDialog.vue",
       "resources/js/Pages/CallCenter/Dialogs/OrderDialogs.vue",
@@ -3260,13 +3260,13 @@
       "resources/js/Pages/CallCenter/Messages.vue",
       "resources/js/Pages/CallCenter/Notes.vue",
       "resources/js/Pages/CallCenter/QuickActionsCard.vue",
-      "_Sms-B_i7XnFc.js",
+      "_Sms-wY_fVJSF.js",
       "resources/js/Pages/CallCenter/Tables/CallHistoryTable.vue",
       "resources/js/Pages/CallCenter/Tables/OrdersTable.vue",
       "resources/js/Pages/CallCenter/Telegram.vue",
       "resources/js/Pages/CallCenter/Tickets.vue",
       "resources/js/Pages/CallCenter/WhatsApp.vue",
-      "_WhatsAppConversation-D_o9P8x4.js",
+      "_WhatsAppConversation-CopZlgr9.js",
       "resources/js/Pages/Dashboard.vue",
       "resources/js/Pages/Dashboard/Activity.vue",
       "resources/js/Pages/Dashboard/Metrics.vue",
@@ -3312,7 +3312,7 @@
       "resources/js/Pages/Orders/ScanDispatch.vue",
       "resources/js/Pages/Orders/Ship.vue",
       "resources/js/Pages/Orders/Shipping.vue",
-      "_Stkpush-D73Rxy1I.js",
+      "_Stkpush-BIwsM2rl.js",
       "resources/js/Pages/PrivacyPolicy.vue",
       "resources/js/Pages/Products/Index.vue",
       "resources/js/Pages/Products/ProductCategory.vue",
@@ -3357,7 +3357,7 @@
       "resources/js/Pages/Settings/Pricing/Services.vue",
       "resources/js/Pages/Settings/Pricing/VendorAssignments.vue",
       "resources/js/Pages/Settings/Pricing/VendorOverriders.vue",
-      "_VendorServices-CfaHaazA.js",
+      "_VendorServices-BWHF4-cP.js",
       "resources/js/Pages/Settings/Profile.vue",
       "resources/js/Pages/Settings/Status.vue",
       "resources/js/Pages/Settings/Templates.vue",
@@ -3382,7 +3382,7 @@
       "resources/js/Pages/Teams/Show.vue",
       "resources/js/Pages/TermsOfService.vue",
       "resources/js/Pages/TrackingPage.vue",
-      "_UserPermissionDialog-BZltSgvO.js",
+      "_UserPermissionDialog-JNaXEL2t.js",
       "resources/js/Pages/Users/Invitations.vue",
       "resources/js/Pages/Users/Permissions.vue",
       "resources/js/Pages/Users/Roles.vue",

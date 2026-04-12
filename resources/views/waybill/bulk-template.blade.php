@@ -14,7 +14,7 @@
 
         body {
             font-family: sans-serif;
-            font-size: 13px;
+            font-size: 16px;
             font-weight: 700;
 
             color: #000;
@@ -67,22 +67,22 @@
         }
 
         .company-name {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 700;
         }
 
         .company-sub {
-            font-size: 10px;
+            font-size: 16px;
         }
 
         .addr-label {
-            font-size: 11px;
+            font-size: 16px;
             font-weight: 700;
             margin-bottom: 3px;
         }
 
         .addr-body {
-            font-size: 11px;
+            font-size: 16px;
             line-height: 1.4;
             word-break: break-word;
         }
@@ -101,7 +101,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 8px;
-            font-size: 11px;
+            font-size: 16px;
         }
 
         .data-table th,
@@ -137,7 +137,7 @@
 
         .barcode-id {
             font-family: monospace;
-            font-size: 11px;
+            font-size: 16px;
             font-weight: 700;
             margin-top: 3px;
         }
@@ -147,7 +147,7 @@
             padding: 6px;
             border: 2px solid #000;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         /* ============================= */
@@ -155,16 +155,16 @@
         /* ============================= */
 
         .delivery-label {
-            font-size: 10px;
+            font-size: 16px;
         }
 
         .delivery-date {
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 700;
         }
 
         .delivery-note {
-            font-size: 10px;
+            font-size: 16px;
             margin-top: 2px;
         }
 
@@ -176,7 +176,7 @@
             border-top: 1px solid #000;
             margin-top: 8px;
             padding-top: 4px;
-            font-size: 9px;
+            font-size: 16px;
             line-height: 1.4;
         }
 
@@ -191,7 +191,7 @@
 
         .waybill-footer {
             margin-top: 6px;
-            font-size: 9px;
+            font-size: 16px;
             text-align: center;
         }
 
@@ -212,7 +212,7 @@
             }
 
             body {
-                font-size: 11px;
+                font-size: 16px;
             }
 
             .waybill {
@@ -223,15 +223,15 @@
         /* Thermal auto-adjust */
 
         @media print and (max-width: 80mm) {
-            body { font-size: 10px; }
+            body { font-size: 16px; }
             .data-table th,
-            .data-table td { font-size: 9px; }
+            .data-table td { font-size: 16px; }
         }
 
         @media print and (max-width: 58mm) {
-            body { font-size: 9px; }
+            body { font-size: 16px; }
             .data-table th,
-            .data-table td { font-size: 8px; }
+            .data-table td { font-size: 16px; }
         }
 
     </style>

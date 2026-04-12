@@ -14,7 +14,7 @@ class ExpenseTypeController extends Controller
      */
     public function index()
     {
-        $perPage = (int) request()->query('per_page', 15);
+        $perPage = (int) request()->query('per_page', 100);
         $perPage = max(1, min(100, $perPage));
 
         $query = ExpenseType::query();
