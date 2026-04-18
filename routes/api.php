@@ -135,7 +135,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'downloadDispatchPDF']);
     Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'downloadDispatchExcel']);
 
-    // Order APIs
+    // Order API
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
     Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
     Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']);
@@ -249,6 +249,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'show']); // Show a specific product
     Route::put('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'update']); // Update a specific product
     Route::delete('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'destroy']); // Delete a specific product
+
+    // landing page
+
+    Route::get('/product/{slug}', [\App\Http\Controllers\Api\ProductController::class, 'landingPage']); // Get landing page data for a product
 
 
     //     // prodcuts of a vendor
@@ -541,6 +545,8 @@ Route::prefix('v1')->group(function () {
     Route::delete('/service-conditions/{id}', [ServiceConditionController::class, 'destroy']);
 
 
+
+
     // assign vendor a service 
 
     Route::post('/vendors/{vendorId}/services', [VendorServicesController::class, 'assignService']);
@@ -628,6 +634,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'show']);
     Route::put('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'update']);
     Route::delete('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'destroy']);
+    Route::get('/remittances/{id}/excel', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadExcel']);
+    Route::get('/remittances/{id}/pdf', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadPdf']);
+
+
+
 
 
 

@@ -4,6 +4,7 @@ namespace App\Services\Remittance;
 
 use App\Models\Order;
 use App\Models\Remittance;
+use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -73,6 +74,9 @@ class RemittanceCalculationService
             ->get();
     }
 
+
+
+
     protected function calculateTotals($orders): array
     {
         $resolver = new ServiceFeeResolver($this->vendorId);
@@ -84,16 +88,19 @@ class RemittanceCalculationService
         ];
 
         foreach ($orders as $order) {
+
             $status = strtolower(optional($order->latest_status->status)->name);
 
             if ($status === 'delivered') {
                 $totals['total_collected'] += $order->total_price;
-                Log::debug("Order {$order->id} is delivered, added {$order->total_price}");
             }
 
             $fees = $resolver->calculateOrderFees($order);
 
-            foreach ($fees as $service => $amount) {
+            foreach ($fees as $service => $data) {
+
+                $amount = $data['amount']; // ✅ FIX HERE
+
                 $totals['service_breakdown'][$service] =
                     ($totals['service_breakdown'][$service] ?? 0) + $amount;
 
@@ -143,6 +150,9 @@ class RemittanceCalculationService
     }
 
 
+
+
+
     protected function createRemittanceOrders($orders, Remittance $remittance)
     {
         $resolver = new ServiceFeeResolver($this->vendorId);
@@ -151,7 +161,8 @@ class RemittanceCalculationService
 
             $fees = $resolver->calculateOrderFees($order);
 
-            $totalFees = array_sum($fees);
+            // ✅ FIX: sum only amounts
+            $totalFees = collect($fees)->sum('amount');
 
             $cod = strtolower(optional($order->latest_status->status)->name) === 'delivered'
                 ? $order->total_price
@@ -171,14 +182,29 @@ class RemittanceCalculationService
 
 
 
+
+
     protected function createOrderCharges($remittanceOrder, array $fees)
     {
-        foreach ($fees as $service => $amount) {
+        // 1. Load all services once (FIXED key)
+        $services = Service::whereIn('service_name', array_keys($fees))
+            ->get()
+            ->keyBy('service_name');
+
+        foreach ($fees as $serviceName => $data) {
+
+            $service = $services->get($serviceName);
 
             \App\Models\RemittanceOrderCharge::create([
                 'remittance_order_id' => $remittanceOrder->id,
-                'service_name' => $service,
-                'amount' => $amount
+                'service_name' => $serviceName,
+                'amount' => $data['amount'] ?? 0,
+
+                'service_id' => $service?->id, // safe fallback
+
+                // ✅ REQUIRED FIELDS
+                'rate_value' => $data['rate_value'] ?? null,
+                'rate_type'  => $data['rate_type'] ?? null,
             ]);
         }
     }

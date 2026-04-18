@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class RemittanceOrderCharge extends Model
 {
     use HasFactory;
-    use SoftDeletes;
+    // use SoftDeletes;    
 
     protected $fillable = [
         'remittance_order_id',

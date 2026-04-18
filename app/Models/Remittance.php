@@ -134,4 +134,19 @@ class Remittance extends Model
     {
         return $this->belongsTo(Remittance::class, 'debt_invoice_id');
     }
+
+
+    public function remittanceOrders()
+    {
+        return $this->hasMany(RemittanceOrder::class);
+    }
+
+
+    public function charges()
+    {
+        return $this->hasManyThrough(
+            RemittanceOrderCharge::class,
+            RemittanceOrder::class
+        );
+    }
 }

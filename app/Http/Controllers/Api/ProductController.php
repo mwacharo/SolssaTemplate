@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 
+use Illuminate\Support\Str;
+
+
 
 class ProductController extends Controller
 {
@@ -91,6 +94,82 @@ class ProductController extends Controller
     }
 
 
+
+    public function landingPage($id)
+    {
+        Log::info('Fetching landing page data for product', ['identifier' => $id]);
+
+        // 1. Try to find product by ID OR slug (grouped to respect global scopes)
+        $product = Product::with([
+            'ProductSections' => function ($q) {
+                $q->where('is_active', true)
+                    ->orderBy('sort_order');
+            },
+            'bundles',
+            'offers',
+            'reviews',
+            'faqs',
+            'testimonials',
+            'delivery',
+            'conversion',
+            'images',
+
+        ])->where(function ($q) use ($id) {
+            $q->where('id', $id)
+                ->orWhere('slug', $id);
+        })->first();
+
+        // 2. If not found → 404
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        // 3. Ensure slug exists (auto-generate if missing)
+        if (!$product->slug) {
+            $product->slug = Str::slug($product->product_name);
+            $product->save();
+        }
+
+        // 4. Build Conversion OS response
+        return response()->json([
+            'product' => [
+                'id'          => $product->id,
+                'name'        => $product->product_name,
+                'sku'         => $product->sku,
+                'slug'        => $product->slug,
+                'description' => $product->description,
+                'media'       => $product->media,
+                'images'      => $product->images,
+                'price'       => $product->prices,
+            ],
+
+            // 🧠 PAGE STRUCTURE (SalesPage.jsx consumes this)
+            'sections' => $product->ProductSections,
+
+            // 💰 OFFER ENGINE
+            'bundles' => $product->bundles,
+            'offers'  => $product->offers,
+
+            // 🛡️ TRUST ENGINE
+            'reviews'      => $product->reviews,
+            'faqs'         => $product->faqs,
+            'testimonials' => $product->testimonials,
+
+            // 🚚 LOGISTICS
+            'delivery' => $product->delivery,
+
+            // ⚡ CONVERSION ENGINE
+            'conversion' => $product->conversion,
+
+            // 📊 OPTIONAL TRACKING INIT
+            'tracking' => [
+                'product_id'     => $product->id,
+                'event_endpoint' => '/api/product-events'
+            ]
+        ]);
+    }
     // Create new product (vendor scoped)
     // public function store(StoreProductRequest $request): JsonResponse
     // {

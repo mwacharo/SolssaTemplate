@@ -114,7 +114,14 @@
                                         icon="mdi-download"
                                         size="small"
                                         variant="text"
-                                        @click="downloadInvoice(invoice)"
+                                        @click="downloadPdf(invoice)"
+                                    />
+
+                                    <v-btn
+                                        icon="mdi-file-excel"
+                                        size="small"
+                                        variant="text"
+                                        @click="downloadExcel(invoice)"
                                     />
                                 </td>
                             </tr>
@@ -646,8 +653,12 @@ const generateInvoice = async () => {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const viewInvoice = (invoice) => router.visit(`/vendor-invoices/${invoice.id}`);
-const downloadInvoice = (invoice) =>
-    window.open(`/vendor-invoices/${invoice.id}/download`, "_blank");
+
+const downloadPdf = (invoice) =>
+    window.open(`/api/v1/remittances/${invoice.id}/pdf`, "_blank");
+
+const downloadExcel = (invoice) =>
+    window.open(`/api/v1/remittances/${invoice.id}/excel`, "_blank");
 
 const showSnackbar = (text, color = "success") => {
     snackbarText.value = text;

@@ -11,6 +11,7 @@ class ProductPrice extends Model
         'product_id',
         'vendor_id',
         'base_price',
+        'old_price',
         'discount_price',
         'cost_price',
         'wholesale_price',

@@ -17,6 +17,7 @@ class ProductResource extends JsonResource
         return [
             'id' => $this->id,
             'product_name' => $this->product_name,
+            'slug' => $this->slug,
             'sku' => $this->sku,
             'description' => $this->description,
             'category_id' => $this->category_id,
@@ -43,6 +44,7 @@ class ProductResource extends JsonResource
             'variants'   => $this->whenLoaded('variants'),
             'statistics' => $this->whenLoaded('statistics'),
             'offers'     => $this->whenLoaded('offers'),
-            'images'     => $this->whenLoaded('images'),    ];
+            'images'     => $this->whenLoaded('images'),
+        ];
     }
 }

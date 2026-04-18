@@ -12,9 +12,9 @@ use App\Traits\BelongsToUserAndCountry;
 
 class Product extends Model
 {
-    use HasFactory, LogsActivity,SoftDeletes;
-        use BelongsToVendor;
-            use BelongsToUserAndCountry;
+    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToVendor;
+    use BelongsToUserAndCountry;
 
 
 
@@ -25,6 +25,7 @@ class Product extends Model
         'vendor_id',
         'product_name',
         'description',
+        'slug',
     ];
 
     // Spatie Activitylog configuration
@@ -46,12 +47,12 @@ class Product extends Model
             ->useLogName('product');
     }
 
-   
+
 
     public function vendor()
-{
-    return $this->belongsTo(\App\Models\User::class, 'vendor_id');
-}
+    {
+        return $this->belongsTo(\App\Models\User::class, 'vendor_id');
+    }
 
 
     public function category()
@@ -59,7 +60,7 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-   
+
     public function statistics()
     {
         return $this->hasOne(ProductStatistic::class);
@@ -69,7 +70,7 @@ class Product extends Model
     {
         return $this->hasMany(ProductPrice::class);
     }
-     public function stocks()
+    public function stocks()
     {
         return $this->hasMany(ProductStock::class);
     }
@@ -96,12 +97,60 @@ class Product extends Model
     }
 
 
-     public function attributeValues()
+    public function attributeValues()
     {
         return $this->hasMany(\App\Models\ProductAttributeValue::class, 'product_id');
     }
 
+    public function ProductSections()
+    {
+        return $this->hasMany(ProductSection::class);
+    }
 
-// product belongs to a warehouse
-// product belongs to a country 
+    public function reviews()
+    {
+        return $this->hasMany(ProductReview::class);
+    }
+
+    public function faqs()
+    {
+        return $this->hasMany(ProductFaq::class);
+    }
+
+    public function testimonials()
+    {
+        return $this->hasMany(ProductTestimonial::class);
+    }
+
+    public function bundles()
+    {
+        return $this->hasMany(ProductBundle::class);
+    }
+
+    public function conversion()
+    {
+        return $this->hasOne(ProductConversion::class);
+    }
+
+
+
+    public function delivery()
+    {
+        return $this->hasMany(ProductDelivery::class);
+    }
+
+    public function leads()
+    {
+        return $this->hasMany(ProductLead::class);
+    }
+
+
+    public function ProductEvents()
+    {
+        return $this->hasMany(ProductEvent::class);
+    }
+
+
+    // product belongs to a warehouse
+    // product belongs to a country 
 }
