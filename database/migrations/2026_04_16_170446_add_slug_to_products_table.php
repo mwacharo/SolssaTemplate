@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('products', function (Blueprint $table) {
             //
 
-            $table->string('slug')->unique();
+            $table->string('slug')->nullable()->unique();
         });
     }
 
