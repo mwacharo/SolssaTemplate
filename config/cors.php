@@ -26,7 +26,7 @@ return [
         'https://mwamkoherbs.vercel.app',
         'https://shoebucket.vercel.app',
         'https://alphaherb.vercel.app',
-        'https://ken-norla.vercel.app/',
+        'https://ken-norla.vercel.app',
 
         'http://localhost:5174',
         'http://127.0.0.1:5174',
