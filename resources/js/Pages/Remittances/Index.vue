@@ -103,12 +103,12 @@
                                     /> 
                                     -->
 
-                                    <v-btn
+                                    <!-- <v-btn
                                         icon="mdi-eye"
                                         size="small"
                                         variant="text"
                                         @click="openDialog(invoice)"
-                                    />
+                                    /> -->
 
                                     <v-btn
                                         icon="mdi-download"

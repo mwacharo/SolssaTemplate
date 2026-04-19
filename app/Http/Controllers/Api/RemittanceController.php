@@ -108,74 +108,113 @@ class RemittanceController extends Controller
     public function downloadExcel($id)
     {
         $remittance = Remittance::with([
-            'vendor',
+            'vendor.country.waybillSettings',
             'remittanceOrders.order.customer',
             'remittanceOrders.order.orderItems',
             'remittanceOrders.charges.service',
             'remittanceOrders.order.latest_status.status',
         ])->findOrFail($id);
+
+        // Identical logic to downloadPdf() — same $serviceColumns, same $company
+        $serviceColumns = $remittance->remittanceOrders
+            ->flatMap(fn($ro) => $ro->charges ?? collect())
+            ->filter(fn($charge) => $charge->service !== null)
+            ->mapWithKeys(fn($charge) => [
+                $charge->service_id => $charge->service->service_name,
+            ])
+            ->sortKeys()
+            ->all();
+
+        $company = $this->getCompanyDetails($remittance->vendor ?? null);
 
         $fileName = $this->generateFileName($remittance, 'xlsx');
 
         return Excel::download(
-            new RemittanceExport($remittance),
+            new RemittanceExport(
+                $remittance,
+                $serviceColumns,
+                $company,
+                optional($remittance->payment_period_start)->format('d M Y'),
+                Carbon::parse($remittance->payment_period_end)->format('d M Y'),
+            ),
             $fileName
         );
     }
 
+
+
     public function downloadPdf($id)
     {
         $remittance = Remittance::with([
-            'vendor',
+            'vendor.country.waybillSettings',           // User → Country → WaybillSetting
             'remittanceOrders.order.customer',
             'remittanceOrders.order.orderItems',
             'remittanceOrders.charges.service',
             'remittanceOrders.order.latest_status.status',
         ])->findOrFail($id);
 
-        // log the remmittance for debughing purposes 
-
-
-
-        // Log::info('Remittance Debug', [
-        //     'id' => $remittance->id,
-        //     'vendor' => $remittance->vendor->name ?? null,
-        //     'orders_count' => $remittance->remittanceOrders->count(),
-        // ]);
-
         Log::info('Remittance Full JSON', $remittance->toArray());
 
+        // ── 1. Dynamic service columns ────────────────────────────────────────────
+        // Collect every unique service this vendor was charged for, keyed by service_id.
+        // Result: [ 6 => 'Outbound Delivery Fee', 9 => 'Return Fee', ... ]
+        $serviceColumns = $remittance->remittanceOrders
+            ->flatMap(fn($ro) => $ro->charges ?? collect())
+            ->filter(fn($charge) => $charge->service !== null)
+            ->mapWithKeys(fn($charge) => [
+                $charge->service_id => $charge->service->service_name,
+            ])
+            ->sortKeys()
+            ->all();
 
+        // ── 2. Company details from vendor → country → waybillSettings ────────────
+        $company = $this->getCompanyDetails($remittance->vendor ?? null);
+
+        // ── 3. Render PDF ─────────────────────────────────────────────────────────
         $fileName = $this->generateFileName($remittance, 'pdf');
 
         $pdf = Pdf::loadView('remittance.report', [
-            'remittance' => $remittance,
-            'startDate' => optional($remittance->payment_period_start)->format('d M Y'),
-            'endDate' => optional($remittance->payment_period_end)->format('d M Y'),
+            'remittance'     => $remittance,
+            'startDate'      => optional($remittance->payment_period_start)->format('d M Y'),
+            'endDate'        => Carbon::parse($remittance->payment_period_end)->format('d M Y'),
+            'serviceColumns' => $serviceColumns,
+            'company'        => $company,
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download($fileName);
     }
 
 
-
-    private function generateFileName($remittance, $type = 'xlsx')
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Resolve company branding from:
+    //   Remittance → vendor (User) → country (Country) → waybillSettings (WaybillSetting)
+    //
+    // All three relationships are already eager-loaded — no extra queries.
+    // ─────────────────────────────────────────────────────────────────────────────
+    private function getCompanyDetails(?\App\Models\User $vendor): array
     {
-        $vendor = $remittance->vendor->name ?? 'vendor';
+        $waybill = $vendor?->country?->waybillSettings ?? null;
 
-        // Clean vendor name (no spaces/special chars)
-        $vendor = Str::slug($vendor, '_');
+        return [
+            'name'     => $waybill?->name      ?? 'COURIER AND FULFILLMENT SERVICES',
+            'phone'    => $waybill?->phone     ?? '',
+            'email'    => $waybill?->email     ?? '',
+            'address'  => $waybill?->address   ?? '',
+            'logo'     => $waybill?->logo_path ?? null,
+            'footer'   => $waybill?->footer    ?? '',
+            'terms'    => $waybill?->terms     ?? '',
+        ];
+    }
 
-        $date = optional($remittance->payment_period_end)->format('d-m-Y');
 
+    private function generateFileName($remittance, $type = 'xlsx'): string
+    {
+        $vendor  = Str::slug($remittance->vendor->name ?? 'vendor', '_');
+        $date    = Carbon::parse($remittance->payment_period_end)->format('d-m-Y');
         $invoice = $remittance->invoice_number
             ? '_INV_' . Str::slug($remittance->invoice_number)
             : '';
 
-        return strtoupper($vendor)
-            . '_REMITTANCE'
-            . $invoice
-            . '_' . $date
-            . '.' . $type;
+        return strtoupper($vendor) . '_REMITTANCE' . $invoice . '_' . $date . '.' . $type;
     }
 }
