@@ -46,16 +46,16 @@ const togglePasswordVisibility = () => {
                 <v-row no-gutters class="fill-height">
                     <!-- Left Side (Brand) -->
                     <!-- #E4572E -->
-                    <v-col
+                    <!-- <v-col
                         cols="12"
                         md="6"
                         class="bg-primary d-flex align-center"
-                    >
-                        <!-- <v-col
+                    > -->
+                    <v-col
                         cols="12"
                         md="6"
                         class="bg-custom-orange d-flex align-center"
-                    > -->
+                    >
                         <v-container>
                             <v-row
                                 justify="center"
@@ -67,13 +67,13 @@ const togglePasswordVisibility = () => {
                                         class="pa-4 pa-md-8 text-center text-md-left"
                                     >
                                         <!-- <h1 class="text-h2 font-weight-bold text-white mb-4">Solssa</h1> -->
-                                        <h2 class="text-h4 text-white mb-8">
-                                            Customer Support
-                                        </h2>
-
                                         <!-- <h2 class="text-h4 text-white mb-8">
-                                            RushBin
+                                            Customer Support
                                         </h2> -->
+
+                                        <h2 class="text-h4 text-white mb-8">
+                                            RushBin
+                                        </h2>
                                         <v-btn
                                             variant="outlined"
                                             color="white"
@@ -81,9 +81,9 @@ const togglePasswordVisibility = () => {
                                             class="mt-4"
                                             rounded="md"
                                         >
-                                            We Tailor Your Coat →
+                                            <!-- We Tailor Your Coat → -->
 
-                                            <!-- Africa's Premier Fulfillment Partner -->
+                                            Africa's Premier Fulfillment Partner
                                         </v-btn>
                                     </div>
                                 </v-col>
@@ -155,7 +155,7 @@ const togglePasswordVisibility = () => {
                                     ></v-checkbox>
 
                                     <!-- Submit Button -->
-                                    <v-btn
+                                    <!-- <v-btn
                                         @click="submit"
                                         color="primary"
                                         block
@@ -164,9 +164,9 @@ const togglePasswordVisibility = () => {
                                         class="mb-4"
                                     >
                                         Log In
-                                    </v-btn>
+                                    </v-btn> -->
 
-                                    <!-- <v-btn
+                                    <v-btn
                                         @click="submit"
                                         block
                                         size="large"
@@ -174,7 +174,7 @@ const togglePasswordVisibility = () => {
                                         class="mb-4 bg-custom-orange text-white"
                                     >
                                         Log In
-                                    </v-btn> -->
+                                    </v-btn>
 
                                     <!-- Links -->
                                     <div class="d-flex flex-column gap-2 mt-4">
