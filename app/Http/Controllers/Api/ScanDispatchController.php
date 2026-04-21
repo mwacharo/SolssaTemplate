@@ -30,8 +30,7 @@ class ScanDispatchController extends Controller
         protected AdvantaSmsService $smsService,
         protected DispatchService $dispatchService
 
-    ) 
-    {}
+    ) {}
 
     /**
      * Look up a single order by tracking number.
@@ -722,7 +721,7 @@ class ScanDispatchController extends Controller
             'order_ids.*' => ['required', 'integer', 'exists:orders,id'],
         ]);
 
-        return $this->dispatchService->generateDispatchPDF($request->order_ids);
+        return $this->dispatchService->generateDispatchPDF($request);
     }
 
     public function downloadDispatchExcel(Request $request)

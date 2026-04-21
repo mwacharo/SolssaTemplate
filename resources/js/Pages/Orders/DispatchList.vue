@@ -1157,15 +1157,25 @@ const resetFilters = () => {
 
 // const downloadDispatchExcel = async () => {
 //     try {
-//         const res = await axios.post("/api/v1/orders/dispatch/excel", {
-//             responseType: "blob",
-//         });
+//         const res = await axios.post(
+//             "/api/v1/orders/dispatch/excel",
+//             {
+//                 order_ids: selectedOrders.value, // ✅ FIX HERE
+//             },
+//             {
+//                 responseType: "blob",
+//             },
+//         );
+
 //         const url = window.URL.createObjectURL(new Blob([res.data]));
 //         const link = document.createElement("a");
 //         link.href = url;
 //         link.setAttribute("download", "dispatch.xlsx");
 //         document.body.appendChild(link);
 //         link.click();
+
+//         window.URL.revokeObjectURL(url);
+//         link.remove();
 //     } catch (err) {
 //         console.error("Failed to download dispatch Excel", err);
 //     }
@@ -1173,70 +1183,101 @@ const resetFilters = () => {
 
 // const downloadDispatchPDF = async () => {
 //     try {
-//         const res = await axios.post("/api/v1/orders/dispatch/pdf", {
-//             responseType: "blob",
-//         });
+//         const res = await axios.post(
+//             "/api/v1/orders/dispatch/pdf",
+//             {
+//                 order_ids: selectedOrders.value, // ✅ FIX HERE
+//                 // pass filteroptions if needed to generate PDF for current filters instead of selected orders
+
+//                 ...filters.value,
+//             },
+//             {
+//                 responseType: "blob",
+//             },
+//         );
+
 //         const url = window.URL.createObjectURL(new Blob([res.data]));
 //         const link = document.createElement("a");
 //         link.href = url;
 //         link.setAttribute("download", "dispatch.pdf");
 //         document.body.appendChild(link);
 //         link.click();
+
+//         window.URL.revokeObjectURL(url);
+//         link.remove();
 //     } catch (err) {
 //         console.error("Failed to download dispatch PDF", err);
 //     }
 // };
 
+// ─── Download PDF (with applied filters) ──────────────────────────────────
+const downloadDispatchPDF = async () => {
+    if (!selectedOrders.value.length) {
+        alert("Please select at least one order to download.");
+        return;
+    }
+    try {
+        const res = await axios.post(
+            "/api/v1/orders/dispatch/pdf",
+            {
+                order_ids: selectedOrders.value,
+                // Applied filter context — sent so the backend can label/scope the PDF
+                city_to: filters.value.cityTo || null,
+                zone_to: filters.value.zoneTo || null,
+                delivery_man: filters.value.deliveryMan || null,
+                courrier: filters.value.courrier || null,
+                seller: filters.value.seller || null,
+                status: filters.value.status || null,
+                dispatched_on: filters.value.dispatchedOn || null,
+                shipped_on: filters.value.shippedOn || null,
+            },
+            { responseType: "blob" },
+        );
+        triggerDownload(res.data, "dispatch.pdf");
+    } catch (err) {
+        console.error("Failed to download dispatch PDF", err);
+    }
+};
+
+// ─── Download Excel (with applied filters) ────────────────────────────────
 const downloadDispatchExcel = async () => {
+    if (!selectedOrders.value.length) {
+        alert("Please select at least one order to download.");
+        return;
+    }
     try {
         const res = await axios.post(
             "/api/v1/orders/dispatch/excel",
             {
-                order_ids: selectedOrders.value, // ✅ FIX HERE
+                order_ids: selectedOrders.value,
+                // Applied filter context
+                city_to: filters.value.cityTo || null,
+                zone_to: filters.value.zoneTo || null,
+                delivery_man: filters.value.deliveryMan || null,
+                courrier: filters.value.courrier || null,
+                seller: filters.value.seller || null,
+                status: filters.value.status || null,
+                dispatched_on: filters.value.dispatchedOn || null,
+                shipped_on: filters.value.shippedOn || null,
             },
-            {
-                responseType: "blob",
-            },
+            { responseType: "blob" },
         );
-
-        const url = window.URL.createObjectURL(new Blob([res.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "dispatch.xlsx");
-        document.body.appendChild(link);
-        link.click();
-
-        window.URL.revokeObjectURL(url);
-        link.remove();
+        triggerDownload(res.data, "dispatch.xlsx");
     } catch (err) {
         console.error("Failed to download dispatch Excel", err);
     }
 };
 
-const downloadDispatchPDF = async () => {
-    try {
-        const res = await axios.post(
-            "/api/v1/orders/dispatch/pdf",
-            {
-                order_ids: selectedOrders.value, // ✅ FIX HERE
-            },
-            {
-                responseType: "blob",
-            },
-        );
-
-        const url = window.URL.createObjectURL(new Blob([res.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "dispatch.pdf");
-        document.body.appendChild(link);
-        link.click();
-
-        window.URL.revokeObjectURL(url);
-        link.remove();
-    } catch (err) {
-        console.error("Failed to download dispatch PDF", err);
-    }
+// ─── Shared blob download helper ──────────────────────────────────────────
+const triggerDownload = (data, filename) => {
+    const url = window.URL.createObjectURL(new Blob([data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    window.URL.revokeObjectURL(url);
+    link.remove();
 };
 
 const sendToInTransit = async () => {
