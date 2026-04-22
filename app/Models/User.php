@@ -230,4 +230,15 @@ class User extends Authenticatable
             ->where('country_id', $this->country_id)
             ->first();
     }
+
+    public function hasService(string $serviceSlug): bool
+    {
+        return $this->services()
+            ->where('is_active', 1)
+            ->whereHas('service', function ($q) use ($serviceSlug) {
+                // $q->where('slug', $serviceSlug);
+                $q->where('service_name', $serviceSlug);
+            })
+            ->exists();
+    }
 }

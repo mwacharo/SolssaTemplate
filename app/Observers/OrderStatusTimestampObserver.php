@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\OrderStatusTimestamp;
 use App\Services\StockService;
 use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class OrderStatusTimestampObserver
 {
@@ -17,12 +18,16 @@ class OrderStatusTimestampObserver
 
 
 
-
-
-
-
     public function created(OrderStatusTimestamp $statusTimestamp)
     {
+        $order = $statusTimestamp->order;
+
+        $vendor = $order->vendor;
+
+        if (!$vendor->hasService('warehousing')) {
+            return;
+        }
+
         $this->stockService->applyForStatus($statusTimestamp);
     }
 }
