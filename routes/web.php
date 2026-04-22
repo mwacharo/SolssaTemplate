@@ -144,7 +144,9 @@ Route::middleware([
 ])->group(function () {
 
     // Dashboard Main & Subviews
-    Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
+    // Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/dashboard', fn() => Inertia::render('Dashboard/Metrics'))->name('metrics');
+
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/metrics', fn() => Inertia::render('Dashboard/Metrics'))->name('metrics');
         Route::get('/activity', fn() => Inertia::render('Dashboard/Activity'))->name('activity');
@@ -198,7 +200,7 @@ Route::middleware([
 
 
         // report order management routes
-        
+
         Route::get('/generate', fn() => Inertia::render('Reports/GenerateReport'))->name('generate');
         Route::get('/export', fn() => Inertia::render('Reports/Export'))->name('export');
         Route::get('/schedule', fn() => Inertia::render('Reports/Schedule'))->name('schedule');
