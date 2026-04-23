@@ -9,6 +9,7 @@ use App\Jobs\AdvantaSmsJob;
 use App\Models\OrderAssignment;
 use App\Models\OrderEvent;
 use App\Models\OrderStatusTimestamp;
+use App\Models\Status;
 use App\Models\WaybillSetting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\JsonResponse;
 
 use App\Services\MessageTemplateService;
+use Illuminate\Support\Facades\Cache;
 
 
 class OrderBulkActionService
@@ -317,71 +319,70 @@ class OrderBulkActionService
 
 
     public function updateStatus(array $orderIds, int $statusId, ?string $statusNotes = null): void
-{
-    $templateService = app(MessageTemplateService::class);
-    $transitionService = app(\App\Services\StatusTransitionService::class);
+    {
+        $templateService = app(MessageTemplateService::class);
+        $transitionService = app(\App\Services\StatusTransitionService::class);
 
-    $newStatus = \App\Models\Status::findOrFail($statusId);
+        $newStatus = \App\Models\Status::findOrFail($statusId);
 
-    foreach ($orderIds as $orderId) {
-        try {
-            $order = Order::with('latestStatus.status')->findOrFail($orderId);
+        foreach ($orderIds as $orderId) {
+            try {
+                $order = Order::with('latestStatus.status')->findOrFail($orderId);
 
-            // ─────────────────────────────
-            // OBEY TRANSITION RULES
-            // ─────────────────────────────
-            $transitionService->apply(
-                $order,
-                $newStatus->name,
-                $statusNotes
-            );
+                // ─────────────────────────────
+                // OBEY TRANSITION RULES
+                // ─────────────────────────────
+                $transitionService->apply(
+                    $order,
+                    $newStatus->name,
+                    $statusNotes
+                );
 
-            // ─────────────────────────────
-            // SMS NOTIFICATION
-            // ─────────────────────────────
-            $phone = $order->customer?->phone;
+                // ─────────────────────────────
+                // SMS NOTIFICATION
+                // ─────────────────────────────
+                $phone = $order->customer?->phone;
 
-            if (!$phone) {
-                Log::warning("Customer phone missing", ['order_id' => $orderId]);
-                continue;
-            }
+                if (!$phone) {
+                    Log::warning("Customer phone missing", ['order_id' => $orderId]);
+                    continue;
+                }
 
-            $result = $templateService->generateMessage(
-                phone: $phone,
-                templateSlug: $newStatus->name,
-                additionalData: ['order_id' => $orderId]
-            );
+                $result = $templateService->generateMessage(
+                    phone: $phone,
+                    templateSlug: $newStatus->name,
+                    additionalData: ['order_id' => $orderId]
+                );
 
-            if (empty($result['message'])) {
-                Log::warning("Generated message is empty", [
+                if (empty($result['message'])) {
+                    Log::warning("Generated message is empty", [
+                        'order_id'  => $orderId,
+                        'status_id' => $statusId,
+                    ]);
+                    continue;
+                }
+
+                AdvantaSmsJob::dispatch(
+                    recipients: $phone,
+                    messageContent: $result['message'],
+                    userId: $order->user_id,
+                );
+            } catch (\RuntimeException $e) {
+                // Transition validation failure — log and skip, don't crash the batch
+                Log::warning('StatusTransitionService: Invalid transition', [
                     'order_id'  => $orderId,
                     'status_id' => $statusId,
+                    'reason'    => $e->getMessage(),
                 ]);
-                continue;
+            } catch (\Throwable $e) {
+                Log::error("Failed updating order status", [
+                    'order_id'  => $orderId,
+                    'status_id' => $statusId,
+                    'error'     => $e->getMessage(),
+                ]);
             }
-
-            AdvantaSmsJob::dispatch(
-                recipients: $phone,
-                messageContent: $result['message'],
-                userId: $order->user_id,
-            );
-
-        } catch (\RuntimeException $e) {
-            // Transition validation failure — log and skip, don't crash the batch
-            Log::warning('StatusTransitionService: Invalid transition', [
-                'order_id'  => $orderId,
-                'status_id' => $statusId,
-                'reason'    => $e->getMessage(),
-            ]);
-        } catch (\Throwable $e) {
-            Log::error("Failed updating order status", [
-                'order_id'  => $orderId,
-                'status_id' => $statusId,
-                'error'     => $e->getMessage(),
-            ]);
         }
     }
-}
 
     // bulk delete orders
 
@@ -503,19 +504,151 @@ class OrderBulkActionService
         return $pdf->stream("waybill_{$order->order_no}.pdf");
     }
 
-    /**
-     * Print waybill PDF for multiple orders (bulk).
-     */
-    public function printWaybills(array $ids)
+    // /**
+    //  * Print waybill PDF for multiple orders (bulk).
+    //  */
+    // public function printWaybills(array $ids)
+    // {
+    //     $orders = Order::with([
+    //         'customer',
+    //         'customer.city',
+    //         'customer.zone',
+    //         'orderItems.product',
+    //         'vendor',
+    //         'rider',
+    //         'agent'
+    //     ])
+    //         ->whereIn('id', $ids)
+    //         ->whereNull('deleted_at')
+    //         ->get();
+
+    //     if ($orders->isEmpty()) {
+    //         throw new \Exception("No orders found for given IDs");
+    //     }
+
+    //     // Get waybill settings
+    //     $company = WaybillSetting::first();
+
+    //     // Handle company settings safely (same logic as single print)
+    //     if (!$company) {
+    //         $company = (object) [
+    //             'name' => config('app.name', 'Your Company'),
+    //             'phone' => '',
+    //             'email' => '',
+    //             'address' => '',
+    //             'template_name' => 'Express Courier',
+    //             'options' => (object) ['color' => 'blue', 'size' => 'A6'],
+    //             'terms' => 'Standard terms and conditions apply.',
+    //             'footer' => 'Terms & Conditions',
+    //             'brand_color' => '#667eea'
+    //         ];
+    //     } else {
+    //         if (isset($company->options)) {
+    //             if (is_string($company->options)) {
+    //                 try {
+    //                     $company->options = json_decode($company->options);
+    //                     if (json_last_error() !== JSON_ERROR_NONE) {
+    //                         $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+    //                     }
+    //                 } catch (\Exception $e) {
+    //                     Log::error('Error decoding company options in printWaybills', ['error' => $e->getMessage()]);
+    //                     $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+    //                 }
+    //             } elseif (is_array($company->options)) {
+    //                 $company->options = (object) $company->options;
+    //             } elseif (!is_object($company->options)) {
+    //                 $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+    //             }
+    //         } else {
+    //             $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
+    //         }
+
+    //         if (!isset($company->brand_color)) {
+    //             $company->brand_color = '#667eea';
+    //         }
+    //     }
+
+    //     // Generate barcodes for each order
+    //     $generator = new BarcodeGeneratorHTML();
+    //     $waybills = [];
+    //     // Log the orders for debugging
+    //     Log::info('Bulk waybill orders:', ['orders' => $orders->toArray()]);
+    //     foreach ($orders as $order) {
+    //         $waybills[] = [
+    //             'order' => $order,
+    //             'barcode' => $generator->getBarcode(
+    //                 $order->order_no,
+    //                 $generator::TYPE_CODE_128,
+    //                 2,
+    //                 50
+    //             ),
+    //             'company' => $company
+    //         ];
+    //     }
+
+    //     // Determine paper size
+    //     $paperSize = 'a6';
+    //     if (isset($company->options->size)) {
+    //         $paperSize = strtolower($company->options->size);
+    //     }
+
+
+
+    //     // It will dump everything to Laravel log so you can see exactly what's wrong.
+
+    //     $logoRel    = $company->logo_path ?? $company->logo ?? 'images/rushbin-logo.png';
+    //     $logoRel    = ltrim($logoRel, '/');
+    //     $logoAbs    = public_path($logoRel);
+    //     $logoExists = file_exists($logoAbs);
+
+    //     Log::debug('=== LOGO DEBUG ===', [
+    //         'company->logo_path'   => $company->logo_path ?? 'NOT SET',
+    //         'company->logo'        => $company->logo       ?? 'NOT SET',
+    //         'resolved_relative'    => $logoRel,
+    //         'resolved_absolute'    => $logoAbs,
+    //         'file_exists'          => $logoExists ? 'YES ✅' : 'NO ❌',
+    //         'public_path()'        => public_path(),
+    //     ]);
+
+
+    //     // Load Blade template with multiple orders
+    //     $pdf = Pdf::loadView('waybill.bulk-template', [
+    //         'waybills' => $waybills,
+    //         'company' => $company
+    //     ])
+    //         ->setPaper($paperSize, 'portrait')
+    //         ->setOptions([
+    //             'dpi' => 150,
+    //             'defaultFont' => 'sans-serif',
+    //             'isHtml5ParserEnabled' => true,
+    //             // 'isPhpEnabled' => false,
+    //             'isPhpEnabled'         => true,   // ← was false, change to true
+    //             'chroot'               => realpath(base_path('public')), // ← add this
+
+    //             'margin-top' => 0,
+    //             'margin-right' => 0,
+    //             'margin-bottom' => 0,
+    //             'margin-left' => 0,
+    //             'enable-local-file-access' => true,
+    //         ]);
+
+    //     // ✅ use a fixed filename for bulk
+    //     return $pdf->stream("bulk_waybills.pdf");
+    // }
+
+
+
+    public function printWaybills(array $ids): mixed
     {
+        // Single query with all relations
         $orders = Order::with([
-            'customer',
             'customer.city',
             'customer.zone',
             'orderItems.product',
             'vendor',
             'rider',
-            'agent'
+            'agent',
+            'latestStatus.status', // Eager load latest status for each order
         ])
             ->whereIn('id', $ids)
             ->whereNull('deleted_at')
@@ -525,116 +658,97 @@ class OrderBulkActionService
             throw new \Exception("No orders found for given IDs");
         }
 
-        // Get waybill settings
-        $company = WaybillSetting::first();
+        // ✅ Fetch status IDs once from DB — cached for 24 hours
+        $scheduledStatus = Cache::remember(
+            'status_scheduled',
+            now()->addHours(24),
+            fn() => Status::where('name', 'Scheduled')->first()
+        );
 
-        // Handle company settings safely (same logic as single print)
-        if (!$company) {
-            $company = (object) [
-                'name' => config('app.name', 'Your Company'),
-                'phone' => '',
-                'email' => '',
-                'address' => '',
-                'template_name' => 'Express Courier',
-                'options' => (object) ['color' => 'blue', 'size' => 'A6'],
-                'terms' => 'Standard terms and conditions apply.',
-                'footer' => 'Terms & Conditions',
-                'brand_color' => '#667eea'
-            ];
-        } else {
-            if (isset($company->options)) {
-                if (is_string($company->options)) {
-                    try {
-                        $company->options = json_decode($company->options);
-                        if (json_last_error() !== JSON_ERROR_NONE) {
-                            $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Error decoding company options in printWaybills', ['error' => $e->getMessage()]);
-                        $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-                    }
-                } elseif (is_array($company->options)) {
-                    $company->options = (object) $company->options;
-                } elseif (!is_object($company->options)) {
-                    $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-                }
-            } else {
-                $company->options = (object) ['color' => 'blue', 'size' => 'A6'];
-            }
+        $awaitingDispatchStatus = Cache::remember(
+            'status_awaiting_dispatch',
+            now()->addHours(24),
+            fn() => Status::where('name', 'Awaiting Dispatch')->first()
+        );
 
-            if (!isset($company->brand_color)) {
-                $company->brand_color = '#667eea';
+        if (!$scheduledStatus) {
+            throw new \Exception("Required statuses (Scheduled / Awaiting Dispatch) not found in DB");
+        }
+
+        // ✅ Single pass: collect scheduled IDs + mutate status in memory
+        $scheduledSet = [];
+        foreach ($orders as $order) {
+            if ($order->latestStatus && $order->latestStatus->status->name === $scheduledStatus->name) {
+                $scheduledSet[$order->id] = true;
             }
         }
 
-        // Generate barcodes for each order
+        if (!empty($scheduledSet)) {
+
+
+            // ✅ Correct insert using status_id FK + status_category_id
+            $timestamps = array_map(fn($id) => [
+                'order_id'           => $id,
+                'status_id'          => $awaitingDispatchStatus->id,
+                'status_notes'       => 'printed via bulk waybill action',
+            ], array_keys($scheduledSet));
+
+            OrderStatusTimestamp::insert($timestamps);
+
+            Log::info('Bulk waybill: Scheduled → Awaiting Dispatch', [
+                'count'     => count($scheduledSet),
+                'order_ids' => array_keys($scheduledSet),
+                'status_id' => $awaitingDispatchStatus->id,
+            ]);
+        }
+
+        // ✅ Cached company settings
+        $company = Cache::remember(
+            'waybill_settings',
+            now()->addMinutes(60),
+            fn() => WaybillSetting::first()
+        );
+        $company = $this->normalizeCompanyOptions($company);
+
+        // ✅ Build waybills — O(1) lookup via hash set
         $generator = new BarcodeGeneratorHTML();
-        $waybills = [];
-        // Log the orders for debugging
-        Log::info('Bulk waybill orders:', ['orders' => $orders->toArray()]);
+        $waybills  = [];
+
         foreach ($orders as $order) {
             $waybills[] = [
-                'order' => $order,
-                'barcode' => $generator->getBarcode(
-                    $order->order_no,
-                    $generator::TYPE_CODE_128,
-                    2,
-                    50
-                ),
-                'company' => $company
+                'order'          => $order,
+                'barcode'        => $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128, 2, 50),
+                'company'        => $company,
+                'status_changed' => isset($scheduledSet[$order->id]),
+                'latest_status'  => $order->latestStatus,
             ];
         }
 
-        // Determine paper size
-        $paperSize = 'a6';
-        if (isset($company->options->size)) {
-            $paperSize = strtolower($company->options->size);
+        // ✅ Debug logging only in debug mode
+        if (config('app.debug')) {
+            Log::debug('=== LOGO DEBUG ===', [
+                'logo' => ltrim($company->logo_path ?? $company->logo ?? 'images/rushbin-logo.png', '/'),
+            ]);
         }
 
+        $paperSize = strtolower($company->options->size ?? 'a6');
 
-
-        // It will dump everything to Laravel log so you can see exactly what's wrong.
-
-        $logoRel    = $company->logo_path ?? $company->logo ?? 'images/rushbin-logo.png';
-        $logoRel    = ltrim($logoRel, '/');
-        $logoAbs    = public_path($logoRel);
-        $logoExists = file_exists($logoAbs);
-
-        Log::debug('=== LOGO DEBUG ===', [
-            'company->logo_path'   => $company->logo_path ?? 'NOT SET',
-            'company->logo'        => $company->logo       ?? 'NOT SET',
-            'resolved_relative'    => $logoRel,
-            'resolved_absolute'    => $logoAbs,
-            'file_exists'          => $logoExists ? 'YES ✅' : 'NO ❌',
-            'public_path()'        => public_path(),
-        ]);
-
-
-        // Load Blade template with multiple orders
-        $pdf = Pdf::loadView('waybill.bulk-template', [
-            'waybills' => $waybills,
-            'company' => $company
-        ])
+        return Pdf::loadView('waybill.bulk-template', compact('waybills', 'company'))
             ->setPaper($paperSize, 'portrait')
             ->setOptions([
-                'dpi' => 150,
-                'defaultFont' => 'sans-serif',
-                'isHtml5ParserEnabled' => true,
-                // 'isPhpEnabled' => false,
-                'isPhpEnabled'         => true,   // ← was false, change to true
-                'chroot'               => realpath(base_path('public')), // ← add this
-
-                'margin-top' => 0,
-                'margin-right' => 0,
-                'margin-bottom' => 0,
-                'margin-left' => 0,
+                'dpi'                      => 150,
+                'defaultFont'              => 'sans-serif',
+                'isHtml5ParserEnabled'     => true,
+                'isPhpEnabled'             => true,
+                'chroot'                   => realpath(base_path('public')),
+                'margin-top'               => 0,
+                'margin-right'             => 0,
+                'margin-bottom'            => 0,
+                'margin-left'              => 0,
                 'enable-local-file-access' => true,
-            ]);
-
-        // ✅ use a fixed filename for bulk
-        return $pdf->stream("bulk_waybills.pdf");
+            ])
+            ->stream("bulk_waybills.pdf");
     }
-
 
 
 
@@ -667,5 +781,43 @@ class OrderBulkActionService
             'barcode' => $barcode,
             'company' => $company
         ];
+    }
+
+
+    /**
+     * Normalize company options from WaybillSetting.
+     */
+    private function normalizeCompanyOptions(mixed $company): object
+    {
+        $default = (object) ['color' => 'blue', 'size' => 'A6'];
+
+        if (!$company) {
+            return (object) [
+                'name'          => config('app.name', 'Your Company'),
+                'phone'         => '',
+                'email'         => '',
+                'address'       => '',
+                'template_name' => 'Express Courier',
+                'options'       => $default,
+                'terms'         => 'Standard terms and conditions apply.',
+                'footer'        => 'Terms & Conditions',
+                'brand_color'   => '#667eea',
+            ];
+        }
+
+        if (!isset($company->options)) {
+            $company->options = $default;
+        } elseif (is_string($company->options)) {
+            $decoded = json_decode($company->options);
+            $company->options = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $default;
+        } elseif (is_array($company->options)) {
+            $company->options = (object) $company->options;
+        } elseif (!is_object($company->options)) {
+            $company->options = $default;
+        }
+
+        $company->brand_color ??= '#667eea';
+
+        return $company;
     }
 }
