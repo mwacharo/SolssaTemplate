@@ -25,6 +25,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Services\StockService;
+use App\Services\StatusTransitionService;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -57,6 +58,8 @@ class OrderController extends Controller
 
         protected StockService $stockService,
         protected OrderTimelineService $orderTimelineService,
+        protected StatusTransitionService $statusService
+
 
     ) {
 
@@ -437,20 +440,204 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified order.
-     */
+    // /**
+    //  * Update the specified order.
+    //  */
+    // public function update(UpdateOrderRequest $request, $id): JsonResponse
+    // {
+
+    //     Log::info('Update order request received', [
+    //         'order_id' => $id,
+    //         'user_id' => Auth::id(),
+    //         'method' => $request->method(),
+    //         'path' => $request->path(),
+    //         'ip' => $request->ip(),
+    //         // 'payload' => $request->all(),
+    //         'payload_keys' => array_keys($request->all())
+    //     ]);
+    //     $order = Order::find($id);
+
+    //     if (!$order) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Order not found'
+    //         ], 404);
+    //     }
+
+    //     DB::beginTransaction();
+
+    //     try {
+    //         $validated = $request->validated();
+
+    //         // Handle customer update or creation if customer data is provided
+    //         // if (isset($validated['customer']) && is_array($validated['customer'])) {
+    //         //     $customerData = $validated['customer'];
+    //         //     $customer = Customer::firstOrCreate(
+    //         //         ['phone' => $customerData['phone']],
+    //         //         [
+    //         //             'full_name' => $customerData['full_name'] ?? null,
+    //         //             'email' => $customerData['email'] ?? null,
+    //         //             'city_id' => $customerData['city_id'] ?? null,
+    //         //             'zone_id' => $customerData['zone_id'] ?? null,
+    //         //             'address' => $customerData['address'] ?? null,
+    //         //             'region' => $customerData['region'] ?? null,
+    //         //             'zipcode' => $customerData['zipcode'] ?? null,
+    //         //         ]
+    //         //     );
+    //         //     $validated['customer_id'] = $customer->id;
+    //         //     unset($validated['customer']);
+    //         // }
+
+
+    //         if (isset($validated['customer']) && is_array($validated['customer'])) {
+    //             $customerData = $validated['customer'];
+
+    //             // Find existing customer or create new one
+    //             $customer = Customer::firstOrCreate(
+    //                 ['phone' => $customerData['phone']]
+    //             );
+
+    //             // Update fields
+    //             $customer->update([
+    //                 'full_name' => $customerData['full_name'] ?? $customer->full_name,
+    //                 'email' => $customerData['email'] ?? $customer->email,
+    //                 'city_id' => $customerData['city_id'] ?? $customer->city_id,
+    //                 'zone_id' => $customerData['zone_id'] ?? $customer->zone_id,
+    //                 'address' => $customerData['address'] ?? $customer->address,
+    //                 'region' => $customerData['region'] ?? $customer->region,
+    //                 'zipcode' => $customerData['zipcode'] ?? $customer->zipcode,
+    //             ]);
+
+    //             $validated['customer_id'] = $customer->id;
+    //             unset($validated['customer']);
+    //         }
+
+
+    //         // Update the order fields except order_items
+    //         $order->update(collect($validated)->except(['order_items'])->toArray());
+
+
+
+
+
+
+    //         $orderItemIds = $order->orderItems()->pluck('id')->toArray();
+    //         $submittedIds = [];
+
+    //         foreach ($validated['order_items'] as $item) {
+    //             $itemData = [
+    //                 'order_id' => $order->id,
+    //                 'product_id' => $item['product_id'] ?? null,
+    //                 'sku' => $item['sku'] ?? null,
+    //                 'name' => $item['name'] ?? null,
+    //                 'quantity' => $item['quantity'] ?? 1,
+    //                 'unit_price' => $item['unit_price'] ?? 0,
+    //                 'total_price' => $item['total_price'] ?? 0,
+    //                 'discount' => $item['discount'] ?? 0,
+    //                 'currency' => $item['currency'] ?? 'KSH',
+    //                 'weight' => $item['weight'] ?? null,
+    //                 'delivered_quantity' => $item['delivered_quantity'] ?? 0,
+    //             ];
+
+    //             // Resolve product_id if missing
+    //             if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
+    //                 $product = Product::where('sku', $itemData['sku'])->first();
+    //                 if ($product) $itemData['product_id'] = $product->id;
+    //             }
+
+    //             if (!empty($item['id']) && in_array($item['id'], $orderItemIds)) {
+    //                 // Update existing item
+    //                 $orderItem = OrderItem::find($item['id']);
+    //                 $orderItem->update($itemData);
+    //                 $submittedIds[] = $orderItem->id;
+    //             } else {
+    //                 // Create new item
+    //                 $newItem = OrderItem::create($itemData);
+    //                 $submittedIds[] = $newItem->id;
+    //             }
+    //         }
+
+    //         // Soft-delete removed items (optional)
+    //         $itemsToRemove = array_diff($orderItemIds, $submittedIds);
+    //         if (!empty($itemsToRemove)) {
+    //             OrderItem::whereIn('id', $itemsToRemove)->delete(); // soft delete
+    //         }
+
+    //         // check status transition 
+
+    //         // Update status timestamp if status_id changed
+    //         // if (isset($validated['status_id']) && $validated['status_id'] != $order->getOriginal('status_id')) {
+    //         //     OrderStatusTimestamp::create([
+    //         //         'order_id' => $order->id,
+    //         //         'status_id' => $validated['status_id'],
+    //         //         'status_category_id' => $validated['status_category_id'] ?? null,
+    //         //         'status_notes' => $validated['status_notes'] ?? null,
+    //         //         'created_at' => now()
+    //         //     ]);
+    //         // }
+
+
+    //         // $currentStatus = $this->statusService->getCurrentStatusId($order);
+
+    //         // $currentStatus = $this->statusService->getCurrentStatus($order);
+
+    //         $currentStatus = $this->statusService->getCurrentStatusId($order);
+
+    //         if (isset($validated['status_id'])) {
+
+    //             $newStatus = (int) $validated['status_id'];
+
+    //             if ($newStatus !== $currentStatus) {
+    //                 $this->statusService->apply(
+    //                     $order,
+    //                     $newStatus,
+    //                     $validated['status_notes'] ?? null,
+    //                     $currentStatus // ✅ pass it
+    //                 );
+    //             }
+    //         }
+
+    //         $order->events()->create([
+    //             'event_type' => 'order_updated',
+    //             'event_data' => json_encode($validated),
+    //             'user_id'    => Auth::id(),
+    //         ]);
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Order updated successfully',
+    //             'data' => $order->load([
+    //                 'orderItems.product',
+    //                 'addresses',
+    //                 'statusTimestamps',
+    //                 'customer',
+    //             ])
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to update order',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
+
     public function update(UpdateOrderRequest $request, $id): JsonResponse
     {
-
         Log::info('Update order request received', [
             'order_id' => $id,
             'user_id' => Auth::id(),
             'method' => $request->method(),
             'path' => $request->path(),
             'ip' => $request->ip(),
-            'payload' => $request->all(),
+            'payload_keys' => array_keys($request->all())
         ]);
+
         $order = Order::find($id);
 
         if (!$order) {
@@ -465,143 +652,132 @@ class OrderController extends Controller
         try {
             $validated = $request->validated();
 
-            // Handle customer update or creation if customer data is provided
-            // if (isset($validated['customer']) && is_array($validated['customer'])) {
-            //     $customerData = $validated['customer'];
-            //     $customer = Customer::firstOrCreate(
-            //         ['phone' => $customerData['phone']],
-            //         [
-            //             'full_name' => $customerData['full_name'] ?? null,
-            //             'email' => $customerData['email'] ?? null,
-            //             'city_id' => $customerData['city_id'] ?? null,
-            //             'zone_id' => $customerData['zone_id'] ?? null,
-            //             'address' => $customerData['address'] ?? null,
-            //             'region' => $customerData['region'] ?? null,
-            //             'zipcode' => $customerData['zipcode'] ?? null,
-            //         ]
-            //     );
-            //     $validated['customer_id'] = $customer->id;
-            //     unset($validated['customer']);
-            // }
-
-
+            // ─────────────────────────────
+            // CUSTOMER HANDLING
+            // ─────────────────────────────
             if (isset($validated['customer']) && is_array($validated['customer'])) {
+
                 $customerData = $validated['customer'];
 
-                // Find existing customer or create new one
                 $customer = Customer::firstOrCreate(
                     ['phone' => $customerData['phone']]
                 );
 
-                // Update fields
                 $customer->update([
                     'full_name' => $customerData['full_name'] ?? $customer->full_name,
-                    'email' => $customerData['email'] ?? $customer->email,
-                    'city_id' => $customerData['city_id'] ?? $customer->city_id,
-                    'zone_id' => $customerData['zone_id'] ?? $customer->zone_id,
-                    'address' => $customerData['address'] ?? $customer->address,
-                    'region' => $customerData['region'] ?? $customer->region,
-                    'zipcode' => $customerData['zipcode'] ?? $customer->zipcode,
+                    'email'     => $customerData['email'] ?? $customer->email,
+                    'city_id'   => $customerData['city_id'] ?? $customer->city_id,
+                    'zone_id'   => $customerData['zone_id'] ?? $customer->zone_id,
+                    'address'   => $customerData['address'] ?? $customer->address,
+                    'region'    => $customerData['region'] ?? $customer->region,
+                    'zipcode'   => $customerData['zipcode'] ?? $customer->zipcode,
                 ]);
 
                 $validated['customer_id'] = $customer->id;
                 unset($validated['customer']);
             }
 
+            // ─────────────────────────────
+            // UPDATE ORDER CORE FIELDS
+            // ─────────────────────────────
+            $order->update(
+                collect($validated)->except(['order_items', 'status_id', 'status_notes'])->toArray()
+            );
 
-            // Update the order fields except order_items
-            $order->update(collect($validated)->except(['order_items'])->toArray());
-
-            // Update order items if provided
-            // if (isset($validated['order_items']) && is_array($validated['order_items'])) {
-            //     // Delete existing items
-            //     OrderItem::where('order_id', $order->id)->delete();
-
-            //     // Create new items
-            //     foreach ($validated['order_items'] as $item) {
-            //         $itemData = [
-            //             'order_id' => $order->id,
-            //             'product_id' => $item['product_id'] ?? null,
-            //             'sku' => $item['sku'] ?? null,
-            //             'name' => $item['name'] ?? null,
-            //             'quantity' => $item['quantity'] ?? 1,
-            //             'unit_price' => $item['unit_price'] ?? 0,
-            //             'total_price' => $item['total_price'] ?? 0,
-            //             'discount' => $item['discount'] ?? 0,
-            //             'currency' => $item['currency'] ?? 'KSH',
-            //             'weight' => $item['weight'] ?? null,
-            //             'delivered_quantity' => $item['delivered_quantity'] ?? 0,
-            //         ];
-
-            //         // Try to resolve product_id by SKU if not provided
-            //         if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
-            //             $product = Product::where('sku', $itemData['sku'])->first();
-            //             if ($product) {
-            //                 $itemData['product_id'] = $product->id;
-            //             }
-            //         }
-
-            //         OrderItem::create($itemData);
-            //     }
-            // }
-
-
-
-
-
+            // ─────────────────────────────
+            // ORDER ITEMS SYNC
+            // ─────────────────────────────
             $orderItemIds = $order->orderItems()->pluck('id')->toArray();
             $submittedIds = [];
 
             foreach ($validated['order_items'] as $item) {
+
                 $itemData = [
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'] ?? null,
-                    'sku' => $item['sku'] ?? null,
-                    'name' => $item['name'] ?? null,
-                    'quantity' => $item['quantity'] ?? 1,
-                    'unit_price' => $item['unit_price'] ?? 0,
-                    'total_price' => $item['total_price'] ?? 0,
-                    'discount' => $item['discount'] ?? 0,
-                    'currency' => $item['currency'] ?? 'KSH',
-                    'weight' => $item['weight'] ?? null,
+                    'order_id'           => $order->id,
+                    'product_id'         => $item['product_id'] ?? null,
+                    'sku'                => $item['sku'] ?? null,
+                    'name'               => $item['name'] ?? null,
+                    'quantity'           => $item['quantity'] ?? 1,
+                    'unit_price'         => $item['unit_price'] ?? 0,
+                    'total_price'        => $item['total_price'] ?? 0,
+                    'discount'           => $item['discount'] ?? 0,
+                    'currency'           => $item['currency'] ?? 'KSH',
+                    'weight'             => $item['weight'] ?? null,
                     'delivered_quantity' => $item['delivered_quantity'] ?? 0,
                 ];
 
-                // Resolve product_id if missing
                 if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
                     $product = Product::where('sku', $itemData['sku'])->first();
-                    if ($product) $itemData['product_id'] = $product->id;
+                    if ($product) {
+                        $itemData['product_id'] = $product->id;
+                    }
                 }
 
                 if (!empty($item['id']) && in_array($item['id'], $orderItemIds)) {
-                    // Update existing item
+
                     $orderItem = OrderItem::find($item['id']);
                     $orderItem->update($itemData);
                     $submittedIds[] = $orderItem->id;
                 } else {
-                    // Create new item
+
                     $newItem = OrderItem::create($itemData);
                     $submittedIds[] = $newItem->id;
                 }
             }
 
-            // Soft-delete removed items (optional)
+            // remove deleted items
             $itemsToRemove = array_diff($orderItemIds, $submittedIds);
+
             if (!empty($itemsToRemove)) {
-                OrderItem::whereIn('id', $itemsToRemove)->delete(); // soft delete
+                OrderItem::whereIn('id', $itemsToRemove)->delete();
             }
 
-            // Update status timestamp if status_id changed
-            if (isset($validated['status_id']) && $validated['status_id'] != $order->getOriginal('status_id')) {
-                OrderStatusTimestamp::create([
+            // ─────────────────────────────
+            // STATUS TRANSITION (FIXED LOGIC)
+            // ─────────────────────────────
+
+            if (isset($validated['status_id'])) {
+
+
+            $currentStatus = $this->statusService->getCurrentStatusName($order);
+
+$newStatus = \App\Models\Status::find($validated['status_id'])?->name;
+                Log::info('Status transition check', [
                     'order_id' => $order->id,
-                    'status_id' => $validated['status_id'],
-                    'status_category_id' => $validated['status_category_id'] ?? null,
-                    'status_notes' => $validated['status_notes'] ?? null,
-                    'created_at' => now()
+                    'current_status' => $currentStatus,
+                    'new_status' => $newStatus,
                 ]);
+
+                if ($newStatus !== $currentStatus) {
+
+                    Log::info('Applying status transition', [
+                        'order_id' => $order->id,
+                        'from_status' => $currentStatus,
+                        'to_status' => $newStatus,
+                        'status_notes' => $validated['status_notes'] ?? null,
+                    ]);
+
+                    $this->statusService->apply(
+                        $order,
+                        $newStatus,
+                        $validated['status_notes'] ?? null
+                    );
+
+                    Log::info('Status transition applied successfully', [
+                        'order_id' => $order->id,
+                        'new_status' => $newStatus,
+                    ]);
+                } else {
+                    Log::debug('No status change needed', [
+                        'order_id' => $order->id,
+                        'status' => $currentStatus,
+                    ]);
+                }
             }
 
+            // ─────────────────────────────
+            // EVENT LOG
+            // ─────────────────────────────
             $order->events()->create([
                 'event_type' => 'order_updated',
                 'event_data' => json_encode($validated),
@@ -621,7 +797,9 @@ class OrderController extends Controller
                 ])
             ]);
         } catch (\Exception $e) {
+
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update order',

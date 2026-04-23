@@ -211,129 +211,177 @@ class OrderBulkActionService
         }
     }
 
-    // public function updateStatus(array $orderIds, $statusId, $statusNotes = null): void
+
+
+
+
+    // public function updateStatus(array $orderIds, int $statusId, ?string $statusNotes = null): void
     // {
+    //     $templateService = app(MessageTemplateService::class);
+
+    //     // ✅ Map status IDs to template slugs
+    //     $statusName = DB::table('statuses')
+    //         ->where('id', $statusId)
+    //         ->value('name');
+
+    //     $statusTemplateMap = $statusName
+    //         ? [$statusId => $statusName]
+    //         : [];
+
     //     foreach ($orderIds as $orderId) {
-    //         OrderStatusTimestamp::create([
-    //             'order_id' => $orderId,
-    //             'status_id' => $statusId,
-    //             'status_notes' => $statusNotes,
 
-    //         ]);
-    //         // Adavanta SMS notification logic can be triggered here based on the new status\
-    //         // status In transit || Shpipped
-    //         // status Scheduled for delivery
-    //         // stautus Pennding 
+    //         try {
+    //             // ✅ Save status timestamp
+    //             OrderStatusTimestamp::create([
+    //                 'order_id' => $orderId,
+    //                 'status_id' => $statusId,
+    //                 'status_notes' => $statusNotes,
+    //             ]);
 
-    //         // use approriate template for each status and dispatch the job
+    //             // ❌ Skip if no template mapped
+    //             if (!isset($statusTemplateMap[$statusId])) {
+    //                 Log::info("No template mapped for status", [
+    //                     'status_id' => $statusId,
+    //                     'order_id' => $orderId
+    //                 ]);
+    //                 continue;
+    //             }
 
+    //             // ✅ Load order with customer
+    //             $order = Order::with('customer')->find($orderId);
 
-    //         // AdvantaSmsJob::dispatch($orderId, $statusId);
-    //         if (in_array($statusId, [/* IDs for "In Transit", "Shipped", "Scheduled for Delivery", "Pending" */])) {
-    //             AdvantaSmsJob::dispatch($orderId, $statusId);
+    //             if (!$order) {
+    //                 Log::warning("Order not found", ['order_id' => $orderId]);
+    //                 continue;
+    //             }
+
+    //             // ❌ Skip if no customer phone
+    //             $phone = $order->customer?->phone;
+
+    //             if (!$phone) {
+    //                 Log::warning("Customer phone missing", ['order_id' => $orderId]);
+    //                 continue;
+    //             }
+
+    //             // ✅ Generate message using template + order_id
+    //             $result = $templateService->generateMessage(
+    //                 phone: $phone,
+    //                 templateSlug: $statusTemplateMap[$statusId],
+    //                 additionalData: [
+    //                     'order_id' => $orderId
+    //                 ]
+    //             );
+
+    //             $message = $result['message'];
+
+    //             // ❌ Skip empty messages
+    //             if (empty($message)) {
+    //                 Log::warning("Generated message is empty", [
+    //                     'order_id' => $orderId,
+    //                     'status_id' => $statusId
+    //                 ]);
+    //                 continue;
+    //             }
+
+    //             // ❌ Skip if no merchant (user)
+    //             // if (!$order->user_id) {
+    //             //     Log::warning("Order has no user_id", ['order_id' => $orderId]);
+    //             //     continue;
+    //             // }
+
+    //             // ✅ Dispatch SMS job (WITH order_id 🔥)
+    //             AdvantaSmsJob::dispatch(
+    //                 recipients: $phone,
+    //                 messageContent: $message,
+    //                 userId: $order->user_id,
+    //                 // orderId: $orderId
+    //             );
+
+    //             Log::info("SMS job dispatched successfully", [
+    //                 'order_id' => $orderId,
+    //                 'status_id' => $statusId,
+    //                 'phone' => $phone
+    //             ]);
+    //         } catch (\Throwable $e) {
+    //             Log::error("Failed updating order status", [
+    //                 'order_id' => $orderId,
+    //                 'status_id' => $statusId,
+    //                 'error' => $e->getMessage()
+    //             ]);
     //         }
     //     }
     // }
 
 
 
+
+
     public function updateStatus(array $orderIds, int $statusId, ?string $statusNotes = null): void
-    {
-        $templateService = app(MessageTemplateService::class);
+{
+    $templateService = app(MessageTemplateService::class);
+    $transitionService = app(\App\Services\StatusTransitionService::class);
 
-        // ✅ Map status IDs to template slugs
-        $statusName = DB::table('statuses')
-            ->where('id', $statusId)
-            ->value('name');
+    $newStatus = \App\Models\Status::findOrFail($statusId);
 
-        $statusTemplateMap = $statusName
-            ? [$statusId => $statusName]
-            : [];
+    foreach ($orderIds as $orderId) {
+        try {
+            $order = Order::with('latestStatus.status')->findOrFail($orderId);
 
-        foreach ($orderIds as $orderId) {
+            // ─────────────────────────────
+            // OBEY TRANSITION RULES
+            // ─────────────────────────────
+            $transitionService->apply(
+                $order,
+                $newStatus->name,
+                $statusNotes
+            );
 
-            try {
-                // ✅ Save status timestamp
-                OrderStatusTimestamp::create([
-                    'order_id' => $orderId,
-                    'status_id' => $statusId,
-                    'status_notes' => $statusNotes,
-                ]);
+            // ─────────────────────────────
+            // SMS NOTIFICATION
+            // ─────────────────────────────
+            $phone = $order->customer?->phone;
 
-                // ❌ Skip if no template mapped
-                if (!isset($statusTemplateMap[$statusId])) {
-                    Log::info("No template mapped for status", [
-                        'status_id' => $statusId,
-                        'order_id' => $orderId
-                    ]);
-                    continue;
-                }
-
-                // ✅ Load order with customer
-                $order = Order::with('customer')->find($orderId);
-
-                if (!$order) {
-                    Log::warning("Order not found", ['order_id' => $orderId]);
-                    continue;
-                }
-
-                // ❌ Skip if no customer phone
-                $phone = $order->customer?->phone;
-
-                if (!$phone) {
-                    Log::warning("Customer phone missing", ['order_id' => $orderId]);
-                    continue;
-                }
-
-                // ✅ Generate message using template + order_id
-                $result = $templateService->generateMessage(
-                    phone: $phone,
-                    templateSlug: $statusTemplateMap[$statusId],
-                    additionalData: [
-                        'order_id' => $orderId
-                    ]
-                );
-
-                $message = $result['message'];
-
-                // ❌ Skip empty messages
-                if (empty($message)) {
-                    Log::warning("Generated message is empty", [
-                        'order_id' => $orderId,
-                        'status_id' => $statusId
-                    ]);
-                    continue;
-                }
-
-                // ❌ Skip if no merchant (user)
-                // if (!$order->user_id) {
-                //     Log::warning("Order has no user_id", ['order_id' => $orderId]);
-                //     continue;
-                // }
-
-                // ✅ Dispatch SMS job (WITH order_id 🔥)
-                AdvantaSmsJob::dispatch(
-                    recipients: $phone,
-                    messageContent: $message,
-                    userId: $order->user_id,
-                    // orderId: $orderId
-                );
-
-                Log::info("SMS job dispatched successfully", [
-                    'order_id' => $orderId,
-                    'status_id' => $statusId,
-                    'phone' => $phone
-                ]);
-            } catch (\Throwable $e) {
-                Log::error("Failed updating order status", [
-                    'order_id' => $orderId,
-                    'status_id' => $statusId,
-                    'error' => $e->getMessage()
-                ]);
+            if (!$phone) {
+                Log::warning("Customer phone missing", ['order_id' => $orderId]);
+                continue;
             }
+
+            $result = $templateService->generateMessage(
+                phone: $phone,
+                templateSlug: $newStatus->name,
+                additionalData: ['order_id' => $orderId]
+            );
+
+            if (empty($result['message'])) {
+                Log::warning("Generated message is empty", [
+                    'order_id'  => $orderId,
+                    'status_id' => $statusId,
+                ]);
+                continue;
+            }
+
+            AdvantaSmsJob::dispatch(
+                recipients: $phone,
+                messageContent: $result['message'],
+                userId: $order->user_id,
+            );
+
+        } catch (\RuntimeException $e) {
+            // Transition validation failure — log and skip, don't crash the batch
+            Log::warning('StatusTransitionService: Invalid transition', [
+                'order_id'  => $orderId,
+                'status_id' => $statusId,
+                'reason'    => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Failed updating order status", [
+                'order_id'  => $orderId,
+                'status_id' => $statusId,
+                'error'     => $e->getMessage(),
+            ]);
         }
     }
-
+}
 
     // bulk delete orders
 

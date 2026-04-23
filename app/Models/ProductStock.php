@@ -48,6 +48,10 @@ class ProductStock extends Model
     {
         $this->increment('current_stock', $quantity);
         $this->increment('historical_stock', $quantity);
+
+        // if was intransit we need to reduce committed stock and log the release of committed stock
+        // increase current stock
+
         activity()
             ->performedOn($this)
             ->withProperties(['quantity' => $quantity])
@@ -136,5 +140,18 @@ class ProductStock extends Model
             ->performedOn($this)
             ->withProperties(['quantity' => $quantity])
             ->log("Delivered {$quantity} stock");
+    }
+
+    // marked as returned 
+
+    public function markAsReturned(int $quantity): void
+    {
+        $this->increment('current_stock', $quantity);
+        $this->decrement('committed_stock', $quantity);
+
+        activity()
+            ->performedOn($this)
+            ->withProperties(['quantity' => $quantity])
+            ->log("Marked {$quantity} stock as returned and added back to inventory");
     }
 }

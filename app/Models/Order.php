@@ -188,9 +188,16 @@ class Order extends Model
     }
 
 
+    // public function latestStatus()
+    // {
+    //     return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
+    // }
+
+
     public function latestStatus()
     {
-        return $this->hasOne(OrderStatusTimestamp::class)->latestOfMany();
+        return $this->hasOne(OrderStatusTimestamp::class)
+            ->latestOfMany('id');
     }
 
 
@@ -206,6 +213,14 @@ class Order extends Model
     {
         return $this->hasMany(OrderExpense::class);
     }
+
+
+
+    //     public function transitionTo(int $newStatusId, ?string $notes = null)
+    // {
+    //     return app(\App\Actions\Orders\ChangeOrderStatusAction::class)
+    //         ->execute($this, $newStatusId, $notes);
+    // }
 }
 
     // public function  replacementOrders()

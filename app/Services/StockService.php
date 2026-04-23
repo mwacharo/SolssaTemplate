@@ -19,7 +19,7 @@ class StockService
         );
 
         $order = $statusTimestamp->order;
-        $status = strtolower(optional($statusTimestamp->status)->name ?? '');
+        $status = optional($statusTimestamp->status)->name ?? '';
 
         if (!$order || !$status) {
             Log::warning('StockService: Missing order or status', [
@@ -28,46 +28,75 @@ class StockService
             return;
         }
 
-        foreach ($order->orderItems as $item) {
+        // ─────────────────────────────
+        // RESOLVE PREVIOUS STATUS
+        // ─────────────────────────────
+        $previousStatus = $order->statusTimestamps()
+            ->where('id', '<', $statusTimestamp->id)
+            ->latest('id')
+            ->value('status_id');
 
-            $stock = $item->product
-                ->stocks()
-                ->lockForUpdate()
-                ->first();
+        $previousStatusName = $previousStatus
+            ? \App\Models\Status::find($previousStatus)?->name
+            : null;
 
-            if (!$stock) {
-                Log::warning('StockService: No stock record found', [
-                    'product_id' => $item->product_id,
-                    'order_id' => $item->order_id
-                ]);
-                continue;
-            }
+        // ─────────────────────────────
+        // WRAP ENTIRE LOOP IN ONE TRANSACTION
+        // ─────────────────────────────
+        DB::transaction(function () use ($status, $order, $statusTimestamp, $previousStatusName) {
 
-            DB::transaction(function () use ($status, $stock, $item) {
+            foreach ($order->orderItems as $item) {
+
+                // ─────────────────────────────
+                // SCOPE STOCK TO WAREHOUSE + LOCK
+                // ─────────────────────────────
+                $stock = $item->product
+                    ->stocks()
+                    ->where('warehouse_id', $order->warehouse_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$stock) {
+                    Log::warning('StockService: No stock record found', [
+                        'product_id'   => $item->product_id,
+                        'order_id'     => $item->order_id,
+                        'warehouse_id' => $order->warehouse_id,
+                    ]);
+                    continue;
+                }
 
                 match ($status) {
 
-                    // ✅ Reserve only when scheduled
-                    'scheduled' =>
+                    // Reserve stock when scheduled
+                    'Scheduled' =>
                     $stock->commitStock($item->quantity),
 
-                    //not really
+                    // Only release if stock was actually committed (prev status was Scheduled)
+                    'Cancelled', 'Pending' =>
+                    $previousStatusName === 'Scheduled'
+                        ? $stock->releaseCommittedStock($item->quantity)
+                        : null,
 
-                    // ✅ Release if cancelled or pending if it was previously reserved ie previous status was scheduled
-                    'cancelled', 'pending' =>
-                    $stock->releaseCommittedStock($item->quantity),
-
-                    // ✅ Final sale
-                    'delivered' =>
+                    // Final sale — use delivered_quantity for partial deliveries
+                    'Delivered' =>
                     $stock->markAsDelivered($item->quantity),
 
-                    // ✅ Returned in good condition
-                    'returned' =>
-                    $stock->increaseStock($item->quantity),
+                    // Stock returned in good condition
+                    'Return' =>
+                    $stock->markAsReturned($item->quantity),
+
+
+                    // Undispatched orders release committed stock
+                    // item returned to warehouse and made available for other orders
+                    'Undispatched' =>
+                    $stock->releaseCommittedStock($item->quantity),
+
+                    // Rescheduled  no changes on stock 
+
 
                     default => null,
                 };
-            });
-        }
+            }
+        });
     }
 }
