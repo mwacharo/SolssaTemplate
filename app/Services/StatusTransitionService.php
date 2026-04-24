@@ -100,7 +100,12 @@ class StatusTransitionService
     private function validateTransition(?string $current, string $new): void
     {
         // ✅ Allow Pending → Pending (self-transition)
+        //  if In transit  -> In transit,
         if ($current === 'Pending' && $new === 'Pending') {
+            return;
+        }
+
+        if ($current === 'In transit' && $new === 'In transit') {
             return;
         }
 
