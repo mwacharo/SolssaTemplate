@@ -214,7 +214,7 @@ class AfricasTalkingService
         $destinationNumber = $request->input('destinationNumber', '');
         $clientDialedNumber = $request->input('clientDialedNumber', '');
         $callSessionState = $request->input('callSessionState', '');
-
+t
 
             $this->ensureConfigLoaded($destinationNumber ?: $clientDialedNumber);
 
@@ -1221,7 +1221,10 @@ class AfricasTalkingService
             // associate with user who made the call
 
             // $user = User::where('client_name', $payload['callerNumber'] ?? null)->first();
-            $user = UserCountryAccount::where('client_name', $payload['callerNumber'])->first();
+            // $user = UserCountryAccount::where('client_name', $payload['callerNumber'])->first();
+
+            $user = User::where('client_name', $payload['callerNumber'])->first();
+
 
             if ($user) {
                 Log::info('Associating call history with user', [
