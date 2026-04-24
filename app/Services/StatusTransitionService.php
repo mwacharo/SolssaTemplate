@@ -13,7 +13,7 @@ class StatusTransitionService
     const ALLOWED_TRANSITIONS = [
         'New' => ['Scheduled', 'Pending', 'Cancelled'],
 
-        'Pending' => ['Scheduled', 'Cancelled'],
+        'Pending' => ['Scheduled', 'Cancelled', 'Pending'],
 
         'Scheduled' => ['Awaiting Dispatch', 'Cancelled', 'Duplicate', 'Pending'],
 
@@ -72,8 +72,38 @@ class StatusTransitionService
     // VALIDATION
     // ─────────────────────────────
 
+    // private function validateTransition(?string $current, string $new): void
+    // {
+
+    //     // ✅ Allow ONLY Pending → Pending
+
+
+
+    //     if ($current === null) {
+    //         if ($new !== 'New') {
+    //             throw new \RuntimeException("Order must start with New");
+    //         }
+    //         return;
+    //     }
+
+    //     $allowed = self::ALLOWED_TRANSITIONS[$current] ?? [];
+
+    //     if (!in_array($new, $allowed, true)) {
+    //         throw new \RuntimeException(
+    //             "Invalid transition: {$current} → {$new}"
+    //         );
+    //     }
+    // }
+
+
+
     private function validateTransition(?string $current, string $new): void
     {
+        // ✅ Allow Pending → Pending (self-transition)
+        if ($current === 'Pending' && $new === 'Pending') {
+            return;
+        }
+
         if ($current === null) {
             if ($new !== 'New') {
                 throw new \RuntimeException("Order must start with New");

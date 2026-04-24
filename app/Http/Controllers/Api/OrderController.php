@@ -739,40 +739,44 @@ class OrderController extends Controller
             if (isset($validated['status_id'])) {
 
 
-            $currentStatus = $this->statusService->getCurrentStatusName($order);
+                $currentStatus = $this->statusService->getCurrentStatusName($order);
 
-$newStatus = \App\Models\Status::find($validated['status_id'])?->name;
+                $newStatus = \App\Models\Status::find($validated['status_id'])?->name;
                 Log::info('Status transition check', [
                     'order_id' => $order->id,
                     'current_status' => $currentStatus,
                     'new_status' => $newStatus,
                 ]);
 
-                if ($newStatus !== $currentStatus) {
+                // if ($newStatus !== $currentStatus) 
+                //     {
 
-                    Log::info('Applying status transition', [
-                        'order_id' => $order->id,
-                        'from_status' => $currentStatus,
-                        'to_status' => $newStatus,
-                        'status_notes' => $validated['status_notes'] ?? null,
-                    ]);
+                Log::info('Applying status transition', [
+                    'order_id' => $order->id,
+                    'from_status' => $currentStatus,
+                    'to_status' => $newStatus,
+                    'status_notes' => $validated['status_notes'] ?? null,
+                ]);
 
-                    $this->statusService->apply(
-                        $order,
-                        $newStatus,
-                        $validated['status_notes'] ?? null
-                    );
+                $this->statusService->apply(
+                    $order,
+                    $newStatus,
+                    $validated['status_notes'] ?? null
+                );
 
-                    Log::info('Status transition applied successfully', [
-                        'order_id' => $order->id,
-                        'new_status' => $newStatus,
-                    ]);
-                } else {
-                    Log::debug('No status change needed', [
-                        'order_id' => $order->id,
-                        'status' => $currentStatus,
-                    ]);
-                }
+                //     Log::info('Status transition applied successfully', [
+                //         'order_id' => $order->id,
+                //         'new_status' => $newStatus,
+                //     ]);
+                // } 
+
+
+                // else {
+                //     Log::debug('No status change needed', [
+                //         'order_id' => $order->id,
+                //         'status' => $currentStatus,
+                //     ]);
+                // }
             }
 
             // ─────────────────────────────
