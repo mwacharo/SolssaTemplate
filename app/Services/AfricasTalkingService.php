@@ -213,10 +213,11 @@ class AfricasTalkingService
         $callerNumber = $request->input('callerNumber');
         $destinationNumber = $request->input('destinationNumber', '');
         $clientDialedNumber = $request->input('clientDialedNumber', '');
-        $callSessionState = $request->input('callSessionState', '');
-t
 
-            $this->ensureConfigLoaded($destinationNumber ?: $clientDialedNumber);
+        $callSessionState = $request->input('callSessionState', '');
+
+
+        $this->ensureConfigLoaded($destinationNumber ?: $clientDialedNumber);
 
 
         $isOutgoing = $this->isOutgoingCall($callerNumber);
