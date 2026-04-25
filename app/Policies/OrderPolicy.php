@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Policies;
 
@@ -13,8 +13,8 @@ class OrderPolicy
     public function viewAny(User $user): bool
     {
         return $user->hasAnyRole([
-            'Admin', 
-            'Manager', 
+            'Admin',
+            'Manager',
             'superAdmin',
             'Delivery Agent',
             'Delivery Man',
@@ -59,11 +59,12 @@ class OrderPolicy
     public function create(User $user): bool
     {
         return $user->hasAnyRole([
-            'Admin', 
-            'Manager', 
+            'Admin',
+            'Manager',
             'superAdmin',
             'CallAgent',
-            'Call Agent'
+            'Call Agent',
+            'Vendor',
         ]);
     }
 
