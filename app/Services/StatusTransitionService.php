@@ -31,6 +31,7 @@ class StatusTransitionService
         'Delivered' => ['Awaiting Return'],
 
         'Awaiting Return' => ['Return Received'],
+        'Return Received' => ['Returned'], // can return to Awaiting Dispatch if customer wants replacement instead of refund
 
         'Undispatched' => ['Cancelled', 'Scheduled'],
         // 'Cancelled' => ['Scheduled', 'Pending', 'Returned'],
