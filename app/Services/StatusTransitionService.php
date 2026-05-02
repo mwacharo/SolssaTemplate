@@ -38,6 +38,8 @@ class StatusTransitionService
 
         'Cancelled' => ['Scheduled', 'Pending'],
 
+        'Out of Stock' => ['Scheduled', 'Cancelled', 'Pending'],
+
     ];
 
     const ROLE_GATED_TRANSITIONS = [
