@@ -82,7 +82,7 @@ class StockService
                     $stock->markAsDelivered($item->quantity),
 
                     // Stock returned in good condition
-                    'Return' =>
+                    'Returned' =>
                     $stock->markAsReturned($item->quantity),
 
 

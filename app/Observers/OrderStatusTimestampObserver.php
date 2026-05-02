@@ -2,10 +2,14 @@
 
 namespace App\Observers;
 
+use App\Events\OrderStatusChanged;
 use App\Models\OrderStatusTimestamp;
 use App\Services\StockService;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+
+// use App\Events\OrderStatusChanged;
+
 
 class OrderStatusTimestampObserver
 {
@@ -29,5 +33,10 @@ class OrderStatusTimestampObserver
         }
 
         $this->stockService->applyForStatus($statusTimestamp);
+
+
+
+        event(new OrderStatusChanged($statusTimestamp));
+        // OrderStatusChanged::dispatch($statusTimestamp);
     }
 }

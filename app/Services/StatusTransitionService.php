@@ -11,9 +11,13 @@ class StatusTransitionService
      * BUSINESS RULES BASED ON STATUS NAME (NOT ID)
      */
     const ALLOWED_TRANSITIONS = [
-        'New' => ['Scheduled', 'Pending', 'Cancelled'],
+        'New' => ['Scheduled', 'Pending', 'Cancelled', 'Out of Stock'],
 
-        'Pending' => ['Scheduled', 'Cancelled', 'Pending'],
+        // 'Pending' => ['Scheduled', 'Cancelled', 'Pending', 'Returned'],
+
+        'Pending' => ['Scheduled', 'Cancelled', 'Pending',],
+
+
 
         'Scheduled' => ['Awaiting Dispatch', 'Cancelled', 'Duplicate', 'Pending'],
 
@@ -21,8 +25,7 @@ class StatusTransitionService
 
         'Dispatched' => ['In transit', 'Undispatched'],
 
-        'In transit' => ['Delivered', 'Return'],
-
+        'In transit' => ['Delivered', 'Returned', 'In transit'],
 
 
         'Delivered' => ['Awaiting Return'],
@@ -30,7 +33,10 @@ class StatusTransitionService
         'Awaiting Return' => ['Return Received'],
 
         'Undispatched' => ['Cancelled', 'Scheduled'],
+        // 'Cancelled' => ['Scheduled', 'Pending', 'Returned'],
+
         'Cancelled' => ['Scheduled', 'Pending'],
+
     ];
 
     const ROLE_GATED_TRANSITIONS = [
@@ -56,7 +62,9 @@ class StatusTransitionService
     {
         $currentStatusName = $this->getCurrentStatusName($order);
 
-        $this->validateTransition($currentStatusName, $newStatusName);
+        // $this->validateTransition($currentStatusName, $newStatusName);
+                $this->validateTransition($order,$currentStatusName, $newStatusName);
+
         $this->validateRole($currentStatusName, $newStatusName);
 
         $status = \App\Models\Status::where('name', $newStatusName)->firstOrFail();
@@ -68,16 +76,23 @@ class StatusTransitionService
         ]);
     }
 
-    // ─────────────────────────────
-    // VALIDATION
-    // ─────────────────────────────
+
+
 
     // private function validateTransition(?string $current, string $new): void
     // {
 
-    //     // ✅ Allow ONLY Pending → Pending
 
+    
+    //     // ✅ Allow Pending → Pending (self-transition)
+    //     //  if In transit  -> In transit,
+    //     if ($current === 'Pending' && $new === 'Pending') {
+    //         return;
+    //     }
 
+    //     if ($current === 'In transit' && $new === 'In transit') {
+    //         return;
+    //     }
 
     //     if ($current === null) {
     //         if ($new !== 'New') {
@@ -96,34 +111,42 @@ class StatusTransitionService
     // }
 
 
-
-    private function validateTransition(?string $current, string $new): void
-    {
-        // ✅ Allow Pending → Pending (self-transition)
-        //  if In transit  -> In transit,
-        if ($current === 'Pending' && $new === 'Pending') {
-            return;
-        }
-
-        if ($current === 'In transit' && $new === 'In transit') {
-            return;
-        }
-
-        if ($current === null) {
-            if ($new !== 'New') {
-                throw new \RuntimeException("Order must start with New");
-            }
-            return;
-        }
-
-        $allowed = self::ALLOWED_TRANSITIONS[$current] ?? [];
-
-        if (!in_array($new, $allowed, true)) {
-            throw new \RuntimeException(
-                "Invalid transition: {$current} → {$new}"
-            );
-        }
+    private function validateTransition(Order $order, ?string $current, string $new): void
+{
+    // ✅ NEW RULE: allow Pending/Cancelled → Returned for NON-warehousing vendors
+    if (
+        in_array($current, ['Pending', 'Cancelled'], true) &&
+        $new === 'Returned' &&
+        !$order->vendor?->hasService('warehousing')
+    ) {
+        return;
     }
+
+    // ✅ Allow self transitions
+    if ($current === 'Pending' && $new === 'Pending') {
+        return;
+    }
+
+    if ($current === 'In transit' && $new === 'In transit') {
+        return;
+    }
+
+    // ✅ Initial state
+    if ($current === null) {
+        if ($new !== 'New') {
+            throw new \RuntimeException("Order must start with New");
+        }
+        return;
+    }
+
+    $allowed = self::ALLOWED_TRANSITIONS[$current] ?? [];
+
+    if (!in_array($new, $allowed, true)) {
+        throw new \RuntimeException(
+            "Invalid transition: {$current} → {$new}"
+        );
+    }
+}
 
     private function validateRole(?string $current, string $new): void
     {

@@ -464,10 +464,11 @@ class ScanDispatchController extends Controller
         if ($isOutbound) {
             $templateSlug = 'In transit';
         } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'message will be sent later for',
-            ], 422);
+            // return response()->json([
+            //     'success' => false,
+            //     'message' => 'message will be sent later for',
+            // ], 422);
+            $templateSlug = 'Dispatched';
         }
 
 
@@ -534,14 +535,14 @@ class ScanDispatchController extends Controller
                     );
 
                     // 5. Dispatch SMS job
-                    AdvantaSmsJob::dispatch(
-                        $phone,
-                        $result['message'],
-                        // $validated['rider_id']   // userId — the acting rider/user
+                    // AdvantaSmsJob::dispatch(
+                    //     $phone,
+                    //     $result['message'],
+                    //     // $validated['rider_id']   // userId — the acting rider/user
 
-                        // pass user_id 1
-                        1,
-                    );
+                    //     // pass user_id 1
+                    //     1,
+                    // );
 
                     $dispatched[] = $order->id;
                 } catch (\Throwable $e) {
