@@ -8,59 +8,61 @@ use Illuminate\Auth\Access\Response;
 
 class ProductStockPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('inventory_view');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, ProductStock $productStock): bool
     {
+        if ($user->hasPermissionTo('inventory_view')) {
+            return true;
+        }
+
+        if ($user->hasPermissionTo('inventory_view_own')) {
+            $vendorId = $productStock->relationLoaded('product')
+                ? $productStock->product?->vendor_id
+                : $productStock->loadMissing('product')->product?->vendor_id;
+
+            return (int) $vendorId === (int) $user->id;
+        }
+
         return false;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Stock creation is an admin-only operation.
+     * inventory_adjust exists only on Admin in the permissions JSON.
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('inventory_adjust');
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Stock updates via the product update endpoint:
+     * - Admin only. inventory_adjust_own (Vendor) is intentionally
+     *   excluded here — vendors adjust stock through their own
+     *   dedicated inventory endpoint, not through product update.
      */
     public function update(User $user, ProductStock $productStock): bool
     {
-        return false;
+        return $user->hasPermissionTo('inventory_adjust');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, ProductStock $productStock): bool
     {
-        return false;
+        return $user->hasPermissionTo('inventory_adjust');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, ProductStock $productStock): bool
     {
-        return false;
+        return $user->hasPermissionTo('inventory_adjust');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, ProductStock $productStock): bool
     {
-        return false;
+        return $user->hasPermissionTo('inventory_adjust');
     }
 }

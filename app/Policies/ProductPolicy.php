@@ -8,59 +8,66 @@ use Illuminate\Auth\Access\Response;
 
 class ProductPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+
+
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('products_view')
+            || $user->hasPermissionTo('products_view_own');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Product $product): bool
     {
+        if ($user->hasPermissionTo('products_view')) {
+            return true;
+        }
+
+        // Own-only permission: vendor may only see their own product
+        if ($user->hasPermissionTo('products_view_own')) {
+            return (int) $product->vendor_id === (int) $user->id;
+        }
+
         return false;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('products_create')
+            || $user->hasPermissionTo('products_create_own');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Product $product): bool
     {
+        // Broad edit permission (Admin, Manager, CallAgent)
+        if ($user->hasPermissionTo('products_edit')) {
+            return true;
+        }
+
+        // Own-only edit permission (Vendor)
+        if ($user->hasPermissionTo('products_edit_own')) {
+            return (int) $product->vendor_id === (int) $user->id;
+        }
+
         return false;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Only Admin has products_delete.
+     * Vendor has products_delete_own but that is intentionally
+     * NOT honoured here — soft-delete via the API is Admin-only.
      */
     public function delete(User $user, Product $product): bool
     {
-        return false;
+        return $user->hasPermissionTo('products_delete');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Product $product): bool
     {
-        return false;
+        return $user->hasPermissionTo('products_delete');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Product $product): bool
     {
-        return false;
+        return $user->hasPermissionTo('products_delete');
     }
 }

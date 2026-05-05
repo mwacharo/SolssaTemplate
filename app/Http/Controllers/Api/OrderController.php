@@ -149,7 +149,19 @@ class OrderController extends Controller
 
     public function assignRider(BulkOrderActionRequest $request)
     {
+
+
+        $user = auth()->user();
+
         Log::info('Assigning rider to orders', ['data' => $request->validated()]);
+
+        // 🚫 BLOCK VENDORS
+        if ($user->hasRole('Vendor')) {
+            abort(403, 'Vendors cannot assign riders.');
+        }
+        // Log::info('Assigning rider to orders', ['data' => $request->validated()]);
+
+
         $this->orderService->assignRider(
             $request->validated('order_ids'),
             $request->validated('rider_id'),
@@ -163,7 +175,15 @@ class OrderController extends Controller
 
     public function assignAgent(BulkOrderActionRequest $request)
     {
+
+        $user = auth()->user();
+
         Log::info('Assigning agent to orders', ['data' => $request->validated()]);
+
+        if ($user->hasRole('Vendor')) {
+            abort(403, 'Vendors cannot assign agents.');
+        }
+        // Log::info('Assigning agent to orders', ['data' => $request->validated()]);
         $this->orderService->assignAgent(
             $request->validated('order_ids'),
             $request->validated('agent_id'),
@@ -177,6 +197,11 @@ class OrderController extends Controller
 
     public function updateStatus(BulkOrderActionRequest $request)
     {
+
+        $user = auth()->user();
+        if ($user->hasRole('Vendor')) {
+            abort(403, 'Vendors cannot update order status.');
+        }
         Log::info('Updating order status', ['data' => $request->validated()]);
         $this->orderService->updateStatus(
             $request->validated('order_ids'),
@@ -190,6 +215,10 @@ class OrderController extends Controller
     // bulk delete orders
     public function bulkDelete(BulkOrderActionRequest $request)
     {
+        $user = auth()->user();
+        if ($user->hasRole('Vendor')) {
+            abort(403, 'Vendors cannot delete orders.');
+        }
         Log::info('Bulk deleting orders', ['data' => $request->validated()]);
         $this->orderService->bulkDelete(
             $request->validated('order_ids')
@@ -646,6 +675,9 @@ class OrderController extends Controller
                 'message' => 'Order not found'
             ], 404);
         }
+
+        // authorize the update action using policy
+        $this->authorize('update', $order);
 
         DB::beginTransaction();
 
@@ -1610,6 +1642,8 @@ class OrderController extends Controller
 
     public function destroy($id): JsonResponse
     {
+
+
         DB::beginTransaction();
 
         try {
@@ -1635,12 +1669,17 @@ class OrderController extends Controller
                 'customer'
             ])->find($id);
 
+
+
             if (!$order) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Order not found'
                 ], 404);
             }
+
+            $this->authorize('delete', $order);
+
 
             // Delete related details
             $order->orderItems()->delete();

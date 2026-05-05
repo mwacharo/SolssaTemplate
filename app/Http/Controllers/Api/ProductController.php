@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Http\Resources\ProductResource;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
+use App\Models\ProductStock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,10 +22,16 @@ use Illuminate\Http\UploadedFile;
 
 use Illuminate\Support\Str;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
+
 
 
 class ProductController extends Controller
 {
+
+    use AuthorizesRequests; // ← this is what makes $this->authorize() work
+
     // Default relationships to load with product
     private const DEFAULT_RELATIONS = [
         'category',
@@ -425,6 +432,10 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+
+        $this->authorize('update', $product);
+
+
         Log::info('Attempting to update product', [
             'product_id' => $id,
             'request_data' => $request->all()
@@ -555,6 +566,25 @@ class ProductController extends Controller
             $warehouseId = $validated['stock']['warehouse_id'] ?? 1;
             $stockRecord = $product->stocks()->where('warehouse_id', $warehouseId)->first();
 
+
+
+
+            // ① $hasStockPayload flag — wraps the entire stock section
+            $hasStockPayload = isset($validated['initial_quantity'])
+                || isset($validated['stock_threshold'])
+                || isset($validated['stock']);
+
+            if ($hasStockPayload) {
+
+                // ② $stockModel resolved for the policy
+                $stockModel = $stockRecord ?? new ProductStock([
+                    'product_id'   => $product->id,
+                    'warehouse_id' => $warehouseId,
+                ]);
+
+                // ③ Gate 2 — the single line that enforces ProductStockPolicy
+                $this->authorize('update', $stockModel);
+            }
             // Handle simple quantity update (from form submission)
             if (isset($validated['initial_quantity']) || isset($validated['stock_threshold'])) {
                 $stockData = [];
@@ -579,6 +609,10 @@ class ProductController extends Controller
                     ]);
                 }
             }
+
+
+
+
 
             // Handle advanced stock operations (in/out/adjust)
             elseif (isset($validated['stock'])) {

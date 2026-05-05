@@ -114,4 +114,43 @@ class OrderPolicy
     {
         return $user->hasAnyRole(['Admin', 'superAdmin']);
     }
+
+
+
+    // public function assignRider(User $user, Order $order): bool
+    // {
+    //     // Only admins/managers
+    //     return $user->hasAnyRole(['Admin', 'Manager', 'superAdmin']);
+    // }
+
+    // public function assignAgent(User $user, Order $order): bool
+    // {
+    //     return $user->hasAnyRole(['Admin', 'Manager', 'superAdmin']);
+    // }
+
+    // public function updateStatus(User $user, Order $order): bool
+    // {
+    //     // Block vendors completely
+    //     if ($user->hasRole('Vendor')) {
+    //         return false;
+    //     }
+
+    //     return $user->hasAnyRole([
+    //         'Admin',
+    //         'Manager',
+    //         'superAdmin',
+    //         'Delivery Agent',
+    //         'CallAgent'
+    //     ]);
+    // }
+
+    // public function printWaybill(User $user, Order $order): bool
+    // {
+    //     // Vendors can only print their own
+    //     if ($user->hasRole('Vendor')) {
+    //         return $order->vendor_id === $user->id;
+    //     }
+
+    //     return true;
+    // }
 }
