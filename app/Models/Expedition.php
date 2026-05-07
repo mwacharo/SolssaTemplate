@@ -6,11 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
+use App\Traits\BelongsToUserAndCountry;
+use App\Traits\BelongsToVendor;
+
 class Expedition extends Model
 {
     /** @use HasFactory<\Database\Factories\ExpeditionFactory> */
     use HasFactory;
     use SoftDeletes;
+
+    use BelongsToUserAndCountry;
+    use BelongsToVendor;
 
     protected $fillable = [
         'vendor_id',

@@ -25,10 +25,10 @@ class StatusTransitionService
 
         'Dispatched' => ['In transit', 'Undispatched'],
 
-        'In transit' => ['Delivered', 'Returned', 'In transit'],
+        'In transit' => ['Delivered', 'Returned', 'In transit', 'Awaiting Return'],
 
 
-        'Delivered' => ['Awaiting Return'],
+        // 'Delivered' => ['Awaiting Return'],
 
         'Awaiting Return' => ['Return Received'],
         'Return Received' => ['Returned'], // can return to Awaiting Dispatch if customer wants replacement instead of refund
