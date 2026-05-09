@@ -122,7 +122,8 @@ class RemittanceCalculationService
             'payment_period_start' => $this->from,
             'payment_period_end' => $this->to,
             'vendor_id' => $this->vendorId,
-            'seller_id' => $this->vendorId,
+            // 'seller_id' => $this->vendorId,
+
             'approval_status' => 'draft',
             'total_amount' => $summary['total_remit'],
             'total_marketplace_cost' => $summary['total_fees'],

@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\BelongsToVendor;
+
+
 
 class Remittance extends Model
 {
     use HasFactory, SoftDeletes;
+    use BelongsToVendor;
 
     protected $table = 'remittances';
 
@@ -22,6 +26,7 @@ class Remittance extends Model
         'manager_approved_at',
         'cfo_approved_at',
         'seller_id',
+        'vendor_id',
         'total_amount',
         'total_amount_mad',
         'vat_percentage',
@@ -100,7 +105,14 @@ class Remittance extends Model
      */
     public function vendor()
     {
-        return $this->belongsTo(User::class, 'seller_id');
+        return $this->belongsTo(User::class, 'vendor_id');
+        // return $this->belongsTo(User::class, 'seller_id');
+
+    }
+
+    public function seller()
+    {
+        return $this->belongsTo(User::class, 'vendor_id');
     }
 
     /**

@@ -39,6 +39,28 @@ class UserResource extends JsonResource
    }
 
 
+   //  public function toArray(Request $request): array
+   //  {
+   //      $authUser = $request->user();
+
+   //      return [
+   //          'id' => $this->id,
+   //          'name' => $this->name,
+
+   //          'email' => $this->when(
+   //              $this->canViewEmail($authUser),
+   //              $this->email
+   //          ),
+
+   //          'phone_number' => $this->when(
+   //              $this->canViewPhone($authUser),
+   //              $this->phone_number
+   //          ),
+   //      ];
+   //  }
+
+
+
    // public function toArray(Request $request): array
    // {
    //    $authUser = $request->user();
@@ -64,4 +86,19 @@ class UserResource extends JsonResource
 
    //    return $data;
    // }
+
+
+
+   // 🔐 place them here
+   protected function canViewEmail($authUser): bool
+   {
+      return $authUser->hasPermissionTo('view user email')
+         || $authUser->id === $this->id;
+   }
+
+   protected function canViewPhone($authUser): bool
+   {
+      return $authUser->hasPermissionTo('view user phone')
+         || $authUser->id === $this->id;
+   }
 }

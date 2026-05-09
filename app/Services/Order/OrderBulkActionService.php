@@ -21,7 +21,9 @@ use Illuminate\Http\JsonResponse;
 
 use App\Services\MessageTemplateService;
 use Illuminate\Support\Facades\Cache;
-
+use Picqer\Barcode\BarcodeGeneratorPNG;
+// use Picqer\Barcode\BarcodeGeneratorPNG;
+use Picqer\Barcode\BarcodeGeneratorSVG;
 
 class OrderBulkActionService
 {
@@ -198,7 +200,7 @@ class OrderBulkActionService
     {
         foreach ($orderIds as $orderId) {
 
-        
+
             // Create or update assignment record for this order and agent
             OrderAssignment::updateOrCreate(
                 [
@@ -713,18 +715,32 @@ class OrderBulkActionService
         $company = $this->normalizeCompanyOptions($company);
 
         // ✅ Build waybills — O(1) lookup via hash set
-        $generator = new BarcodeGeneratorHTML();
-        $waybills  = [];
+        // $generator = new BarcodeGeneratorHTML();
+        // $generator = new BarcodeGeneratorPNG();
 
-        foreach ($orders as $order) {
-            $waybills[] = [
-                'order'          => $order,
-                'barcode'        => $generator->getBarcode($order->order_no, $generator::TYPE_CODE_128, 2, 50),
-                'company'        => $company,
-                'status_changed' => isset($scheduledSet[$order->id]),
-                'latest_status'  => $order->latestStatus,
-            ];
-        }
+
+
+      $generator = new BarcodeGeneratorPNG();
+
+foreach ($orders as $order) {
+    $barcodePng = $generator->getBarcode(
+        trim((string) $order->order_no),
+        $generator::TYPE_CODE_128,
+        3,   // widthFactor
+        60   // height
+    );
+
+    // Convert to base64 data URI for Dompdf
+    $barcode = 'data:image/png;base64,' . base64_encode($barcodePng);
+
+    $waybills[] = [
+        'order'          => $order,
+        'barcode'        => $barcode,
+        'company'        => $company,
+        'status_changed' => isset($scheduledSet[$order->id]),
+        'latest_status'  => $order->latestStatus,
+    ];
+}
 
         // ✅ Debug logging only in debug mode
         if (config('app.debug')) {

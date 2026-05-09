@@ -19,15 +19,20 @@ use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
+
 class UserController extends Controller
 {
 
+    use AuthorizesRequests; // ← this is what makes $this->authorize() work
 
     protected $userService;
 
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
+        // Apply authorization to all resource methods
     }
 
     // public function index()
@@ -51,24 +56,29 @@ class UserController extends Controller
 
 
     public function index()
-{
-    // Dynamically get the authenticated user's current team ID or fallback to default (e.g., 1)
-    $teamId = Auth::user()?->currentTeam->id ?? 1;
+    {
 
-    // Set team context for Spatie roles/permissions
-    app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
+        $this->authorize('viewAny', User::class);
+        // Dynamically get the authenticated user's current team ID or fallback to default (e.g., 1)
+        $teamId = Auth::user()?->currentTeam->id ?? 1;
 
-    // Load users with their roles and permissions under the correct team context
-    $users = User::with(['roles', 'permissions','country'])->get();
+        // Set team context for Spatie roles/permissions
+        app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
 
-    return response()->json([
-        'data' => UserResource::collection($users),
-        'message' => 'Users retrieved successfully'
-    ]);
-}
+        // Load users with their roles and permissions under the correct team context
+        $users = User::with(['roles', 'permissions', 'country'])->get();
+
+        return response()->json([
+            'data' => UserResource::collection($users),
+            'message' => 'Users retrieved successfully'
+        ]);
+    }
 
     public function store(UserStoreRequest $request)
     {
+
+        $this->authorize('create', User::class);
+
         // log info
         Log::info('Creating User:', $request->validated());
         $user = $this->userService->create($request->validated());
@@ -91,6 +101,8 @@ class UserController extends Controller
 
     public function show($id)
     {
+        // $this->authorize('view', User::class);
+
         return new UserResource($this->userService->find($id));
     }
 
@@ -115,7 +127,13 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request, $id)
     {
+
+        $userModel = User::findOrFail($id);
+
+        $this->authorize('update', $userModel);
         $user = $this->userService->update($id, $request->validated());
+
+
 
         if ($request->has('role_id')) {
             // Assign a single role by ID
@@ -129,15 +147,22 @@ class UserController extends Controller
 
     public function destroy($id)
     {
+
+        $userModel = User::findOrFail($id);
+
+        $this->authorize('delete', $userModel);
+
+
         $this->userService->delete($id);
         return response()->json(['message' => 'User deleted successfully']);
     }
 
 
 
-     // ✅ Suspend or Reactivate User
+    // ✅ Suspend or Reactivate User
     public function toggleStatus($id)
     {
+
         $user = User::findOrFail($id);
         $user->is_active = !$user->is_active;
         $user->save();

@@ -633,7 +633,8 @@
                                         {{ order.order_no || "-" }}
                                     </td>
                                     <td class="px-4 py-3 text-sm">
-                                        {{ getVendorName(order.vendor_id) }}
+                                        <!-- {{ getVendorName(order.vendor_id) }} -->
+                                        {{ order.vendor?.name ?? "Unknown" }}
                                     </td>
                                     <td class="px-4 py-3">
                                         <span

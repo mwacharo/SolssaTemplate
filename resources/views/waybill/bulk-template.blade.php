@@ -120,36 +120,35 @@
             text-align: left !important;
         }
 
-        /* ============================= */
-        /* BARCODE + COD */
-        /* ============================= */
+/* ============================= */
+/* BARCODE + COD */
+/* ============================= */
+.barcode-section {
+    margin-top: 8px;
+    text-align: center;
+}
 
-        .barcode-section {
-            margin-top: 8px;
-            text-align: center;
-        }
+.barcode-img {
+    width: 320px;
+    height: 80px;
+    display: block;
+    margin: 0 auto;
+}
 
-        .barcode-section svg,
-        .barcode-section img {
-            max-width: 100%;
-            height: auto;
-        }
+.barcode-id {
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 3px;
+}
 
-        .barcode-id {
-            font-family: monospace;
-            font-size: 16px;
-            font-weight: 700;
-            margin-top: 3px;
-        }
-
-        .cod-box {
-            margin-top: 6px;
-            padding: 6px;
-            border: 2px solid #000;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
+.cod-box {
+    margin-top: 6px;
+    padding: 6px;
+    border: 2px solid #000;
+    font-weight: 700;
+    font-size: 16px;
+}
         /* ============================= */
         /* DELIVERY */
         /* ============================= */
@@ -337,17 +336,18 @@
     </table>
 
     {{-- BARCODE + COD --}}
-    <div class="barcode-section">
-        {!! $barcode !!}
-        <div class="barcode-id">{{ $order->order_no }}</div>
+   {{-- BARCODE + COD --}}
+{{-- BARCODE + COD --}}
+<div class="barcode-section">
+    <img src="{{ $barcode }}" alt="{{ $order->order_no }}" class="barcode-img">
+    <div class="barcode-id">{{ $order->order_no }}</div>
 
-        @if($paymentMethod === 'cod')
-            <div class="cod-box">
-                COD: {{ ($order->currency ?? 'KES') . ' ' . number_format($order->total_price ?? 0, 2) }}
-            </div>
-        @endif
-    </div>
-
+    @if($paymentMethod === 'cod')
+        <div class="cod-box">
+            COD: {{ ($order->currency ?? 'KES') . ' ' . number_format($order->total_price ?? 0, 2) }}
+        </div>
+    @endif
+</div>
     {{-- DELIVERY --}}
     <div style="margin-top:6px;">
         <div class="delivery-label">Expected Delivery</div>
