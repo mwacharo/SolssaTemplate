@@ -82,7 +82,7 @@ export const useOrderStore = defineStore('orders', () => {
   })
 
   // NEW: Items per page options
-  const perPageOptions = [15, 30, 50, 100, 200]
+  const perPageOptions = [15, 30, 50, 100, 200,500, 1000]
 
   // Getters
   const getOrderById = computed(() => id => orders.value.find(order => order.id === id))
