@@ -48,7 +48,7 @@ use App\Http\Controllers\Api\ServiceConditionController;
 
 use App\Http\Controllers\Api\VendorServicesController;
 use App\Http\Controllers\Api\ServiceRateController;
-
+use App\Http\Controllers\Api\RiderAuthController;
 use Illuminate\Support\Facades\Http;
 
 
@@ -84,6 +84,9 @@ Route::post('/webrtc/token', function () {
 
 Route::post('/v1/get-vendor-token', [VendorAuthController::class, 'getToken']);
 
+Route::post('/v1/rider/login',  [RiderAuthController::class, 'getToken']);
+
+
 
 Route::post('/form/{order_no}', [OrderConfirmationController::class, 'submit']);
 
@@ -107,6 +110,11 @@ Route::get('/user', function (Request $request) {
 
 
 // routes/api.php
+
+
+
+Route::post('/v1/rider/logout',         [RiderAuthController::class, 'logout']);
+Route::patch('/v1/rider/status',        [RiderAuthController::class, 'updateStatus']);
 
 
 Route::prefix('v1')->group(function () {

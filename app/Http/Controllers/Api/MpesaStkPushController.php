@@ -61,7 +61,7 @@ class MpesaStkPushController extends Controller
             'phone'     => $phone,
             'status'    => 0, // pending
             'purpose'   => 'Order Payment',
-            'method ' => 'mpesa_stk_push',
+            'method' => 'mpesa_stk_push',
         ]);
 
         // 2️⃣ Get access token
@@ -105,14 +105,14 @@ class MpesaStkPushController extends Controller
             ->post($url, $payload);
 
         $responseData = $response->json();
-        $transaction->update([
-            // 'status' => 'completed',
-            'mpesa_receipt' => $metadata['MpesaReceiptNumber'] ?? null,
-            // 'transaction_date' => $metadata['TransactionDate'] ?? null,
-            'result_code' => 0,
-            'result_desc' => 'Success',
-            // 'result_data' => json_encode($stkCallback),
-        ]);
+        // $transaction->update([
+        //     // 'status' => 'completed',
+        //     'mpesa_receipt' => $metadata['MpesaReceiptNumber'] ?? null,
+        //     // 'transaction_date' => $metadata['TransactionDate'] ?? null,
+        //     'result_code' => 0,
+        //     'result_desc' => 'Success',
+        //     // 'result_data' => json_encode($stkCallback),
+        // ]);
 
         Log::info('STK Push Response', $responseData);
 
@@ -125,7 +125,9 @@ class MpesaStkPushController extends Controller
             ]);
         } else {
             $transaction->update([
-                'status' => 'failed',
+                // 'status' => 'failed',
+                'status' => OrderPayment::STATUS_FAILED,
+
                 'raw_response' => json_encode($responseData),
             ]);
         }
@@ -222,13 +224,32 @@ class MpesaStkPushController extends Controller
 
 
 
-            $deliveredStatus = Status::where('name', 'Delivered')->first();
+            // $deliveredStatus = Status::where('name', 'Delivered')->first();
 
-            if ($deliveredStatus && $order) {
-                OrderStatusTimestamp::create([
-                    'order_id' => $order->id,
-                    'status_id' => $deliveredStatus->id,
-                ]);
+
+            // if ($deliveredStatus && $order) {
+            //     OrderStatusTimestamp::create([
+            //         'order_id' => $order->id,
+            //         'status_id' => $deliveredStatus->id,
+            //     ]);
+            // }
+
+
+
+            $paidStatus = Status::where('name', 'Paid')->first();
+
+            if ($paidStatus && $order) {
+
+                $exists = OrderStatusTimestamp::where('order_id', $order->id)
+                    ->where('status_id', $paidStatus->id)
+                    ->exists();
+
+                if (!$exists) {
+                    OrderStatusTimestamp::create([
+                        'order_id'  => $order->id,
+                        'status_id' => $paidStatus->id,
+                    ]);
+                }
             }
             // sendmmessage mpesa notification
         }

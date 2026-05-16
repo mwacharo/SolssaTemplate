@@ -19,19 +19,21 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // 'allowed_origins' => ['*'],
+    'allowed_origins' => ['*'],
 
-    'allowed_origins' => [
-        'https://mwamkoherbs.com',
-        'https://mwamkoherbs.vercel.app',
-        'https://shoebucket.vercel.app',
-        'https://alphaherb.vercel.app',
-        'https://ken-norla.vercel.app',
+    // 'allowed_origins' => [
+    //     'https://mwamkoherbs.com',
+    //     'https://mwamkoherbs.vercel.app',
+    //     'https://shoebucket.vercel.app',
+    //     'https://alphaherb.vercel.app',
+    //     'https://ken-norla.vercel.app',
 
-        'http://localhost:5174',
-        'http://127.0.0.1:5174',
-        'http://localhost:5173',
-    ],
+    //     'http://localhost:5174',
+    //     'http://127.0.0.1:5174',
+    //     'http://localhost:5173',
+    //     'http://127.0.0.1',           // ← add this  
+
+    // ],
 
     'allowed_origins_patterns' => [],
 

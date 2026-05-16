@@ -190,7 +190,9 @@ const openDialog = (phoneNumber, order = null) => {
     
     // Set the active order if provided
     if (order) {
-        activeOrder.value = order;
+        // activeOrder.value = order;
+                activeOrder.value = { ...order }; // new ref every open
+
     }
     
     dialogOpen.value = true;

@@ -719,49 +719,100 @@ class OrderController extends Controller
             // ─────────────────────────────
             // ORDER ITEMS SYNC
             // ─────────────────────────────
-            $orderItemIds = $order->orderItems()->pluck('id')->toArray();
-            $submittedIds = [];
+            // $orderItemIds = $order->orderItems()->pluck('id')->toArray();
+            // $submittedIds = [];
 
-            foreach ($validated['order_items'] as $item) {
+            // foreach ($validated['order_items'] as $item) {
 
-                $itemData = [
-                    'order_id'           => $order->id,
-                    'product_id'         => $item['product_id'] ?? null,
-                    'sku'                => $item['sku'] ?? null,
-                    'name'               => $item['name'] ?? null,
-                    'quantity'           => $item['quantity'] ?? 1,
-                    'unit_price'         => $item['unit_price'] ?? 0,
-                    'total_price'        => $item['total_price'] ?? 0,
-                    'discount'           => $item['discount'] ?? 0,
-                    'currency'           => $item['currency'] ?? 'KSH',
-                    'weight'             => $item['weight'] ?? null,
-                    'delivered_quantity' => $item['delivered_quantity'] ?? 0,
-                ];
+            //     $itemData = [
+            //         'order_id'           => $order->id,
+            //         'product_id'         => $item['product_id'] ?? null,
+            //         'sku'                => $item['sku'] ?? null,
+            //         'name'               => $item['name'] ?? null,
+            //         'quantity'           => $item['quantity'] ?? 1,
+            //         'unit_price'         => $item['unit_price'] ?? 0,
+            //         'total_price'        => $item['total_price'] ?? 0,
+            //         'discount'           => $item['discount'] ?? 0,
+            //         'currency'           => $item['currency'] ?? 'KSH',
+            //         'weight'             => $item['weight'] ?? null,
+            //         'delivered_quantity' => $item['delivered_quantity'] ?? 0,
+            //     ];
 
-                if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
-                    $product = Product::where('sku', $itemData['sku'])->first();
-                    if ($product) {
-                        $itemData['product_id'] = $product->id;
+            //     if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
+            //         $product = Product::where('sku', $itemData['sku'])->first();
+            //         if ($product) {
+            //             $itemData['product_id'] = $product->id;
+            //         }
+            //     }
+
+            //     if (!empty($item['id']) && in_array($item['id'], $orderItemIds)) {
+
+            //         $orderItem = OrderItem::find($item['id']);
+            //         $orderItem->update($itemData);
+            //         $submittedIds[] = $orderItem->id;
+            //     } else {
+
+            //         $newItem = OrderItem::create($itemData);
+            //         $submittedIds[] = $newItem->id;
+            //     }
+            // }
+
+            // // remove deleted items
+            // $itemsToRemove = array_diff($orderItemIds, $submittedIds);
+
+            // if (!empty($itemsToRemove)) {
+            //     OrderItem::whereIn('id', $itemsToRemove)->delete();
+            // }
+
+
+
+            if (isset($validated['order_items']) && is_array($validated['order_items'])) {
+
+                $orderItemIds = $order->orderItems()->pluck('id')->toArray();
+                $submittedIds = [];
+
+                foreach ($validated['order_items'] as $item) {
+
+                    $itemData = [
+                        'order_id'           => $order->id,
+                        'product_id'         => $item['product_id'] ?? null,
+                        'sku'                => $item['sku'] ?? null,
+                        'name'               => $item['name'] ?? null,
+                        'quantity'           => $item['quantity'] ?? 1,
+                        'unit_price'         => $item['unit_price'] ?? 0,
+                        'total_price'        => $item['total_price'] ?? 0,
+                        'discount'           => $item['discount'] ?? 0,
+                        'currency'           => $item['currency'] ?? 'KSH',
+                        'weight'             => $item['weight'] ?? null,
+                        'delivered_quantity' => $item['delivered_quantity'] ?? 0,
+                    ];
+
+                    if (empty($itemData['product_id']) && !empty($itemData['sku'])) {
+                        $product = Product::where('sku', $itemData['sku'])->first();
+
+                        if ($product) {
+                            $itemData['product_id'] = $product->id;
+                        }
+                    }
+
+                    if (!empty($item['id']) && in_array($item['id'], $orderItemIds)) {
+
+                        $orderItem = OrderItem::find($item['id']);
+                        $orderItem->update($itemData);
+                        $submittedIds[] = $orderItem->id;
+                    } else {
+
+                        $newItem = OrderItem::create($itemData);
+                        $submittedIds[] = $newItem->id;
                     }
                 }
 
-                if (!empty($item['id']) && in_array($item['id'], $orderItemIds)) {
+                // remove deleted items
+                $itemsToRemove = array_diff($orderItemIds, $submittedIds);
 
-                    $orderItem = OrderItem::find($item['id']);
-                    $orderItem->update($itemData);
-                    $submittedIds[] = $orderItem->id;
-                } else {
-
-                    $newItem = OrderItem::create($itemData);
-                    $submittedIds[] = $newItem->id;
+                if (!empty($itemsToRemove)) {
+                    OrderItem::whereIn('id', $itemsToRemove)->delete();
                 }
-            }
-
-            // remove deleted items
-            $itemsToRemove = array_diff($orderItemIds, $submittedIds);
-
-            if (!empty($itemsToRemove)) {
-                OrderItem::whereIn('id', $itemsToRemove)->delete();
             }
 
             // ─────────────────────────────

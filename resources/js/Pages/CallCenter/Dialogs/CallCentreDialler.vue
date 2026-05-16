@@ -1128,11 +1128,18 @@ const dialogOpen = computed({
 });
 
 // Method to update dialog state
+// const updateDialogOpen = (value) => {
+//     emit("update:modelValue", value);
+//     if (!value) {
+//         store.closeDialog();
+//     }
+// };
+
+// Simplify updateDialogOpen — let closeDialog handle store cleanup
 const updateDialogOpen = (value) => {
     emit("update:modelValue", value);
-    if (!value) {
-        store.closeDialog();
-    }
+    if (!value) closeDialog(); // closeDialog already resets everything
+    // Remove the separate store.closeDialog() call here
 };
 // Active tab
 const activeTab = ref("call");
@@ -1261,44 +1268,78 @@ const shouldShowRecallDate = computed(() => {
     return selectedCategory?.name === "Follow Up";
 });
 
+// watch(
+//     () => props.order,
+//     (newOrder) => {
+//         if (newOrder) {
+//             // Deep clone the order to avoid mutating the prop
+//             orderEdit.value = {
+//                 ...newOrder,
+//                 customer: { ...newOrder.customer },
+//                 order_items:
+//                     newOrder.order_items?.map((item) => ({
+//                         ...item,
+//                         product: { ...item.product },
+//                     })) || [],
+//                 shipping_charges: newOrder.shipping_charges || 0,
+//                 total_price: newOrder.total_price || 0,
+//                 sub_total: newOrder.sub_total || 0,
+//             };
+
+//             // Initialize call form
+//             callForm.value.phone =
+//                 newOrder.customer?.phone ||
+//                 newOrder.customer?.phone_number ||
+//                 "";
+
+//             // Load status history if available
+//             if (newOrder.order_statuses?.length > 0) {
+//                 statusHistory.value = newOrder.order_statuses.map((status) => ({
+//                     status_name: status.status?.name || "Unknown",
+//                     notes: status.status_notes || "No notes",
+//                     created_at: status.created_at,
+//                     user: status.user?.name || "System",
+//                     color: getOrderStatusColor(status.status?.name),
+//                 }));
+//             }
+//         }
+//     },
+
+//     { immediate: true },
+// );
+
 watch(
-    () => props.order,
-    (newOrder) => {
-        if (newOrder) {
-            // Deep clone the order to avoid mutating the prop
-            orderEdit.value = {
-                ...newOrder,
-                customer: { ...newOrder.customer },
-                order_items:
-                    newOrder.order_items?.map((item) => ({
-                        ...item,
-                        product: { ...item.product },
-                    })) || [],
-                shipping_charges: newOrder.shipping_charges || 0,
-                total_price: newOrder.total_price || 0,
-                sub_total: newOrder.sub_total || 0,
-            };
+    [() => props.order, () => props.modelValue],
+    ([newOrder]) => {
+        if (!newOrder || !props.modelValue) return;
 
-            // Initialize call form
-            callForm.value.phone =
-                newOrder.customer?.phone ||
-                newOrder.customer?.phone_number ||
-                "";
+        orderEdit.value = {
+            ...newOrder,
+            customer: { ...newOrder.customer },
+            order_items:
+                newOrder.order_items?.map((item) => ({
+                    ...item,
+                    product: { ...item.product },
+                })) || [],
+            shipping_charges: newOrder.shipping_charges || 0,
+            total_price: newOrder.total_price || 0,
+            sub_total: newOrder.sub_total || 0,
+        };
 
-            // Load status history if available
-            if (newOrder.order_statuses?.length > 0) {
-                statusHistory.value = newOrder.order_statuses.map((status) => ({
-                    status_name: status.status?.name || "Unknown",
-                    notes: status.status_notes || "No notes",
-                    created_at: status.created_at,
-                    user: status.user?.name || "System",
-                    color: getOrderStatusColor(status.status?.name),
-                }));
-            }
+        callForm.value.phone =
+            newOrder.customer?.phone || newOrder.customer?.phone_number || "";
+
+        if (newOrder.order_statuses?.length > 0) {
+            statusHistory.value = newOrder.order_statuses.map((status) => ({
+                status_name: status.status?.name || "Unknown",
+                notes: status.status_notes || "No notes",
+                created_at: status.created_at,
+                user: status.user?.name || "System",
+                color: getOrderStatusColor(status.status?.name),
+            }));
         }
     },
-
-    { immediate: true },
+    { immediate: true, deep: true },
 );
 
 const updateProductSelection = (item, productId) => {
@@ -1450,10 +1491,6 @@ const removeAttachment = (index) => {
     messageText.value.attachments.splice(index, 1);
 };
 
-
-
-
-
 const sendMessage = async () => {
     sending.value = true;
 
@@ -1463,7 +1500,10 @@ const sendMessage = async () => {
 
         const contactData = {
             id: customerData.id || orderData.customer?.id || null,
-            name: customerData.full_name || orderData.customer?.full_name || "Unknown",
+            name:
+                customerData.full_name ||
+                orderData.customer?.full_name ||
+                "Unknown",
             phone:
                 customerData.phone ||
                 customerData.phone_number ||
@@ -1477,10 +1517,10 @@ const sendMessage = async () => {
         console.log("📤 Sending message with context:", contactData);
 
         const templateId = templateStore.selectedTemplate?.id || null;
-        
+
         // ✅ FIX: Use storeMessageText.value (the computed) instead of store.messageText
         const messageToSend = storeMessageText.value;
-        
+
         if (!messageToSend?.trim()) {
             showSnackbar("Please enter a message", "error");
             return;
@@ -1489,7 +1529,7 @@ const sendMessage = async () => {
         const result = await templateStore.sendSingleMessage(
             userId.value,
             contactData,
-            messageToSend,  // ✅ Pass the resolved message text
+            messageToSend, // ✅ Pass the resolved message text
             templateId,
         );
 
