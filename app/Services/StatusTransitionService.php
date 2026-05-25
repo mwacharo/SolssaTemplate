@@ -39,6 +39,7 @@ class StatusTransitionService
         'Cancelled' => ['Scheduled', 'Pending'],
 
         'Out of Stock' => ['Scheduled', 'Cancelled', 'Pending'],
+        
         'Paid' => ['Delivered'],
 
         'Returned' => ['Scheduled']

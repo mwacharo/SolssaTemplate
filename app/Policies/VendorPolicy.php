@@ -13,7 +13,10 @@ class VendorPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Vendor');
+        return $user->hasRole('Admin') ||
+            $user->hasRole('Vendor')
+
+            || $user->hasRole('CallAgent');
     }
 
     /**

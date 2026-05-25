@@ -13,7 +13,7 @@ class Role extends SpatieRole implements RoleContract
 
 
 
-     use LogsActivity;
+    use LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -43,7 +43,7 @@ class Role extends SpatieRole implements RoleContract
      */
     protected $casts = [
         'active' => 'boolean',
-          'created_at' => 'datetime',
+        'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
@@ -69,5 +69,13 @@ class Role extends SpatieRole implements RoleContract
     public function isActive()
     {
         return $this->active;
+    }
+
+    public function statuses()
+    {
+        return $this->belongsToMany(
+            Status::class,
+            'role_status_permissions'
+        );
     }
 }

@@ -56,6 +56,7 @@ class Order extends Model
         'city_id',
         'status',
         'delivery_status',
+        'rescheduled_date',
         'delivery_date',
         'recall_date',
         'schedule_date',

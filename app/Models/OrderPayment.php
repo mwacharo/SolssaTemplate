@@ -39,6 +39,8 @@ class OrderPayment extends Model
         'raw_response',          // Raw JSON response from STK Push initiation
         'raw_callback',          // Raw JSON payload from M-PESA callback
         'paid_at',               // Timestamp when payment was completed
+
+        // BillRefNumber //This is the account reference number provided for payments to paybill numbers, usually null for till number.
     ];
 
     /**

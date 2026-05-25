@@ -45,9 +45,18 @@ class Status extends Model
             ->dontSubmitEmptyLogs();
     }
 
-//   status has many status categories
+    //   status has many status categories
     public function statusCategories()
     {
         return $this->hasMany(StatusCategory::class);
+    }
+
+
+    public function roles()
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'role_status_permissions'
+        );
     }
 }

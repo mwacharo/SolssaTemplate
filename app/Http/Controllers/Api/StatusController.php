@@ -1,11 +1,13 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStatusRequest;
 use App\Http\Requests\UpdateStatusRequest;
 use App\Models\Status;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class StatusController extends Controller
 {
@@ -29,7 +31,7 @@ class StatusController extends Controller
         // Find the status by id or fail if not found
         $status = Status::findOrFail($status->id);
         return response()->json($status, 201);
-    }       
+    }
 
     /**
      * Display the specified resource.
@@ -56,5 +58,25 @@ class StatusController extends Controller
     {
         $status->delete();
         return response()->json(null, 204);
+    }
+
+    // avialable status per  role ...role based status
+
+    public function availableStatuses()
+    {
+        $user = auth()->user();
+
+        $roleNames = $user->getRoleNames();
+
+        Log::info('User ID: ' . $user->id . ', Roles: ' . $roleNames->implode(', '));
+
+        $statuses = Status::whereHas('roles', function ($q) use ($roleNames) {
+            $q->whereIn('roles.name', $roleNames);
+        })->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $statuses
+        ]);
     }
 }

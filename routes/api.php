@@ -41,6 +41,8 @@ use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
 
 use App\Http\Controllers\Api\ConditionTypeController;
+use App\Http\Controllers\Api\MpesaC2BController;
+use App\Http\Controllers\Api\MpesaVerificationController;
 use App\Http\Controllers\Api\OrderTrackingController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ScanDispatchController;
@@ -100,6 +102,16 @@ Route::get('/v1/orders/{id}', [\App\Http\Controllers\Api\OrderController::class,
 
 
 Route::post('/mpesa/stk/callback', [MpesaStkPushController::class, 'callback']);
+
+//     "message": "The route api/v1/orders/2651/verify-mpesa could not be found.",
+Route::post('/v1/orders/{id}/verify-mpesa', [MpesaVerificationController::class, 'verify']);
+
+// validatiion  url
+// MpesaC2BController
+Route::post('/mpesa/c2b/validation', [MpesaC2BController::class, 'validation']);
+// confirmation url
+Route::post('/mpesa/c2b/confirmation', [MpesaC2BController::class, 'confirmation']);
+
 
 
 
@@ -425,6 +437,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/statuses/{id}', [StatusController::class, 'show']); // Show a specific status
     Route::put('/statuses/{id}', [StatusController::class, 'update']); // Update a specific status
     Route::delete('/statuses/{id}', [StatusController::class, 'destroy']); // Delete a specific status
+    // avaible status by role 
+    Route::get('/available-statuses', [StatusController::class, 'availableStatuses']); // Get available statuses by role
 
 
     // cities 
