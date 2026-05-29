@@ -1667,14 +1667,48 @@ const getVendorName = (vendorId) => {
     return vendor ? vendor.name : "Unknown";
 };
 
-const getCallAgent = (order) => getAgentByRole(order, "CallAgent");
-const getDeliveryAgent = (order) => getAgentByRole(order, "Delivery Agent");
+// const getCallAgent = (order) => getAgentByRole(order, "CallAgent");
+// const getDeliveryAgent = (order) => getAgentByRole(order, "Delivery Agent");
 
-const getAgentByRole = (order, role) => {
-    if (!order.assignments || order.assignments.length === 0) return null;
-    const assignment = order.assignments.find((a) => a.role === role);
-    return assignment ? assignment.user : null;
+// const getAgentByRole = (order, role) => {
+//     if (!order.assignments || order.assignments.length === 0) return null;
+//     const assignment = order.assignments.find((a) => a.role === role);
+//     return assignment ? assignment.user : null;
+// };
+
+// const getCallAgent = (order) => {
+//     if (!order.latest_assignment) return null;
+//     if (order.latest_assignment.role !== 'CallAgent') return null;
+//     return order.latest_assignment.user;
+// };
+
+// const getDeliveryAgent = (order) => getAgentByRole(order, "Delivery Agent");
+
+// const getCallAgent = (order) => {
+//     return order.latest_call_agent_assignment?.user ?? null;
+// };
+
+// const getDeliveryAgent = (order) => {
+//     return order.latest_delivery_agent_assignment?.user ?? null;
+// };
+
+// // const getAgentByRole = (order, role) => {
+// //     if (!order.assignments || order.assignments.length === 0) return null;
+// //     const assignment = order.assignments.find((a) => a.role === role);
+// //     return assignment ? assignment.user : null;
+// // };
+
+const getCallAgent = (order) => {
+    return order.latest_call_agent_assignment?.user ?? null;
 };
+
+const getDeliveryAgent = (order) => {
+    return order.latest_delivery_agent_assignment?.user ?? null;
+};
+
+// const getRider = (order) => {
+//     return order.latest_rider_assignment?.user ?? null;
+// };
 
 const viewOrder = (order) => {
     // Open the view dialog for the selected order

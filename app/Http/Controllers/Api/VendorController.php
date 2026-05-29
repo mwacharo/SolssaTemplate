@@ -32,7 +32,7 @@ class VendorController extends Controller
 
     public function index()
     {
-        $this->authorize('viewAny', User::class);
+        // $this->authorize('viewAny', User::class);
 
         $query = User::role('Vendor')
             ->whereNull('deleted_at')

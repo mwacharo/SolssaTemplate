@@ -8,7 +8,7 @@ class SmsalaVoiceService
 {
     protected string $endpoint = 'https://api2.smsala.com/api/VoiceBridge';
 
-    protected string $apiToken = 'Ri8A5WRKLddUdphQ';
+    protected string $apiToken = 'C5dIPOMZC8prdR5Z';
     protected string $callerNumber = '919906121146';
     protected string $callbackUrl = 'logibrain.solssa.com/api/v1/africastalking-handle-callback';
 

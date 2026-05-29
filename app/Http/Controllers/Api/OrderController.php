@@ -1391,6 +1391,11 @@ class OrderController extends Controller
             'shippingAddress',
             'pickupAddress',
             'assignments.user',
+            'latestAssignment.user',
+
+            'latestCallAgentAssignment.user',
+            'latestDeliveryAgentAssignment.user',
+
             'payments',
             'latestStatus.status',
             'statusTimestamps.status',
@@ -1424,7 +1429,11 @@ class OrderController extends Controller
             });
             \Log::info('Applied Call Agent filter');
         }
-        // If role is Admin, Vendor, or other - show all orders (no filter applied)
+
+
+
+
+
 
         // Apply additional filters
         $this->applyFilters($query, $request);

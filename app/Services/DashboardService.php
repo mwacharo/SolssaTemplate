@@ -3,134 +3,141 @@
 namespace App\Services;
 
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\OrderStatusTimestamp;
 use App\Models\Product;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Services\CallAgentPerformanceService;
-use App\Http\Resources\AgentPerformanceResource;
 
 class DashboardService
 {
     /**
-     * Get high-level counts of orders by latest status.
+     * Reusable vendor scope — returns base orders query scoped to vendor if applicable.
      */
-    public function getOrderStats(): array
+    private function ordersQuery($user)
     {
-        // Get the latest status for each order
-        $statuses = Order::with('latestStatus.status')
-            ->get()
-            ->map(fn($order) => $order->latestStatus?->status?->name)
-            ->filter();
+        $query = DB::table('orders')->whereNull('orders.deleted_at');
 
-        $statusCounts = $statuses->countBy();
+        if ($this->isVendor($user)) {
+            $query->where('orders.vendor_id', $user->id);
+        }
 
-        $totalOrders = $statuses->count();
-        $delivered   = $statusCounts->get('Delivered', 0);
-        $pending     = $statusCounts->get('Pending', 0);
+        return $query;
+    }
 
-        // Delivery rate (success percentage)
-        $deliveryRate = $totalOrders > 0
-            ? round(($delivered / $totalOrders) * 100, 2)
-            : 0;
+    private function isVendor($user): bool
+    {
+        return in_array($user?->getRoleNames()->first(), ['vendor', 'Vendor']);
+    }
 
-        // Order growth (mock: +12% — you can compute by comparing last month vs this month)
-        $orderGrowth = 12;
+    /**
+     * Subquery that gets the latest status name per order — reused across methods.
+     */
+    private function latestStatusSubquery(): string
+    {
+        return "
+            SELECT ost.order_id, s.name as status_name
+            FROM order_status_timestamps ost
+            INNER JOIN (
+                SELECT order_id, MAX(id) as max_id
+                FROM order_status_timestamps
+                GROUP BY order_id
+            ) latest ON ost.id = latest.max_id
+            INNER JOIN statuses s ON s.id = ost.status_id
+        ";
+    }
 
-        // Monthly target (example: at least 150, or +20 from current)
+    /**
+     * Get high-level order stats.
+     */
+    public function getOrderStats($user): array
+    {
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+
+        $rows = DB::select("
+            SELECT 
+                ls.status_name,
+                COUNT(*) as count
+            FROM orders o
+            LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
+            WHERE o.deleted_at IS NULL {$vendorWhere}
+            GROUP BY ls.status_name
+        ");
+
+        $statusCounts  = collect($rows)->pluck('count', 'status_name');
+        $totalOrders   = $statusCounts->sum();
+        $delivered     = (int) ($statusCounts['Delivered'] ?? 0);
+        $pending       = (int) ($statusCounts['Pending'] ?? 0);
+        $deliveryRate  = $totalOrders > 0 ? round(($delivered / $totalOrders) * 100, 2) : 0;
         $monthlyTarget = max($totalOrders + 20, 150);
-
-        // Progress towards target
-        $orderProgress = $monthlyTarget > 0
-            ? min(100, round(($totalOrders / $monthlyTarget) * 100, 2))
-            : 0;
-
-        // Average delivery time (mocked for now)
-        $averageDeliveryTime = "2.4h";
+        $orderProgress = $monthlyTarget > 0 ? min(100, round(($totalOrders / $monthlyTarget) * 100, 2)) : 0;
 
         return [
-            'totalOrders'        => $totalOrders,
-            'deliveries'         => $delivered,
-            'pending'            => $pending,
-            'deliveryRate'       => $deliveryRate,
-            'orderGrowth'        => $orderGrowth,
-            'monthlyTarget'      => $monthlyTarget,
-            'orderProgress'      => $orderProgress,
-            'averageDeliveryTime' => $averageDeliveryTime,
-            'statusCounts'       => $statusCounts, // full dynamic breakdown
+            'totalOrders'         => $totalOrders,
+            'deliveries'          => $delivered,
+            'pending'             => $pending,
+            'deliveryRate'        => $deliveryRate,
+            'orderGrowth'         => $this->calculateOrderGrowth($user),
+            'monthlyTarget'       => $monthlyTarget,
+            'orderProgress'       => $orderProgress,
+            'averageDeliveryTime' => $this->calculateAverageDeliveryTime($user),
+            'statusCounts'        => $statusCounts,
         ];
     }
 
-
     /**
-     * Get analytics (confirmed vs delivered grouped by month).
+     * Order analytics grouped by period.
      */
-    public function getOrderAnalytics(string $period = '6M')
+    public function getOrderAnalytics($user, string $period = '6M'): array
     {
-        $orders = Order::with('latestStatus.status')->get();
-
-        // Get all unique statuses dynamically
-        $statuses = $orders
-            ->map(fn($o) => strtolower($o->latestStatus?->status?->name))
-            ->filter()
-            ->unique()
-            ->values();
-
-        $now = Carbon::now();
+        $now         = Carbon::now();
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
 
         switch ($period) {
-            case '1M': // Last 4 weeks
-                $labels = collect(range(0, 3))
-                    ->map(fn($w) => $now->copy()->subWeeks($w)->format('W'))
-                    ->reverse()
-                    ->values();
-                $groupBy = fn($o) => $o->created_at->format('W');
+            case '1M':
+                $groupExpr = "WEEK(o.created_at)";
+                $labels    = collect(range(3, 0))->map(fn($w) => $now->copy()->subWeeks($w)->format('W'));
+                $filterExpr = "o.created_at >= '" . $now->copy()->subWeeks(3)->startOfWeek()->toDateTimeString() . "'";
                 break;
-
-            case '3M': // Last 3 months
-                $labels = collect(range(0, 2))
-                    ->map(fn($m) => $now->copy()->subMonths($m)->format('M'))
-                    ->reverse()
-                    ->values();
-                $groupBy = fn($o) => $o->created_at->format('M');
+            case '3M':
+                $groupExpr  = "DATE_FORMAT(o.created_at, '%b')";
+                $labels     = collect(range(2, 0))->map(fn($m) => $now->copy()->subMonths($m)->format('M'));
+                $filterExpr = "o.created_at >= '" . $now->copy()->subMonths(2)->startOfMonth()->toDateTimeString() . "'";
                 break;
-
-            case '1Y': // 4 quarters
-                $labels = collect([1, 2, 3, 4]);
-                $groupBy = fn($o) => ceil($o->created_at->month / 3);
-                $year = $now->year;
+            case '1Y':
+                $groupExpr  = "QUARTER(o.created_at)";
+                $labels     = collect([1, 2, 3, 4]);
+                $filterExpr = "YEAR(o.created_at) = {$now->year}";
                 break;
-
             case '6M':
-            default: // Last 6 months
-                $labels = collect(range(0, 5))
-                    ->map(fn($m) => $now->copy()->subMonths($m)->format('M'))
-                    ->reverse()
-                    ->values();
-                $groupBy = fn($o) => $o->created_at->format('M');
+            default:
+                $groupExpr  = "DATE_FORMAT(o.created_at, '%b')";
+                $labels     = collect(range(5, 0))->map(fn($m) => $now->copy()->subMonths($m)->format('M'));
+                $filterExpr = "o.created_at >= '" . $now->copy()->subMonths(5)->startOfMonth()->toDateTimeString() . "'";
                 break;
         }
 
-        $result = [];
+        $rows = DB::select("
+            SELECT 
+                ls.status_name,
+                {$groupExpr} as period,
+                COUNT(*) as count
+            FROM orders o
+            LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
+            WHERE o.deleted_at IS NULL
+            AND {$filterExpr}
+            {$vendorWhere}
+            GROUP BY ls.status_name, {$groupExpr}
+        ");
 
-        foreach ($statuses as $status) {
-            $filtered = $orders->filter(
-                fn($o) =>
-                strtolower($o->latestStatus?->status?->name) === $status
-                    && (!isset($year) || $o->created_at->year == $year)
-            );
+        // Build result keyed by status → period → count
+        $grouped = collect($rows)->groupBy('status_name');
+        $result  = [];
 
-            $data = $labels->map(
-                fn($label) =>
-                $filtered->filter(fn($o) => $groupBy($o) == $label)->count()
-            )->toArray();
-
+        foreach ($grouped as $status => $entries) {
+            $byPeriod = $entries->pluck('count', 'period');
             $result[] = [
-                'name' => ucfirst($status),
-                'data' => $data,
+                'name' => $status,
+                'data' => $labels->map(fn($label) => (int) ($byPeriod[$label] ?? 0))->values()->toArray(),
             ];
         }
 
@@ -138,660 +145,229 @@ class DashboardService
     }
 
     /**
-     * Mock inventory stats (replace with real warehouse/product queries).
+     * Status overview counts.
      */
-    public function getInventoryStats(): array
+    public function getStatusOverview($user): array
     {
-        // distinct products (SKUs)
-        $skus = Product::count();
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
 
-        // total stock units across all products
-        $items = DB::table('product_stocks')->sum('current_stock');
+        $rows = DB::select("
+            SELECT ls.status_name, COUNT(*) as count
+            FROM orders o
+            LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
+            WHERE o.deleted_at IS NULL {$vendorWhere}
+            GROUP BY ls.status_name
+        ");
 
-        // counts by condition (using stock_threshold from product_stocks)
-        $inStockCount = DB::table('product_stocks')
-            ->whereColumn('current_stock', '>', 'stock_threshold')
-            ->count();
-
-        $lowStockCount = DB::table('product_stocks')
-            ->where('current_stock', '>', 0)
-            ->whereColumn('current_stock', '<=', 'stock_threshold')
-            ->count();
-
-        $outStockCount = DB::table('product_stocks')
-            ->where('current_stock', '=', 0)
-            ->count();
-
-        $totalTracked = $inStockCount + $lowStockCount + $outStockCount;
-
-        // avoid division by zero
-        $inStockPercent  = $totalTracked > 0 ? round(($inStockCount / $totalTracked) * 100, 2) : 0;
-        $lowStockPercent = $totalTracked > 0 ? round(($lowStockCount / $totalTracked) * 100, 2) : 0;
-        $outStockPercent = $totalTracked > 0 ? round(($outStockCount / $totalTracked) * 100, 2) : 0;
-
-        // Optional: calculate stock value (if product_stocks has `price`)
-        // Calculate stock value using the latest active price from product_prices
-        // Calculate stock value using Eloquent relationships for accuracy
-        $stockValue = Product::with(['prices' => function ($q) {
-            $q->where('is_active', true);
-        }, 'stocks'])
-            ->get()
-            ->sum(function ($product) {
-                $activePrice = $product->prices->first()?->base_price ?? 0;
-                $totalStock = $product->stocks->sum('current_stock');
-                return $activePrice * $totalStock;
-            });
+        $counts = collect($rows)->pluck('count', 'status_name');
 
         return [
-            'items'     => $items,       // total units
-            'skus'      => $skus,        // distinct products
-            'inStock'   => $inStockPercent,
-            'lowStock'  => $lowStockPercent,
-            'outStock'  => $outStockPercent,
-            'stockValue' => round($stockValue, 2), // optional
+            'pending'   => (int) ($counts['Pending'] ?? 0),
+            'shipped'   => (int) ($counts['Shipped'] ?? 0),
+            'delivered' => (int) ($counts['Delivered'] ?? 0),
+            'returned'  => (int) ($counts['Returned'] ?? 0),
+            'cancelled' => (int) ($counts['Cancelled'] ?? 0),
         ];
     }
-
 
     /**
-     * Status overview (by latest status, not raw columns).
+     * Delivery rate stats.
      */
-    public function getStatusOverview(): array
+    public function getDeliveryRate($user): array
     {
-        $statuses = Order::with('latestStatus.status')
-            ->get()
-            ->map(fn($o) => $o->latestStatus?->status?->name)
-            ->filter()
-            ->countBy();
+        $today       = now()->startOfDay()->toDateTimeString();
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+
+        $rows = DB::select("
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN ls.status_name = 'Delivered' THEN 1 ELSE 0 END) as delivered,
+                SUM(CASE WHEN o.delivery_date >= '{$today}' THEN 1 ELSE 0 END) as live,
+                SUM(CASE WHEN o.delivery_date < '{$today}' THEN 1 ELSE 0 END) as non_live
+            FROM orders o
+            LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
+            WHERE o.deleted_at IS NULL {$vendorWhere}
+        ");
+
+        $row = $rows[0];
 
         return [
-            'pending'   => $statuses['Pending'] ?? 0,
-            'shipped'   => $statuses['Shipped'] ?? 0,
-            'delivered' => $statuses['Delivered'] ?? 0,
-            'returned'  => $statuses['Returned'] ?? 0,
-            'cancelled' => $statuses['Cancelled'] ?? 0,
-            // 'new'     => $statuses['New'] ?? 0,
-            // 'scheduled' => $statuses['Scheduled'] ?? 0,
-            ''
+            'rate'      => $row->total > 0 ? round(($row->delivered / $row->total) * 100, 2) : 0,
+            'total'     => (int) $row->total,
+            'delivered' => (int) $row->delivered,
+            'live'      => (int) $row->live,
+            'non_live'  => (int) $row->non_live,
         ];
     }
-
-
-
-    // public function getTopAgents()
-    // {
-    //     $metricsService = app(MetricsService::class);
-    //     $service = new CallAgentPerformanceService($metricsService);
-
-    //     $topAgents = $service->getTopAgentsPerformance(5);
-
-    //     return ['data' => $topAgents];
-    // }
-
-
-    public function getTopAgents()
-    {
-        $metricsService = app(MetricsService::class);
-        $service = new CallAgentPerformanceService($metricsService);
-
-        $topAgents = $service->getTopAgentsPerformance(5);
-
-        // Return transformed collection using Resource
-        // return AgentPerformanceResource::collection($topAgents);
-
-        return  $topAgents;
-    }
-
-
-
-
-    public function getDeliveryRate(): array
-    {
-        $today = now()->startOfDay();
-
-        // Total orders
-        $total = Order::count();
-
-        // Delivered orders (success)
-        $delivered = Order::with('latestStatus.status')
-            ->get()
-            ->filter(fn($o) => $o->latestStatus?->status?->name === 'Delivered')
-            ->count();
-
-        // Live orders (delivery_date not elapsed)
-        $live = Order::whereDate('delivery_date', '>=', $today)->count();
-
-        // Non-Live orders (delivery_date elapsed)
-        $nonLive = Order::whereDate('delivery_date', '<', $today)->count();
-
-        return [
-            'rate' => $total ? round(($delivered / $total) * 100, 2) : 0,
-            'total' => $total,
-            'delivered' => $delivered,
-            'live' => $live,
-            'non_live' => $nonLive,
-        ];
-    }
-
-
-    public function getTopProducts()
-    {
-        return DB::table('order_items')
-            ->join('products', 'order_items.product_id', '=', 'products.id')
-            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
-            ->select(
-                'products.product_name as name',
-                DB::raw('SUM(order_items.quantity) as sales'),
-                'categories.name as category'
-            )
-            ->groupBy('products.product_name', 'categories.name')
-            ->orderByDesc('sales')
-            ->take(5)
-            ->get();
-    }
-
-
-
-
-
-
-
-
-
-
-    public function getDashboardData()
-    {
-        $vendorId = auth()->id(); // or however you get the current vendor ID
-
-        // Get all orders for the vendor
-        $orders = Order::where('vendor_id', $vendorId)
-            ->whereNull('deleted_at')
-            ->with('latestStatus.status')
-            ->get();
-
-        // Total orders
-        $totalOrders = $orders->count();
-
-        // Count deliveries (orders with latest status = "Delivered")
-        $deliveries = $orders->filter(function ($order) {
-            return $order->latestStatus
-                && $order->latestStatus->status
-                && $order->latestStatus->status->name === 'Delivered';
-        })->count();
-
-        // Delivery rate
-        $deliveryRate = $totalOrders > 0 ? round(($deliveries / $totalOrders) * 100, 2) : 0;
-
-        // Count orders by status
-        $statusCounts = [];
-        foreach ($orders as $order) {
-            if ($order->latestStatus && $order->latestStatus->status) {
-                $statusName = $order->latestStatus->status->name;
-                if (!isset($statusCounts[$statusName])) {
-                    $statusCounts[$statusName] = 0;
-                }
-                $statusCounts[$statusName]++;
-            }
-        }
-
-        // Count pending (assuming "New" or "Scheduled" = pending)
-        $pending = ($statusCounts['New'] ?? 0) + ($statusCounts['Scheduled'] ?? 0);
-
-        // Order chart data - last 6 periods (days/weeks/months)
-        $orderChart = $this->getOrderChartData($vendorId);
-
-        // Status data for pie chart
-        $statusData = [
-            'pending' => $statusCounts['New'] ?? 0,
-            'shipped' => $statusCounts['Scheduled'] ?? 0, // or whatever your "shipped" status is
-            'delivered' => $statusCounts['Delivered'] ?? 0,
-            'returned' => $statusCounts['Returned'] ?? 0,
-            'cancelled' => $statusCounts['Cancelled'] ?? 0,
-        ];
-
-        return [
-            'orderStats' => [
-                'totalOrders' => $totalOrders,
-                'deliveries' => $deliveries,
-                'pending' => $pending,
-                'deliveryRate' => $deliveryRate,
-                'orderGrowth' => $this->calculateOrderGrowth($vendorId),
-                'monthlyTarget' => 150, // This should come from settings
-                'orderProgress' => $totalOrders, // or calculate based on target
-                'averageDeliveryTime' => $this->calculateAverageDeliveryTime($vendorId),
-                'statusCounts' => $statusCounts,
-            ],
-            'orderChart' => $orderChart,
-            'inventory' => $this->getInventoryStats($vendorId),
-            'statusData' => $statusData,
-            'topProducts' => $this->getTopProducts($vendorId),
-            'topSellers' => $this->getTopSellers(),
-            'wallet' => $this->getWalletData($vendorId),
-        ];
-    }
-
-    // Get order chart data for the last 6 periods
-    private function getOrderChartData($vendorId)
-    {
-        // Get last 6 days of orders grouped by status
-        $startDate = now()->subDays(6)->startOfDay();
-
-        $orders = Order::where('vendor_id', $vendorId)
-            ->whereNull('deleted_at')
-            ->where('created_at', '>=', $startDate)
-            ->with('latestStatus.status')
-            ->get()
-            ->groupBy(function ($order) {
-                return $order->created_at->format('Y-m-d');
-            });
-
-        // Initialize data structure
-        $chartData = [];
-        $dates = [];
-
-        // Get last 6 days
-        for ($i = 5; $i >= 0; $i--) {
-            $dates[] = now()->subDays($i)->format('Y-m-d');
-        }
-
-        // Get all unique statuses
-        $allStatuses = Order::where('vendor_id', $vendorId)
-            ->whereNull('deleted_at')
-            ->with('latestStatus.status')
-            ->get()
-            ->pluck('latestStatus.status.name')
-            ->filter()
-            ->unique()
-            ->values();
-
-        // Initialize chart data for each status
-        foreach ($allStatuses as $status) {
-            $chartData[$status] = array_fill(0, 6, 0);
-        }
-
-        // Fill in the actual counts
-        foreach ($dates as $index => $date) {
-            if (isset($orders[$date])) {
-                foreach ($orders[$date] as $order) {
-                    if ($order->latestStatus && $order->latestStatus->status) {
-                        $statusName = $order->latestStatus->status->name;
-                        if (isset($chartData[$statusName])) {
-                            $chartData[$statusName][$index]++;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Convert to required format
-        $result = [];
-        foreach ($chartData as $statusName => $data) {
-            $result[] = [
-                'name' => $statusName,
-                'data' => $data,
-            ];
-        }
-
-        return $result;
-    }
-
-    // Calculate order growth percentage
-    private function calculateOrderGrowth($vendorId)
-    {
-        $currentMonth = Order::where('vendor_id', $vendorId)
-            ->whereNull('deleted_at')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->count();
-
-        $lastMonth = Order::where('vendor_id', $vendorId)
-            ->whereNull('deleted_at')
-            ->whereMonth('created_at', now()->subMonth()->month)
-            ->whereYear('created_at', now()->subMonth()->year)
-            ->count();
-
-        if ($lastMonth == 0) {
-            return $currentMonth > 0 ? 100 : 0;
-        }
-
-        return round((($currentMonth - $lastMonth) / $lastMonth) * 100, 2);
-    }
-
-    // Calculate average delivery time
-    private function calculateAverageDeliveryTime($vendorId)
-    {
-        $deliveredOrders = Order::where('vendor_id', $vendorId)
-            ->whereNull('deleted_at')
-            ->whereHas('latestStatus.status', function ($query) {
-                $query->where('name', 'Delivered');
-            })
-            ->with('latestStatus')
-            ->get();
-
-        if ($deliveredOrders->isEmpty()) {
-            return '0h';
-        }
-
-        $totalHours = 0;
-        foreach ($deliveredOrders as $order) {
-            $createdAt = $order->created_at;
-            $deliveredAt = $order->latestStatus->created_at;
-            $hours = $createdAt->diffInHours($deliveredAt);
-            $totalHours += $hours;
-        }
-
-        $averageHours = $totalHours / $deliveredOrders->count();
-
-        return round($averageHours, 1) . 'h';
-    }
-
-
-
-
-
-    // / Alternative using Eloquent relationships (recommended)
-    public function getTopSellersX()
-    {
-        $sellers = User::withCount([
-            'orders as total_orders' => function ($query) {
-                $query->whereNull('deleted_at');
-            }
-        ])
-            ->with(['orders' => function ($query) {
-                $query->whereNull('deleted_at')
-                    ->with('latestStatus.status');
-            }])
-            ->having('total_orders', '>', 0)
-            ->orderByDesc('total_orders')
-            ->limit(5)
-            ->get();
-
-        return $sellers->map(function ($seller) {
-            $orders = $seller->orders;
-            $totalOrders = $orders->count();
-
-            $deliveredOrders = $orders->filter(function ($order) {
-                return $order->latestStatus
-                    && $order->latestStatus->status
-                    && $order->latestStatus->status->name === 'Delivered';
-            })->count();
-
-            $successRate = $totalOrders > 0
-                ? round(($deliveredOrders / $totalOrders) * 100, 2)
-                : 0.00;
-
-            return [
-                'id' => $seller->id,
-                'name' => $seller->name,
-                'deliveries' => $totalOrders,
-                'successRate' => $successRate,
-            ];
-        });
-    }
-
-
 
     /**
-     * Wallet earnings (mocked).
+     * Top 5 products by quantity sold.
      */
-    // public function getWalletEarnings(): array
-    // {
-    //     return [
-    //         'balance'  => 12500,
-    //         'progress' => 75,
-    //     ];
-    // }
-
-
-    public function getWalletEarnings(): array
+    public function getTopProducts($user)
     {
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
 
+        return DB::select("
+            SELECT 
+                p.product_name as name,
+                c.name as category,
+                SUM(oi.quantity) as sales
+            FROM order_items oi
+            INNER JOIN orders o ON o.id = oi.order_id
+            INNER JOIN products p ON p.id = oi.product_id
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE o.deleted_at IS NULL {$vendorWhere}
+            GROUP BY p.product_name, c.name
+            ORDER BY sales DESC
+            LIMIT 5
+        ");
+    }
 
+    /**
+     * Top 5 sellers by deliveries.
+     */
+    public function getTopSellers($user)
+    {
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
 
-        $balance = Order::with('latestStatus.status')
-            ->get()
-            ->filter(fn($o) => $o->latestStatus?->status?->name === 'Delivered')
-            ->sum('total_price');
+        $rows = DB::select("
+            SELECT 
+                u.id,
+                u.name,
+                COUNT(DISTINCT o.id) as total_orders,
+                SUM(CASE WHEN ls.status_name = 'Delivered' THEN 1 ELSE 0 END) as delivered
+            FROM users u
+            INNER JOIN orders o ON o.vendor_id = u.id
+            LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
+            WHERE o.deleted_at IS NULL {$vendorWhere}
+            GROUP BY u.id, u.name
+            HAVING total_orders > 0
+            ORDER BY delivered DESC
+            LIMIT 5
+        ");
 
-        // Sum of ALL orders (target)
-        $target = Order::sum('total_price');
+        return collect($rows)->map(fn($row) => [
+            'id'          => $row->id,
+            'name'        => $row->name,
+            'deliveries'  => (int) $row->delivered,
+            'totalOrders' => (int) $row->total_orders,
+            'successRate' => $row->total_orders > 0
+                ? round(($row->delivered / $row->total_orders) * 100, 2)
+                : 0,
+        ]);
+    }
 
-        // Avoid division by zero
-        $progress = $target > 0
-            ? round(($balance / $target) * 100, 2)
-            : 0;
+    /**
+     * Wallet earnings based on delivered orders.
+     */
+    public function getWalletEarnings($user): array
+    {
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+
+        $row = DB::select("
+            SELECT
+                SUM(CASE WHEN ls.status_name = 'Delivered' THEN o.total_price ELSE 0 END) as balance,
+                SUM(o.total_price) as target
+            FROM orders o
+            LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
+            WHERE o.deleted_at IS NULL {$vendorWhere}
+        ")[0];
+
+        $balance  = (float) ($row->balance ?? 0);
+        $target   = (float) ($row->target ?? 0);
+        $progress = $target > 0 ? round(($balance / $target) * 100, 2) : 0;
 
         return [
-            'balance'  => (float) $balance,
-            'target'   => (float) $target,
+            'balance'  => $balance,
+            'target'   => $target,
             'progress' => $progress,
         ];
     }
 
-
-
-
-
-    public function getTopSellers()
+    /**
+     * Inventory stats — scoped to vendor's products if applicable.
+     */
+    public function getInventoryStats($user): array
     {
-        // Load sellers with their orders and each order's latest status → super efficient
-        $sellers = User::whereHas('orders', function ($q) {
-            $q->whereNull('deleted_at');
-        })
-            ->with([
-                'orders' => function ($q) {
-                    $q->whereNull('deleted_at')
-                        ->with(['latestStatus.status']); // eager load latest status
-                }
-            ])
-            ->get();
+        $vendorWhere = $this->isVendor($user) ? "AND p.vendor_id = {$user->id}" : "";
 
-        $results = [];
+        $row = DB::select("
+            SELECT
+                COUNT(DISTINCT p.id) as skus,
+                COALESCE(SUM(ps.current_stock), 0) as total_units,
+                SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
+                SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
+                SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
+                SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
+            FROM products p
+            LEFT JOIN product_stocks ps ON ps.product_id = p.id
+            LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
+            WHERE 1=1 {$vendorWhere}
+        ")[0];
 
-        foreach ($sellers as $seller) {
+        $tracked = $row->in_stock + $row->low_stock + $row->out_stock;
 
-            $orders = $seller->orders;
-            $totalOrders = $orders->count();
-
-            if ($totalOrders === 0) {
-                continue;
-            }
-
-            // Count only orders whose latest status is "Delivered"
-            $deliveredCount = $orders->filter(function ($order) {
-                return optional($order->latestStatus?->status)->name === 'Delivered';
-            })->count();
-
-            $successRate = $totalOrders > 0
-                ? round(($deliveredCount / $totalOrders) * 100, 2)
-                : 0;
-
-            $results[] = [
-                'id'          => $seller->id,
-                'name'        => $seller->name,
-                'deliveries'  => $deliveredCount,
-                'totalOrders' => $totalOrders,
-                'successRate' => $successRate,
-            ];
-        }
-
-        // Sort by number of delivered orders
-        usort($results, function ($a, $b) {
-            return $b['deliveries'] <=> $a['deliveries'];
-        });
-
-        return array_slice($results, 0, 5);
+        return [
+            'items'      => (int) $row->total_units,
+            'skus'       => (int) $row->skus,
+            'inStock'    => $tracked > 0 ? round(($row->in_stock / $tracked) * 100, 2) : 0,
+            'lowStock'   => $tracked > 0 ? round(($row->low_stock / $tracked) * 100, 2) : 0,
+            'outStock'   => $tracked > 0 ? round(($row->out_stock / $tracked) * 100, 2) : 0,
+            'stockValue' => round((float) $row->stock_value, 2),
+        ];
     }
 
-
-    // ALTERNATIVE: Optimized with fewer queries
-    public function getTopSellersOptimized()
+    /**
+     * Top agents — delegated to CallAgentPerformanceService.
+     */
+    public function getTopAgents($user)
     {
-        // Get all latest status timestamps in one query
-        $latestStatuses = OrderStatusTimestamp::select('order_status_timestamps.*')
-            ->join(
-                DB::raw('(SELECT order_id, MAX(created_at) as max_created_at 
-                      FROM order_status_timestamps 
-                      GROUP BY order_id) as latest'),
-                function ($join) {
-                    $join->on('order_status_timestamps.order_id', '=', 'latest.order_id')
-                        ->on('order_status_timestamps.created_at', '=', 'latest.max_created_at');
-                }
+        $metricsService = app(MetricsService::class);
+        $service        = new CallAgentPerformanceService($metricsService);
+
+        return $service->getTopAgentsPerformance(5);
+    }
+
+    /**
+     * Order growth: current month vs last month.
+     */
+    private function calculateOrderGrowth($user): float
+    {
+        $vendorWhere = $this->isVendor($user) ? "AND vendor_id = {$user->id}" : "";
+
+        $row = DB::select("
+            SELECT
+                SUM(CASE WHEN MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) THEN 1 ELSE 0 END) as current_month,
+                SUM(CASE WHEN MONTH(created_at) = MONTH(NOW() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(NOW() - INTERVAL 1 MONTH) THEN 1 ELSE 0 END) as last_month
+            FROM orders
+            WHERE deleted_at IS NULL {$vendorWhere}
+        ")[0];
+
+        if ($row->last_month == 0) return $row->current_month > 0 ? 100 : 0;
+
+        return round((($row->current_month - $row->last_month) / $row->last_month) * 100, 2);
+    }
+
+    /**
+     * Average delivery time in hours.
+     */
+    private function calculateAverageDeliveryTime($user): string
+    {
+        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+
+        $row = DB::select("
+            SELECT AVG(TIMESTAMPDIFF(HOUR, o.created_at, ost.created_at)) as avg_hours
+            FROM orders o
+            INNER JOIN order_status_timestamps ost ON ost.id = (
+                SELECT id FROM order_status_timestamps
+                WHERE order_id = o.id
+                ORDER BY id DESC LIMIT 1
             )
-            ->with('status')
-            ->get()
-            ->keyBy('order_id');
+            INNER JOIN statuses s ON s.id = ost.status_id
+            WHERE s.name = 'Delivered'
+            AND o.deleted_at IS NULL {$vendorWhere}
+        ")[0];
 
-        // Get all sellers with their orders
-        $sellers = User::whereHas('orders', function ($query) {
-            $query->whereNull('deleted_at');
-        })
-            ->with(['orders' => function ($query) {
-                $query->whereNull('deleted_at')
-                    ->select('id', 'vendor_id');
-            }])
-            ->get();
-
-        $results = [];
-
-        foreach ($sellers as $seller) {
-            $totalOrders = $seller->orders->count();
-
-            if ($totalOrders === 0) continue;
-
-            $deliveredCount = 0;
-
-            foreach ($seller->orders as $order) {
-                $latestStatus = $latestStatuses->get($order->id);
-
-                if (
-                    $latestStatus &&
-                    $latestStatus->status &&
-                    $latestStatus->status->name === 'Delivered'
-                ) {
-                    $deliveredCount++;
-                }
-            }
-
-            $successRate = round(($deliveredCount / $totalOrders) * 100, 2);
-
-            $results[] = [
-                'id' => $seller->id,
-                'name' => $seller->name,
-                'deliveries' => $totalOrders,
-                'successRate' => $successRate,
-            ];
-        }
-
-        usort($results, fn($a, $b) => $b['deliveries'] <=> $a['deliveries']);
-
-        return array_slice($results, 0, 5);
-    }
-
-    // PURE SQL APPROACH - Most Efficient
-    public function getTopSellersSql()
-    {
-        $results = DB::select("
-        SELECT 
-            u.id,
-            u.name,
-            COUNT(DISTINCT o.id) as deliveries,
-            ROUND(
-                COUNT(DISTINCT CASE 
-                    WHEN s.name = 'Delivered' THEN o.id 
-                END) * 100.0 / COUNT(DISTINCT o.id), 
-                2
-            ) as successRate
-        FROM users u
-        INNER JOIN orders o ON o.vendor_id = u.id AND o.deleted_at IS NULL
-        LEFT JOIN (
-            SELECT 
-                ost1.order_id,
-                ost1.status_id
-            FROM order_status_timestamps ost1
-            WHERE ost1.created_at = (
-                SELECT MAX(ost2.created_at)
-                FROM order_status_timestamps ost2
-                WHERE ost2.order_id = ost1.order_id
-            )
-        ) as latest_status ON latest_status.order_id = o.id
-        LEFT JOIN statuses s ON s.id = latest_status.status_id
-        GROUP BY u.id, u.name
-        HAVING deliveries > 0
-        ORDER BY deliveries DESC
-        LIMIT 5
-    ");
-
-        return collect($results)->map(fn($row) => [
-            'id' => $row->id,
-            'name' => $row->name,
-            'deliveries' => (int) $row->deliveries,
-            'successRate' => (float) $row->successRate,
-        ]);
-    }
-
-    // DEBUG FUNCTION - Use this to see what's happening
-    public function debugOrderStatuses()
-    {
-        $orders = Order::where('vendor_id', 3)
-            ->whereNull('deleted_at')
-            ->get();
-
-        echo "=== DEBUG: Order Statuses ===\n\n";
-        echo "Total Orders: " . $orders->count() . "\n\n";
-
-        foreach ($orders as $order) {
-            echo "Order #{$order->id} (No: {$order->order_no})\n";
-
-            // Get all statuses for this order
-            $statuses = OrderStatusTimestamp::where('order_id', $order->id)
-                ->with('status')
-                ->orderBy('created_at', 'DESC')
-                ->get();
-
-            echo "  Status History:\n";
-            foreach ($statuses as $st) {
-                $statusName = $st->status ? $st->status->name : 'NULL';
-                echo "    - {$statusName} at {$st->created_at}\n";
-            }
-
-            // Get latest
-            $latest = $statuses->first();
-            $latestName = $latest && $latest->status ? $latest->status->name : 'NULL';
-            echo "  Latest Status: {$latestName}\n";
-            echo "  Is Delivered? " . ($latestName === 'Delivered' ? 'YES' : 'NO') . "\n";
-            echo "\n";
-        }
-
-        // Summary
-        $deliveredCount = 0;
-        foreach ($orders as $order) {
-            $latest = OrderStatusTimestamp::where('order_id', $order->id)
-                ->with('status')
-                ->orderBy('created_at', 'DESC')
-                ->first();
-
-            if ($latest && $latest->status && $latest->status->name === 'Delivered') {
-                $deliveredCount++;
-            }
-        }
-
-        echo "=== SUMMARY ===\n";
-        echo "Total Orders: {$orders->count()}\n";
-        echo "Delivered Orders: {$deliveredCount}\n";
-        echo "Success Rate: " . round(($deliveredCount / $orders->count()) * 100, 2) . "%\n";
-    }
-
-    // TEST FUNCTION - Quick check
-    public function testTopSellers()
-    {
-        echo "Testing getTopSellers():\n";
-        $sellers = $this->getTopSellers();
-
-        foreach ($sellers as $seller) {
-            echo "\nSeller: {$seller['name']}\n";
-            echo "  Total Orders: {$seller['deliveries']}\n";
-            echo "  Success Rate: {$seller['successRate']}%\n";
-        }
+        return round((float) ($row->avg_hours ?? 0), 1) . 'h';
     }
 }

@@ -154,9 +154,13 @@ class Order extends Model
     {
         return $this->hasOne(OrderAddress::class)->where('type', 'pickup');
     }
+    // public function assignments()
+    // {
+    //     return $this->hasMany(OrderAssignment::class);
+    // }
     public function assignments()
     {
-        return $this->hasMany(OrderAssignment::class);
+        return $this->hasMany(OrderAssignment::class, 'order_id');
     }
     public function payments()
     {
@@ -215,6 +219,70 @@ class Order extends Model
         return $this->hasMany(OrderExpense::class);
     }
 
+
+    public function latestAssignment()
+    {
+        return $this->hasOne(OrderAssignment::class)->latestOfMany();
+    }
+
+
+    // public function latestCallAgentAssignment()
+    // {
+    //     return $this->hasOne(OrderAssignment::class)
+    //         ->whereIn('role', ['CallAgent', 'Call Agent'])
+    //         ->latestOfMany('id');
+    // }
+
+
+    // public function latestDeliveryAgentAssignment()
+    // {
+    //     return $this->hasOne(OrderAssignment::class)
+    //         ->whereIn('role', ['Delivery Agent', 'Delivery Man'])
+    //         ->latestOfMany('id');
+    // }
+
+
+    public function latestAssignmentByRole(string $role)
+    {
+        return $this->assignments()
+            ->where('role', $role)
+            ->latest('id')
+            ->first();
+    }
+
+
+    // public function latestDeliveryAgentAssignment()
+    // {
+    //     return $this->hasOne(OrderAssignment::class)
+    //         ->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent'])
+    //         ->latestOfMany();
+    // }
+
+    // public function latestCallAgentAssignment()
+    // {
+    //     return $this->hasOne(OrderAssignment::class)
+    //         ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent'])
+    //         ->latestOfMany();
+    // }
+
+
+    public function latestDeliveryAgentAssignment()
+    {
+        return $this->hasOne(OrderAssignment::class)
+            ->ofMany(
+                ['id' => 'max'],
+                fn($query) => $query->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent'])
+            );
+    }
+
+    public function latestCallAgentAssignment()
+    {
+        return $this->hasOne(OrderAssignment::class)
+            ->ofMany(
+                ['id' => 'max'],
+                fn($query) => $query->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent'])
+            );
+    }
 
 
     //     public function transitionTo(int $newStatusId, ?string $notes = null)
