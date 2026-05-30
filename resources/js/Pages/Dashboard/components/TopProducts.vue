@@ -77,7 +77,8 @@ const defaultProducts = [
 
 // Use props if available
 const productData = computed(() =>
-    props.topProducts?.length ? props.topProducts : defaultProducts
+    // props.topProducts?.length ? props.topProducts : defaultProducts,
+    props.topProducts?.length ? props.topProducts : [],
 );
 
 // Products & sales arrays
@@ -86,14 +87,14 @@ const sales = computed(() => productData.value.map((item) => item.sales));
 
 // Stats
 const totalSales = computed(() =>
-    sales.value.reduce((sum, val) => sum + val, 0)
+    sales.value.reduce((sum, val) => sum + val, 0),
 );
 const topProduct = computed(() => {
     const maxSales = Math.max(...sales.value);
     return productData.value.find((p) => p.sales === maxSales);
 });
 const averageSales = computed(() =>
-    Math.round(totalSales.value / sales.value.length)
+    Math.round(totalSales.value / sales.value.length),
 );
 
 // Chart data
@@ -183,7 +184,7 @@ watch(
             },
         };
     },
-    { deep: true }
+    { deep: true },
 );
 </script>
 

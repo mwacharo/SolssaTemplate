@@ -203,25 +203,65 @@ class DashboardService
     /**
      * Top 5 products by quantity sold.
      */
+    // public function getTopProducts($user)
+    // {
+    //     $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+
+    //     return DB::select("
+    //         SELECT 
+    //             p.product_name as name,
+    //             c.name as category,
+    //             SUM(oi.quantity) as sales
+    //         FROM order_items oi
+    //         INNER JOIN orders o ON o.id = oi.order_id
+    //         INNER JOIN products p ON p.id = oi.product_id
+    //         LEFT JOIN categories c ON c.id = p.category_id
+    //         WHERE o.deleted_at IS NULL {$vendorWhere}
+
+    //         GROUP BY p.product_name, c.name
+    //         ORDER BY sales DESC
+    //         LIMIT 5
+    //     ");
+    // }
+
+
+
     public function getTopProducts($user)
     {
         $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
 
         return DB::select("
-            SELECT 
-                p.product_name as name,
-                c.name as category,
-                SUM(oi.quantity) as sales
-            FROM order_items oi
-            INNER JOIN orders o ON o.id = oi.order_id
-            INNER JOIN products p ON p.id = oi.product_id
-            LEFT JOIN categories c ON c.id = p.category_id
-            WHERE o.deleted_at IS NULL {$vendorWhere}
-            GROUP BY p.product_name, c.name
-            ORDER BY sales DESC
-            LIMIT 5
-        ");
+        SELECT 
+            p.product_name as name,
+            c.name as category,
+            SUM(oi.quantity) as sales
+        FROM order_items oi
+        INNER JOIN orders o ON o.id = oi.order_id
+        INNER JOIN products p ON p.id = oi.product_id
+        LEFT JOIN categories c ON c.id = p.category_id
+
+        INNER JOIN (
+            SELECT ost.order_id
+            FROM order_status_timestamps ost
+            INNER JOIN (
+                SELECT order_id, MAX(id) as max_id
+                FROM order_status_timestamps
+                GROUP BY order_id
+            ) latest ON latest.max_id = ost.id
+            INNER JOIN statuses s ON s.id = ost.status_id
+            WHERE s.name = 'Delivered'
+        ) delivered ON delivered.order_id = o.id
+
+        WHERE o.deleted_at IS NULL {$vendorWhere}
+
+        GROUP BY p.id, p.product_name, c.name
+        ORDER BY sales DESC
+        LIMIT 5
+    ");
     }
+
+
+
 
     /**
      * Top 5 sellers by deliveries.
