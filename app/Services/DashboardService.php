@@ -163,7 +163,10 @@ class DashboardService
 
         return [
             'pending'   => (int) ($counts['Pending'] ?? 0),
-            'shipped'   => (int) ($counts['Shipped'] ?? 0),
+            // 'shipped'   => (int) ($counts['Shipped'] ?? 0),
+            
+            'In transit'   => (int) ($counts['In transit'] ?? 0),
+
             'delivered' => (int) ($counts['Delivered'] ?? 0),
             'returned'  => (int) ($counts['Returned'] ?? 0),
             'cancelled' => (int) ($counts['Cancelled'] ?? 0),
