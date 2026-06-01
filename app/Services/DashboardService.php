@@ -164,7 +164,7 @@ class DashboardService
         return [
             'pending'   => (int) ($counts['Pending'] ?? 0),
             // 'shipped'   => (int) ($counts['Shipped'] ?? 0),
-            
+
             'In transit'   => (int) ($counts['In transit'] ?? 0),
 
             'delivered' => (int) ($counts['Delivered'] ?? 0),
@@ -330,23 +330,83 @@ class DashboardService
     /**
      * Inventory stats — scoped to vendor's products if applicable.
      */
+    // public function getInventoryStats($user): array
+    // {
+    //     $vendorWhere = $this->isVendor($user) ? "AND p.vendor_id = {$user->id}" : "";
+
+    //     $row = DB::select("
+    //         SELECT
+    //             COUNT(DISTINCT p.id) as skus,
+    //             COALESCE(SUM(ps.current_stock), 0) as total_units,
+    //             SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
+    //             SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
+    //             SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
+    //             SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
+    //         FROM products p
+    //         LEFT JOIN product_stocks ps ON ps.product_id = p.id
+    //         LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
+    //         WHERE 1=1 {$vendorWhere}
+    //     ")[0];
+
+    //     $tracked = $row->in_stock + $row->low_stock + $row->out_stock;
+
+    //     return [
+    //         'items'      => (int) $row->total_units,
+    //         'skus'       => (int) $row->skus,
+    //         'inStock'    => $tracked > 0 ? round(($row->in_stock / $tracked) * 100, 2) : 0,
+    //         'lowStock'   => $tracked > 0 ? round(($row->low_stock / $tracked) * 100, 2) : 0,
+    //         'outStock'   => $tracked > 0 ? round(($row->out_stock / $tracked) * 100, 2) : 0,
+    //         'stockValue' => round((float) $row->stock_value, 2),
+    //     ];
+    // }
+
+
+
     public function getInventoryStats($user): array
     {
         $vendorWhere = $this->isVendor($user) ? "AND p.vendor_id = {$user->id}" : "";
 
         $row = DB::select("
-            SELECT
-                COUNT(DISTINCT p.id) as skus,
-                COALESCE(SUM(ps.current_stock), 0) as total_units,
-                SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
-                SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
-                SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
-                SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
-            FROM products p
-            LEFT JOIN product_stocks ps ON ps.product_id = p.id
-            LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
-            WHERE 1=1 {$vendorWhere}
-        ")[0];
+        SELECT
+            COUNT(DISTINCT p.id) as skus,
+            COALESCE(SUM(ps.current_stock), 0) as total_units,
+            SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
+            SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
+            SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
+            SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
+        FROM products p
+        LEFT JOIN product_stocks ps ON ps.product_id = p.id
+        LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
+        WHERE 1=1 {$vendorWhere}
+    ")[0];
+
+        // Critical: fetch top SKUs needing restocking, ordered by urgency
+        $restocking = DB::select("
+        SELECT
+            p.id,
+            p.product_name,
+            p.sku,
+            ps.current_stock,
+            ps.stock_threshold,
+            ps.committed_stock,
+            ps.stock_delivered,
+            COALESCE(pp.base_price, 0) as base_price,
+            CASE
+                WHEN ps.current_stock = 0 THEN 'out_of_stock'
+                WHEN ps.current_stock <= ps.stock_threshold THEN 'low_stock'
+                ELSE 'ok'
+            END as status,
+            -- urgency score: lower available stock vs threshold = higher score
+            (ps.stock_threshold - ps.current_stock + 1) as urgency_score
+        FROM products p
+        LEFT JOIN product_stocks ps ON ps.product_id = p.id
+        LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
+        WHERE (ps.current_stock = 0 OR ps.current_stock <= ps.stock_threshold)
+            AND ps.stock_threshold > 0
+            {$vendorWhere}
+        ORDER BY urgency_score DESC, ps.current_stock ASC
+        LIMIT 10
+    ");
 
         $tracked = $row->in_stock + $row->low_stock + $row->out_stock;
 
@@ -357,6 +417,18 @@ class DashboardService
             'lowStock'   => $tracked > 0 ? round(($row->low_stock / $tracked) * 100, 2) : 0,
             'outStock'   => $tracked > 0 ? round(($row->out_stock / $tracked) * 100, 2) : 0,
             'stockValue' => round((float) $row->stock_value, 2),
+            'restocking' => collect($restocking)->map(fn($r) => [
+                'id'             => $r->id,
+                'name'           => $r->product_name,
+                'sku'            => $r->sku,
+                'currentStock'   => (int) $r->current_stock,
+                'threshold'      => (int) $r->stock_threshold,
+                'committed'      => (int) $r->committed_stock,
+                'lastDelivered'  => (int) $r->stock_delivered,
+                'price'          => (float) $r->base_price,
+                'status'         => $r->status,
+                'urgencyScore'   => (int) $r->urgency_score,
+            ])->toArray(),
         ];
     }
 
