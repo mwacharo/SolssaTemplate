@@ -1059,14 +1059,34 @@ class AfricasTalkingService
 
             // $updated = User::where('phone_number', $callerNumber)
             // $updated = User::where('client_name', $callerNumber)
-            $updated = UserCountryAccount::where('client_name', $callerNumber)
+
+            // useraccount
+            $userAccount = UserCountryAccount::where('client_name', $callerNumber)
+                ->first();
 
 
-                ->update([
-                    'status' => $status,
-                    'sessionId' => $sessionId,
-                    'updated_at' => now()
+            // find the above owner of useraccount
+
+
+
+            // 2. Find user
+            $user = User::find($userAccount->user_id);
+
+            if (!$user) {
+                Log::warning("User not found for account", [
+                    'user_id' => $userAccount->user_id
                 ]);
+                return;
+            }
+
+
+
+
+            $updated =  $user->update([
+                'status' => $status,
+                'sessionId' => $sessionId,
+                'updated_at' => now()
+            ]);
 
             if ($updated) {
                 Log::info("Agent status updated successfully", [
