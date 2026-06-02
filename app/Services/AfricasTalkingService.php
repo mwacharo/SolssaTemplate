@@ -1058,7 +1058,9 @@ class AfricasTalkingService
             ]);
 
             // $updated = User::where('phone_number', $callerNumber)
-            $updated = User::where('client_name', $callerNumber)
+            // $updated = User::where('client_name', $callerNumber)
+            $updated = UserCountryAccount::where('client_name', $callerNumber)
+
 
                 ->update([
                     'status' => $status,
