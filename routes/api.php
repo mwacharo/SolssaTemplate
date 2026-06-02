@@ -51,6 +51,7 @@ use App\Http\Controllers\Api\ServiceConditionController;
 use App\Http\Controllers\Api\VendorServicesController;
 use App\Http\Controllers\Api\ServiceRateController;
 use App\Http\Controllers\Api\RiderAuthController;
+use App\Http\Controllers\Api\UserCountryAccountController;
 use Illuminate\Support\Facades\Http;
 
 
@@ -479,6 +480,9 @@ Route::prefix('v1')->group(function () {
 
 
     // // callcentre 
+
+    // authuser accounts 
+    Route::get('/user/accounts', [UserCountryAccountController::class, 'index']);
 
     Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
     Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);

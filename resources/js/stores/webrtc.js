@@ -16,15 +16,35 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     // Debug: Log the page props to inspect user values
     // console.debug("Page props:", JSON.stringify(page.props));
 
-    const userToken = computed(() => {
-        // const token = page.props.auth?.user?.token;
-            return page.props.authUser?.webrtc_token;
+    // const userToken = computed(() => {
+    //     // const token = page.props.auth?.user?.token;
+    //         return page.props.authUser?.webrtc_token;
 
 
 
-        // console.debug("✅ Computed userToken:", token);
-        return token;
-    });
+    //     // console.debug("✅ Computed userToken:", token);
+    //     return token;
+    // });
+
+
+
+    const activeAccount = computed(() => {
+    return accounts.value.find(
+        acc => acc.country_id === activeCountryId.value
+    );
+});
+
+const userToken = computed(() => {
+    return activeAccount.value?.token || null;
+});
+
+
+
+    const defaultCountryId = page.props.auth?.user?.country_id;
+const activeCountryId = ref(defaultCountryId);
+const countryAccounts = ref([]); // loaded from API
+
+const accounts = ref([]);
 
     const userId = computed(() => {
         const id = page.props.auth?.user?.id;
@@ -84,6 +104,29 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
 
 
+    async function loadAccounts() {
+    try {
+        const res = await axios.get('/api/v1/user/accounts');
+        accounts.value = res.data.data;
+
+        // set default active country
+        if (!activeCountryId.value && page.props.auth?.user?.country_id) {
+            activeCountryId.value = page.props.auth.user.country_id;
+        }
+
+
+            console.log('User Country:', activeCountryId.value);
+    console.log('Accounts:', accounts.value);
+    console.log('Selected Account:', activeAccount.value);
+    console.log('Token:', userToken.value);
+
+    } catch (e) {
+        console.error('Failed to load accounts', e);
+    }
+}
+
+
+
     async function waitForToken() {
         return new Promise((resolve) => {
             const check = setInterval(() => {
@@ -115,6 +158,9 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
 
     async function initializeAfricastalking() {
+
+            await loadAccounts();
+
     const country_id = page.props.auth?.user?.country_id;
 
     // 🚫 HARD STOP: Disable AfricasTalking for Zambia
