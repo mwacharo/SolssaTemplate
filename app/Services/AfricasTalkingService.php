@@ -956,9 +956,17 @@ class AfricasTalkingService
         $normalizedCaller = preg_replace('/^sip:|@.+$/i', '', $callerNumber);
 
         // Try to resolve agent
-        $agent = User::where('client_name', $normalizedCaller)
+        // $agent = User::where('client_name', $normalizedCaller)
+        //     ->orWhere('phone_number', $callerNumber)
+        //     ->first();
+
+        $userAccount = UserCountryAccount::where('client_name', $normalizedCaller)
             ->orWhere('phone_number', $callerNumber)
             ->first();
+
+
+        // finf the user of the above account
+        $agent = User::find($userAccount->user_id);
 
         if (!$agent || !$agent->country_id) {
             Log::error("Agent not found or missing country_id", [
