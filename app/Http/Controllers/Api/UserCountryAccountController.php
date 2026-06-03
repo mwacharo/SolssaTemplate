@@ -14,37 +14,66 @@ use Illuminate\Http\Request;
 
 class UserCountryAccountController extends Controller
 {
+    // public function index(Request $request): JsonResponse
+    // {
+    //     $query = UserCountryAccount::with(['user', 'country'])
+    //         ->latest();
+
+    //     if ($request->filled('user_id')) {
+    //         $query->where('user_id', $request->user_id);
+    //     }
+
+    //     if ($request->filled('search')) {
+    //         $search = $request->search;
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('client_name', 'like', "%{$search}%")
+    //                 ->orWhere('phone_number', 'like', "%{$search}%")
+    //                 ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+    //         });
+    //     }
+
+    //     $accounts = $query->paginate($request->input('per_page', 20));
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data'    => $accounts->items(),
+    //         'meta'    => [
+    //             'current_page' => $accounts->currentPage(),
+    //             'last_page'    => $accounts->lastPage(),
+    //             'per_page'     => $accounts->perPage(),
+    //             'total'        => $accounts->total(),
+    //         ],
+    //     ]);
+    // }
+
+
     public function index(Request $request): JsonResponse
-    {
-        $query = UserCountryAccount::with(['user', 'country'])
-            ->latest();
+{
+    $query = UserCountryAccount::with(['user', 'country'])
+        ->where('user_id', $request->user()->id) // ✅ Always scope to auth user
+        ->latest();
 
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('client_name', 'like', "%{$search}%")
-                    ->orWhere('phone_number', 'like', "%{$search}%")
-                    ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
-            });
-        }
-
-        $accounts = $query->paginate($request->input('per_page', 20));
-
-        return response()->json([
-            'success' => true,
-            'data'    => $accounts->items(),
-            'meta'    => [
-                'current_page' => $accounts->currentPage(),
-                'last_page'    => $accounts->lastPage(),
-                'per_page'     => $accounts->perPage(),
-                'total'        => $accounts->total(),
-            ],
-        ]);
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('client_name', 'like', "%{$search}%")
+                ->orWhere('phone_number', 'like', "%{$search}%");
+        });
     }
+
+    $accounts = $query->paginate($request->input('per_page', 20));
+
+    return response()->json([
+        'success' => true,
+        'data'    => $accounts->items(),
+        'meta'    => [
+            'current_page' => $accounts->currentPage(),
+            'last_page'    => $accounts->lastPage(),
+            'per_page'     => $accounts->perPage(),
+            'total'        => $accounts->total(),
+        ],
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.

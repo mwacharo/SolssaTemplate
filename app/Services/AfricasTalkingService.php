@@ -965,7 +965,7 @@ class AfricasTalkingService
             ->first();
 
 
-        // finf the user of the above account
+        // find the user of the above account
         $agent = User::find($userAccount->user_id);
 
         if (!$agent || !$agent->country_id) {
