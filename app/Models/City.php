@@ -6,12 +6,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
+use App\Models\Scopes\CountryScope;
+
 class City extends Model
 {
     /** @use HasFactory<\Database\Factories\CityFactory> */
     use HasFactory;
     use SoftDeletes;
     use \App\Traits\BelongsToUserAndCountry;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new CountryScope);
+    }
+
 
 
     protected $fillable = [
@@ -28,7 +37,7 @@ class City extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
-    }   
+    }
 
     public function zone()
     {

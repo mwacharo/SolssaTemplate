@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\BelongsToUserAndCountry;
 use App\Traits\BelongsToVendor;
 
+use App\Models\Scopes\CountryScope;
 
 
 
@@ -30,6 +31,13 @@ class Order extends Model
      *
      * @return \Spatie\Activitylog\LogOptions
      */
+
+
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new CountryScope);
+    }
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

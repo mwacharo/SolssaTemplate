@@ -14,13 +14,13 @@ class AgentController extends Controller
 {
     /**
      * Display a listing of the resource.
-    */
+     */
     public function index()
     {
-       //
-       $agents = User::role('CallAgent')->latest()->paginate(20);
-       return AgentResource::collection($agents);
+        //
+        $agents = User::role('CallAgent')
+            ->currentCountry()
+            ->latest()->paginate(20);
+        return AgentResource::collection($agents);
     }
-
-    
-}   
+}

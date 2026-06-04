@@ -9,6 +9,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use App\Traits\BelongsToVendor;
 use App\Traits\BelongsToUserAndCountry;
 
+use App\Models\Scopes\CountryScope;
+
+
 
 class Product extends Model
 {
@@ -16,6 +19,12 @@ class Product extends Model
     use BelongsToVendor;
     use BelongsToUserAndCountry;
 
+
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new CountryScope);
+    }
 
 
     protected $fillable = [

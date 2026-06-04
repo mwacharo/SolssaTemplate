@@ -66,7 +66,12 @@ class UserController extends Controller
         app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
 
         // Load users with their roles and permissions under the correct team context
-        $users = User::with(['roles', 'permissions', 'country'])->get();
+        // $users = User::with(['roles', 'permissions', 'country'])->get();
+
+        // Users filtered by authenticated user's country
+        $users = User::currentCountry()
+            ->with(['roles', 'permissions', 'country'])
+            ->get();
 
         return response()->json([
             'data' => UserResource::collection($users),

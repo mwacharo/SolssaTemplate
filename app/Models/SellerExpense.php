@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToUserAndCountry;
 
+use App\Models\Scopes\CountryScope;
+
+
 
 class SellerExpense extends Model
 {
@@ -15,6 +18,11 @@ class SellerExpense extends Model
     use SoftDeletes;
     use BelongsToUserAndCountry;
 
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new CountryScope);
+    }
 
     protected $fillable = [
         'id',

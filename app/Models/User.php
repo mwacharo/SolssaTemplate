@@ -19,6 +19,8 @@ use App\Models\Scopes\CountryScope;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
+
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -240,5 +242,15 @@ class User extends Authenticatable
                 $q->where('service_name', $serviceSlug);
             })
             ->exists();
+    }
+
+
+    public function scopeCurrentCountry($query)
+    {
+        if (auth()->check()) {
+            $query->where('country_id', auth()->user()->country_id);
+        }
+
+        return $query;
     }
 }

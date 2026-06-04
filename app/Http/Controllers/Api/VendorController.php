@@ -35,6 +35,8 @@ class VendorController extends Controller
         // $this->authorize('viewAny', User::class);
 
         $query = User::role('Vendor')
+            ->currentCountry()
+
             ->whereNull('deleted_at')
             ->latest();
 

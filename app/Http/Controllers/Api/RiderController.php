@@ -15,12 +15,13 @@ class RiderController extends Controller
      */
     public function index()
     {
-        
+
         // Since a rider is a user with the "Delivery Agent" role, get all users with that role
-        $riders = \App\Models\User::role('Delivery Agent')->latest()->paginate(20);
+        $riders = \App\Models\User::role('Delivery Agent')
+            ->currentCountry()
+
+            ->latest()->paginate(20);
 
         return RiderResource::collection($riders);
     }
-
-   
 }
