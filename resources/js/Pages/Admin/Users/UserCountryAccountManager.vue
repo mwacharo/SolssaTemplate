@@ -135,7 +135,6 @@
                                 label="Client name"
                                 density="compact"
                                 variant="outlined"
-                                :rules="[required]"
                             />
                         </v-col>
                         <v-col cols="12" sm="6">
@@ -158,7 +157,6 @@
                                 density="compact"
                                 variant="outlined"
                                 placeholder="+254 7XX XXX XXX"
-                                :rules="[required]"
                             />
                         </v-col>
                         <v-col cols="12" sm="6">
@@ -177,7 +175,6 @@
                                 density="compact"
                                 variant="outlined"
                                 placeholder="+254"
-                                :rules="[required]"
                             />
                         </v-col>
                         <v-col cols="12" sm="6">
@@ -274,6 +271,8 @@ const deleteDialog = ref(false);
 const pendingDelete = ref(null);
 
 const emptyForm = () => ({
+    user_id: null,
+
     client_name: "",
     country_id: null,
     phone_number: "",
@@ -292,6 +291,9 @@ function open(userId) {
     showForm.value = false;
     editingAccount.value = null;
     Object.assign(form, emptyForm());
+
+    form.user_id = userId;
+
     dialog.value = true;
     fetchAccounts();
     fetchCountries();
@@ -303,7 +305,7 @@ defineExpose({ open });
 async function fetchAccounts() {
     loading.value = true;
     try {
-        const { data } = await axios.get("/api/v1/admin/user-accounts", {
+        const { data } = await axios.get("/api/v1/user/accounts", {
             params: { user_id: currentUserId.value },
         });
         accounts.value = data.data;
@@ -328,41 +330,55 @@ async function fetchCountries() {
 function openForm(account) {
     editingAccount.value = account;
     Object.assign(form, account ? { ...account } : emptyForm());
+    form.user_id = currentUserId.value;
+
     showForm.value = true;
 }
 
 async function saveAccount() {
     const { valid } = await formRef.value.validate();
     if (!valid) return;
+
     saving.value = true;
+
+    // Only send what the API expects
+    const payload = {
+        user_id:      form.user_id,
+        client_name:  form.client_name  || null,
+        country_id:   form.country_id,
+        phone_number: form.phone_number || null,
+        alt_number:   form.alt_number   || null,
+        country_code: form.country_code || null,
+        token:        form.token        || null,
+        is_default:   form.is_default,
+    };
+
     try {
         let saved;
+
         if (editingAccount.value) {
             const { data } = await axios.put(
-                `/api/v1/admin/user-accounts/${editingAccount.value.id}`,
-                form,
+                `/api/v1/user/accounts/${editingAccount.value.id}`,
+                payload,   // ← not form
             );
             saved = data.data;
-            const idx = accounts.value.findIndex(
-                (a) => a.id === editingAccount.value.id,
-            );
+            const idx = accounts.value.findIndex(a => a.id === editingAccount.value.id);
             accounts.value.splice(idx, 1, saved);
         } else {
-            const { data } = await axios.post("/api/v1/admin/user-accounts", {
-                ...form,
-                user_id: currentUserId.value,
-            });
+            const { data } = await axios.post('/api/v1/user/accounts', payload);  // ← not form
             saved = data.data;
             accounts.value.push(saved);
         }
+
         if (form.is_default) {
-            accounts.value.forEach((a) => {
+            accounts.value.forEach(a => {
                 if (a.id !== saved.id) a.is_default = false;
             });
         }
+
         showForm.value = false;
     } catch (e) {
-        console.error("Failed to save account", e);
+        console.error('Failed to save account', e);
     } finally {
         saving.value = false;
     }
@@ -370,7 +386,7 @@ async function saveAccount() {
 
 async function setDefault(account) {
     try {
-        await axios.patch(`/api/v1/admin/user-accounts/${account.id}/default`);
+        await axios.patch(`/api/v1/user/accounts/${account.id}/default`);
         accounts.value.forEach((a) => {
             a.is_default = a.id === account.id;
         });
@@ -387,9 +403,7 @@ function confirmDelete(account) {
 async function deleteAccount() {
     deletingId.value = pendingDelete.value.id;
     try {
-        await axios.delete(
-            `/api/v1/admin/user-accounts/${pendingDelete.value.id}`,
-        );
+        await axios.delete(`/api/v1/user/accounts/${pendingDelete.value.id}`);
         accounts.value = accounts.value.filter(
             (a) => a.id !== pendingDelete.value.id,
         );

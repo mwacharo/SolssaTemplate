@@ -263,24 +263,23 @@
                                 </template>
                             </v-tooltip>
 
-
                             <!-- add usercountryaccount management -->
 
-                       <!-- Manage Country Accounts -->
-<v-tooltip text="Country Accounts" location="top">
-    <template v-slot:activator="{ props }">
-        <v-btn
-            v-bind="props"
-            icon="mdi-wallet"
-            size="small"
-            variant="text"
-            color="teal"
-            @click="openCountryAccountManager(item)"
-            :loading="updatingUser === item.id"
-            class="ma-1"
-        ></v-btn>
-    </template>
-</v-tooltip>
+                            <!-- Manage Country Accounts -->
+                            <v-tooltip text="Country Accounts" location="top">
+                                <template v-slot:activator="{ props }">
+                                    <v-btn
+                                        v-bind="props"
+                                        icon="mdi-wallet"
+                                        size="small"
+                                        variant="text"
+                                        color="teal"
+                                        @click="openCountryAccountManager(item)"
+                                        :loading="updatingUser === item.id"
+                                        class="ma-1"
+                                    ></v-btn>
+                                </template>
+                            </v-tooltip>
 
                             <!-- -->
                         </div>
@@ -1543,9 +1542,6 @@ function handleApiError(error, defaultMessage) {
 
 // Dialog functions
 
-
-
-
 function openCreateDialog() {
     editingUserId.value = null;
     userFormData.value = {
@@ -1563,12 +1559,9 @@ function openCreateDialog() {
 }
 
 // // opem user country account manager dialog
-function openCountryAccountManager (){
-
-userCountryAccountManagerRef.value.open(selectedUser.value);
-
+function openCountryAccountManager(item) {
+    userCountryAccountManagerRef.value.open(item.id); // ← pass item.id, not selectedUser
 }
-
 
 function openEditDialog(user) {
     editingUserId.value = user.id;

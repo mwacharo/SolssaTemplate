@@ -78,16 +78,15 @@ class UserCountryAccountController extends Controller
 
 
 
-
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'user_id'      => 'required|exists:users,id',
             'country_id'   => 'required|exists:countries,id',
-            'client_name'  => 'required|string|max:255',
-            'phone_number' => 'required|string|max:255',
-            'alt_number'   => 'nullable|string|max:255',
-            'country_code' => 'required|string|max:5',
+            'client_name'  => 'nullable|string|max:255',   // ← nullable, not sometimes
+            'phone_number' => 'nullable|string|max:20',
+            'alt_number'   => 'nullable|string|max:20',
+            'country_code' => 'nullable|string|max:5',
             'token'        => 'nullable|string|max:255',
             'is_default'   => 'boolean',
         ]);
