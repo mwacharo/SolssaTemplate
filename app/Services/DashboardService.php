@@ -21,12 +21,36 @@ class DashboardService
             $query->where('orders.vendor_id', $user->id);
         }
 
+        // ✅ Always scope to the user's active country
+        if ($user?->country_id) {
+            $query->where('orders.country_id', $user->country_id);
+        }
+
         return $query;
     }
 
     private function isVendor($user): bool
     {
         return in_array($user?->getRoleNames()->first(), ['vendor', 'Vendor']);
+    }
+
+    /**
+     * Resolves the active country_id for the given user.
+     * Returns null if no country is set (no filter applied).
+     */
+    private function activeCountryId($user): ?int
+    {
+        return $user?->country_id ? (int) $user->country_id : null;
+    }
+
+    /**
+     * Builds a reusable SQL WHERE clause fragment for country scoping on orders.
+     * Assumes the orders table alias is `o`.
+     */
+    private function countryWhere($user, string $alias = 'o'): string
+    {
+        $countryId = $this->activeCountryId($user);
+        return $countryId ? "AND {$alias}.country_id = {$countryId}" : "";
     }
 
     /**
@@ -51,7 +75,8 @@ class DashboardService
      */
     public function getOrderStats($user): array
     {
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         $rows = DB::select("
             SELECT 
@@ -59,7 +84,7 @@ class DashboardService
                 COUNT(*) as count
             FROM orders o
             LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
-            WHERE o.deleted_at IS NULL {$vendorWhere}
+            WHERE o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
             GROUP BY ls.status_name
         ");
 
@@ -89,13 +114,14 @@ class DashboardService
      */
     public function getOrderAnalytics($user, string $period = '6M'): array
     {
-        $now         = Carbon::now();
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $now          = Carbon::now();
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         switch ($period) {
             case '1M':
-                $groupExpr = "WEEK(o.created_at)";
-                $labels    = collect(range(3, 0))->map(fn($w) => $now->copy()->subWeeks($w)->format('W'));
+                $groupExpr  = "WEEK(o.created_at)";
+                $labels     = collect(range(3, 0))->map(fn($w) => $now->copy()->subWeeks($w)->format('W'));
                 $filterExpr = "o.created_at >= '" . $now->copy()->subWeeks(3)->startOfWeek()->toDateTimeString() . "'";
                 break;
             case '3M':
@@ -125,11 +151,10 @@ class DashboardService
             LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
             WHERE o.deleted_at IS NULL
             AND {$filterExpr}
-            {$vendorWhere}
+            {$vendorWhere} {$countryWhere}
             GROUP BY ls.status_name, {$groupExpr}
         ");
 
-        // Build result keyed by status → period → count
         $grouped = collect($rows)->groupBy('status_name');
         $result  = [];
 
@@ -149,27 +174,25 @@ class DashboardService
      */
     public function getStatusOverview($user): array
     {
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         $rows = DB::select("
             SELECT ls.status_name, COUNT(*) as count
             FROM orders o
             LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
-            WHERE o.deleted_at IS NULL {$vendorWhere}
+            WHERE o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
             GROUP BY ls.status_name
         ");
 
         $counts = collect($rows)->pluck('count', 'status_name');
 
         return [
-            'pending'   => (int) ($counts['Pending'] ?? 0),
-            // 'shipped'   => (int) ($counts['Shipped'] ?? 0),
-
-            'In transit'   => (int) ($counts['In transit'] ?? 0),
-
-            'delivered' => (int) ($counts['Delivered'] ?? 0),
-            'returned'  => (int) ($counts['Returned'] ?? 0),
-            'cancelled' => (int) ($counts['Cancelled'] ?? 0),
+            'pending'    => (int) ($counts['Pending'] ?? 0),
+            'In transit' => (int) ($counts['In transit'] ?? 0),
+            'delivered'  => (int) ($counts['Delivered'] ?? 0),
+            'returned'   => (int) ($counts['Returned'] ?? 0),
+            'cancelled'  => (int) ($counts['Cancelled'] ?? 0),
         ];
     }
 
@@ -178,8 +201,9 @@ class DashboardService
      */
     public function getDeliveryRate($user): array
     {
-        $today       = now()->startOfDay()->toDateTimeString();
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $today        = now()->startOfDay()->toDateTimeString();
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         $rows = DB::select("
             SELECT
@@ -189,7 +213,7 @@ class DashboardService
                 SUM(CASE WHEN o.delivery_date < '{$today}' THEN 1 ELSE 0 END) as non_live
             FROM orders o
             LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
-            WHERE o.deleted_at IS NULL {$vendorWhere}
+            WHERE o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
         ");
 
         $row = $rows[0];
@@ -204,74 +228,47 @@ class DashboardService
     }
 
     /**
-     * Top 5 products by quantity sold.
+     * Top 5 products by quantity sold (delivered only).
      */
-    // public function getTopProducts($user)
-    // {
-    //     $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
-
-    //     return DB::select("
-    //         SELECT 
-    //             p.product_name as name,
-    //             c.name as category,
-    //             SUM(oi.quantity) as sales
-    //         FROM order_items oi
-    //         INNER JOIN orders o ON o.id = oi.order_id
-    //         INNER JOIN products p ON p.id = oi.product_id
-    //         LEFT JOIN categories c ON c.id = p.category_id
-    //         WHERE o.deleted_at IS NULL {$vendorWhere}
-
-    //         GROUP BY p.product_name, c.name
-    //         ORDER BY sales DESC
-    //         LIMIT 5
-    //     ");
-    // }
-
-
-
     public function getTopProducts($user)
     {
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         return DB::select("
-        SELECT 
-            p.product_name as name,
-            c.name as category,
-            SUM(oi.quantity) as sales
-        FROM order_items oi
-        INNER JOIN orders o ON o.id = oi.order_id
-        INNER JOIN products p ON p.id = oi.product_id
-        LEFT JOIN categories c ON c.id = p.category_id
-
-        INNER JOIN (
-            SELECT ost.order_id
-            FROM order_status_timestamps ost
+            SELECT 
+                p.product_name as name,
+                c.name as category,
+                SUM(oi.quantity) as sales
+            FROM order_items oi
+            INNER JOIN orders o ON o.id = oi.order_id
+            INNER JOIN products p ON p.id = oi.product_id
+            LEFT JOIN categories c ON c.id = p.category_id
             INNER JOIN (
-                SELECT order_id, MAX(id) as max_id
-                FROM order_status_timestamps
-                GROUP BY order_id
-            ) latest ON latest.max_id = ost.id
-            INNER JOIN statuses s ON s.id = ost.status_id
-            WHERE s.name = 'Delivered'
-        ) delivered ON delivered.order_id = o.id
-
-        WHERE o.deleted_at IS NULL {$vendorWhere}
-
-        GROUP BY p.id, p.product_name, c.name
-        ORDER BY sales DESC
-        LIMIT 5
-    ");
+                SELECT ost.order_id
+                FROM order_status_timestamps ost
+                INNER JOIN (
+                    SELECT order_id, MAX(id) as max_id
+                    FROM order_status_timestamps
+                    GROUP BY order_id
+                ) latest ON latest.max_id = ost.id
+                INNER JOIN statuses s ON s.id = ost.status_id
+                WHERE s.name = 'Delivered'
+            ) delivered ON delivered.order_id = o.id
+            WHERE o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
+            GROUP BY p.id, p.product_name, c.name
+            ORDER BY sales DESC
+            LIMIT 5
+        ");
     }
-
-
-
 
     /**
      * Top 5 sellers by deliveries.
      */
     public function getTopSellers($user)
     {
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         $rows = DB::select("
             SELECT 
@@ -282,7 +279,7 @@ class DashboardService
             FROM users u
             INNER JOIN orders o ON o.vendor_id = u.id
             LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
-            WHERE o.deleted_at IS NULL {$vendorWhere}
+            WHERE o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
             GROUP BY u.id, u.name
             HAVING total_orders > 0
             ORDER BY delivered DESC
@@ -305,7 +302,8 @@ class DashboardService
      */
     public function getWalletEarnings($user): array
     {
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         $row = DB::select("
             SELECT
@@ -313,7 +311,7 @@ class DashboardService
                 SUM(o.total_price) as target
             FROM orders o
             LEFT JOIN ({$this->latestStatusSubquery()}) ls ON ls.order_id = o.id
-            WHERE o.deleted_at IS NULL {$vendorWhere}
+            WHERE o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
         ")[0];
 
         $balance  = (float) ($row->balance ?? 0);
@@ -328,85 +326,54 @@ class DashboardService
     }
 
     /**
-     * Inventory stats — scoped to vendor's products if applicable.
+     * Inventory stats — scoped to vendor's products and active country.
      */
-    // public function getInventoryStats($user): array
-    // {
-    //     $vendorWhere = $this->isVendor($user) ? "AND p.vendor_id = {$user->id}" : "";
-
-    //     $row = DB::select("
-    //         SELECT
-    //             COUNT(DISTINCT p.id) as skus,
-    //             COALESCE(SUM(ps.current_stock), 0) as total_units,
-    //             SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
-    //             SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
-    //             SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
-    //             SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
-    //         FROM products p
-    //         LEFT JOIN product_stocks ps ON ps.product_id = p.id
-    //         LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
-    //         WHERE 1=1 {$vendorWhere}
-    //     ")[0];
-
-    //     $tracked = $row->in_stock + $row->low_stock + $row->out_stock;
-
-    //     return [
-    //         'items'      => (int) $row->total_units,
-    //         'skus'       => (int) $row->skus,
-    //         'inStock'    => $tracked > 0 ? round(($row->in_stock / $tracked) * 100, 2) : 0,
-    //         'lowStock'   => $tracked > 0 ? round(($row->low_stock / $tracked) * 100, 2) : 0,
-    //         'outStock'   => $tracked > 0 ? round(($row->out_stock / $tracked) * 100, 2) : 0,
-    //         'stockValue' => round((float) $row->stock_value, 2),
-    //     ];
-    // }
-
-
-
     public function getInventoryStats($user): array
     {
-        $vendorWhere = $this->isVendor($user) ? "AND p.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND p.vendor_id = {$user->id}" : "";
+        $countryId    = $this->activeCountryId($user);
+        // ✅ Products are scoped by country via the products table directly
+        $countryWhere = $countryId ? "AND p.country_id = {$countryId}" : "";
 
         $row = DB::select("
-        SELECT
-            COUNT(DISTINCT p.id) as skus,
-            COALESCE(SUM(ps.current_stock), 0) as total_units,
-            SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
-            SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
-            SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
-            SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
-        FROM products p
-        LEFT JOIN product_stocks ps ON ps.product_id = p.id
-        LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
-        WHERE 1=1 {$vendorWhere}
-    ")[0];
+            SELECT
+                COUNT(DISTINCT p.id) as skus,
+                COALESCE(SUM(ps.current_stock), 0) as total_units,
+                SUM(CASE WHEN ps.current_stock > ps.stock_threshold THEN 1 ELSE 0 END) as in_stock,
+                SUM(CASE WHEN ps.current_stock > 0 AND ps.current_stock <= ps.stock_threshold THEN 1 ELSE 0 END) as low_stock,
+                SUM(CASE WHEN ps.current_stock = 0 THEN 1 ELSE 0 END) as out_stock,
+                SUM(ps.current_stock * COALESCE(pp.base_price, 0)) as stock_value
+            FROM products p
+            LEFT JOIN product_stocks ps ON ps.product_id = p.id
+            LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
+            WHERE 1=1 {$vendorWhere} {$countryWhere}
+        ")[0];
 
-        // Critical: fetch top SKUs needing restocking, ordered by urgency
         $restocking = DB::select("
-        SELECT
-            p.id,
-            p.product_name,
-            p.sku,
-            ps.current_stock,
-            ps.stock_threshold,
-            ps.committed_stock,
-            ps.stock_delivered,
-            COALESCE(pp.base_price, 0) as base_price,
-            CASE
-                WHEN ps.current_stock = 0 THEN 'out_of_stock'
-                WHEN ps.current_stock <= ps.stock_threshold THEN 'low_stock'
-                ELSE 'ok'
-            END as status,
-            -- urgency score: lower available stock vs threshold = higher score
-            (ps.stock_threshold - ps.current_stock + 1) as urgency_score
-        FROM products p
-        LEFT JOIN product_stocks ps ON ps.product_id = p.id
-        LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
-        WHERE (ps.current_stock = 0 OR ps.current_stock <= ps.stock_threshold)
-            AND ps.stock_threshold > 0
-            {$vendorWhere}
-        ORDER BY urgency_score DESC, ps.current_stock ASC
-        LIMIT 10
-    ");
+            SELECT
+                p.id,
+                p.product_name,
+                p.sku,
+                ps.current_stock,
+                ps.stock_threshold,
+                ps.committed_stock,
+                ps.stock_delivered,
+                COALESCE(pp.base_price, 0) as base_price,
+                CASE
+                    WHEN ps.current_stock = 0 THEN 'out_of_stock'
+                    WHEN ps.current_stock <= ps.stock_threshold THEN 'low_stock'
+                    ELSE 'ok'
+                END as status,
+                (ps.stock_threshold - ps.current_stock + 1) as urgency_score
+            FROM products p
+            LEFT JOIN product_stocks ps ON ps.product_id = p.id
+            LEFT JOIN product_prices pp ON pp.product_id = p.id AND pp.is_active = 1
+            WHERE (ps.current_stock = 0 OR ps.current_stock <= ps.stock_threshold)
+                AND ps.stock_threshold > 0
+                {$vendorWhere} {$countryWhere}
+            ORDER BY urgency_score DESC, ps.current_stock ASC
+            LIMIT 10
+        ");
 
         $tracked = $row->in_stock + $row->low_stock + $row->out_stock;
 
@@ -418,16 +385,16 @@ class DashboardService
             'outStock'   => $tracked > 0 ? round(($row->out_stock / $tracked) * 100, 2) : 0,
             'stockValue' => round((float) $row->stock_value, 2),
             'restocking' => collect($restocking)->map(fn($r) => [
-                'id'             => $r->id,
-                'name'           => $r->product_name,
-                'sku'            => $r->sku,
-                'currentStock'   => (int) $r->current_stock,
-                'threshold'      => (int) $r->stock_threshold,
-                'committed'      => (int) $r->committed_stock,
-                'lastDelivered'  => (int) $r->stock_delivered,
-                'price'          => (float) $r->base_price,
-                'status'         => $r->status,
-                'urgencyScore'   => (int) $r->urgency_score,
+                'id'            => $r->id,
+                'name'          => $r->product_name,
+                'sku'           => $r->sku,
+                'currentStock'  => (int) $r->current_stock,
+                'threshold'     => (int) $r->stock_threshold,
+                'committed'     => (int) $r->committed_stock,
+                'lastDelivered' => (int) $r->stock_delivered,
+                'price'         => (float) $r->base_price,
+                'status'        => $r->status,
+                'urgencyScore'  => (int) $r->urgency_score,
             ])->toArray(),
         ];
     }
@@ -448,14 +415,17 @@ class DashboardService
      */
     private function calculateOrderGrowth($user): float
     {
-        $vendorWhere = $this->isVendor($user) ? "AND vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND vendor_id = {$user->id}" : "";
+        $countryId    = $this->activeCountryId($user);
+        // ✅ No alias in this query, so reference orders.country_id directly
+        $countryWhere = $countryId ? "AND country_id = {$countryId}" : "";
 
         $row = DB::select("
             SELECT
                 SUM(CASE WHEN MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) THEN 1 ELSE 0 END) as current_month,
                 SUM(CASE WHEN MONTH(created_at) = MONTH(NOW() - INTERVAL 1 MONTH) AND YEAR(created_at) = YEAR(NOW() - INTERVAL 1 MONTH) THEN 1 ELSE 0 END) as last_month
             FROM orders
-            WHERE deleted_at IS NULL {$vendorWhere}
+            WHERE deleted_at IS NULL {$vendorWhere} {$countryWhere}
         ")[0];
 
         if ($row->last_month == 0) return $row->current_month > 0 ? 100 : 0;
@@ -468,7 +438,8 @@ class DashboardService
      */
     private function calculateAverageDeliveryTime($user): string
     {
-        $vendorWhere = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $vendorWhere  = $this->isVendor($user) ? "AND o.vendor_id = {$user->id}" : "";
+        $countryWhere = $this->countryWhere($user);  // ✅
 
         $row = DB::select("
             SELECT AVG(TIMESTAMPDIFF(HOUR, o.created_at, ost.created_at)) as avg_hours
@@ -480,7 +451,7 @@ class DashboardService
             )
             INNER JOIN statuses s ON s.id = ost.status_id
             WHERE s.name = 'Delivered'
-            AND o.deleted_at IS NULL {$vendorWhere}
+            AND o.deleted_at IS NULL {$vendorWhere} {$countryWhere}
         ")[0];
 
         return round((float) ($row->avg_hours ?? 0), 1) . 'h';
