@@ -76,6 +76,17 @@ class UserCountryAccountController extends Controller
     }
 
 
+    public function showByUserId(): JsonResponse
+    {
+        $userId = request()->route('user_id');
+        $accounts = UserCountryAccount::with('country')
+            ->where('user_id', $userId)
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $accounts]);
+    }
+
+
 
 
     public function store(Request $request): JsonResponse

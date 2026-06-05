@@ -1664,12 +1664,6 @@ async function togglePermission(permission, isAssigned) {
     }
 }
 
-// async function openServicesDialog(user) {
-//     vendorServicesRef.openDialog(user);
-
-//     console.log("Opening Vendor Assignments dialog for user:", user);
-// }
-
 function closeServicesDialog() {
     servicesDialog.value = false;
     selectedUser.value = null;

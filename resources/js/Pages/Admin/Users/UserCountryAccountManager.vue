@@ -305,9 +305,13 @@ defineExpose({ open });
 async function fetchAccounts() {
     loading.value = true;
     try {
-        const { data } = await axios.get("/api/v1/user/accounts", {
-            params: { user_id: currentUserId.value },
-        });
+        // const { data } = await axios.get("/api/v1/user/accounts", {
+        //     params: { user_id: currentUserId.value },
+        // });
+
+        const { data } = await axios.get(
+            `/api/v1/user/accounts/${currentUserId.value}`,
+        );
         accounts.value = data.data;
     } catch (e) {
         console.error("Failed to fetch accounts", e);
@@ -315,6 +319,8 @@ async function fetchAccounts() {
         loading.value = false;
     }
 }
+
+// fetch account of user passed by userid
 
 async function fetchCountries() {
     if (countries.value.length) return;
@@ -343,14 +349,14 @@ async function saveAccount() {
 
     // Only send what the API expects
     const payload = {
-        user_id:      form.user_id,
-        client_name:  form.client_name  || null,
-        country_id:   form.country_id,
+        user_id: form.user_id,
+        client_name: form.client_name || null,
+        country_id: form.country_id,
         phone_number: form.phone_number || null,
-        alt_number:   form.alt_number   || null,
+        alt_number: form.alt_number || null,
         country_code: form.country_code || null,
-        token:        form.token        || null,
-        is_default:   form.is_default,
+        token: form.token || null,
+        is_default: form.is_default,
     };
 
     try {
@@ -359,26 +365,28 @@ async function saveAccount() {
         if (editingAccount.value) {
             const { data } = await axios.put(
                 `/api/v1/user/accounts/${editingAccount.value.id}`,
-                payload,   // ← not form
+                payload, // ← not form
             );
             saved = data.data;
-            const idx = accounts.value.findIndex(a => a.id === editingAccount.value.id);
+            const idx = accounts.value.findIndex(
+                (a) => a.id === editingAccount.value.id,
+            );
             accounts.value.splice(idx, 1, saved);
         } else {
-            const { data } = await axios.post('/api/v1/user/accounts', payload);  // ← not form
+            const { data } = await axios.post("/api/v1/user/accounts", payload); // ← not form
             saved = data.data;
             accounts.value.push(saved);
         }
 
         if (form.is_default) {
-            accounts.value.forEach(a => {
+            accounts.value.forEach((a) => {
                 if (a.id !== saved.id) a.is_default = false;
             });
         }
 
         showForm.value = false;
     } catch (e) {
-        console.error('Failed to save account', e);
+        console.error("Failed to save account", e);
     } finally {
         saving.value = false;
     }

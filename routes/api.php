@@ -484,6 +484,9 @@ Route::prefix('v1')->group(function () {
     // authuser accounts 
     Route::get('/user/accounts', [UserCountryAccountController::class, 'index']);
 
+    // find account by user id passed 
+    Route::get('/user/accounts/{user_id}', [UserCountryAccountController::class, 'showByUserId']);
+
     Route::post('/user/accounts',             [UserCountryAccountController::class, 'store']);
     Route::put('/user/accounts/{userCountryAccount}',   [UserCountryAccountController::class, 'update']);
     Route::patch('/user/accounts/{userCountryAccount}/default', [UserCountryAccountController::class, 'setDefault']);
