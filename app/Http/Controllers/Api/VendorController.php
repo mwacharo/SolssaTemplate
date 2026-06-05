@@ -30,21 +30,42 @@ class VendorController extends Controller
 
 
 
+    // public function index()
+    // {
+    //     // $this->authorize('viewAny', User::class);
+
+    //     $query = User::role('Vendor')
+    //         ->currentCountry()
+
+    //         ->whereNull('deleted_at')
+    //         ->latest();
+
+    //     if (auth()->user()->hasRole('Vendor')) {
+    //         $query->where('id', auth()->id());
+    //     }
+
+    //     $vendors = $query->paginate(20, ['*'], 'page', request()->get('page', 1));
+
+    //     return VendorResource::collection($vendors);
+    // }
+
     public function index()
     {
-        // $this->authorize('viewAny', User::class);
+        $activeCountryId = auth()->user()->country_id;
 
         $query = User::role('Vendor')
-            ->currentCountry()
-
             ->whereNull('deleted_at')
+            ->whereHas('countryAccounts', function ($q) use ($activeCountryId) {
+                $q->where('country_id', $activeCountryId);
+            })
             ->latest();
 
+        // Vendor sees only themselves
         if (auth()->user()->hasRole('Vendor')) {
             $query->where('id', auth()->id());
         }
 
-        $vendors = $query->paginate(20, ['*'], 'page', request()->get('page', 1));
+        $vendors = $query->paginate(20);
 
         return VendorResource::collection($vendors);
     }
