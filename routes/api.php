@@ -484,6 +484,11 @@ Route::prefix('v1')->group(function () {
     // authuser accounts 
     Route::get('/user/accounts', [UserCountryAccountController::class, 'index']);
 
+    Route::post('/user/accounts',             [UserCountryAccountController::class, 'store']);
+    Route::put('/user/accounts/{userCountryAccount}',   [UserCountryAccountController::class, 'update']);
+    Route::patch('/user/accounts/{userCountryAccount}/default', [UserCountryAccountController::class, 'setDefault']);
+    Route::delete('/user/accounts/{userCountryAccount}', [UserCountryAccountController::class, 'destroy']);
+
     Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
     Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
     // Route::get('v1/voice-token', [ApiCallCentreController::class, 'generateToken']);

@@ -263,6 +263,25 @@
                                 </template>
                             </v-tooltip>
 
+
+                            <!-- add usercountryaccount management -->
+
+                       <!-- Manage Country Accounts -->
+<v-tooltip text="Country Accounts" location="top">
+    <template v-slot:activator="{ props }">
+        <v-btn
+            v-bind="props"
+            icon="mdi-wallet"
+            size="small"
+            variant="text"
+            color="teal"
+            @click="openCountryAccountManager(item)"
+            :loading="updatingUser === item.id"
+            class="ma-1"
+        ></v-btn>
+    </template>
+</v-tooltip>
+
                             <!-- -->
                         </div>
                     </template>
@@ -844,6 +863,11 @@
             :services="availableServices"
             @close="closeModal"
         />
+        <!-- User Country Account Manager -->
+        <UserCountryAccountManager
+            ref="userCountryAccountManagerRef"
+            :user-id="selectedUser?.id"
+        />
     </AppLayout>
 </template>
 
@@ -853,6 +877,9 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 
 import VendorServices from "@/Pages/Settings/Pricing/VendorServices.vue";
 
+// resources/js/Pages/Admin/Users/UserCountryAccountManager.vue
+
+import UserCountryAccountManager from "@/Pages/Admin/Users/UserCountryAccountManager.vue";
 import { notify } from "@/utils/toast";
 import axios from "axios";
 import { debounce } from "lodash";
@@ -865,6 +892,8 @@ axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 axios.defaults.headers.common["Accept"] = "application/json";
 
 // Reactive data
+
+const userCountryAccountManagerRef = ref(null);
 
 const vendorServicesRef = ref(null);
 
@@ -1513,6 +1542,10 @@ function handleApiError(error, defaultMessage) {
 }
 
 // Dialog functions
+
+
+
+
 function openCreateDialog() {
     editingUserId.value = null;
     userFormData.value = {
@@ -1528,6 +1561,14 @@ function openCreateDialog() {
     };
     userDialog.value = true;
 }
+
+// // opem user country account manager dialog
+function openCountryAccountManager (){
+
+userCountryAccountManagerRef.value.open(selectedUser.value);
+
+}
+
 
 function openEditDialog(user) {
     editingUserId.value = user.id;
