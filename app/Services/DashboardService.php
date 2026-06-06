@@ -10,6 +10,227 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
+
+
+    // orders given
+    // confirmation summary 
+    // delivery summary 
+
+
+
+    private array $confirmationStatuses = [
+        'confirmed' => [
+            'Scheduled',
+            'Awaiting Dispatch',
+            'Dispatched',
+            'In transit',
+            'Delivered',
+        ],
+
+        'pending' => [
+            'New',
+            'Pending',
+            'Pending Confirmation',
+        ],
+
+        'failed' => [
+            'Cancelled',
+            'Duplicate',
+            // 'Out of Stock',
+        ],
+    ];
+
+
+    private function getOrdersGivenByDate($query)
+    {
+        return $query
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as orders_given')
+            )
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date', 'asc')
+            ->get();
+    }
+
+
+    public function getConfirmationSummary($query)
+    {
+        $orders = $query
+            ->with('latestStatus.status')
+            ->get();
+
+        $total = $orders->count();
+
+        $confirmed = 0;
+        $pending = 0;
+        $failed = 0;
+
+        foreach ($orders as $order) {
+
+            $status = optional(
+                optional($order->latestStatus)->status
+            )->name;
+
+            if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+                $confirmed++;
+            } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+                $pending++;
+            } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+                $failed++;
+            }
+        }
+
+        $rate = $total > 0
+            ? round(($confirmed / $total) * 100, 2)
+            : 0;
+
+        return [
+            'total_orders' => $total,
+
+            'confirmed' => $confirmed,
+
+            'pending' => $pending,
+
+            'failed' => $failed,
+
+            'confirmation_rate' => $rate,
+        ];
+    }
+
+
+
+
+    public function getDeliverySummary($query)
+    {
+        $orders = $query
+            ->with('latestStatus.status')
+            ->get();
+
+        $totalOrders = $orders->count();
+
+        /*
+    |--------------------------------------------------------------------------
+    | STATUS GROUPS (FULL FLEXIBLE MODEL)
+    |--------------------------------------------------------------------------
+    */
+
+        $deliveredStatuses = [
+            'Delivered',
+        ];
+
+        $cancelledStatuses = [
+            'Cancelled',
+            'Returned',
+            'Return Received',
+            'Awaiting Return',
+            'Undispatched',
+        ];
+
+        $shippingStatuses = [
+            'Awaiting Dispatch',
+            'Dispatched',
+            'In transit',
+        ];
+
+        $confirmationStatuses = [
+            'Scheduled',
+            'Pending',
+            'Pending Confirmation',
+            'New',
+        ];
+
+        /*
+    |--------------------------------------------------------------------------
+    | COUNTERS
+    |--------------------------------------------------------------------------
+    */
+
+        $delivered = 0;
+        $cancelled = 0;
+        $shipping = 0;
+        $confirmed = 0;
+
+        $statusBreakdown = [];
+
+        foreach ($orders as $order) {
+
+            $statusName = optional(
+                optional($order->latestStatus)->status
+            )->name;
+
+            if (!$statusName) continue;
+
+            // DELIVERY
+            if (in_array($statusName, $deliveredStatuses)) {
+                $delivered++;
+            }
+
+            // CANCELLED / FAILED
+            elseif (in_array($statusName, $cancelledStatuses)) {
+                $cancelled++;
+            }
+
+            // SHIPPING
+            elseif (in_array($statusName, $shippingStatuses)) {
+                $shipping++;
+            }
+
+            // CONFIRMED / PIPELINE
+            elseif (in_array($statusName, $confirmationStatuses)) {
+                $confirmed++;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | STATUS BREAKDOWN (FULL DYNAMIC LIST)
+        |--------------------------------------------------------------------------
+        */
+            $statusBreakdown[$statusName] = ($statusBreakdown[$statusName] ?? 0) + 1;
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | DELIVERY RATE
+    |--------------------------------------------------------------------------
+    | You can define it in two ways:
+    | - Delivered / Total Orders
+    | - Delivered / (Delivered + Cancelled)
+    */
+
+        $deliveryRate = ($totalOrders > 0)
+            ? round(($delivered / $totalOrders) * 100, 2)
+            : 0;
+
+        /*
+    |--------------------------------------------------------------------------
+    | RETURN
+    |--------------------------------------------------------------------------
+    */
+
+        return [
+            'total_orders' => $totalOrders,
+
+            'delivered' => $delivered,
+            'cancelled' => $cancelled,
+            'shipping' => $shipping,
+            'confirmed' => $confirmed,
+
+            'delivery_rate' => $deliveryRate,
+
+            'status_breakdown' => collect($statusBreakdown)
+                ->map(function ($count, $status) {
+                    return [
+                        'status' => $status,
+                        'count' => $count,
+                    ];
+                })
+                ->values(),
+        ];
+    }
+
+
+
     /**
      * Reusable vendor scope — returns base orders query scoped to vendor if applicable.
      */
