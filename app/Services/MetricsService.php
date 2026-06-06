@@ -96,16 +96,29 @@ class MetricsService
      * 
      * @return array - Metrics percentages
      */
+    // public function generateMetrics(string $entityType, array $data): array
+    // {
+    //     return [
+    //         'EntityType' => $entityType,
+    //         'BuyoutRate' => $this->calculateBuyoutRate($data['delivered'], $data['totalOrders'], $data['outOfStock']),
+    //         'CancellationRate' => $this->calculateCancellationRate($data['cancelled'], $data['totalOrders']),
+    //         'PendingRate' => $this->calculatePendingRate($data['pending'], $data['totalOrders']),
+    //         'ReturnRate' => $this->calculateReturnRate($data['returned'], $data['statuses']),
+    //         'DeliveryRate' => $this->calculateDeliveryRate($data['delivered'], $data['statuses']),
+    //         'SchedulingRate' => $this->calculateSchedulingRate($data['statuses'], $data['totalOrders'], $data['outOfStock']),
+    //     ];
+    // }
+
     public function generateMetrics(string $entityType, array $data): array
     {
         return [
             'EntityType' => $entityType,
-            'BuyoutRate' => $this->calculateBuyoutRate($data['delivered'], $data['totalOrders'], $data['outOfStock']),
-            'CancellationRate' => $this->calculateCancellationRate($data['cancelled'], $data['totalOrders']),
-            'PendingRate' => $this->calculatePendingRate($data['pending'], $data['totalOrders']),
-            'ReturnRate' => $this->calculateReturnRate($data['returned'], $data['statuses']),
-            'DeliveryRate' => $this->calculateDeliveryRate($data['delivered'], $data['statuses']),
-            'SchedulingRate' => $this->calculateSchedulingRate($data['statuses'], $data['totalOrders'], $data['outOfStock']),
+            'BuyoutRate' => round($this->calculateBuyoutRate($data['delivered'], $data['totalOrders'], $data['outOfStock']), 2),
+            'CancellationRate' => round($this->calculateCancellationRate($data['cancelled'], $data['totalOrders']), 2),
+            'PendingRate' => round($this->calculatePendingRate($data['pending'], $data['totalOrders']), 2),
+            'ReturnRate' => round($this->calculateReturnRate($data['returned'], $data['statuses']), 2),
+            'DeliveryRate' => round($this->calculateDeliveryRate($data['delivered'], $data['statuses']), 2),
+            'SchedulingRate' => round($this->calculateSchedulingRate($data['statuses'], $data['totalOrders'], $data['outOfStock']), 2),
         ];
     }
 
