@@ -17,6 +17,20 @@ class DashboardService
     // delivery summary 
 
 
+    private function getOrdersGivenByDate($query)
+    {
+        return $query
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COUNT(*) as total')
+            )
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date', 'desc')
+            ->limit(7)
+            ->get();
+    }
+
+
 
     private array $confirmationStatuses = [
         'confirmed' => [
@@ -41,17 +55,7 @@ class DashboardService
     ];
 
 
-    private function getOrdersGivenByDate($query)
-    {
-        return $query
-            ->select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('COUNT(*) as orders_given')
-            )
-            ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy('date', 'asc')
-            ->get();
-    }
+
 
 
     public function getConfirmationSummary($query)
@@ -707,5 +711,34 @@ class DashboardService
         }
 
         return $this->getDeliverySummary($query);
+    }
+
+
+    // orders given per day 
+
+
+
+    public function getOrdersGivenSummary($user): array
+    {
+        $query = Order::query()->whereNull('deleted_at');
+
+        // Vendor scope
+        if ($this->isVendor($user)) {
+            $query->where('vendor_id', $user->id);
+        }
+
+        // Country scope
+        if ($user?->country_id) {
+            $query->where('country_id', $user->country_id);
+        }
+
+        $totalOrders = (clone $query)->count();
+
+        $ordersPerDay = $this->getOrdersGivenByDate(clone $query);
+
+        return [
+            'total_orders' => $totalOrders,
+            'orders_per_day' => $ordersPerDay,
+        ];
     }
 }

@@ -45,7 +45,7 @@ class DashboardController extends Controller
         return response()->json([
             'orderStats'     => $this->service->getOrderStats($user),
             'orderChart'     => $this->service->getOrderAnalytics($user),
-            'inventory'      => $this->service->getInventoryStats($user),
+            // 'inventory'      => $this->service->getInventoryStats($user),
             'statusData'     => $this->service->getStatusOverview($user),
             'topAgents'      => $this->service->getTopAgents($user),
             'deliveryRate'   => $this->service->getDeliveryRate($user),
@@ -54,6 +54,7 @@ class DashboardController extends Controller
             'wallet'         => $this->service->getWalletEarnings($user),
             'confirmationSummary' => $this->service->getConfirmationSummaryForUser($user),
             'deliverySummary'     => $this->service->getDeliverySummaryForUser($user),
+            'ordersGivenSummary'  => $this->service->getOrdersGivenSummary($user),
             'placeholder'    => null,
         ]);
     }
