@@ -1024,7 +1024,7 @@ class DashboardService
 
 
 
-    public function getOrdersGivenSummary($user): array
+    public function getOrdersGivenSummary($user, $request): array
     {
         $query = Order::query()->whereNull('deleted_at');
 
@@ -1040,7 +1040,7 @@ class DashboardService
 
         $totalOrders = (clone $query)->count();
 
-        $ordersPerDay = $this->getOrdersGivenByDate(clone $query);
+        $ordersPerDay = $this->getOrdersGivenByDate(clone $query, $request);
 
         return [
             'total_orders' => $totalOrders,
