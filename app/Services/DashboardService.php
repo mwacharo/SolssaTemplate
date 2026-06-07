@@ -58,17 +58,63 @@ class DashboardService
 
 
 
-    public function getConfirmationSummary($query)
+    // public function getConfirmationSummary($query)
+    // {
+    //     $orders = $query
+    //         ->with('latestStatus.status')
+    //         ->get();
+
+    //     $total = $orders->count();
+
+    //     $confirmed = 0;
+    //     $pending = 0;
+    //     $failed = 0;
+
+    //     foreach ($orders as $order) {
+
+    //         $status = optional(
+    //             optional($order->latestStatus)->status
+    //         )->name;
+
+    //         if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+    //             $confirmed++;
+    //         } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+    //             $pending++;
+    //         } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+    //             $failed++;
+    //         }
+    //     }
+
+    //     $rate = $total > 0
+    //         ? round(($confirmed / $total) * 100, 2)
+    //         : 0;
+
+    //     return [
+    //         'total_orders' => $total,
+
+    //         'confirmed' => $confirmed,
+
+    //         'pending' => $pending,
+
+    //         'failed' => $failed,
+
+    //         'confirmation_rate' => $rate,
+    //     ];
+    // }
+
+
+
+    public function getConfirmationSummary($query): array
     {
         $orders = $query
             ->with('latestStatus.status')
             ->get();
 
-        $total = $orders->count();
-
         $confirmed = 0;
         $pending = 0;
         $failed = 0;
+
+        $dailyTrend = [];
 
         foreach ($orders as $order) {
 
@@ -76,29 +122,66 @@ class DashboardService
                 optional($order->latestStatus)->status
             )->name;
 
+            $date = $order->created_at->format('Y-m-d');
+
+            if (!isset($dailyTrend[$date])) {
+                $dailyTrend[$date] = [
+                    'date' => $date,
+                    'total_orders' => 0,
+                    'confirmed' => 0,
+                    'pending' => 0,
+                    'failed' => 0,
+                ];
+            }
+
+            $dailyTrend[$date]['total_orders']++;
+
             if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+
                 $confirmed++;
+                $dailyTrend[$date]['confirmed']++;
             } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+
                 $pending++;
+                $dailyTrend[$date]['pending']++;
             } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+
                 $failed++;
+                $dailyTrend[$date]['failed']++;
             }
         }
 
-        $rate = $total > 0
-            ? round(($confirmed / $total) * 100, 2)
-            : 0;
+        $total = $orders->count();
 
         return [
-            'total_orders' => $total,
+            'summary' => [
+                'total_orders' => $total,
+                'confirmed' => $confirmed,
+                'pending' => $pending,
+                'failed' => $failed,
+                'confirmation_rate' => $total > 0
+                    ? round(($confirmed / $total) * 100, 2)
+                    : 0,
+            ],
 
-            'confirmed' => $confirmed,
+            'status_breakdown' => [
+                [
+                    'status' => 'Confirmed',
+                    'count' => $confirmed,
+                ],
+                [
+                    'status' => 'Pending',
+                    'count' => $pending,
+                ],
+                [
+                    'status' => 'Failed',
+                    'count' => $failed,
+                ],
+            ],
 
-            'pending' => $pending,
-
-            'failed' => $failed,
-
-            'confirmation_rate' => $rate,
+            'daily_trend' => collect($dailyTrend)
+                ->sortBy('date')
+                ->values(),
         ];
     }
 
@@ -744,19 +827,19 @@ class DashboardService
 
 
     // ✅ Add this private helper once — reuse in every method
-private function applyFilters($query, array $filters)
-{
-    if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-        $query->whereBetween('created_at', [
-            Carbon::parse($filters['start_date'])->startOfDay(),
-            Carbon::parse($filters['end_date'])->endOfDay(),
-        ]);
-    }
+    private function applyFilters($query, array $filters)
+    {
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $query->whereBetween('created_at', [
+                Carbon::parse($filters['start_date'])->startOfDay(),
+                Carbon::parse($filters['end_date'])->endOfDay(),
+            ]);
+        }
 
-    if (!empty($filters['merchant_id'])) {
-        $query->where('merchant_id', $filters['merchant_id']);
-    }
+        if (!empty($filters['merchant_id'])) {
+            $query->where('merchant_id', $filters['merchant_id']);
+        }
 
-    return $query;
-}
+        return $query;
+    }
 }
