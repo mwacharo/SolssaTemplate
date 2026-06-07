@@ -15,7 +15,7 @@
 
                 <div class="card">
                     <OrderAnalytics
-                        :ordersGivenSummary="dashboardData.ordersGivenSummary"
+                        :ordersGivenSummary="ordersGivenSummary"
                         :isLoading="isLoading"
                         @filter-change="handleFilterChange"
                     />
