@@ -54,16 +54,8 @@
                 v-else-if="!filteredData.length"
                 class="flex flex-col items-center justify-center h-80 text-gray-400"
             >
-                <svg
-                    class="w-12 h-12 mb-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
+                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                 </svg>
@@ -81,13 +73,9 @@
         </div>
 
         <!-- Stats Summary -->
-        <div
-            class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100"
-        >
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
             <div class="text-center">
-                <div
-                    class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full mx-auto mb-2"
-                >
+                <div class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full mx-auto mb-2">
                     <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
                 </div>
                 <p class="text-2xl font-bold text-gray-900">
@@ -97,30 +85,19 @@
             </div>
 
             <div class="text-center">
-                <div
-                    class="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full mx-auto mb-2"
-                >
+                <div class="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full mx-auto mb-2">
                     <div class="w-3 h-3 bg-green-600 rounded-full"></div>
                 </div>
                 <p class="text-2xl font-bold text-gray-900">
                     {{ periodTotal.toLocaleString() }}
                 </p>
-                <p class="text-xs text-gray-500">
-                    Orders ({{ selectedPeriod }})
-                </p>
+                <p class="text-xs text-gray-500">Orders ({{ selectedPeriod }})</p>
             </div>
 
             <div class="text-center">
-                <div
-                    class="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full mx-auto mb-2"
-                >
-                    <svg
-                        class="w-4 h-4 text-purple-600"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                    >
-                        <path
-                            fill-rule="evenodd"
+                <div class="flex items-center justify-center w-8 h-8 bg-purple-100 rounded-full mx-auto mb-2">
+                    <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
                             clip-rule="evenodd"
                         />
@@ -154,13 +131,13 @@ const props = defineProps({
 const emit = defineEmits(["filter-change"]);
 
 // Filter state
-const dateRange = ref(null);
+const dateRange  = ref(null);
 const merchantId = ref(null);
-const formValid = ref({ merchant: true });
+const formValid  = ref({ merchant: true });
 const selectedPeriod = ref("7D");
 
 const timePeriods = [
-    { label: "7D", value: "7D" },
+    { label: "7D",  value: "7D"  },
     { label: "14D", value: "14D" },
     { label: "30D", value: "30D" },
     { label: "All", value: "All" },
@@ -171,7 +148,7 @@ watch(
     [dateRange, merchantId],
     ([newDateRange, newMerchantId]) => {
         emit("filter-change", {
-            dateRange: newDateRange,
+            dateRange:  newDateRange,
             merchantId: newMerchantId,
         });
     },
@@ -245,9 +222,9 @@ const chartOptions = computed(() => ({
         padding: { top: 20, right: 20, bottom: 20, left: 20 },
     },
     xaxis: {
-        type: "category", // ✅ reads x from { x, y } data points
+        type: "category",        // ✅ reads x from { x, y } data points
         axisBorder: { show: false },
-        axisTicks: { show: false },
+        axisTicks:  { show: false },
         labels: {
             style: { colors: "#6B7280", fontSize: "12px", fontWeight: 500 },
         },
@@ -292,9 +269,7 @@ const avgPerDay = computed(() => {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 .animate-spin {
     animation: spin 1s linear infinite;
