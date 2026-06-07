@@ -104,87 +104,174 @@ class DashboardService
 
 
 
+    // public function getConfirmationSummary($query): array
+    // {
+    //     $orders = $query
+    //         ->with('latestStatus.status')
+    //         ->get();
+
+    //     $confirmed = 0;
+    //     $pending = 0;
+    //     $failed = 0;
+
+    //     $dailyTrend = [];
+
+    //     foreach ($orders as $order) {
+
+    //         $status = optional(
+    //             optional($order->latestStatus)->status
+    //         )->name;
+
+    //         $date = $order->created_at->format('Y-m-d');
+
+    //         if (!isset($dailyTrend[$date])) {
+    //             $dailyTrend[$date] = [
+    //                 'date' => $date,
+    //                 'total_orders' => 0,
+    //                 'confirmed' => 0,
+    //                 'pending' => 0,
+    //                 'failed' => 0,
+    //             ];
+    //         }
+
+    //         $dailyTrend[$date]['total_orders']++;
+
+    //         if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+
+    //             $confirmed++;
+    //             $dailyTrend[$date]['confirmed']++;
+    //         } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+
+    //             $pending++;
+    //             $dailyTrend[$date]['pending']++;
+    //         } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+
+    //             $failed++;
+    //             $dailyTrend[$date]['failed']++;
+    //         }
+    //     }
+
+    //     $total = $orders->count();
+
+    //     return [
+    //         'summary' => [
+    //             'total_orders' => $total,
+    //             'confirmed' => $confirmed,
+    //             'pending' => $pending,
+    //             'failed' => $failed,
+    //             'confirmation_rate' => $total > 0
+    //                 ? round(($confirmed / $total) * 100, 2)
+    //                 : 0,
+    //         ],
+
+    //         'status_breakdown' => [
+    //             [
+    //                 'status' => 'Confirmed',
+    //                 'count' => $confirmed,
+    //             ],
+    //             [
+    //                 'status' => 'Pending',
+    //                 'count' => $pending,
+    //             ],
+    //             [
+    //                 'status' => 'Failed',
+    //                 'count' => $failed,
+    //             ],
+    //         ],
+
+    //         'daily_trend' => collect($dailyTrend)
+    //             ->sortBy('date')
+    //             ->values(),
+    //     ];
+    // }
+
+
+
     public function getConfirmationSummary($query): array
-    {
-        $orders = $query
-            ->with('latestStatus.status')
-            ->get();
+{
+    $orders = $query
+        ->with('latestStatus.status')
+        ->get();
 
-        $confirmed = 0;
-        $pending = 0;
-        $failed = 0;
+    $confirmed = 0;
+    $pending = 0;
+    $failed = 0;
 
-        $dailyTrend = [];
+    $trend = [];
 
-        foreach ($orders as $order) {
+    foreach ($orders as $order) {
 
-            $status = optional(
-                optional($order->latestStatus)->status
-            )->name;
+        $status = optional(
+            optional($order->latestStatus)->status
+        )->name;
 
-            $date = $order->created_at->format('Y-m-d');
+        $date = $order->created_at->format('Y-m-d');
 
-            if (!isset($dailyTrend[$date])) {
-                $dailyTrend[$date] = [
-                    'date' => $date,
-                    'total_orders' => 0,
-                    'confirmed' => 0,
-                    'pending' => 0,
-                    'failed' => 0,
-                ];
-            }
-
-            $dailyTrend[$date]['total_orders']++;
-
-            if (in_array($status, $this->confirmationStatuses['confirmed'])) {
-
-                $confirmed++;
-                $dailyTrend[$date]['confirmed']++;
-            } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
-
-                $pending++;
-                $dailyTrend[$date]['pending']++;
-            } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
-
-                $failed++;
-                $dailyTrend[$date]['failed']++;
-            }
+        if (!isset($trend[$date])) {
+            $trend[$date] = [
+                'date' => $date,
+                'total' => 0,
+                'confirmed' => 0,
+                'pending' => 0,
+                'failed' => 0,
+            ];
         }
 
-        $total = $orders->count();
+        $trend[$date]['total']++;
 
-        return [
-            'summary' => [
-                'total_orders' => $total,
-                'confirmed' => $confirmed,
-                'pending' => $pending,
-                'failed' => $failed,
-                'confirmation_rate' => $total > 0
-                    ? round(($confirmed / $total) * 100, 2)
-                    : 0,
-            ],
+        if (in_array($status, $this->confirmationStatuses['confirmed'])) {
 
-            'status_breakdown' => [
-                [
-                    'status' => 'Confirmed',
-                    'count' => $confirmed,
-                ],
-                [
-                    'status' => 'Pending',
-                    'count' => $pending,
-                ],
-                [
-                    'status' => 'Failed',
-                    'count' => $failed,
-                ],
-            ],
+            $confirmed++;
+            $trend[$date]['confirmed']++;
 
-            'daily_trend' => collect($dailyTrend)
-                ->sortBy('date')
-                ->values(),
-        ];
+        } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+
+            $pending++;
+            $trend[$date]['pending']++;
+
+        } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+
+            $failed++;
+            $trend[$date]['failed']++;
+        }
     }
 
+    $total = $orders->count();
+
+    return [
+        'total_orders' => $total,
+
+        'confirmed' => $confirmed,
+
+        'pending' => $pending,
+
+        'failed' => $failed,
+
+        'confirmation_rate' => $total > 0
+            ? round(($confirmed / $total) * 100, 2)
+            : 0,
+
+        'status_breakdown' => [
+            [
+                'status' => 'Confirmed',
+                'total' => $confirmed,
+            ],
+            [
+                'status' => 'Pending',
+                'total' => $pending,
+            ],
+            [
+                'status' => 'Failed',
+                'total' => $failed,
+            ],
+        ],
+
+        'confirmation_per_day' => collect($trend)
+            ->sortByDesc('date')
+            ->values()
+            ->all(),
+    ];
+}
 
 
 
