@@ -18,24 +18,7 @@ class DashboardController extends Controller
         $this->service = $service;
     }
 
-    // public function index()
-    // {
 
-    //     // authorised user 
-
-    //     return response()->json([
-    //         'orderStats'     => $this->service->getOrderStats(),
-    //         'orderChart'     => $this->service->getOrderAnalytics(),
-    //         'inventory'      => $this->service->getInventoryStats(),
-    //         'statusData'     => $this->service->getStatusOverview(),
-    //         'topAgents'      => $this->service->getTopAgents(),
-    //         'deliveryRate'   => $this->service->getDeliveryRate(),
-    //         'topProducts'    => $this->service->getTopProducts(),
-    //         'topSellers'     => $this->service->getTopSellers(),
-    //         'wallet'         => $this->service->getWalletEarnings(),
-    //         'placeholder'    => null,
-    //     ]);
-    // }
 
 
     public function index(Request $request)
@@ -58,4 +41,35 @@ class DashboardController extends Controller
             'placeholder'    => null,
         ]);
     }
+
+
+    // public function index(Request $request)
+    // {
+    //     $user       = $request->user();
+    //     $startDate  = $request->query('start_date');
+    //     $endDate    = $request->query('end_date');
+    //     $merchantId = $request->query('merchant_id');
+
+    //     // ✅ Bundle filters into one array for clean passing
+    //     $filters = [
+    //         'start_date'  => $startDate,
+    //         'end_date'    => $endDate,
+    //         'merchant_id' => $merchantId,
+    //     ];
+
+    //     return response()->json([
+    //         'orderStats'          => $this->service->getOrderStats($user, $filters),
+    //         'orderChart'          => $this->service->getOrderAnalytics($user, $filters),
+    //         'statusData'          => $this->service->getStatusOverview($user, $filters),
+    //         'topAgents'           => $this->service->getTopAgents($user, $filters),
+    //         'deliveryRate'        => $this->service->getDeliveryRate($user, $filters),
+    //         'topProducts'         => $this->service->getTopProducts($user, $filters),
+    //         'topSellers'          => $this->service->getTopSellers($user, $filters),
+    //         'wallet'              => $this->service->getWalletEarnings($user, $filters),
+    //         'confirmationSummary' => $this->service->getConfirmationSummaryForUser($user, $filters),
+    //         'deliverySummary'     => $this->service->getDeliverySummaryForUser($user, $filters),
+    //         'ordersGivenSummary'  => $this->service->getOrdersGivenSummary($user, $filters),
+    //         'placeholder'         => null,
+    //     ]);
+    // }
 }

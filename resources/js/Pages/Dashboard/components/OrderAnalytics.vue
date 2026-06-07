@@ -159,14 +159,6 @@ const filteredData = computed(() => {
     return sorted.slice(-days);
 });
 
-// Plain numbers — xaxis.categories drives the labels
-// const chartSeries = computed(() => [
-//     {
-//         name: "Orders",
-//         data: filteredData.value.map((item) => Number(item.total)),
-//     },
-// ]);
-
 const chartSeries = computed(() => [
     {
         name: "Orders",
@@ -199,15 +191,6 @@ const chartOptions = computed(() => ({
     },
 
     colors: ["#3B82F6"],
-
-    // plotOptions: {
-    //     bar: {
-    //         borderRadius: 6,
-    //         borderRadiusApplication: "end",
-    //         columnWidth: filteredData.value.length <= 7 ? "40%" : "60%",
-    //         dataLabels: { position: "top" },
-    //     },
-    // },
 
     plotOptions: {
         bar: {
@@ -246,17 +229,6 @@ const chartOptions = computed(() => ({
         },
         formatter: (val) => (val > 0 ? val : ""),
     },
-
-    // ✅ category type + pre-formatted labels array — no formatter needed
-    // xaxis: {
-    //     type: "category",
-    //     categories: xCategories.value,
-    //     labels: {
-    //         style: { colors: "#6B7280", fontSize: "12px" },
-    //     },
-    //     axisBorder: { show: false },
-    //     axisTicks: { show: false },
-    // },
 
     xaxis: {
         type: "datetime",

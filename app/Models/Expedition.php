@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToUserAndCountry;
 use App\Traits\BelongsToVendor;
 
-use App\Models\Scopes\CountryScope;
+// use App\Models\Scopes\CountryScope;
 
 
 class Expedition extends Model
@@ -22,10 +22,10 @@ class Expedition extends Model
     use BelongsToUserAndCountry;
     use BelongsToVendor;
 
-    protected static function booted(): void
-    {
-        static::addGlobalScope(new CountryScope);
-    }
+    // protected static function booted(): void
+    // {
+    //     static::addGlobalScope(new CountryScope);
+    // }
 
     protected $fillable = [
         'vendor_id',

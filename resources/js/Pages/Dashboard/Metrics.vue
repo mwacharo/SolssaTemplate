@@ -8,11 +8,6 @@
                     <OrderStats :stats="orderStats" />
                 </div>
 
-                <!-- Component 2 -->
-                <!-- <div class="card">
-                    <OrderAnalytics :chartData="orderChart" />
-                </div> -->
-
                 <div class="card">
                     <OrderAnalytics
                         :ordersGivenSummary="ordersGivenSummary"

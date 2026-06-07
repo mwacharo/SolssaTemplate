@@ -741,4 +741,22 @@ class DashboardService
             'orders_per_day' => $ordersPerDay,
         ];
     }
+
+
+    // ✅ Add this private helper once — reuse in every method
+private function applyFilters($query, array $filters)
+{
+    if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+        $query->whereBetween('created_at', [
+            Carbon::parse($filters['start_date'])->startOfDay(),
+            Carbon::parse($filters['end_date'])->endOfDay(),
+        ]);
+    }
+
+    if (!empty($filters['merchant_id'])) {
+        $query->where('merchant_id', $filters['merchant_id']);
+    }
+
+    return $query;
+}
 }
