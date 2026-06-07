@@ -13,6 +13,20 @@
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+            <div class="flex-1">
+                <DateRangePicker v-model="dateRange" />
+            </div>
+            <div class="flex-1">
+                <SelectMerchant
+                    v-model="merchantId"
+                    label="Merchant"
+                    @validation="formValid.merchant = $event"
+                />
+            </div>
+        </div>
+
         <!-- KPI Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <div
@@ -221,6 +235,9 @@
 
 <script setup>
 import { computed } from "vue";
+
+import DateRangePicker from "@/Components/DualDatePicker.vue";
+import SelectMerchant from "@/Components/SelectMerchant.vue";
 
 const props = defineProps({
     data: {
