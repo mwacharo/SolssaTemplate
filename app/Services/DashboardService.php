@@ -973,7 +973,23 @@ class DashboardService
     }
 
 
-    public function getConfirmationSummaryForUser($user): array
+    // public function getConfirmationSummaryForUser($user): array
+    // {
+    //     $query = Order::whereNull('deleted_at');
+
+    //     if ($this->isVendor($user)) {
+    //         $query->where('vendor_id', $user->id);
+    //     }
+
+    //     if ($user?->country_id) {
+    //         $query->where('country_id', $user->country_id);
+    //     }
+
+    //     return $this->getConfirmationSummary($query);
+    // }
+
+
+    public function getConfirmationSummaryForUser($user, $request): array
     {
         $query = Order::whereNull('deleted_at');
 
@@ -985,7 +1001,7 @@ class DashboardService
             $query->where('country_id', $user->country_id);
         }
 
-        return $this->getConfirmationSummary($query);
+        return $this->getConfirmationSummary($query, $request);
     }
 
     public function getDeliverySummaryForUser($user): array

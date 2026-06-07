@@ -35,7 +35,7 @@ class DashboardController extends Controller
             'topProducts'    => $this->service->getTopProducts($user),
             'topSellers'     => $this->service->getTopSellers($user),
             'wallet'         => $this->service->getWalletEarnings($user),
-            'confirmationSummary' => $this->service->getConfirmationSummaryForUser($user),
+            'confirmationSummary' => $this->service->getConfirmationSummaryForUser($user , $request),
             'deliverySummary'     => $this->service->getDeliverySummaryForUser($user),
             'ordersGivenSummary'  => $this->service->getOrdersGivenSummary($user),
             'placeholder'    => null,
