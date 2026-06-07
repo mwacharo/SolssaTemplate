@@ -150,7 +150,7 @@
             </div>
 
             <!-- Efficiency Trend -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <div class="mb-4">
                     <h3 class="font-semibold text-gray-900">
                         Daily Delivery Efficiency
@@ -166,11 +166,10 @@
                     :options="efficiencyChartOptions"
                     :series="efficiencyChartSeries"
                 />
-            </div>
+            </div> -->
 
             <!-- Bottom Row: Aging + Rates -->
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <!-- Order Aging -->
+            <!-- <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                     <div class="mb-4">
                         <h3 class="font-semibold text-gray-900">Order Aging</h3>
@@ -185,10 +184,10 @@
                         :options="agingChartOptions"
                         :series="agingChartSeries"
                     />
-                </div>
+                </div> -->
 
                 <!-- Confirmation to Delivery Rate Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between">
+                <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between">
                     <div class="mb-4">
                         <h3 class="font-semibold text-gray-900">
                             Confirmation-to-Delivery Rate
@@ -207,7 +206,7 @@
                         />
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Daily Breakdown Table -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
