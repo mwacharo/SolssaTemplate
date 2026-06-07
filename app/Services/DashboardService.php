@@ -946,20 +946,324 @@ class DashboardService
 
 
 
+    // public function getDeliverySummary($query, $request = null)
+    // {
+
+    //     // Default to last 7 days if no dates are provided
+    //     // if (
+    //     //     !$request->filled('start_date') &&
+    //     //     !$request->filled('end_date')
+    //     // ) {
+    //     //     $query->whereDate(
+    //     //         'created_at',
+    //     //         '>=',
+    //     //         now()->subDays(7)
+    //     //     );
+    //     // }
+    //     $orders = $query
+    //         ->with([
+    //             'latestStatus.status',
+    //         ])
+    //         ->get();
+
+    //     $totalOrders = $orders->count();
+
+    //     $deliveredStatuses = [
+    //         'Delivered',
+    //     ];
+
+    //     $cancelledStatuses = [
+    //         'Cancelled',
+    //         'Returned',
+    //         'Return Received',
+    //         'Awaiting Return',
+    //         'Undispatched',
+    //     ];
+
+    //     $shippingStatuses = [
+    //         'Awaiting Dispatch',
+    //         'Dispatched',
+    //         'In transit',
+    //     ];
+
+    //     $confirmationStatuses = [
+    //         'Scheduled',
+    //         'Pending',
+    //         'Pending Confirmation',
+    //         'New',
+    //     ];
+
+    //     $delivered = 0;
+    //     $cancelled = 0;
+    //     $shipping = 0;
+    //     $confirmed = 0;
+
+    //     $statusBreakdown = [];
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | CURRENT STATUS COUNTS
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     foreach ($orders as $order) {
+
+    //         $statusName = optional(
+    //             optional($order->latestStatus)->status
+    //         )->name;
+
+    //         if (!$statusName) {
+    //             continue;
+    //         }
+
+    //         if (in_array($statusName, $deliveredStatuses)) {
+    //             $delivered++;
+    //         } elseif (in_array($statusName, $cancelledStatuses)) {
+    //             $cancelled++;
+    //         } elseif (in_array($statusName, $shippingStatuses)) {
+    //             $shipping++;
+    //         } elseif (in_array($statusName, $confirmationStatuses)) {
+    //             $confirmed++;
+    //         }
+
+    //         $statusBreakdown[$statusName] =
+    //             ($statusBreakdown[$statusName] ?? 0) + 1;
+    //     }
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | DELIVERY RATE
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     $deliveryRate = $totalOrders > 0
+    //         ? round(($delivered / $totalOrders) * 100, 2)
+    //         : 0;
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | CONFIRMED → DELIVERED RATE
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     $confirmedToDeliveryRate = $confirmed > 0
+    //         ? round(($delivered / $confirmed) * 100, 2)
+    //         : 0;
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | AWAITING FULFILLMENT
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     $awaitingFulfillment =
+    //         $confirmed + $shipping;
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | DAILY PERFORMANCE
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     $baseQuery = OrderStatusTimestamp::query()
+    //         ->with('status');
+
+    //     if ($this->isVendor(auth()->user())) {
+    //         $baseQuery->whereHas('order', function ($q) {
+    //             $q->where('vendor_id', auth()->id());
+    //         });
+    //     }
+
+    //     if (auth()->user()?->country_id) {
+    //         $baseQuery->whereHas('order', function ($q) {
+    //             $q->where('country_id', auth()->user()->country_id);
+    //         });
+    //     }
+
+    //     $statusLogs = $baseQuery->get();
+
+    //     $dailyPerformance = [];
+
+    //     foreach ($statusLogs as $log) {
+
+    //         $statusName = optional($log->status)->name;
+
+    //         if (!$statusName) {
+    //             continue;
+    //         }
+
+    //         $date = Carbon::parse(
+    //             $log->timestamp ?? $log->created_at
+    //         )->format('Y-m-d');
+
+    //         if (!isset($dailyPerformance[$date])) {
+
+    //             $dailyPerformance[$date] = [
+    //                 'date' => $date,
+    //                 'confirmed' => 0,
+    //                 'delivered' => 0,
+    //                 'efficiency' => 0,
+    //             ];
+    //         }
+
+    //         if (in_array($statusName, $confirmationStatuses)) {
+    //             $dailyPerformance[$date]['confirmed']++;
+    //         }
+
+    //         if (in_array($statusName, $deliveredStatuses)) {
+    //             $dailyPerformance[$date]['delivered']++;
+    //         }
+    //     }
+
+    //     $dailyPerformance = collect($dailyPerformance)
+    //         ->sortBy('date')
+    //         ->map(function ($row) {
+
+    //             $row['efficiency'] =
+    //                 $row['confirmed'] > 0
+    //                 ? round(
+    //                     ($row['delivered'] / $row['confirmed']) * 100,
+    //                     2
+    //                 )
+    //                 : 0;
+
+    //             return $row;
+    //         })
+    //         ->values();
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | AGING OF CURRENT CONFIRMED ORDERS
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     $aging = [
+    //         '0_2_days' => 0,
+    //         '3_5_days' => 0,
+    //         '6_10_days' => 0,
+    //         '10_plus_days' => 0,
+    //     ];
+
+    //     foreach ($orders as $order) {
+
+    //         $latestStatus = $order->latestStatus;
+
+    //         $statusName = optional(
+    //             optional($latestStatus)->status
+    //         )->name;
+
+    //         if (!in_array($statusName, $confirmationStatuses)) {
+    //             continue;
+    //         }
+
+    //         $days = Carbon::parse(
+    //             $latestStatus->timestamp ?? $latestStatus->created_at
+    //         )->diffInDays(now());
+
+    //         if ($days <= 2) {
+    //             $aging['0_2_days']++;
+    //         } elseif ($days <= 5) {
+    //             $aging['3_5_days']++;
+    //         } elseif ($days <= 10) {
+    //             $aging['6_10_days']++;
+    //         } else {
+    //             $aging['10_plus_days']++;
+    //         }
+    //     }
+
+    //     /*
+    // |--------------------------------------------------------------------------
+    // | FUNNEL
+    // |--------------------------------------------------------------------------
+    // */
+
+    //     $funnel = [
+    //         [
+    //             'stage' => 'Total Orders',
+    //             'value' => $totalOrders,
+    //         ],
+    //         [
+    //             'stage' => 'Confirmed',
+    //             'value' => $confirmed,
+    //         ],
+    //         [
+    //             'stage' => 'Shipping',
+    //             'value' => $shipping,
+    //         ],
+    //         [
+    //             'stage' => 'Delivered',
+    //             'value' => $delivered,
+    //         ],
+    //     ];
+
+    //     return [
+    //         'total_orders' => $totalOrders,
+
+    //         'delivered' => $delivered,
+    //         'cancelled' => $cancelled,
+    //         'shipping' => $shipping,
+    //         'confirmed' => $confirmed,
+
+    //         'delivery_rate' => $deliveryRate,
+
+    //         'confirmed_to_delivery_rate' =>
+    //         $confirmedToDeliveryRate,
+
+    //         'awaiting_fulfillment' =>
+    //         $awaitingFulfillment,
+
+    //         /*
+    //     |--------------------------------------------------------------------------
+    //     | DONUT CHART
+    //     |--------------------------------------------------------------------------
+    //     */
+
+    //         'status_breakdown' => collect($statusBreakdown)
+    //             ->map(function ($count, $status) {
+    //                 return [
+    //                     'status' => $status,
+    //                     'count' => $count,
+    //                 ];
+    //             })
+    //             ->values(),
+
+    //         /*
+    //     |--------------------------------------------------------------------------
+    //     | LINE CHART
+    //     |--------------------------------------------------------------------------
+    //     */
+
+    //         'daily_performance' => $dailyPerformance,
+
+    //         /*
+    //     |--------------------------------------------------------------------------
+    //     | AGING CHART
+    //     |--------------------------------------------------------------------------
+    //     */
+
+    //         'aging' => $aging,
+
+    //         /*
+    //     |--------------------------------------------------------------------------
+    //     | FUNNEL CHART
+    //     |--------------------------------------------------------------------------
+    //     */
+
+    //         'funnel' => $funnel,
+    //     ];
+    // }
+
+
     public function getDeliverySummary($query, $request = null)
     {
+        // Apply last 7 days filter if no explicit date range provided
+        if (
+            !$request?->filled('start_date') &&
+            !$request?->filled('end_date')
+        ) {
+            $query->whereDate('created_at', '>=', now()->subDays(7));
+        }
 
-        // Default to last 7 days if no dates are provided
-        // if (
-        //     !$request->filled('start_date') &&
-        //     !$request->filled('end_date')
-        // ) {
-        //     $query->whereDate(
-        //         'created_at',
-        //         '>=',
-        //         now()->subDays(7)
-        //     );
-        // }
         $orders = $query
             ->with([
                 'latestStatus.status',
@@ -1056,8 +1360,7 @@ class DashboardService
     |--------------------------------------------------------------------------
     */
 
-        $awaitingFulfillment =
-            $confirmed + $shipping;
+        $awaitingFulfillment = $confirmed + $shipping;
 
         /*
     |--------------------------------------------------------------------------
@@ -1067,6 +1370,28 @@ class DashboardService
 
         $baseQuery = OrderStatusTimestamp::query()
             ->with('status');
+
+        // Apply last 7 days filter to status logs as well
+        if (
+            !$request?->filled('start_date') &&
+            !$request?->filled('end_date')
+        ) {
+            $baseQuery->where(function ($q) {
+                $q->where('timestamp', '>=', now()->subDays(7))
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('timestamp')
+                            ->where('created_at', '>=', now()->subDays(7));
+                    });
+            });
+        } elseif ($request?->filled('start_date')) {
+            $baseQuery->where(function ($q) use ($request) {
+                $q->where('timestamp', '>=', $request->start_date)
+                    ->orWhere(function ($q2) use ($request) {
+                        $q2->whereNull('timestamp')
+                            ->where('created_at', '>=', $request->start_date);
+                    });
+            });
+        }
 
         if ($this->isVendor(auth()->user())) {
             $baseQuery->whereHas('order', function ($q) {
@@ -1097,7 +1422,6 @@ class DashboardService
             )->format('Y-m-d');
 
             if (!isset($dailyPerformance[$date])) {
-
                 $dailyPerformance[$date] = [
                     'date' => $date,
                     'confirmed' => 0,
@@ -1140,8 +1464,7 @@ class DashboardService
         $aging = [
             '0_2_days' => 0,
             '3_5_days' => 0,
-            '6_10_days' => 0,
-            '10_plus_days' => 0,
+            '6_7_days' => 0,
         ];
 
         foreach ($orders as $order) {
@@ -1164,10 +1487,8 @@ class DashboardService
                 $aging['0_2_days']++;
             } elseif ($days <= 5) {
                 $aging['3_5_days']++;
-            } elseif ($days <= 10) {
-                $aging['6_10_days']++;
             } else {
-                $aging['10_plus_days']++;
+                $aging['6_7_days']++;
             }
         }
 
@@ -1206,11 +1527,9 @@ class DashboardService
 
             'delivery_rate' => $deliveryRate,
 
-            'confirmed_to_delivery_rate' =>
-            $confirmedToDeliveryRate,
+            'confirmed_to_delivery_rate' => $confirmedToDeliveryRate,
 
-            'awaiting_fulfillment' =>
-            $awaitingFulfillment,
+            'awaiting_fulfillment' => $awaitingFulfillment,
 
             /*
         |--------------------------------------------------------------------------
