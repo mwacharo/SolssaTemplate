@@ -21,6 +21,11 @@
                     <ConfirmationSummary :data="confirmationSummary" />
                 </div>
 
+                <!-- Delivery Summary -->
+                <div class="card">
+                    <DeliverySummary :data="deliverySummary" />
+                </div>
+
                 <!-- Component 3 -->
                 <div class="card">
                     <InventoryStats :inventory="inventory" />
@@ -82,7 +87,7 @@ import TopSellers from "@/Pages/Dashboard/components/TopSellers.vue";
 import TopAgents from "@/Pages/Dashboard/components/TopAgents.vue";
 
 import ConfirmationSummary from "@/Pages/Dashboard/components/ConfirmationSummary.vue";
-// import DeliverySummary from "@/Pages/Dashboard/components/DeliverySummary.vue";
+import DeliverySummary from "@/Pages/Dashboard/components/DeliverySummary.vue";
 
 const orderStats = ref({});
 const orderChart = ref([]);
@@ -96,6 +101,7 @@ const deliveryRate = ref({});
 
 const ordersGivenSummary = ref({ total_orders: 0, orders_per_day: [] });
 const confirmationSummary = ref({});
+const deliverySummary = ref({});
 
 onMounted(async () => {
     const { data } = await axios.get("/api/v1/dashboard");
@@ -114,5 +120,6 @@ onMounted(async () => {
     deliveryRate.value = data.deliveryRate;
     ordersGivenSummary.value = data.ordersGivenSummary;
     confirmationSummary.value = data.confirmationSummary;
+    deliverySummary.value = data.deliverySummary;
 });
 </script>
