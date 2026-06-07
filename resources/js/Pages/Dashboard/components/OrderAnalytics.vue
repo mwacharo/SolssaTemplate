@@ -159,13 +159,24 @@ const filteredData = computed(() => {
     return sorted.slice(-days);
 });
 
-// ── Bar chart: categories = dates, single series = totals ──
+// Plain numbers — xaxis.categories drives the labels
 const chartSeries = computed(() => [
     {
         name: "Orders",
         data: filteredData.value.map((item) => Number(item.total)),
     },
 ]);
+
+// Pre-formatted date labels e.g. "07 Jun"
+const xCategories = computed(() =>
+    filteredData.value.map((item) => {
+        const d = new Date(item.date);
+        return d.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+        });
+    }),
+);
 
 const chartOptions = computed(() => ({
     chart: {
@@ -199,21 +210,12 @@ const chartOptions = computed(() => ({
         formatter: (val) => (val > 0 ? val : ""),
     },
 
+    // ✅ category type + pre-formatted labels array — no formatter needed
     xaxis: {
-        // Use plain date strings as categories so every date is shown
-        categories: filteredData.value.map((item) => item.date),
         type: "category",
+        categories: xCategories.value,
         labels: {
             style: { colors: "#6B7280", fontSize: "12px" },
-            // Format "2026-06-07" → "07 Jun"
-            formatter: (val) => {
-                if (!val) return val;
-                const d = new Date(val);
-                return d.toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                });
-            },
         },
         axisBorder: { show: false },
         axisTicks: { show: false },
@@ -235,20 +237,9 @@ const chartOptions = computed(() => ({
         xaxis: { lines: { show: false } },
     },
 
+    // ✅ tooltip x receives the category string directly
     tooltip: {
-        x: {
-            // Show the full date in the tooltip
-            formatter: (val) => {
-                const d = new Date(val);
-                return isNaN(d)
-                    ? val
-                    : d.toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                      });
-            },
-        },
+        x: { formatter: (val) => val },
         y: { formatter: (val) => `${val} Orders` },
     },
 

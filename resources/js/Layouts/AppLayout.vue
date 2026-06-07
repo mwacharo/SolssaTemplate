@@ -287,8 +287,12 @@ watch(darkMode, (newValue) => {
 
             <!-- href   -->
             <v-app-bar-title>
-                <Link
+                <!-- <Link
                     :href="route('dashboard')"
+                    class="text-decoration-none text-primary"
+                > -->
+                <Link
+                    :href="route('metrics')"
                     class="text-decoration-none text-primary"
                 >
                     <ApplicationMark class="mr-2" height="32" />
