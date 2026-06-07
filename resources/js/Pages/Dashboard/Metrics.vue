@@ -13,13 +13,13 @@
                     <OrderAnalytics :chartData="orderChart" />
                 </div> -->
 
-             <div class="card">
-    <OrderAnalytics 
-        :ordersGivenSummary="dashboardData.ordersGivenSummary"
-        :isLoading="isLoading"
-        @filter-change="handleFilterChange"
-    />
-</div>
+                <div class="card">
+                    <OrderAnalytics
+                        :ordersGivenSummary="dashboardData.ordersGivenSummary"
+                        :isLoading="isLoading"
+                        @filter-change="handleFilterChange"
+                    />
+                </div>
 
                 <!-- Component 3 -->
                 <div class="card">
@@ -91,6 +91,8 @@ const topProducts = ref([]);
 const topSellers = ref([]);
 const deliveryRate = ref({});
 
+const ordersGivenSummary = ref({ total_orders: 0, orders_per_day: [] });
+
 onMounted(async () => {
     const { data } = await axios.get("/api/v1/dashboard");
 
@@ -106,5 +108,6 @@ onMounted(async () => {
     }));
     topSellers.value = data.topSellers;
     deliveryRate.value = data.deliveryRate;
+    ordersGivenSummary.value = data.ordersGivenSummary;
 });
 </script>
