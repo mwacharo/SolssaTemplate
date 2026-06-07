@@ -160,10 +160,20 @@ const filteredData = computed(() => {
 });
 
 // Plain numbers — xaxis.categories drives the labels
+// const chartSeries = computed(() => [
+//     {
+//         name: "Orders",
+//         data: filteredData.value.map((item) => Number(item.total)),
+//     },
+// ]);
+
 const chartSeries = computed(() => [
     {
         name: "Orders",
-        data: filteredData.value.map((item) => Number(item.total)),
+        data: filteredData.value.map((item) => ({
+            x: item.date,
+            y: Number(item.total),
+        })),
     },
 ]);
 
@@ -190,12 +200,39 @@ const chartOptions = computed(() => ({
 
     colors: ["#3B82F6"],
 
+    // plotOptions: {
+    //     bar: {
+    //         borderRadius: 6,
+    //         borderRadiusApplication: "end",
+    //         columnWidth: filteredData.value.length <= 7 ? "40%" : "60%",
+    //         dataLabels: { position: "top" },
+    //     },
+    // },
+
     plotOptions: {
         bar: {
-            borderRadius: 6,
+            horizontal: false,
+            borderRadius: 8,
             borderRadiusApplication: "end",
-            columnWidth: filteredData.value.length <= 7 ? "40%" : "60%",
-            dataLabels: { position: "top" },
+            columnWidth: "45%",
+            distributed: false,
+        },
+    },
+
+    stroke: {
+        show: true,
+        width: 2,
+        colors: ["transparent"],
+    },
+
+    fill: {
+        opacity: 1,
+        gradient: {
+            shade: "light",
+            type: "vertical",
+            shadeIntensity: 0.25,
+            opacityFrom: 0.9,
+            opacityTo: 0.6,
         },
     },
 
@@ -211,16 +248,19 @@ const chartOptions = computed(() => ({
     },
 
     // ✅ category type + pre-formatted labels array — no formatter needed
-    xaxis: {
-        type: "category",
-        categories: xCategories.value,
-        labels: {
-            style: { colors: "#6B7280", fontSize: "12px" },
-        },
-        axisBorder: { show: false },
-        axisTicks: { show: false },
-    },
+    // xaxis: {
+    //     type: "category",
+    //     categories: xCategories.value,
+    //     labels: {
+    //         style: { colors: "#6B7280", fontSize: "12px" },
+    //     },
+    //     axisBorder: { show: false },
+    //     axisTicks: { show: false },
+    // },
 
+    xaxis: {
+        type: "datetime",
+    },
     yaxis: {
         min: 0,
         forceNiceScale: true,
