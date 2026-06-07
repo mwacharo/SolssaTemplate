@@ -50,6 +50,26 @@
                 ></div>
             </div>
 
+            <div
+                v-else-if="!filteredData.length"
+                class="flex flex-col items-center justify-center h-80 text-gray-400"
+            >
+                <svg
+                    class="w-12 h-12 mb-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    />
+                </svg>
+                <p class="text-sm font-medium">No data for this period</p>
+            </div>
+
             <apexchart
                 v-else
                 type="area"
@@ -131,7 +151,6 @@ const props = defineProps({
     },
 });
 
-// Emits — parent listens to this to re-fetch data
 const emit = defineEmits(["filter-change"]);
 
 // Filter state
@@ -147,7 +166,7 @@ const timePeriods = [
     { label: "All", value: "All" },
 ];
 
-// Emit filter changes whenever any filter changes so the parent can re-fetch
+// Emit to parent whenever date range or merchant changes
 watch(
     [dateRange, merchantId],
     ([newDateRange, newMerchantId]) => {
@@ -159,36 +178,31 @@ watch(
     { deep: true },
 );
 
-// Client-side slice by time period (applied on top of whatever the API returned)
+// Sort + slice by selected period
 const filteredData = computed(() => {
-    const sorted = [...props.ordersGivenSummary.orders_per_day].sort(
+    const sorted = [...(props.ordersGivenSummary.orders_per_day ?? [])].sort(
         (a, b) => new Date(a.date) - new Date(b.date),
     );
-
     if (selectedPeriod.value === "All") return sorted;
-
     const days = parseInt(selectedPeriod.value);
     return sorted.slice(-days);
 });
 
-// Chart series
+// ✅ { x, y } format — NO xaxis.categories needed
 const chartSeries = computed(() => [
     {
         name: "Orders",
-        data: filteredData.value.map((d) => d.total),
+        data: filteredData.value.map((d) => ({
+            x: new Date(d.date + "T00:00:00").toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+            }),
+            y: d.total,
+        })),
     },
 ]);
 
-// X-axis formatted dates
-const xCategories = computed(() =>
-    filteredData.value.map((d) =>
-        new Date(d.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        }),
-    ),
-);
-
+// ✅ xaxis has NO categories — type: "category" lets ApexCharts read x from data
 const chartOptions = computed(() => ({
     chart: {
         id: "orders-analytics",
@@ -231,7 +245,7 @@ const chartOptions = computed(() => ({
         padding: { top: 20, right: 20, bottom: 20, left: 20 },
     },
     xaxis: {
-        categories: xCategories.value,
+        type: "category", // ✅ reads x from { x, y } data points
         axisBorder: { show: false },
         axisTicks: { show: false },
         labels: {
@@ -239,10 +253,12 @@ const chartOptions = computed(() => ({
         },
     },
     yaxis: {
+        min: 0,
+        forceNiceScale: true,
         labels: {
             style: { colors: "#6B7280", fontSize: "12px", fontWeight: 500 },
             formatter: (val) =>
-                val >= 1000 ? (val / 1000).toFixed(1) + "K" : val,
+                val >= 1000 ? (val / 1000).toFixed(1) + "K" : Math.round(val),
         },
     },
     tooltip: {
