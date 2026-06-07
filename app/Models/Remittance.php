@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\BelongsToVendor;
 
 // apply country scope to only show remittances of the authenticated user's country
-use App\Models\Scopes\CountryScope;
+// use App\Models\Scopes\CountryScope;
 
 
 
@@ -90,10 +90,10 @@ class Remittance extends Model
     ];
 
 
-    protected static function booted(): void
-    {
-        static::addGlobalScope(new CountryScope);
-    }
+    // protected static function booted(): void
+    // {
+    //     static::addGlobalScope(new CountryScope);
+    // }
 
     /*
      |--------------------------------------------------------------------------
