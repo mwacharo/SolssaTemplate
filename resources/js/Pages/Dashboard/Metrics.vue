@@ -18,7 +18,7 @@
 
                 <!-- Confirmation Summary -->
                 <div class="card">
-                    <ConfirmationSummary :data="confirmationData" />
+                    <ConfirmationSummary :data="confirmationSummary" />
                 </div>
 
                 <!-- Component 3 -->
@@ -95,7 +95,7 @@ const topSellers = ref([]);
 const deliveryRate = ref({});
 
 const ordersGivenSummary = ref({ total_orders: 0, orders_per_day: [] });
-const confirmationData = ref({});
+const confirmationSummary = ref({});
 
 onMounted(async () => {
     const { data } = await axios.get("/api/v1/dashboard");
@@ -113,6 +113,6 @@ onMounted(async () => {
     topSellers.value = data.topSellers;
     deliveryRate.value = data.deliveryRate;
     ordersGivenSummary.value = data.ordersGivenSummary;
-    confirmationData.value = data.confirmationData;
+    confirmationSummary.value = data.confirmationSummary;
 });
 </script>
