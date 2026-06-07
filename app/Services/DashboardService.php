@@ -17,16 +17,41 @@ class DashboardService
     // delivery summary 
 
 
-    private function getOrdersGivenByDate($query)
+    // private function getOrdersGivenByDate($query)
+    // {
+    //     return $query
+    //         ->select(
+    //             DB::raw('DATE(created_at) as date'),
+    //             DB::raw('COUNT(*) as total')
+    //         )
+    //         ->groupBy(DB::raw('DATE(created_at)'))
+    //         ->orderBy('date', 'desc')
+    //         ->limit(7)
+    //         ->get();
+    // }
+
+
+    private function getOrdersGivenByDate($query, $request)
     {
+        // Default to last 7 days if no dates are provided
+        if (
+            !$request->filled('start_date') &&
+            !$request->filled('end_date')
+        ) {
+            $query->whereDate(
+                'created_at',
+                '>=',
+                now()->subDays(7)
+            );
+        }
+
         return $query
             ->select(
                 DB::raw('DATE(created_at) as date'),
                 DB::raw('COUNT(*) as total')
             )
             ->groupBy(DB::raw('DATE(created_at)'))
-            ->orderBy('date', 'desc')
-            ->limit(7)
+            ->orderBy('date')
             ->get();
     }
 
@@ -187,91 +212,186 @@ class DashboardService
 
 
 
-    public function getConfirmationSummary($query): array
-{
-    $orders = $query
-        ->with('latestStatus.status')
-        ->get();
+    // public function getConfirmationSummary($query): array
+    // {
+    //     $orders = $query
+    //         ->with('latestStatus.status')
+    //         ->get();
 
-    $confirmed = 0;
-    $pending = 0;
-    $failed = 0;
+    //     $confirmed = 0;
+    //     $pending = 0;
+    //     $failed = 0;
 
-    $trend = [];
+    //     $trend = [];
 
-    foreach ($orders as $order) {
+    //     foreach ($orders as $order) {
 
-        $status = optional(
-            optional($order->latestStatus)->status
-        )->name;
+    //         $status = optional(
+    //             optional($order->latestStatus)->status
+    //         )->name;
 
-        $date = $order->created_at->format('Y-m-d');
+    //         $date = $order->created_at->format('Y-m-d');
 
-        if (!isset($trend[$date])) {
-            $trend[$date] = [
-                'date' => $date,
-                'total' => 0,
-                'confirmed' => 0,
-                'pending' => 0,
-                'failed' => 0,
-            ];
+    //         if (!isset($trend[$date])) {
+    //             $trend[$date] = [
+    //                 'date' => $date,
+    //                 'total' => 0,
+    //                 'confirmed' => 0,
+    //                 'pending' => 0,
+    //                 'failed' => 0,
+    //             ];
+    //         }
+
+    //         $trend[$date]['total']++;
+
+    //         if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+
+    //             $confirmed++;
+    //             $trend[$date]['confirmed']++;
+    //         } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+
+    //             $pending++;
+    //             $trend[$date]['pending']++;
+    //         } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+
+    //             $failed++;
+    //             $trend[$date]['failed']++;
+    //         }
+    //     }
+
+    //     $total = $orders->count();
+
+    //     return [
+    //         'total_orders' => $total,
+
+    //         'confirmed' => $confirmed,
+
+    //         'pending' => $pending,
+
+    //         'failed' => $failed,
+
+    //         'confirmation_rate' => $total > 0
+    //             ? round(($confirmed / $total) * 100, 2)
+    //             : 0,
+
+    //         'status_breakdown' => [
+    //             [
+    //                 'status' => 'Confirmed',
+    //                 'total' => $confirmed,
+    //             ],
+    //             [
+    //                 'status' => 'Pending',
+    //                 'total' => $pending,
+    //             ],
+    //             [
+    //                 'status' => 'Failed',
+    //                 'total' => $failed,
+    //             ],
+    //         ],
+
+    //         'confirmation_per_day' => collect($trend)
+    //             ->sortByDesc('date')
+    //             ->values()
+    //             ->all(),
+    //     ];
+    // }
+
+
+    public function getConfirmationSummary($query, $request): array
+    {
+        // Default to last 7 days if no dates are provided
+        if (
+            !$request->filled('start_date') &&
+            !$request->filled('end_date')
+        ) {
+            $query->whereDate(
+                'created_at',
+                '>=',
+                now()->subDays(7)
+            );
         }
 
-        $trend[$date]['total']++;
+        $orders = $query
+            ->with('latestStatus.status')
+            ->get();
 
-        if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+        $confirmed = 0;
+        $pending = 0;
+        $failed = 0;
 
-            $confirmed++;
-            $trend[$date]['confirmed']++;
+        $trend = [];
 
-        } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+        foreach ($orders as $order) {
 
-            $pending++;
-            $trend[$date]['pending']++;
+            $status = optional(
+                optional($order->latestStatus)->status
+            )->name;
 
-        } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+            $date = $order->created_at->format('Y-m-d');
 
-            $failed++;
-            $trend[$date]['failed']++;
+            if (!isset($trend[$date])) {
+                $trend[$date] = [
+                    'date' => $date,
+                    'total' => 0,
+                    'confirmed' => 0,
+                    'pending' => 0,
+                    'failed' => 0,
+                ];
+            }
+
+            $trend[$date]['total']++;
+
+            if (in_array($status, $this->confirmationStatuses['confirmed'])) {
+
+                $confirmed++;
+                $trend[$date]['confirmed']++;
+            } elseif (in_array($status, $this->confirmationStatuses['pending'])) {
+
+                $pending++;
+                $trend[$date]['pending']++;
+            } elseif (in_array($status, $this->confirmationStatuses['failed'])) {
+
+                $failed++;
+                $trend[$date]['failed']++;
+            }
         }
+
+        $total = $orders->count();
+
+        return [
+            'total_orders' => $total,
+
+            'confirmed' => $confirmed,
+
+            'pending' => $pending,
+
+            'failed' => $failed,
+
+            'confirmation_rate' => $total > 0
+                ? round(($confirmed / $total) * 100, 2)
+                : 0,
+
+            'status_breakdown' => [
+                [
+                    'status' => 'Confirmed',
+                    'total' => $confirmed,
+                ],
+                [
+                    'status' => 'Pending',
+                    'total' => $pending,
+                ],
+                [
+                    'status' => 'Failed',
+                    'total' => $failed,
+                ],
+            ],
+
+            'confirmation_per_day' => collect($trend)
+                ->sortByDesc('date')
+                ->values()
+                ->all(),
+        ];
     }
-
-    $total = $orders->count();
-
-    return [
-        'total_orders' => $total,
-
-        'confirmed' => $confirmed,
-
-        'pending' => $pending,
-
-        'failed' => $failed,
-
-        'confirmation_rate' => $total > 0
-            ? round(($confirmed / $total) * 100, 2)
-            : 0,
-
-        'status_breakdown' => [
-            [
-                'status' => 'Confirmed',
-                'total' => $confirmed,
-            ],
-            [
-                'status' => 'Pending',
-                'total' => $pending,
-            ],
-            [
-                'status' => 'Failed',
-                'total' => $failed,
-            ],
-        ],
-
-        'confirmation_per_day' => collect($trend)
-            ->sortByDesc('date')
-            ->values()
-            ->all(),
-    ];
-}
 
 
 
