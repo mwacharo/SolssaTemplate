@@ -9,9 +9,17 @@
                 </div>
 
                 <!-- Component 2 -->
-                <div class="card">
+                <!-- <div class="card">
                     <OrderAnalytics :chartData="orderChart" />
-                </div>
+                </div> -->
+
+             <div class="card">
+    <OrderAnalytics 
+        :ordersGivenSummary="dashboardData.ordersGivenSummary"
+        :isLoading="isLoading"
+        @filter-change="handleFilterChange"
+    />
+</div>
 
                 <!-- Component 3 -->
                 <div class="card">
