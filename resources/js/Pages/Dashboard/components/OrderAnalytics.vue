@@ -14,7 +14,6 @@
                 <div class="flex-1">
                     <DateRangePicker v-model="dateRange" />
                 </div>
-
                 <div class="flex-1">
                     <SelectMerchant
                         v-model="merchantId"
@@ -55,7 +54,7 @@
 
             <apexchart
                 v-else
-                type="area"
+                type="bar"
                 height="320"
                 :options="chartOptions"
                 :series="chartSeries"
@@ -121,7 +120,6 @@ import { ref, computed, watch } from "vue";
 import DateRangePicker from "@/Components/DualDatePicker.vue";
 import SelectMerchant from "@/Components/SelectMerchant.vue";
 
-// Props
 const props = defineProps({
     ordersGivenSummary: {
         type: Object,
@@ -136,20 +134,11 @@ const props = defineProps({
 
 const emit = defineEmits(["filter-change"]);
 
-// Filter state
 const dateRange = ref(null);
 const merchantId = ref(null);
 const formValid = ref({ merchant: true });
 const selectedPeriod = ref("7D");
 
-const timePeriods = [
-    { label: "7D", value: "7D" },
-    { label: "14D", value: "14D" },
-    { label: "30D", value: "30D" },
-    { label: "All", value: "All" },
-];
-
-// Emit to parent whenever date range or merchant changes
 watch(
     [dateRange, merchantId],
     ([newDateRange, newMerchantId]) => {
@@ -161,7 +150,6 @@ watch(
     { deep: true },
 );
 
-// Sort + slice by selected period
 const filteredData = computed(() => {
     const sorted = [...(props.ordersGivenSummary.orders_per_day ?? [])].sort(
         (a, b) => new Date(a.date) - new Date(b.date),
@@ -171,114 +159,105 @@ const filteredData = computed(() => {
     return sorted.slice(-days);
 });
 
+// ── Bar chart: categories = dates, single series = totals ──
 const chartSeries = computed(() => [
     {
         name: "Orders",
-        data: filteredData.value.map((item) => ({
-            x: item.date,
-            y: Number(item.total),
-        })),
+        data: filteredData.value.map((item) => Number(item.total)),
     },
 ]);
 
 const chartOptions = computed(() => ({
     chart: {
         id: "orders-analytics",
-        type: "area",
+        type: "bar",
         height: 320,
         fontFamily: "Inter, sans-serif",
-        toolbar: {
-            show: true,
-        },
-        zoom: {
-            enabled: true,
-        },
+        toolbar: { show: true },
+        zoom: { enabled: false },
     },
 
     colors: ["#3B82F6"],
 
-    dataLabels: {
-        enabled: false,
-    },
-
-    stroke: {
-        curve: "smooth",
-        width: 3,
-    },
-
-    fill: {
-        type: "gradient",
-        gradient: {
-            shadeIntensity: 1,
-            opacityFrom: 0.35,
-            opacityTo: 0.05,
-            stops: [0, 100],
+    plotOptions: {
+        bar: {
+            borderRadius: 6,
+            borderRadiusApplication: "end",
+            columnWidth: filteredData.value.length <= 7 ? "40%" : "60%",
+            dataLabels: { position: "top" },
         },
+    },
+
+    dataLabels: {
+        enabled: true,
+        offsetY: -20,
+        style: {
+            fontSize: "12px",
+            colors: ["#374151"],
+            fontWeight: 600,
+        },
+        formatter: (val) => (val > 0 ? val : ""),
     },
 
     xaxis: {
-        type: "datetime",
-
+        // Use plain date strings as categories so every date is shown
+        categories: filteredData.value.map((item) => item.date),
+        type: "category",
         labels: {
-            style: {
-                colors: "#6B7280",
-                fontSize: "12px",
+            style: { colors: "#6B7280", fontSize: "12px" },
+            // Format "2026-06-07" → "07 Jun"
+            formatter: (val) => {
+                if (!val) return val;
+                const d = new Date(val);
+                return d.toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                });
             },
-            datetimeFormatter: {
-                year: "yyyy",
-                month: "MMM dd",
-                day: "dd MMM",
-            },
         },
-
-        axisBorder: {
-            show: false,
-        },
-
-        axisTicks: {
-            show: false,
-        },
+        axisBorder: { show: false },
+        axisTicks: { show: false },
     },
 
     yaxis: {
         min: 0,
         forceNiceScale: true,
-
         labels: {
-            formatter: (value) => Math.round(value),
-            style: {
-                colors: "#6B7280",
-                fontSize: "12px",
-            },
+            formatter: (val) => Math.round(val),
+            style: { colors: "#6B7280", fontSize: "12px" },
         },
     },
 
     grid: {
         borderColor: "#E5E7EB",
         strokeDashArray: 3,
+        yaxis: { lines: { show: true } },
+        xaxis: { lines: { show: false } },
     },
 
     tooltip: {
         x: {
-            format: "dd MMM yyyy",
+            // Show the full date in the tooltip
+            formatter: (val) => {
+                const d = new Date(val);
+                return isNaN(d)
+                    ? val
+                    : d.toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                      });
+            },
         },
-        y: {
-            formatter: (value) => `${value} Orders`,
-        },
+        y: { formatter: (val) => `${val} Orders` },
     },
 
-    legend: {
-        show: false,
-    },
-
-    noData: {
-        text: "No orders found",
-    },
+    legend: { show: false },
+    noData: { text: "No orders found" },
 }));
 
-// Stats
 const periodTotal = computed(() =>
-    filteredData.value.reduce((sum, d) => sum + d.total, 0),
+    filteredData.value.reduce((sum, d) => sum + Number(d.total), 0),
 );
 
 const avgPerDay = computed(() => {
@@ -291,7 +270,6 @@ const avgPerDay = computed(() => {
 .apex-chart {
     font-family: "Inter", sans-serif;
 }
-
 @keyframes spin {
     to {
         transform: rotate(360deg);
