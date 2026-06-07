@@ -1371,26 +1371,14 @@ class DashboardService
         $baseQuery = OrderStatusTimestamp::query()
             ->with('status');
 
-        // Apply last 7 days filter to status logs as well
+        // Apply last 7 days filter using created_at
         if (
             !$request?->filled('start_date') &&
             !$request?->filled('end_date')
         ) {
-            $baseQuery->where(function ($q) {
-                $q->where('timestamp', '>=', now()->subDays(7))
-                    ->orWhere(function ($q2) {
-                        $q2->whereNull('timestamp')
-                            ->where('created_at', '>=', now()->subDays(7));
-                    });
-            });
+            $baseQuery->where('created_at', '>=', now()->subDays(7));
         } elseif ($request?->filled('start_date')) {
-            $baseQuery->where(function ($q) use ($request) {
-                $q->where('timestamp', '>=', $request->start_date)
-                    ->orWhere(function ($q2) use ($request) {
-                        $q2->whereNull('timestamp')
-                            ->where('created_at', '>=', $request->start_date);
-                    });
-            });
+            $baseQuery->where('created_at', '>=', $request->start_date);
         }
 
         if ($this->isVendor(auth()->user())) {
@@ -1417,9 +1405,7 @@ class DashboardService
                 continue;
             }
 
-            $date = Carbon::parse(
-                $log->timestamp ?? $log->created_at
-            )->format('Y-m-d');
+            $date = Carbon::parse($log->created_at)->format('Y-m-d');
 
             if (!isset($dailyPerformance[$date])) {
                 $dailyPerformance[$date] = [
@@ -1480,7 +1466,7 @@ class DashboardService
             }
 
             $days = Carbon::parse(
-                $latestStatus->timestamp ?? $latestStatus->created_at
+                $latestStatus->created_at
             )->diffInDays(now());
 
             if ($days <= 2) {
