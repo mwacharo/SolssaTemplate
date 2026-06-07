@@ -171,21 +171,16 @@ const filteredData = computed(() => {
     return sorted.slice(-days);
 });
 
-// ✅ { x, y } format — NO xaxis.categories needed
 const chartSeries = computed(() => [
     {
         name: "Orders",
-        data: filteredData.value.map((d) => ({
-            x: new Date(d.date + "T00:00:00").toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-            }),
-            y: d.total,
+        data: filteredData.value.map((item) => ({
+            x: item.date,
+            y: Number(item.total),
         })),
     },
 ]);
 
-// ✅ xaxis has NO categories — type: "category" lets ApexCharts read x from data
 const chartOptions = computed(() => ({
     chart: {
         id: "orders-analytics",
@@ -194,68 +189,91 @@ const chartOptions = computed(() => ({
         fontFamily: "Inter, sans-serif",
         toolbar: {
             show: true,
-            tools: {
-                download: true,
-                selection: false,
-                zoom: true,
-                zoomin: true,
-                zoomout: true,
-                pan: false,
-                reset: true,
-            },
         },
-        animations: {
+        zoom: {
             enabled: true,
-            easing: "easeinout",
-            speed: 800,
         },
     },
+
     colors: ["#3B82F6"],
-    dataLabels: { enabled: false },
-    stroke: { curve: "smooth", width: 3, lineCap: "round" },
+
+    dataLabels: {
+        enabled: false,
+    },
+
+    stroke: {
+        curve: "smooth",
+        width: 3,
+    },
+
     fill: {
         type: "gradient",
         gradient: {
             shadeIntensity: 1,
-            opacityFrom: 0.4,
+            opacityFrom: 0.35,
             opacityTo: 0.05,
             stops: [0, 100],
         },
     },
-    grid: {
-        borderColor: "#E5E7EB",
-        strokeDashArray: 3,
-        padding: { top: 20, right: 20, bottom: 20, left: 20 },
-    },
+
     xaxis: {
-        type: "category", // ✅ reads x from { x, y } data points
-        axisBorder: { show: false },
-        axisTicks: { show: false },
+        type: "datetime",
+
         labels: {
-            style: { colors: "#6B7280", fontSize: "12px", fontWeight: 500 },
+            style: {
+                colors: "#6B7280",
+                fontSize: "12px",
+            },
+            datetimeFormatter: {
+                year: "yyyy",
+                month: "MMM dd",
+                day: "dd MMM",
+            },
+        },
+
+        axisBorder: {
+            show: false,
+        },
+
+        axisTicks: {
+            show: false,
         },
     },
+
     yaxis: {
         min: 0,
         forceNiceScale: true,
+
         labels: {
-            style: { colors: "#6B7280", fontSize: "12px", fontWeight: 500 },
-            formatter: (val) =>
-                val >= 1000 ? (val / 1000).toFixed(1) + "K" : Math.round(val),
+            formatter: (value) => Math.round(value),
+            style: {
+                colors: "#6B7280",
+                fontSize: "12px",
+            },
         },
     },
+
+    grid: {
+        borderColor: "#E5E7EB",
+        strokeDashArray: 3,
+    },
+
     tooltip: {
-        theme: "light",
-        y: { formatter: (val) => `${val.toLocaleString()} orders` },
-        style: { fontSize: "12px", fontFamily: "Inter, sans-serif" },
-    },
-    legend: { show: false },
-    responsive: [
-        {
-            breakpoint: 768,
-            options: { chart: { height: 280 } },
+        x: {
+            format: "dd MMM yyyy",
         },
-    ],
+        y: {
+            formatter: (value) => `${value} Orders`,
+        },
+    },
+
+    legend: {
+        show: false,
+    },
+
+    noData: {
+        text: "No orders found",
+    },
 }));
 
 // Stats
