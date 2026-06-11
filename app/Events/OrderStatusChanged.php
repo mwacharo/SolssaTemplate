@@ -23,7 +23,9 @@ class OrderStatusChanged
      */
     public function __construct(
 
-        public OrderStatusTimestamp $statusTimestamp
+        // public OrderStatusTimestamp $statusTimestamp
+        public array $payload
+
 
     ) {
         //

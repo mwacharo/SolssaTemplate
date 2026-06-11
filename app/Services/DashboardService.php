@@ -762,9 +762,9 @@ class DashboardService
 
         $confirmationStatuses = [
             'Scheduled',
-            'Pending',
+            // 'Pending',
             'Pending Confirmation',
-            'New',
+            // 'New',
         ];
 
         $delivered = 0;
