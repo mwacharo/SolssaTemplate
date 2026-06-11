@@ -158,7 +158,9 @@ class SendOrderNotificationsListener implements ShouldQueue
                     ]);
 
 
-                    $userId = $payload['user_id'] ?? null;
+                    // $userId = $payload['user_id'] ?? null;
+
+                    $userId = 1;
 
                     if (!$userId) {
                         Log::warning('SMS skipped: missing user_id', [
