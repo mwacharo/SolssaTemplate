@@ -41,5 +41,5 @@ Schedule::call(function () {
             }
         });
 })
-    // ->everyFifteenMinutes();
-    ->everyTwoMinutes();
+    ->everyThirtyMinutes();
+    // ->everyTwoMinutes();
