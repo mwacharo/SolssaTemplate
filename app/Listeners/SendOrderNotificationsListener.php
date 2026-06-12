@@ -182,7 +182,8 @@ class SendOrderNotificationsListener implements ShouldQueue
                     $providerResponse = $this->whatsappService->sendMessage(
                         $phone,
                         $message,
-                        $payload['user_id'] ?? null,  // userId — null if not in payload
+                        // $payload['user_id'] ?? null,  // userId — null if not in payload
+                        \App\Models\User::first()?->id,  // userId — using first user as fallback
                         $orderId                       // orderId — already extracted above
                     );
                 }
