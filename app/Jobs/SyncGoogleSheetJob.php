@@ -12,6 +12,7 @@ use App\Services\Order\Sources\GoogleSheetSyncService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Support\Facades\Log;
 
 class SyncGoogleSheetJob implements ShouldQueue
 {
@@ -32,6 +33,8 @@ class SyncGoogleSheetJob implements ShouldQueue
         $sheet = $repository->findById($this->sheetId);
 
         if (!$sheet) {
+                        Log::warning("SyncGoogleSheetJob: Sheet not found", ['sheet_id' => $this->sheetId]);
+
             return;
         }
 

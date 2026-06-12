@@ -485,4 +485,16 @@ class GoogleSheetRepository implements GoogleSheetRepositoryInterface
 
         return collect($timestamps)->max();
     }
+
+
+    public function fetchSheetNames(string $spreadsheetId): array
+    {
+        // Option A: stored in DB (e.g. a pivot/config table)
+        return GoogleSheet::where('post_spreadsheet_id', $spreadsheetId)
+            ->pluck('sheet_name')
+            ->toArray();
+
+        // Option B: fetched live from Google Sheets API
+        // return $this->googleClient->getSheetNames($spreadsheetId);
+    }
 }

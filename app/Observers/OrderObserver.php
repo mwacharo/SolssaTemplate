@@ -47,6 +47,10 @@ class OrderObserver
 
         ]);
 
+
+        dispatch(new \App\Jobs\BufferOrderEventForSyncJob($order->id));
+
+
         // Dispatch webhook job
         // dispatch(new \App\Jobs\DispatchWebhookEvent($eventType, $data, $order->id));
     }

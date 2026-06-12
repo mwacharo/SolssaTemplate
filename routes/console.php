@@ -26,21 +26,20 @@ Schedule::job(new GenerateDailyTokensJob())
 // ->everyTwoMinutes();
 
 
-//call the SyncGoogleSheetJob every 30 minutes
+Schedule::call(function () {
 
+    GoogleSheet::query()
+        ->where('active', true)
+        ->select('id')
+        ->chunkById(100, function ($sheets) {
 
-// Schedule::call(function () {
-//     $sheets = GoogleSheet::all();
-//     foreach ($sheets as $sheet) {
-//         SyncGoogleSheetJob::dispatch($sheet->id);
-//     }
-// })->everyThirtyMinutes()
-//     ->name('sync-google-sheets');
-//     // ->withoutOverlapping();
+            foreach ($sheets as $sheet) {
 
-
-
-Schedule::job(new SyncGoogleSheetJob('16vEgiQ5fo_C41lVuX9CttygGMcUTjPlY8XyuxRtpfzg'))
-    ->dailyAt('00:00');
-// ->everyMinute();
-// ->everyTwoMinutes();
+                SyncGoogleSheetJob::dispatch(
+                    $sheet->id
+                );
+            }
+        });
+})
+    // ->everyFifteenMinutes();
+    ->everyTwoMinutes();
