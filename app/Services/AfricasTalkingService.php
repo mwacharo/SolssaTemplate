@@ -1252,7 +1252,10 @@ class AfricasTalkingService
             // associate with user who made the call
 
             // $user = User::where('client_name', $payload['callerNumber'] ?? null)->first();
-            $user = UserCountryAccount::where('client_name', $payload['callerNumber'])->first();
+            $useraccount = UserCountryAccount::where('client_name', $payload['callerNumber'])->first();
+
+            // find the user of the above account
+            $user = User::find($useraccount->user_id);
 
             // $user = User::where('client_name', $payload['callerNumber'])->first();
 
