@@ -78,7 +78,9 @@ class User extends Authenticatable
         'two_factor_enabled',
         'timezone',
         'country_id',
-        'status'
+        'status',
+        'present'
+
     ];
 
     /**
@@ -252,5 +254,25 @@ class User extends Authenticatable
         }
 
         return $query;
+    }
+
+    public function agentFulfillmentHubs()
+    {
+        return $this->belongsToMany(
+            FulfillmentHub::class,
+            'fulfillment_hub_agent',
+            'agent_id',
+            'fulfillment_hub_id'
+        )->withTimestamps();
+    }
+
+    public function vendorFulfillmentHubs()
+    {
+        return $this->belongsToMany(
+            FulfillmentHub::class,
+            'fulfillment_hub_vendor',
+            'vendor_id',
+            'fulfillment_hub_id'
+        )->withTimestamps();
     }
 }

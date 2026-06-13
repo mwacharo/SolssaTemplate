@@ -57,6 +57,21 @@ export const useClientStore = defineStore('client', {
             }
         },
 
+        // fetch agents 
+        async fetchAgents() {
+            this.loading = true
+            this.error = null
+            try {
+                const response = await axios.get('/api/v1/agents')
+                this.agents = response.data.data || []
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message
+                console.error('Error fetching agents:', error)
+            } finally {
+                this.loading = false
+            }
+        },
+
         async fetchRiders() {
             this.loading = true
             this.error = null

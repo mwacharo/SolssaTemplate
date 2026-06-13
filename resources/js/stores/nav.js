@@ -130,6 +130,9 @@ export const ROUTES = {
       PRICING_VENDOR_ASSIGNMENTS: 'settings.vendor-assignments',
       PRICING_VENDOR_OVERRIDES: 'settings.vendor-overrides',
 
+      // Fulfillment Hubs
+      FULFILLMENT_HUBS: 'settings.fulfillment-hubs',
+
     
   },
   INTEGRATIONS: {
@@ -444,6 +447,9 @@ export const useNavStore = defineStore('nav', {
           { title: 'Pricing Conditions', route: ROUTES.SETTINGS.PRICING_CONDITIONS, icon: 'mdi-scale-balance', permission: 'pricing_view' },
           { title: 'Vendor Assignments', route: ROUTES.SETTINGS.PRICING_VENDOR_ASSIGNMENTS, icon: 'mdi-account-multiple-check', permission: 'pricing_manage' },
           { title: 'Vendor Overrides', route: ROUTES.SETTINGS.PRICING_VENDOR_OVERRIDES, icon: 'mdi-account-cash', permission: 'pricing_manage' }, 
+
+          // Fulfillment Hubs
+          { title: 'Fulfillment Hubs', route: ROUTES.SETTINGS.FULFILLMENT_HUBS, icon: 'mdi-account-multiple', permission: 'fulfillment_hubs_view' },
           
         ],
       },

@@ -11,7 +11,7 @@ class Vendor extends Model
     use HasFactory;
 
     protected $fillable = [
-       
+
         'website',
         'description',
         'user_id'
@@ -41,5 +41,13 @@ class Vendor extends Model
     public function services()
     {
         return $this->hasMany(Service::class);
+    }
+
+    // public function fulfillmentHub()
+
+
+    public function fulfillmentHub()
+    {
+        return $this->belongsTo(FulfillmentHub::class);
     }
 }

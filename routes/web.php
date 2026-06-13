@@ -244,6 +244,9 @@ Route::middleware([
         Route::get('/features', fn() => Inertia::render('Settings/FeatureToggles'))->name('features');
         Route::get('/notifications', fn() => Inertia::render('Settings/Notifications'))->name('notifications');
         Route::get('/branding', fn() => Inertia::render('Settings/Branding'))->name('branding');
+
+        // fulfillment hubs
+        Route::get('/fulfillment-hubs', fn() => Inertia::render('Settings/FulfillmentHub'))->name('fulfillment-hubs');
     });
 
     // Integrations

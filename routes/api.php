@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\VendorAuthController;
 use App\Http\Controllers\Api\WarehouseController;
 
 use App\Http\Controllers\Api\ConditionTypeController;
+use App\Http\Controllers\Api\FulfillmentHubController;
 use App\Http\Controllers\Api\MpesaC2BController;
 use App\Http\Controllers\Api\MpesaVerificationController;
 use App\Http\Controllers\Api\OrderTrackingController;
@@ -672,7 +673,20 @@ Route::prefix('v1')->group(function () {
     Route::get('/remittances/{id}/pdf', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadPdf']);
 
 
+    // team magement 
+    // FulfillmentHubController
+    Route::get('/fulfillment-hubs', [FulfillmentHubController::class, 'index']);
+    Route::post('/fulfillment-hubs', [FulfillmentHubController::class, 'store']);
+    Route::get('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'show']);
+    // Route::put('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'update']);
+    Route::put(
+        '/fulfillment-hubs/{fulfillmentHub}',
+        [FulfillmentHubController::class, 'update']
+    );
+    // Route::delete('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'destroy']);
 
+
+    Route::delete('/fulfillment-hubs/{fulfillmentHub}', [FulfillmentHubController::class, 'destroy']);
 
 
 

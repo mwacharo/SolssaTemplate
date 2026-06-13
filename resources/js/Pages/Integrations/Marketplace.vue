@@ -390,6 +390,8 @@ const loadVendors = async () => {
   }
 }
 
+
+
 // Table headers
 const headers = [
   { title: 'Merchant', key: 'merchant', sortable: true },
