@@ -26,20 +26,40 @@ Schedule::job(new GenerateDailyTokensJob())
 // ->everyTwoMinutes();
 
 
-Schedule::call(function () {
+// Schedule::call(function () {
 
-    GoogleSheet::query()
-        ->where('active', true)
-        ->select('id')
-        ->chunkById(100, function ($sheets) {
+//     GoogleSheet::query()
+//         ->where('active', true)
+//         ->select('id')
+//         ->chunkById(100, function ($sheets) {
 
-            foreach ($sheets as $sheet) {
+//             foreach ($sheets as $sheet) {
 
-                SyncGoogleSheetJob::dispatch(
-                    $sheet->id
-                );
-            }
-        });
-})
-    ->everyThirtyMinutes();
+//                 SyncGoogleSheetJob::dispatch(
+//                     $sheet->id
+//                 );
+//             }
+//         });
+// })
+//     ->everyThirtyMinutes();
     // ->everyTwoMinutes();
+
+
+// Schedule::call(function () {
+
+//     GoogleSheet::query()
+//         ->where('active', true)
+//         ->select('id')
+//         ->chunkById(100, function ($sheets) {
+
+//             foreach ($sheets as $sheet) {
+//                 // SyncGoogleSheetJob::dispatch($sheet->id);
+
+//                        SyncGoogleSheetJob::dispatch(
+//                 $sheet->id
+//             )->onQueue('google-sync');
+//             }
+//         });
+// })
+//     ->everyThirtyMinutes()
+//     ->withoutOverlapping();
