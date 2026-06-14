@@ -1422,13 +1422,14 @@ class OrderController extends Controller
                     ->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent']);
             });
             \Log::info('Applied Delivery Agent filter');
-        } elseif (in_array($userRole, ['CallAgent', 'Call Agent', 'call_agent'])) {
-            $query->whereHas('assignments', function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent']);
-            });
-            \Log::info('Applied Call Agent filter');
         }
+        // elseif (in_array($userRole, ['CallAgent', 'Call Agent', 'call_agent'])) {
+        //     $query->whereHas('assignments', function ($q) use ($user) {
+        //         $q->where('user_id', $user->id)
+        //             ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent']);
+        //     });
+        //     \Log::info('Applied Call Agent filter');
+        // }
 
 
 
