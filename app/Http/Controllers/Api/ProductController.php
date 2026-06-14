@@ -63,7 +63,47 @@ class ProductController extends Controller
 
 
 
-    public function index(): JsonResponse
+    // public function index(): JsonResponse
+    // {
+    //     $user = Auth::user();
+
+    //     if (!$user) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthorized. Provide valid Bearer token'
+    //         ], 401);
+    //     }
+
+    //     // Base query with relationships
+    //     $query = Product::with([
+    //         'vendor',
+    //         'category',
+    //         'stocks',
+    //         'statistics',
+    //         'prices',
+    //         'images',
+    //         'media',
+    //         'variants'
+    //     ]);
+
+    //     /**
+    //      * ✅ Vendor Scope
+    //      */
+    //     if ($user->hasRole('Vendor')) {
+    //         $query->where('vendor_id', $user->id);
+    //     }
+
+    //     $products = $query->paginate(50);
+
+    //     return response()->json(
+    //         ProductResource::collection($products)
+    //     );
+    // }
+
+
+
+
+    public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
 
@@ -74,7 +114,8 @@ class ProductController extends Controller
             ], 401);
         }
 
-        // Base query with relationships
+        $perPage = $request->integer('per_page', 50);
+
         $query = Product::with([
             'vendor',
             'category',
@@ -87,19 +128,57 @@ class ProductController extends Controller
         ]);
 
         /**
-         * ✅ Vendor Scope
+         * Vendor Scope
          */
         if ($user->hasRole('Vendor')) {
             $query->where('vendor_id', $user->id);
         }
 
-        $products = $query->paginate(50);
+        /**
+         * Search
+         */
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('product_name', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        });
+
+        /**
+         * Vendor Filter
+         */
+        $query->when(
+            $request->filled('vendor_id') && !$user->hasRole('Vendor'),
+            fn($q) => $q->where('vendor_id', $request->vendor_id)
+        );
+
+        /**
+         * Category Filter
+         */
+        $query->when(
+            $request->filled('category_id'),
+            fn($q) => $q->where('category_id', $request->category_id)
+        );
+
+        /**
+         * Created Date Filter
+         */
+        $query->when(
+            $request->filled('created_date'),
+            fn($q) => $q->whereDate('created_at', $request->created_date)
+        );
+
+        $products = $query
+            ->latest()
+            ->paginate($perPage);
 
         return response()->json(
             ProductResource::collection($products)
         );
     }
-
 
 
     public function landingPage($id)
