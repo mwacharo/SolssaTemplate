@@ -364,7 +364,7 @@ class ProductController extends Controller
             // ✅ Check if user is a vendor
             if ($user->hasRole('Vendor')) {
                 $validated['vendor_id'] = $user->id;
-                Log::info('Vendor identified from Bearer token', ['vendor_id' => $user->id]);
+                // Log::info('Vendor identified from Bearer token', ['vendor_id' => $user->id]);
             }
 
 
