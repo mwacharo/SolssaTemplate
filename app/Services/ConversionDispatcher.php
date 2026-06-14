@@ -111,6 +111,11 @@ class ConversionDispatcher
             ],
         ];
 
+        Log::info('TikTok Config', [
+            'pixel' => $config['pixel'],
+            'token_present' => !empty($config['access_token']),
+        ]);
+
         $response = Http::withHeaders([
             'Access-Token' => $config['access_token'],
         ])->post(
