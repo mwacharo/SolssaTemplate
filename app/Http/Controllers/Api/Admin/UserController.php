@@ -55,7 +55,7 @@ class UserController extends Controller
 
 
 
-    public function index()
+    public function index(Request $request)
     {
 
         $this->authorize('viewAny', User::class);
@@ -69,9 +69,45 @@ class UserController extends Controller
         // $users = User::with(['roles', 'permissions', 'country'])->get();
 
         // Users filtered by authenticated user's country
-        $users = User::currentCountry()
-            ->with(['roles', 'permissions', 'country'])
-            ->get();
+        // $users = User::currentCountry()
+        //     ->with(['roles', 'permissions', 'country'])
+        //     ->get();
+
+
+        $query = User::currentCountry()
+            ->with(['roles', 'permissions', 'country']);
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('client_name', 'like', "%{$search}%")
+                    ->orWhere('phone_number', 'like', "%{$search}%");
+
+                // boolean keyword handling (still inside SAME $q scope)
+                if ($search === 'active') {
+                    $q->orWhere('is_active', 1);
+                }
+
+                if ($search === 'suspended') {
+                    $q->orWhere('is_active', 0);
+                }
+            });
+        }
+
+        // Role filter
+        if ($request->filled('role')) {
+            $query->role($request->role);
+        }
+
+
+        $perPage = $request->get('per_page', 10);
+
+        $users = $query->paginate($perPage);
 
         return response()->json([
             'data' => UserResource::collection($users),

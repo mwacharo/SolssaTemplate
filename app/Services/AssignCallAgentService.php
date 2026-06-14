@@ -37,7 +37,17 @@ class AssignCallAgentService
                 'hub_name' => $team->name ?? null,
             ]);
 
+            // $agent = $team->availableAgents()
+            //     ->withCount([
+            //         'assignedOrders as today_count' => fn($q) =>
+            //         $q->whereDate('order_assignments.created_at', today())
+            //     ])
+            //     ->orderBy('today_count')
+            //     ->orderBy('id')
+            //     ->first();
+
             $agent = $team->availableAgents()
+                ->where('users.country_id', $order->country_id)
                 ->withCount([
                     'assignedOrders as today_count' => fn($q) =>
                     $q->whereDate('order_assignments.created_at', today())
