@@ -64,7 +64,7 @@ export const useOrderStore = defineStore('orders', () => {
   const agentOptions = ref([])
   const riderOptions = ref([])
   const vendorOptions = ref([])
-  const clientOptions = ref([])
+  // const clientOptions = ref([])
   const warehouseOptions = ref([])
   const countryOptions = ref([])
   const deliveryStatusOptions = ref([])
@@ -584,7 +584,7 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
         axios.get('/api/v1/vendors').catch(() => ({ data: { data: [] } })),
         axios.get('/api/v1/countries').catch(() => ({ data: { data: [] } })),
         axios.get('/api/v1/warehouses').catch(() => ({ data: { data: [] } })),
-        axios.get('/api/v1/clients').catch(() => ({ data: { data: [] } })),
+        // axios.get('/api/v1/clients').catch(() => ({ data: { data: [] } })),
       ]
 
       if (vendorId) {
@@ -614,7 +614,7 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
         vendorsRes,
         countriesRes,
         warehousesRes,
-        clientsRes,
+        // clientsRes,
         productsRes
       ] = await Promise.all(requests)
 
@@ -627,7 +627,7 @@ if (createdDateRange.value && createdDateRange.value.length > 0) {
       vendorOptions.value = normalize(vendorsRes)
       countryOptions.value = normalize(countriesRes)
       warehouseOptions.value = normalize(warehousesRes)
-      clientOptions.value = normalize(clientsRes)
+      // clientOptions.value = normalize(clientsRes)
       productOptions.value = normalize(productsRes)
 
       console.log('Dropdown options loaded successfully')
@@ -915,7 +915,7 @@ const exportOrders = async (orderIds) => {
     agentOptions,
     riderOptions,
     vendorOptions,
-    clientOptions,
+    // clientOptions,
     warehouseOptions,
     countryOptions,
     deliveryStatusOptions,

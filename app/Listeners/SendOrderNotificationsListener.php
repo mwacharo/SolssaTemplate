@@ -108,7 +108,7 @@ class SendOrderNotificationsListener implements ShouldQueue
 
             if (!$template) {
 
-                Log::warninchannelg(
+                Log::info(
                     'Notification template missing',
                     [
                         'channel' => $channel,
