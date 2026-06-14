@@ -14,6 +14,7 @@ class Country extends Model
         'code',
         'phone_code',
         'status',
+        'currency',
     ];
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i:s',

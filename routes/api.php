@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdvantaDeliveryController;
 use App\Http\Controllers\Api\Admin\UserRolePermissionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -113,6 +114,9 @@ Route::post('/v1/orders/{id}/verify-mpesa', [MpesaVerificationController::class,
 Route::post('/mpesa/c2b/validation', [MpesaC2BController::class, 'validation']);
 // confirmation url
 Route::post('/mpesa/c2b/confirmation', [MpesaC2BController::class, 'confirmation']);
+
+
+Route::post('/webhooks/advanta/delivery', [AdvantaDeliveryController::class, 'handle']);
 
 
 
