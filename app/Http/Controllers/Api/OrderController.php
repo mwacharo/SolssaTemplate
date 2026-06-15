@@ -1371,7 +1371,7 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
 
-        Log::info('Fetching orders with filters', ['filters' => $request->all()]);
+        // Log::info('Fetching orders with filters', ['filters' => $request->all()]);
         // 1. Apply policy (uncomment when ready)
         // $this->authorize('viewAny', Order::class);
 
@@ -1412,8 +1412,8 @@ class OrderController extends Controller
         $userRole = $user ? $user->getRoleNames()->first() : null;
 
         // Debug logs (remove in production)
-        \Log::info('Current User Role: ' . $userRole);
-        \Log::info('Current User ID: ' . $user->id);
+        // \Log::info('Current User Role: ' . $userRole);
+        // \Log::info('Current User ID: ' . $user->id);
 
         // Apply role-based filtering
         if (in_array($userRole, ['Delivery Agent', 'Delivery Man', 'DeliveryAgent'])) {
@@ -1421,7 +1421,7 @@ class OrderController extends Controller
                 $q->where('user_id', $user->id)
                     ->whereIn('role', ['Delivery Agent', 'Delivery Man', 'DeliveryAgent']);
             });
-            \Log::info('Applied Delivery Agent filter');
+            // \Log::info('Applied Delivery Agent filter');
         }
         // elseif (in_array($userRole, ['CallAgent', 'Call Agent', 'call_agent'])) {
         //     $query->whereHas('assignments', function ($q) use ($user) {
@@ -1456,14 +1456,14 @@ class OrderController extends Controller
         $this->applySorting($query, $request);
 
         // Debug: Log the SQL query
-        \Log::info('Generated SQL: ' . $query->toSql());
-        \Log::info('Query Bindings: ' . json_encode($query->getBindings()));
+        // \Log::info('Generated SQL: ' . $query->toSql());
+        // \Log::info('Query Bindings: ' . json_encode($query->getBindings()));
 
         // Paginate results
         $orders = $query->paginate($perPage);
 
         // Debug: Log result count
-        \Log::info('Orders returned: ' . $orders->count());
+        // \Log::info('Orders returned: ' . $orders->count());
 
         return response()->json([
             'success' => true,
