@@ -126,12 +126,19 @@ class AdvantaSmsJob implements ShouldQueue
                 'body' => $response->body(),
             ]);
 
-            $status       = $response->successful() ? 'sent' : 'failed';
+
             $responseData = $response->json();
+
+            // $status       = $response->successful() ? 'sent' : 'failed';
+
+            // response_payload { "responses": [ { "mobile": "0722450908", "messageid": 681370068, "networkid": 1, "response-code": 200, "response-description": "Success" } ] }
+            $status = data_get($responseData, 'responses.0.response-description') ?? ($response->successful() ? 'sent' : 'failed');
+
 
             // Store messages
             if (count($this->recipients) === 1) {
-                $externalId = data_get($responseData, 'messageId');
+                // $externalId = data_get($responseData, 'messageId');
+                $externalId = data_get($responseData, 'responses.0.messageid');
 
                 Message::create([
                     'chat_id'             => $this->recipients[0],

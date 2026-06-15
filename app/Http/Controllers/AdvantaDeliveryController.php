@@ -12,6 +12,14 @@ class AdvantaDeliveryController extends Controller
     {
         Log::info('Advanta Delivery Callback', $request->all());
 
+        // Advanta Delivery response 
+        // {
+        //   "description": "DeliveredToTerminal",
+        //   "messageid": "680548027",
+        //   "timeTaken": "0.19 sec",
+        //   "timestamp": "2026-06-15 09:22:30"
+        // }
+
         $messageId = $request->messageid;
 
         if (!$messageId) {
@@ -21,12 +29,15 @@ class AdvantaDeliveryController extends Controller
             ], 400);
         }
 
-        $message = Message::query()
-            ->whereRaw(
-                "JSON_UNQUOTE(JSON_EXTRACT(response_payload, '$.responses[0].messageid')) = ?",
-                [$messageId]
-            )
-            ->first();
+        // $message = Message::query()
+        //     ->whereRaw(
+        //         "JSON_UNQUOTE(JSON_EXTRACT(response_payload, '$.responses[0].messageid')) = ?",
+        //         [$messageId]
+        //     )
+        //     ->first();
+
+        $message = Message::where('external_message_id', $messageId)
+            ->first();;
 
         if (!$message) {
             Log::warning('Advanta message not found', [
@@ -40,7 +51,7 @@ class AdvantaDeliveryController extends Controller
         }
 
         $message->update([
-            'message_status' => 'delivered',
+            'message_status' => $request->description   ?? null,
             'delivered_at' => $request->timestamp ?? now(),
             'delivery_payload' => json_encode($request->all()),
             // 'message_status' => $request->response-description ?? null,

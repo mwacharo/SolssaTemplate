@@ -239,10 +239,10 @@ class AfricasTalkingService
         $isPhoneNumber = preg_match('/^\+?\d+$/', $callerNumber) ? true : false;
         $result = !$isPhoneNumber; // true if SIP client, false if phone number
 
-        Log::info('isOutgoingCall check', [
-            'callerNumber' => $callerNumber,
-            'isOutgoing' => $result
-        ]);
+        // Log::info('isOutgoingCall check', [
+        //     'callerNumber' => $callerNumber,
+        //     'isOutgoing' => $result
+        // ]);
 
         return $result;
     }
@@ -256,11 +256,11 @@ class AfricasTalkingService
         string $callerNumber,
         string $clientDialedNumber
     ) {
-        Log::info("Handling outgoing call state: {$callSessionState}", [
-            'sessionId' => $sessionId,
-            'callerNumber' => $callerNumber,
-            'clientDialedNumber' => $clientDialedNumber
-        ]);
+        // Log::info("Handling outgoing call state: {$callSessionState}", [
+        //     'sessionId' => $sessionId,
+        //     'callerNumber' => $callerNumber,
+        //     'clientDialedNumber' => $clientDialedNumber
+        // ]);
 
         switch ($callSessionState) {
             case 'Ringing':
@@ -316,7 +316,7 @@ class AfricasTalkingService
         // Return empty XML for all other states
         $emptyResponse = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
 
-        Log::info("Returning empty XML for state: {$callSessionState}");
+        // Log::info("Returning empty XML for state: {$callSessionState}");
 
         header('Content-Type: text/xml; charset=UTF-8');
         echo $emptyResponse;
@@ -727,7 +727,7 @@ class AfricasTalkingService
         // Update call history with selection
         $this->updateCallHistoryWithSelection($sessionId, $callerNumber, $ivrOption);
 
-        Log::info("User selected: {$ivrOption->option_number} - {$ivrOption->description}");
+        // Log::info("User selected: {$ivrOption->option_number} - {$ivrOption->description}");
 
         // Handle special routing for "Speak to Agent" option
         if ($this->isAgentOption($ivrOption)) {
