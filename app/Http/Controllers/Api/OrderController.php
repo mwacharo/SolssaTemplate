@@ -1500,7 +1500,7 @@ class OrderController extends Controller
 
             // ✅ Get authenticated user from Bearer token
             $user = Auth::user();
-            Log::info('Authenticated user', ['user' => $user]);
+            // Log::info('Authenticated user', ['user' => $user]);
 
             if (!$user) {
                 return response()->json([
@@ -2107,7 +2107,7 @@ class OrderController extends Controller
 
 
             $user = Auth::user();
-            Log::info('Authenticated user', ['user' => $user]);
+            // Log::info('Authenticated user', ['user' => $user]);
 
             if (!$user) {
                 return response()->json([
