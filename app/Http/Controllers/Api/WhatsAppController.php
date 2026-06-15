@@ -365,7 +365,6 @@ class WhatsAppController extends Controller
                     $personalizedMessage,
                     $userId
                 )->delay(now()->addMinutes($delayMinutes * $index));
-                
             } catch (\Exception $e) {
                 Log::error('❌ Error generating message', [
                     'contact' => $contact,
@@ -517,13 +516,30 @@ class WhatsAppController extends Controller
     /**
      * Get the full message thread for a given chat_id
      */
+    // public function getConversation($chatId)
+    // {
+    //     Log::info('Fetching conversation for chatId', ['chatId' => $chatId]);
+    //     $messages = Message::where(function ($q) use ($chatId) {
+    //         $q->where('from', $chatId)
+    //             ->orWhere('to', $chatId);
+    //     })->orderBy('timestamp')->get();
+
+    //     return MessageResource::collection($messages);
+    // }
+
     public function getConversation($chatId)
     {
         Log::info('Fetching conversation for chatId', ['chatId' => $chatId]);
+
+        // normalize
+        $chatId = explode('@', $chatId)[0];
+
         $messages = Message::where(function ($q) use ($chatId) {
-            $q->where('from', $chatId)
-                ->orWhere('to', $chatId);
-        })->orderBy('timestamp')->get();
+            $q->whereRaw("REPLACE(`from`, '@c.us', '') = ?", [$chatId])
+                ->orWhereRaw("REPLACE(`to`, '@c.us', '') = ?", [$chatId]);
+        })
+            ->orderBy('timestamp')
+            ->get();
 
         return MessageResource::collection($messages);
     }
