@@ -24,6 +24,7 @@ class SendOrderStatusToAdPlatforms implements ShouldQueue
         'new',
         'scheduled',
         'delivered',
+        
     ];
 
     public function __construct(

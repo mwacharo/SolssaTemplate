@@ -32,7 +32,7 @@ class AssignOrdersToAgentsCommand extends Command
     {
         $orders = Order::query()
             ->whereDoesntHave('latestCallAgentAssignment')
-            ->whereHas('latestStatus.status', fn($q) => $q->where('name', 'New'))
+            ->whereHas('latestStatus.status', fn($q) => $q->where('name', 'New', 'Pending'))
             ->get();
 
         foreach ($orders as $order) {
