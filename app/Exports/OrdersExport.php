@@ -129,7 +129,9 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
 
             optional($order->delivery_date)->format('Y-m-d'),
 
-            $order->customer_notes,
+            $order->customer_notes || $order->latestStatus?->status_notes
+                ? $order->customer_notes . ' ' . $order->latestStatus?->status_notes
+                : null,
 
             optional($order->agent)->name,
 
