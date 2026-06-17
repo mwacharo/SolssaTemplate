@@ -116,13 +116,25 @@ class ConversionDispatcher
             'token_present' => !empty($config['access_token']),
         ]);
 
+        // $response = Http::withHeaders([
+        //     'Access-Token' => $config['access_token'],
+        // ])->post(
+        //     'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
+        // );
+
+
         $response = Http::withHeaders([
             'Access-Token' => $config['access_token'],
+            'Content-Type' => 'application/json',
         ])->post(
             'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
+            $payload
         );
 
         Log::info('TikTok response', $response->json());
+
+        // log the payload for debugging
+        Log::info('TikTok payload', $payload);
     }
 
     private function sendGoogle($event, array $config): void
