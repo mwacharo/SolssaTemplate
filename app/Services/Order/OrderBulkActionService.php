@@ -706,11 +706,23 @@ class OrderBulkActionService
             ]);
         }
 
+        $countryId = $orders->value('country_id');
+
         // ✅ Cached company settings
+        // $company = Cache::remember(
+        //     'waybill_settings',
+        //     now()->addMinutes(60),
+        //     // fn() => WaybillSetting::first()
+        //     // use the country_id of the order 
+        //     fn() => WaybillSetting::when($orders->first()?->customer?->country_id, function ($query) use ($orders) {
+        //         return $query->where('country_id', $orders->first()->customer->country_id);
+        //     })->first()
+        // );
+
         $company = Cache::remember(
-            'waybill_settings',
+            "waybill_settings_{$countryId}",
             now()->addMinutes(60),
-            fn() => WaybillSetting::first()
+            fn() => WaybillSetting::where('country_id', $countryId)->first()
         );
         $company = $this->normalizeCompanyOptions($company);
 
@@ -720,27 +732,27 @@ class OrderBulkActionService
 
 
 
-      $generator = new BarcodeGeneratorPNG();
+        $generator = new BarcodeGeneratorPNG();
 
-foreach ($orders as $order) {
-    $barcodePng = $generator->getBarcode(
-        trim((string) $order->order_no),
-        $generator::TYPE_CODE_128,
-        3,   // widthFactor
-        60   // height
-    );
+        foreach ($orders as $order) {
+            $barcodePng = $generator->getBarcode(
+                trim((string) $order->order_no),
+                $generator::TYPE_CODE_128,
+                3,   // widthFactor
+                60   // height
+            );
 
-    // Convert to base64 data URI for Dompdf
-    $barcode = 'data:image/png;base64,' . base64_encode($barcodePng);
+            // Convert to base64 data URI for Dompdf
+            $barcode = 'data:image/png;base64,' . base64_encode($barcodePng);
 
-    $waybills[] = [
-        'order'          => $order,
-        'barcode'        => $barcode,
-        'company'        => $company,
-        'status_changed' => isset($scheduledSet[$order->id]),
-        'latest_status'  => $order->latestStatus,
-    ];
-}
+            $waybills[] = [
+                'order'          => $order,
+                'barcode'        => $barcode,
+                'company'        => $company,
+                'status_changed' => isset($scheduledSet[$order->id]),
+                'latest_status'  => $order->latestStatus,
+            ];
+        }
 
         // ✅ Debug logging only in debug mode
         if (config('app.debug')) {
