@@ -75,7 +75,7 @@ class Order extends Model
         'total_price',
         'discount',
         'shipping_charges',
-        'currency',
+        // 'currency',
         // 'weight',
         'platform',
         'source',

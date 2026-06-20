@@ -757,7 +757,9 @@
                                     <!-- total_price -->
 
                                     <td class="px-4 py-3 font-mono text-sm">
-                                        KSH{{ order.total_price || "0.00" }}
+                                        {{ order.country?.currency || "₦" }}
+
+                                        {{ order.total_price || "0.00" }}
                                     </td>
 
                                     <!-- delivery man  -->

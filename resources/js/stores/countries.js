@@ -55,8 +55,8 @@ export const useCountriesStore = defineStore('countries', () => {
     loading.value = true
     error.value = null
     try {
-      if (!countryData.name || !countryData.code || !countryData.phone_code) {
-        throw new Error('Name, code, and phone code are required')
+      if (!countryData.name || !countryData.code || !countryData.phone_code || !countryData.currency || countryData.is_active === undefined) {
+        throw new Error('Name, code, phone code, currency, and status are required')
       }
       if (getCountryByCode.value(countryData.code.toUpperCase())) {
         throw new Error('Country code already exists')
@@ -65,6 +65,7 @@ export const useCountriesStore = defineStore('countries', () => {
         name: countryData.name.trim(),
         code: countryData.code.toUpperCase().trim(),
         phone_code: countryData.phone_code.trim(),
+        currency: countryData.currency?.trim() || null,
         is_active: countryData.is_active ?? true
       }
       const { data } = await api.post('/countries', dataToSend)
@@ -82,8 +83,8 @@ export const useCountriesStore = defineStore('countries', () => {
     loading.value = true
     error.value = null
     try {
-      if (!countryData.name || !countryData.code || !countryData.phone_code) {
-        throw new Error('Name, code, and phone code are required')
+      if (!countryData.name || !countryData.code || !countryData.phone_code || countryData.is_active === undefined) {
+        throw new Error('Name, code, phone code, and status are required')
       }
       const existingCountry = getCountryByCode.value(countryData.code.toUpperCase())
       if (existingCountry && existingCountry.id !== id) {
@@ -93,6 +94,7 @@ export const useCountriesStore = defineStore('countries', () => {
         name: countryData.name.trim(),
         code: countryData.code.toUpperCase().trim(),
         phone_code: countryData.phone_code.trim(),
+        currency: countryData.currency?.trim() || null,
         is_active: countryData.is_active ?? true
       }
       const { data } = await api.put(`/countries/${id}`, dataToSend)

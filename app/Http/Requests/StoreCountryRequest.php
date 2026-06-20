@@ -26,6 +26,8 @@ class StoreCountryRequest extends FormRequest
             'code' => 'required|string|max:10',
             'phone_code' => 'required|string|max:10',
             'status' => 'nullable|boolean',
+            'currency' => 'nullable|string|max:10',
         ];
+
     }
 }

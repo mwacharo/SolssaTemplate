@@ -25,6 +25,7 @@ class UpdateCountryRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'code' => ['sometimes', 'string', 'max:10'],
             'phone_code' => ['sometimes', 'string', 'max:10'],
+            'currency' => ['sometimes', 'string', 'max:10'],
             'status' => ['sometimes', 'boolean'],
         ];
     }

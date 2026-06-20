@@ -381,6 +381,7 @@ const headers = [
     { title: "Name", key: "name", sortable: true },
     { title: "Code", key: "code", sortable: true },
     { title: "Phone Code", key: "phone_code", sortable: true },
+    { title: "Currency", key: "currency", sortable: true },
     { title: "Status", key: "is_active", sortable: true },
     { title: "Actions", key: "actions", sortable: false, width: "150px" },
 ];
