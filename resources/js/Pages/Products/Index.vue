@@ -387,10 +387,16 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm font-medium">
+
                                     {{ formatPrice(getProductPrice(product)) }}
-                                    <span class="text-xs text-gray-500"
+
+                                    {{ product.country?.currency }}
+
+                                    <!-- product?country.currency -->
+
+                                    <!-- <span class="text-xs text-gray-500"
                                         >KES</span
-                                    >
+                                    > -->
                                 </td>
 
                                 <td class="px-4 py-4">
@@ -807,10 +813,10 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label
+                                    <!-- <label
                                         class="block text-sm font-medium text-gray-700 mb-2"
                                         >Price (KES)</label
-                                    >
+                                    > -->
                                     <input
                                         v-model="form.base_price"
                                         type="number"

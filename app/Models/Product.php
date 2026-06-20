@@ -159,6 +159,12 @@ class Product extends Model
         return $this->hasMany(ProductEvent::class);
     }
 
+    // belongs to a country
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
 
     // product belongs to a warehouse
     // product belongs to a country 

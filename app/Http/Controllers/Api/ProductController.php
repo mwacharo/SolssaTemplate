@@ -118,6 +118,7 @@ class ProductController extends Controller
 
         $query = Product::with([
             'vendor',
+            'country',
             'category',
             'stocks',
             'statistics',
