@@ -344,7 +344,7 @@
 
     @if($paymentMethod === 'cod')
         <div class="cod-box">
-            COD: {{ ($order->currency ?? 'KES') . ' ' . number_format($order->total_price ?? 0, 2) }}
+            COD: {{ ($order->country->currency ?? 'Null') . ' ' . number_format($order->total_price ?? 0, 2) }}
         </div>
     @endif
 </div>
