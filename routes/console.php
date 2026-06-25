@@ -64,5 +64,5 @@ Schedule::call(function () {
             }
         });
 })
-    ->everyThirtyMinutes()
+    ->everyThirtyMinutes();
     // ->withoutOverlapping();
