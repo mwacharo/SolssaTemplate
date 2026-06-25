@@ -45,24 +45,24 @@ Schedule::job(new GenerateDailyTokensJob())
 //         });
 // })
 //     ->everyThirtyMinutes();
-    // ->everyTwoMinutes();
+// ->everyTwoMinutes();
 
 
-// Schedule::call(function () {
+Schedule::call(function () {
 
-//     GoogleSheet::query()
-//         ->where('active', true)
-//         ->select('id')
-//         ->chunkById(100, function ($sheets) {
+    GoogleSheet::query()
+        ->where('active', true)
+        ->select('id')
+        ->chunkById(100, function ($sheets) {
 
-//             foreach ($sheets as $sheet) {
-//                 // SyncGoogleSheetJob::dispatch($sheet->id);
+            foreach ($sheets as $sheet) {
+                // SyncGoogleSheetJob::dispatch($sheet->id);
 
-//                        SyncGoogleSheetJob::dispatch(
-//                 $sheet->id
-//             )->onQueue('google-sync');
-//             }
-//         });
-// })
-//     ->everyThirtyMinutes()
-//     ->withoutOverlapping();
+                SyncGoogleSheetJob::dispatch(
+                    $sheet->id
+                )->onQueue('google-sync');
+            }
+        });
+})
+    ->everyThirtyMinutes()
+    ->withoutOverlapping();
