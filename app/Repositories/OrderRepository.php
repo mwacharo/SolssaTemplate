@@ -193,13 +193,17 @@ class OrderRepository implements OrderRepositoryInterface
 
                 // 3️⃣ If still not found, create a new one with auto-generated SKU
                 if (!$product) {
-                    $newSku = $p['sku_number'] ?? $this->generateSku($p['product_name'], $sheet->vendor_id);
+                    // $newSku = $p['sku_number'] ?? $this->generateSku($p['product_name'], $sheet->vendor_id);
 
-                    $product = Product::create([
-                        'sku'          => $newSku,
-                        'vendor_id'    => $sheet->vendor_id,
-                        'product_name' => $p['product_name'],
-                    ]);
+                    // $product = Product::create([
+                    //     'sku'          => $newSku,
+                    //     'vendor_id'    => $sheet->vendor_id,
+                    //     'product_name' => $p['product_name'],
+                    // ]);
+
+                    throw new \Exception(
+                        "Product '{$p['product_name']}' not found. "
+                    );
                 }
 
                 // 4️⃣ Build order item
