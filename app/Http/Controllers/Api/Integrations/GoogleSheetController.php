@@ -632,10 +632,10 @@ class GoogleSheetController extends Controller
             $rowValues = $this->mapOrderRow($item['order']);
             $columnCount = count($rowValues);
 
-            Log::info([
-                'keys' => array_keys($rowValues),
-                'row' => $rowValues
-            ]);
+            // Log::info([
+            //     'keys' => array_keys($rowValues),
+            //     'row' => $rowValues
+            // ]);
 
             $lastColumn = $this->getColumnLetter($columnCount);
 
@@ -655,7 +655,30 @@ class GoogleSheetController extends Controller
             'data' => $data
         ]);
 
-        return $service->spreadsheets_values->batchUpdate($spreadsheetId, $body);
+        // return $service->spreadsheets_values->batchUpdate($spreadsheetId, $body);
+
+
+        foreach ($data as $index => $valueRange) {
+            try {
+                $singleBody = new \Google\Service\Sheets\BatchUpdateValuesRequest([
+                    'valueInputOption' => 'RAW',
+                    'data' => [$valueRange]
+                ]);
+
+                $service->spreadsheets_values->batchUpdate(
+                    $spreadsheetId,
+                    $singleBody
+                );
+            } catch (\Exception $e) {
+                Log::error('Exact failing update found', [
+                    'batch_index' => $index,
+                    'payload' => json_decode(json_encode($valueRange), true),
+                    'error' => $e->getMessage()
+                ]);
+
+                throw $e;
+            }
+        }
     }
 
 
