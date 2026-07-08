@@ -427,6 +427,9 @@ class GoogleSheetController extends Controller
         // $since = now()->subMinutes(30);
         $since = now()->startOfDay();
 
+        // since 72
+        $since = now()->subHours(72);
+
 
         Log::info("fetchOrders: Fetching changed orders", [
             'vendor_id' => $vendorId,
