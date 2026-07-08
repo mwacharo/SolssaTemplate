@@ -632,6 +632,11 @@ class GoogleSheetController extends Controller
             $rowValues = $this->mapOrderRow($item['order']);
             $columnCount = count($rowValues);
 
+            Log::info([
+                'keys' => array_keys($rowValues),
+                'row' => $rowValues
+            ]);
+
             $lastColumn = $this->getColumnLetter($columnCount);
 
             $range = "{$sheetName}!A{$item['row']}:{$lastColumn}{$item['row']}";
