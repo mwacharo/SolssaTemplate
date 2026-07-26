@@ -64,27 +64,33 @@ class OrderStatusTimestampObserver
 
 
 
-        OrderStatusChanged::dispatch([
-            'status_timestamp_id' => $statusTimestamp->id,
+        // OrderStatusChanged::dispatch([
+        //     'status_timestamp_id' => $statusTimestamp->id,
 
-            'status' => strtolower(
-                $statusTimestamp->status?->name
-                    ?? $statusTimestamp->status
-            ),
+        //     'status' => strtolower(
+        //         $statusTimestamp->status?->name
+        //             ?? $statusTimestamp->status
+        //     ),
 
-            'order' => $order->toArray(),
+        //     'order' => $order->toArray(),
 
-            'vendor_id' => $vendor->id,
+        //     'vendor_id' => $vendor->id,
 
-            'country_id' => $order->country_id,
+        //     'country_id' => $order->country_id,
 
-            'customer_phone' =>
-            $order->customer?->phone
-                ?? $order->customer_phone,
+        //     'customer_phone' =>
+        //     $order->customer?->phone
+        //         ?? $order->customer_phone,
 
-            'user_id' => $userId,
+        //     'user_id' => $userId,
 
-        ]);
+        // ]);
         // OrderStatusChanged::dispatch($statusTimestamp);
+
+
+        // Notify integrations
+        OrderStatusChanged::dispatch(
+            $statusTimestamp->id
+        );
     }
 }
