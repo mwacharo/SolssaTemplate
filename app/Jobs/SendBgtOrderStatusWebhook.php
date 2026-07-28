@@ -163,8 +163,13 @@ class SendBgtOrderStatusWebhook implements ShouldQueue
 
                 'address' => $order->customer?->address,
 
-                'region' => $order->customer?->city?->name
-                    ?? $order->zone?->name,
+                // 'region' => $order->customer?->city?->name
+                //     ?? $order->zone?->name,
+                'region' =>
+                $order->customer?->city?->name,
+                $order->customer?->zone?->name
+
+                // ?? $order->zone?->name,
 
                 // 'country' => $order->customer?->country?->name
                 //     ?? $order->country?->name,
@@ -187,8 +192,8 @@ class SendBgtOrderStatusWebhook implements ShouldQueue
         // coming from .env file
         $url = env('BGT_WEBHOOK_URL');
         $token = env('BGT_WEBHOOK_SECRET');
-            // 'vendor_id' => env('BGT_VENDOR_ID'),
-            
+        // 'vendor_id' => env('BGT_VENDOR_ID'),
+
 
 
 
