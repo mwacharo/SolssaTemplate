@@ -143,7 +143,7 @@ class SendBgtOrderStatusWebhook implements ShouldQueue
                     'order_item_id' => $item->id,
                     'sku' => $item->sku,
                     'unit_price' => $item->unit_price,
-                    'quantity' => $citem->quantity,
+                    'quantity' => $item->quantity,
                     'calculation' => $item->unit_price * $item->quantity,
                 ]);
 
