@@ -129,7 +129,7 @@ class SendBgtOrderStatusWebhook implements ShouldQueue
                 return [
                     'sku' => $item->product?->sku,
                     'quantity' => $item->quantity,
-                    'price' => $item->price * $item->quantity,
+                    'price' => $item->unit_price * $item->quantity,
                 ];
             })
             ->values()

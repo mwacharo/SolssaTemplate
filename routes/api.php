@@ -119,34 +119,34 @@ Route::post('/mpesa/c2b/confirmation', [MpesaC2BController::class, 'confirmation
 Route::post('/webhooks/advanta/delivery', [AdvantaDeliveryController::class, 'handle']);
 
 
-Route::post('/orders/bgt/receive', function (Request $request) {
+// Route::post('/orders/bgt/receive', function (Request $request) {
 
-    // Mock secret
-    $expectedToken = 'ABC123XYZ';
+//     // Mock secret
+//     $expectedToken = 'ABC123XYZ';
 
-    // Get token from query string
-    $token = $request->query('token');
+//     // Get token from query string
+//     $token = $request->query('token');
 
-    // Validate token
-    if ($token !== $expectedToken) {
-        return response()->json([
-            'message' => 'Invalid or missing token',
-        ], 403);
-    }
+//     // Validate token
+//     if ($token !== $expectedToken) {
+//         return response()->json([
+//             'message' => 'Invalid or missing token',
+//         ], 403);
+//     }
 
-    // Get webhook payload
-    $payload = $request->all();
+//     // Get webhook payload
+//     $payload = $request->all();
 
-    // Log received webhook
-    Log::info('BGT Webhook Received', [
-        'token' => $token,
-        'payload' => $payload,
-    ]);
+//     // Log received webhook
+//     Log::info('BGT Webhook Received', [
+//         'token' => $token,
+//         'payload' => $payload,
+//     ]);
 
-    return response()->json([
-        'message' => 'ORDER_UPDATED_SUCCESSFULY',
-    ], 200);
-});
+//     return response()->json([
+//         'message' => 'ORDER_UPDATED_SUCCESSFULY',
+//     ], 200);
+// });
 
 
 
