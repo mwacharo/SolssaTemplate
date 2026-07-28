@@ -187,6 +187,10 @@ class SendBgtOrderStatusWebhook implements ShouldQueue
         // coming from .env file
         $url = env('BGT_WEBHOOK_URL');
         $token = env('BGT_WEBHOOK_SECRET');
+            // 'vendor_id' => env('BGT_VENDOR_ID'),
+            
+
+
 
         // $url = config('services.bgt.webhook_url');
 

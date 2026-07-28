@@ -40,8 +40,8 @@ class SendBgtOrderStatusWebhookListener
             'status_timestamp_id' => $event->statusTimestampId,
         ]);
 
-        SendBgtOrderStatusWebhook::dispatch(
-            $event->statusTimestampId
-        );
+        // SendBgtOrderStatusWebhook::dispatch(
+        //     $event->statusTimestampId
+        // );
     }
 }

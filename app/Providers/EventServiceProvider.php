@@ -8,6 +8,8 @@ use App\Observers\OrderStatusTimestampObserver;
 
 use App\Listeners\SendOrderStatusToAdPlatforms;
 use App\Events\OrderStatusChanged;
+// use App\Listeners\SendBgtWebhookForEligibleVendor;
+
 
 
 class EventServiceProvider extends ServiceProvider
@@ -22,6 +24,8 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         OrderStatusChanged::class => [
             SendOrderStatusToAdPlatforms::class,
+            //             SendBgtWebhookForEligibleVendor::class,
+
         ],
     ];
     /**
