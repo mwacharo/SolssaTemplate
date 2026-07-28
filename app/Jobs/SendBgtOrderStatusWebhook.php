@@ -124,8 +124,29 @@ class SendBgtOrderStatusWebhook implements ShouldQueue
         |--------------------------------------------------------------------------
         */
 
+        // $items = $order->orderItems
+        //     ->map(function ($item) {
+        //         return [
+        //             'sku' => $item->product?->sku,
+        //             'quantity' => $item->quantity,
+        //             'price' => $item->unit_price * $item->quantity,
+        //         ];
+        //     })
+        //     ->values()
+        //     ->toArray();
+
+
         $items = $order->orderItems
             ->map(function ($item) {
+
+                Log::info('BGT ITEM PRICE DEBUG', [
+                    'order_item_id' => $item->id,
+                    'sku' => $item->sku,
+                    'unit_price' => $item->unit_price,
+                    'quantity' => $item->quantity,
+                    'calculation' => $item->unit_price * $item->quantity,
+                ]);
+
                 return [
                     'sku' => $item->product?->sku,
                     'quantity' => $item->quantity,
