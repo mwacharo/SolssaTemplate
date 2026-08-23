@@ -134,10 +134,19 @@
                             </v-col>
 
                             <v-col cols="12" md="6">
-                                <v-text-field
+                                <!-- <v-text-field
                                     v-model="orderEdit.delivery_date"
                                     label="Delivery Date"
                                     type="datetime-local"
+                                    prepend-inner-icon="mdi-calendar-clock"
+                                    variant="outlined"
+                                    density="comfortable"
+                                /> -->
+
+                                <v-text-field
+                                    v-model="orderEdit.delivery_date"
+                                    label="Delivery Date"
+                                    type="date"
                                     prepend-inner-icon="mdi-calendar-clock"
                                     variant="outlined"
                                     density="comfortable"

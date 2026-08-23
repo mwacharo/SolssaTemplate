@@ -93,7 +93,7 @@ class Order extends Model
         'paid' => 'boolean',
         'schedule_date' => 'datetime',
 
-        // 'delivery_date' => 'datetime',
+        'delivery_date' => 'datetime',
         // 'rescheduled_date' => 'datetime',
         // 'recall_date' => 'datetime',
         'sub_total' => 'decimal:2',
