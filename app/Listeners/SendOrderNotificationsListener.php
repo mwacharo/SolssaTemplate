@@ -14,6 +14,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
+use App\Models\OrderStatusTimestamp;
+
 class SendOrderNotificationsListener implements ShouldQueue
 {
     use InteractsWithQueue;
@@ -49,26 +51,71 @@ class SendOrderNotificationsListener implements ShouldQueue
 
     public function handle(OrderStatusChanged $event): void
     {
-        $payload = $event->payload;
+        // $payload = $event->payload;
 
-        $status = strtolower($payload['status'] ?? '');
+        // $status = strtolower($payload['status'] ?? '');
+
+        // if (!in_array($status, $this->allowedStatuses)) {
+        //     return;
+        // }
+
+        // $order = $payload['order'] ?? [];
+
+        // $orderId = $order['id'] ?? null;
+
+        // $countryId = $payload['country_id'] ?? null;
+
+        // $phone = $payload['customer_phone'] ?? null;
+
+        // if (!$orderId || !$phone) {
+        //     return;
+        // }
+
+
+
+        $statusTimestamp = OrderStatusTimestamp::with([
+            'order.customer',
+            'status',
+        ])->find($event->statusTimestampId);
+
+        if (!$statusTimestamp) {
+            Log::warning('Order status timestamp not found', [
+                'status_timestamp_id' => $event->statusTimestampId,
+            ]);
+
+            return;
+        }
+
+        $order = $statusTimestamp->order;
+
+        if (!$order) {
+            Log::warning('Order not found for status timestamp', [
+                'status_timestamp_id' => $event->statusTimestampId,
+            ]);
+
+            return;
+        }
+
+        $status = strtolower($statusTimestamp->status?->name ?? '');
 
         if (!in_array($status, $this->allowedStatuses)) {
             return;
         }
 
-        $order = $payload['order'] ?? [];
+        $orderId = $order->id;
+        $countryId = $order->country_id;
 
-        $orderId = $order['id'] ?? null;
-
-        $countryId = $payload['country_id'] ?? null;
-
-        $phone = $payload['customer_phone'] ?? null;
+        // Assuming the customer's phone is stored on Customer
+        $phone = $order->customer?->phone;
 
         if (!$orderId || !$phone) {
+            Log::warning('Notification skipped: missing order ID or customer phone', [
+                'order_id' => $orderId,
+                'phone' => $phone,
+            ]);
+
             return;
         }
-
         foreach (['sms', 'whatsapp'] as $channel) {
 
             /*
