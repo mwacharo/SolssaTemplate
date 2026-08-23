@@ -105,7 +105,7 @@ class UserController extends Controller
         }
 
 
-        $perPage = $request->get('per_page', 20);
+        $perPage = $request->get('per_page', 30);
 
         $users = $query->paginate($perPage);
 
