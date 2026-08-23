@@ -784,6 +784,12 @@
                                                 {{
                                                     getDeliveryAgent(order).name
                                                 }}
+
+                                                📞
+                                                {{
+                                                    getDeliveryAgent(order)
+                                                        .phone_number
+                                                }}
                                             </div>
                                         </div>
                                         <div
