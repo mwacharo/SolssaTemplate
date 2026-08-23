@@ -636,13 +636,29 @@
                                         <!-- {{ getVendorName(order.vendor_id) }} -->
                                         {{ order.vendor?.name ?? "Unknown" }}
                                     </td>
+
+                                    <!-- <td class="px-4 py-3">
+                                        <span
+                                            class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs"
+                                        >
+                                            {{
+                                                order.delivery_date || "Unknown"
+                                            }}
+                                        </span>
+                                    </td> -->
+
                                     <td class="px-4 py-3">
                                         <span
                                             class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs"
                                         >
-                                            <!-- {{ order.source || 'Unknown' }} -->
                                             {{
-                                                order.delivery_date || "Unknown"
+                                                order.delivery_date
+                                                    ? new Date(
+                                                          order.delivery_date,
+                                                      ).toLocaleDateString(
+                                                          "en-GB",
+                                                      )
+                                                    : "Unknown"
                                             }}
                                         </span>
                                     </td>
