@@ -20,7 +20,11 @@ class RiderController extends Controller
         $riders = \App\Models\User::role('Delivery Agent')
             ->currentCountry()
 
-            ->latest()->paginate(20);
+            // ->latest()->paginate(20);
+            ->latest()
+
+            ->get();
+
 
         return RiderResource::collection($riders);
     }
