@@ -74,7 +74,19 @@ class OrderPolicy
     public function update(User $user, Order $order): bool
     {
         // Admin / Manager / superAdmin
-        if ($user->hasAnyRole(['Admin', 'Manager', 'superAdmin'])) {
+        if ($user->hasAnyRole([
+            'Admin',
+            'Manager',
+            'superAdmin',
+            'CallAgent',
+            'Call Agent',
+            'call_agent'
+
+
+
+
+
+        ])) {
             return true;
         }
 
@@ -87,12 +99,12 @@ class OrderPolicy
         }
 
         // CallAgent (all variations)
-        if ($user->hasAnyRole(['CallAgent', 'Call Agent', 'call_agent'])) {
-            return $order->assignments()
-                ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent'])
-                ->where('user_id', $user->id)
-                ->exists();
-        }
+        // if ($user->hasAnyRole(['CallAgent', 'Call Agent', 'call_agent'])) {
+        //     return $order->assignments()
+        //         ->whereIn('role', ['CallAgent', 'Call Agent', 'call_agent'])
+        //         ->where('user_id', $user->id)
+        //         ->exists();
+        // }
 
         return false;
     }

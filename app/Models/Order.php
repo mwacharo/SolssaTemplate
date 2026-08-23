@@ -92,6 +92,10 @@ class Order extends Model
     protected $casts = [
         'paid' => 'boolean',
         'schedule_date' => 'datetime',
+
+        // 'delivery_date' => 'datetime',
+        // 'rescheduled_date' => 'datetime',
+        // 'recall_date' => 'datetime',
         'sub_total' => 'decimal:2',
         'total_price' => 'decimal:2',
         'discount' => 'decimal:2',
