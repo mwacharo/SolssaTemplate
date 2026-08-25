@@ -164,12 +164,12 @@ const accounts = ref([]);
     const country_id = page.props.auth?.user?.country_id;
 
     // 🚫 HARD STOP: Disable AfricasTalking for Zambia
-    if (country_id === 2) {
-        console.warn('🚫 AfricasTalking disabled for Zambia users');
-        afClient.value = null;
-        connection_active.value = false;
-        return;
-    }
+    // if (country_id === 2) {
+    //     console.warn('🚫 AfricasTalking disabled for Zambia users');
+    //     afClient.value = null;
+    //     connection_active.value = false;
+    //     return;
+    // }
 
     // ✅ Only supported countries reach here (e.g Kenya)
     startHeartbeat();
