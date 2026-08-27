@@ -178,7 +178,7 @@ const accounts = ref([]);
     if (!userToken.value) {
         console.warn("Waiting for token...");
         await waitForToken();
-    }
+    }   
 
     if (afClient.value) {
         console.log("WebRTC client already initialized.");
