@@ -55,63 +55,133 @@ class UserController extends Controller
 
 
 
+    // public function index(Request $request)
+    // {
+
+    //     $this->authorize('viewAny', User::class);
+    //     // Dynamically get the authenticated user's current team ID or fallback to default (e.g., 1)
+    //     $teamId = Auth::user()?->currentTeam->id ?? 1;
+
+    //     // Set team context for Spatie roles/permissions
+    //     app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
+
+    //     // Load users with their roles and permissions under the correct team context
+    //     // $users = User::with(['roles', 'permissions', 'country'])->get();
+
+    //     // Users filtered by authenticated user's country
+    //     // $users = User::currentCountry()
+    //     //     ->with(['roles', 'permissions', 'country'])
+    //     //     ->get();
+
+
+    //     $query = User::currentCountry()
+    //         ->with(['roles', 'permissions', 'country']);
+
+    //     // Search
+    //     if ($request->filled('search')) {
+    //         $search = $request->search;
+
+    //         $query->where(function ($q) use ($search) {
+
+    //             $q->where('name', 'like', "%{$search}%")
+    //                 ->orWhere('email', 'like', "%{$search}%")
+    //                 ->orWhere('client_name', 'like', "%{$search}%")
+    //                 ->orWhere('phone_number', 'like', "%{$search}%");
+
+    //             // boolean keyword handling (still inside SAME $q scope)
+    //             if ($search === 'active') {
+    //                 $q->orWhere('is_active', 1);
+    //             }
+
+    //             if ($search === 'suspended') {
+    //                 $q->orWhere('is_active', 0);
+    //             }
+    //         });
+    //     }
+
+    //     // Role filter
+    //     if ($request->filled('role')) {
+    //         $query->role($request->role);
+    //     }
+
+
+    //     $perPage = $request->get('per_page', 30);
+
+    //     $users = $query->paginate($perPage);
+
+    //     return response()->json([
+    //         'data' => UserResource::collection($users),
+    //         'message' => 'Users retrieved successfully'
+    //     ]);
+    // }
+
+
+
     public function index(Request $request)
     {
-
         $this->authorize('viewAny', User::class);
-        // Dynamically get the authenticated user's current team ID or fallback to default (e.g., 1)
+
         $teamId = Auth::user()?->currentTeam->id ?? 1;
 
-        // Set team context for Spatie roles/permissions
-        app(PermissionRegistrar::class)->setPermissionsTeamId($teamId);
-
-        // Load users with their roles and permissions under the correct team context
-        // $users = User::with(['roles', 'permissions', 'country'])->get();
-
-        // Users filtered by authenticated user's country
-        // $users = User::currentCountry()
-        //     ->with(['roles', 'permissions', 'country'])
-        //     ->get();
-
+        app(PermissionRegistrar::class)
+            ->setPermissionsTeamId($teamId);
 
         $query = User::currentCountry()
             ->with(['roles', 'permissions', 'country']);
 
-        // Search
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
+            $normalizedSearch = strtolower($search);
 
-            $query->where(function ($q) use ($search) {
-
+            $query->where(function ($q) use ($search, $normalizedSearch) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('client_name', 'like', "%{$search}%")
                     ->orWhere('phone_number', 'like', "%{$search}%");
 
-                // boolean keyword handling (still inside SAME $q scope)
-                if ($search === 'active') {
+                if ($normalizedSearch === 'active') {
                     $q->orWhere('is_active', 1);
                 }
 
-                if ($search === 'suspended') {
+                if (
+                    $normalizedSearch === 'suspended' ||
+                    $normalizedSearch === 'inactive'
+                ) {
                     $q->orWhere('is_active', 0);
                 }
             });
         }
 
-        // Role filter
         if ($request->filled('role')) {
             $query->role($request->role);
         }
 
+        $perPage = max((int) $request->get('per_page', 10), 1);
 
-        $perPage = $request->get('per_page', 30);
-
-        $users = $query->paginate($perPage);
+        $users = $query
+            ->orderByDesc('id')
+            ->paginate($perPage);
 
         return response()->json([
-            'data' => UserResource::collection($users),
-            'message' => 'Users retrieved successfully'
+            'data' => UserResource::collection($users->items()),
+
+            'meta' => [
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+                'from' => $users->firstItem(),
+                'to' => $users->lastItem(),
+            ],
+
+            'links' => [
+                'first' => $users->url(1),
+                'last' => $users->url($users->lastPage()),
+                'prev' => $users->previousPageUrl(),
+                'next' => $users->nextPageUrl(),
+            ],
+
+            'message' => 'Users retrieved successfully',
         ]);
     }
 
