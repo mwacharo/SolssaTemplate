@@ -328,7 +328,9 @@
                                     </div>
                                 </td>
 
+
                                 <!-- stock_delivered -->
+
 
                                 <td class="px-4 py-4 text-center">
                                     <span
@@ -385,6 +387,7 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm font-medium">
+
                                     {{ formatPrice(getProductPrice(product)) }}
 
                                     {{ product.country?.currency }}
@@ -1395,8 +1398,7 @@ const getStockDelivered = (product) => {
 };
 
 const getDefectedStock = (product) => {
-    return product.stocks?.[0]?.defected_stock || 0;
-    ``;
+    return product.stocks?.[0]?.defected_stock || 0;``
 };
 
 const getStockThreshold = (product) => {
@@ -1441,13 +1443,102 @@ const handleSave = (payload) => {
 // }, { deep: true })
 
 // Methods
+// const fetchProducts = async (page = 1) => {
+//     try {
+//         isLoading.value = true;
+
+//         // Build query parameters
+//         const params = {
+//             page: page,
+//             per_page: pagination.value.per_page,
+//         };
+
+//         if (searchQuery.value) {
+//             params.search = searchQuery.value;
+//         }
+
+//         if (filters.value.vendor) {
+//             params.vendor_id = filters.value.vendor;
+//         }
+
+//         if (filters.value.category) {
+//             params.category_id = filters.value.category;
+//         }
+
+//         if (filters.value.date) {
+//             params.created_date = filters.value.date;
+//         }
+
+//         const response = await apiClient.get("/products", { params });
+//         const data = response.data;
+
+//         // Handle both paginated and non-paginated responses
+//         if (data.data && Array.isArray(data.data)) {
+//             // Paginated response
+//             products.value = data.data;
+//             pagination.value = {
+//                 current_page: data.current_page || 1,
+//                 per_page: data.per_page || 15,
+//                 total: data.total || data.data.length,
+//                 last_page: data.last_page || 1,
+//                 from: data.from || 1,
+//                 to: data.to || data.data.length,
+//                 prev_page_url: data.prev_page_url,
+//                 next_page_url: data.next_page_url,
+//             };
+//         } else if (Array.isArray(data)) {
+//             // Direct array response
+//             products.value = data;
+//             pagination.value = {
+//                 current_page: 1,
+//                 per_page: data.length,
+//                 total: data.length,
+//                 last_page: 1,
+//                 from: 1,
+//                 to: data.length,
+//                 prev_page_url: null,
+//                 next_page_url: null,
+//             };
+//         }
+//     } catch (error) {
+//         console.error("Error fetching products:", error);
+
+//         // Handle different types of errors
+//         if (error.response) {
+//             const status = error.response.status;
+//             const message =
+//                 error.response.data?.message || "Failed to load products";
+
+//             if (status === 401) {
+//                 alert("Please log in to continue");
+//                 // Redirect to login if needed
+//                 // window.location.href = '/login'
+//             } else if (status === 403) {
+//                 alert("You do not have permission to view products");
+//             } else if (status >= 500) {
+//                 alert("Server error. Please try again later.");
+//             } else {
+//                 alert(message);
+//             }
+//         } else if (error.request) {
+//             alert("Network error. Please check your connection and try again.");
+//         } else {
+//             alert("An unexpected error occurred");
+//         }
+//     } finally {
+//         isLoading.value = false;
+//     }
+// };
+
+
+
 const fetchProducts = async (page = 1) => {
     try {
         isLoading.value = true;
 
         // Build query parameters
         const params = {
-            page: page,
+            page,
             per_page: pagination.value.per_page,
         };
 
@@ -1470,49 +1561,58 @@ const fetchProducts = async (page = 1) => {
         const response = await apiClient.get("/products", { params });
         const data = response.data;
 
-        // Handle both paginated and non-paginated responses
+        // Laravel paginated resource response
         if (data.data && Array.isArray(data.data)) {
-            // Paginated response
             products.value = data.data;
-            // pagination.value = {
-            //     current_page: data.current_page || 1,
-            //     per_page: data.per_page || 15,
-            //     total: data.total || data.data.length,
-            //     last_page: data.last_page || 1,
-            //     from: data.from || 1,
-            //     to: data.to || data.data.length,
-            //     prev_page_url: data.prev_page_url,
-            //     next_page_url: data.next_page_url,
-            // };
 
             pagination.value = {
-                current_page: data.meta?.current_page || 1,
-                per_page: data.meta?.per_page || 15,
-                total: data.meta?.total || 0,
-                last_page: data.meta?.last_page || 1,
-                from: data.meta?.from || 0,
-                to: data.meta?.to || 0,
-                prev_page_url: data.links?.prev || null,
-                next_page_url: data.links?.next || null,
+                current_page: data.meta?.current_page ?? 1,
+                per_page: data.meta?.per_page ?? 15,
+                total: data.meta?.total ?? data.data.length,
+                last_page: data.meta?.last_page ?? 1,
+                from: data.meta?.from ?? 0,
+                to: data.meta?.to ?? data.data.length,
+                prev_page_url: data.links?.prev ?? null,
+                next_page_url: data.links?.next ?? null,
             };
-        } else if (Array.isArray(data)) {
-            // Direct array response
+        }
+
+        // Non-paginated / direct array response
+        else if (Array.isArray(data)) {
             products.value = data;
+
             pagination.value = {
                 current_page: 1,
                 per_page: data.length,
                 total: data.length,
                 last_page: 1,
-                from: 1,
+                from: data.length > 0 ? 1 : 0,
                 to: data.length,
                 prev_page_url: null,
                 next_page_url: null,
             };
         }
+
+        // Unexpected response structure
+        else {
+            products.value = [];
+
+            pagination.value = {
+                current_page: 1,
+                per_page: 15,
+                total: 0,
+                last_page: 1,
+                from: 0,
+                to: 0,
+                prev_page_url: null,
+                next_page_url: null,
+            };
+
+            console.warn("Unexpected products response:", data);
+        }
     } catch (error) {
         console.error("Error fetching products:", error);
 
-        // Handle different types of errors
         if (error.response) {
             const status = error.response.status;
             const message =
@@ -1520,8 +1620,6 @@ const fetchProducts = async (page = 1) => {
 
             if (status === 401) {
                 alert("Please log in to continue");
-                // Redirect to login if needed
-                // window.location.href = '/login'
             } else if (status === 403) {
                 alert("You do not have permission to view products");
             } else if (status >= 500) {
@@ -1530,7 +1628,9 @@ const fetchProducts = async (page = 1) => {
                 alert(message);
             }
         } else if (error.request) {
-            alert("Network error. Please check your connection and try again.");
+            alert(
+                "Network error. Please check your connection and try again."
+            );
         } else {
             alert("An unexpected error occurred");
         }
