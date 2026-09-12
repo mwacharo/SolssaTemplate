@@ -114,7 +114,7 @@ class ProductController extends Controller
             ], 401);
         }
 
-        $perPage = $request->integer('per_page', 50);
+        $perPage = $request->integer('per_page', 100);
 
         $query = Product::with([
             'vendor',
