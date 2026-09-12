@@ -1316,27 +1316,16 @@ const handleVideoUpload = (event) => {
 };
 
 // Pagination
-// const pagination = ref({
-//     current_page: 1,
-//     per_page: 15,
-//     total: 0,
-//     last_page: 1,
-//     from: 1,
-//     to: 15,
-//     prev_page_url: null,
-//     next_page_url: null,
-// });
-
-pagination.value = {
-    current_page: data.meta?.current_page || 1,
-    per_page: data.meta?.per_page || 15,
-    total: data.meta?.total || 0,
-    last_page: data.meta?.last_page || 1,
-    from: data.meta?.from || 0,
-    to: data.meta?.to || 0,
-    prev_page_url: data.links?.prev || null,
-    next_page_url: data.links?.next || null,
-};
+const pagination = ref({
+    current_page: 1,
+    per_page: 15,
+    total: 0,
+    last_page: 1,
+    from: 1,
+    to: 15,
+    prev_page_url: null,
+    next_page_url: null,
+});
 
 // Form data
 const form = ref({
@@ -1485,15 +1474,26 @@ const fetchProducts = async (page = 1) => {
         if (data.data && Array.isArray(data.data)) {
             // Paginated response
             products.value = data.data;
+            // pagination.value = {
+            //     current_page: data.current_page || 1,
+            //     per_page: data.per_page || 15,
+            //     total: data.total || data.data.length,
+            //     last_page: data.last_page || 1,
+            //     from: data.from || 1,
+            //     to: data.to || data.data.length,
+            //     prev_page_url: data.prev_page_url,
+            //     next_page_url: data.next_page_url,
+            // };
+
             pagination.value = {
-                current_page: data.current_page || 1,
-                per_page: data.per_page || 15,
-                total: data.total || data.data.length,
-                last_page: data.last_page || 1,
-                from: data.from || 1,
-                to: data.to || data.data.length,
-                prev_page_url: data.prev_page_url,
-                next_page_url: data.next_page_url,
+                current_page: data.meta?.current_page || 1,
+                per_page: data.meta?.per_page || 15,
+                total: data.meta?.total || 0,
+                last_page: data.meta?.last_page || 1,
+                from: data.meta?.from || 0,
+                to: data.meta?.to || 0,
+                prev_page_url: data.links?.prev || null,
+                next_page_url: data.links?.next || null,
             };
         } else if (Array.isArray(data)) {
             // Direct array response
