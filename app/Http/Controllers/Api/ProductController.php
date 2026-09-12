@@ -176,9 +176,12 @@ class ProductController extends Controller
             ->latest()
             ->paginate($perPage);
 
-        return response()->json(
-            ProductResource::collection($products)
-        );
+        // return response()->json(
+        //     ProductResource::collection($products)
+        // );
+
+        return ProductResource::collection($products)
+            ->response();
     }
 
 
