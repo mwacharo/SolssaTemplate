@@ -328,9 +328,7 @@
                                     </div>
                                 </td>
 
-
                                 <!-- stock_delivered -->
-
 
                                 <td class="px-4 py-4 text-center">
                                     <span
@@ -387,7 +385,6 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-sm font-medium">
-
                                     {{ formatPrice(getProductPrice(product)) }}
 
                                     {{ product.country?.currency }}
@@ -1319,16 +1316,27 @@ const handleVideoUpload = (event) => {
 };
 
 // Pagination
-const pagination = ref({
-    current_page: 1,
-    per_page: 15,
-    total: 0,
-    last_page: 1,
-    from: 1,
-    to: 15,
-    prev_page_url: null,
-    next_page_url: null,
-});
+// const pagination = ref({
+//     current_page: 1,
+//     per_page: 15,
+//     total: 0,
+//     last_page: 1,
+//     from: 1,
+//     to: 15,
+//     prev_page_url: null,
+//     next_page_url: null,
+// });
+
+pagination.value = {
+    current_page: data.meta?.current_page || 1,
+    per_page: data.meta?.per_page || 15,
+    total: data.meta?.total || 0,
+    last_page: data.meta?.last_page || 1,
+    from: data.meta?.from || 0,
+    to: data.meta?.to || 0,
+    prev_page_url: data.links?.prev || null,
+    next_page_url: data.links?.next || null,
+};
 
 // Form data
 const form = ref({
@@ -1398,7 +1406,8 @@ const getStockDelivered = (product) => {
 };
 
 const getDefectedStock = (product) => {
-    return product.stocks?.[0]?.defected_stock || 0;``
+    return product.stocks?.[0]?.defected_stock || 0;
+    ``;
 };
 
 const getStockThreshold = (product) => {
