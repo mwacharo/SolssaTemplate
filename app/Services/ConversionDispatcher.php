@@ -75,255 +75,254 @@ class ConversionDispatcher
 
 
 
-//     private function sendTikTok(ConversionEvent $event, array $config, $order): void
-//     {
-//         if (!($config['enabled'] ?? false)) return;
-//         if (!$config['pixel'] || !$config['access_token']) return; // guard 
-//         $customer = $order->customer;
-//         $item = $order->order_items[0] ?? null;
+    //     private function sendTikTok(ConversionEvent $event, array $config, $order): void
+    //     {
+    //         if (!($config['enabled'] ?? false)) return;
+    //         if (!$config['pixel'] || !$config['access_token']) return; // guard 
+    //         $customer = $order->customer;
+    //         $item = $order->order_items[0] ?? null;
 
-//         $payload = [
-//             'pixel_code' => $config['pixel'],
-//             'event'      => $event->eventName,
-//             'event_id'   => $event->eventId,
-//             'timestamp'  => now()->toIso8601String(),
-//             'context' => [
-//                 'user' => array_filter([
-//                     'phone_number' => $customer->phone
-//                         ? hash('sha256', preg_replace('/\D+/', '', $customer->phone))
-//                         : null,
-//                     'email' => $customer->email
-//                         ? hash('sha256', strtolower(trim($customer->email)))
-//                         : null,
-//                 ]),
-//             ],
+    //         $payload = [
+    //             'pixel_code' => $config['pixel'],
+    //             'event'      => $event->eventName,
+    //             'event_id'   => $event->eventId,
+    //             'timestamp'  => now()->toIso8601String(),
+    //             'context' => [
+    //                 'user' => array_filter([
+    //                     'phone_number' => $customer->phone
+    //                         ? hash('sha256', preg_replace('/\D+/', '', $customer->phone))
+    //                         : null,
+    //                     'email' => $customer->email
+    //                         ? hash('sha256', strtolower(trim($customer->email)))
+    //                         : null,
+    //                 ]),
+    //             ],
 
-//             'properties' => [
-//                 'value'        => (float) $order->total_price,
-//                 // 'currency'     => 'KES',
-//                 'content_type' => 'product',
-//                 'contents'     => $item ? [[
-//                     'content_id'   => (string) $item->product_id,
-//                     'content_name' => $item->product->product_name ?? $item->sku,
-//                     'quantity'     => (int) $item->quantity,
-//                     'price'        => (float) $item->unit_price,
-//                 ]] : [],
-//             ],
-//         ];
+    //             'properties' => [
+    //                 'value'        => (float) $order->total_price,
+    //                 // 'currency'     => 'KES',
+    //                 'content_type' => 'product',
+    //                 'contents'     => $item ? [[
+    //                     'content_id'   => (string) $item->product_id,
+    //                     'content_name' => $item->product->product_name ?? $item->sku,
+    //                     'quantity'     => (int) $item->quantity,
+    //                     'price'        => (float) $item->unit_price,
+    //                 ]] : [],
+    //             ],
+    //         ];
 
-//         Log::info('TikTok Config', [
-//             'pixel' => $config['pixel'],
-//             'token_present' => !empty($config['access_token']),
-//         ]);
+    //         Log::info('TikTok Config', [
+    //             'pixel' => $config['pixel'],
+    //             'token_present' => !empty($config['access_token']),
+    //         ]);
 
-//         // $response = Http::withHeaders([
-//         //     'Access-Token' => $config['access_token'],
-//         // ])->post(
-//         //     'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
-//         // );
-
-
-//         $response = Http::withHeaders([
-//             'Access-Token' => $config['access_token'],
-//             'Content-Type' => 'application/json',
-//         ])->post(
-//             'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
-//             $payload
-//         );
-
-//         Log::info('TikTok response', $response->json());
-
-//         // log the payload for debugging
-//         Log::info('TikTok payload', $payload);
-//     }
-
-//     private function sendGoogle($event, array $config): void
-//     {
-//         if (!($config['enabled'] ?? false)) return;
-
-//         // Placeholder for Google Ads API
-//         Log::info('Google conversion sent', [
-//             'conversion_id' => $config['conversion_id'],
-//             'event' => $event->eventName,
-//         ]);
-//     }
-// }
+    //         // $response = Http::withHeaders([
+    //         //     'Access-Token' => $config['access_token'],
+    //         // ])->post(
+    //         //     'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
+    //         // );
 
 
+    //         $response = Http::withHeaders([
+    //             'Access-Token' => $config['access_token'],
+    //             'Content-Type' => 'application/json',
+    //         ])->post(
+    //             'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
+    //             $payload
+    //         );
 
-private function sendTikTok(
-    ConversionEvent $event,
-    array $config,
-    $order
-): void {
-    if (!($config['enabled'] ?? false)) {
-        return;
-    }
+    //         Log::info('TikTok response', $response->json());
 
-    if (empty($config['pixel']) || empty($config['access_token'])) {
-        return;
-    }
+    //         // log the payload for debugging
+    //         Log::info('TikTok payload', $payload);
+    //     }
 
-    $customer = $order->customer;
+    //     private function sendGoogle($event, array $config): void
+    //     {
+    //         if (!($config['enabled'] ?? false)) return;
 
-    /*
+    //         // Placeholder for Google Ads API
+    //         Log::info('Google conversion sent', [
+    //             'conversion_id' => $config['conversion_id'],
+    //             'event' => $event->eventName,
+    //         ]);
+    //     }
+    // }
+
+
+
+    private function sendTikTok(
+        ConversionEvent $event,
+        array $config,
+        $order
+    ): void {
+        if (!($config['enabled'] ?? false)) {
+            return;
+        }
+
+        if (empty($config['pixel']) || empty($config['access_token'])) {
+            return;
+        }
+
+        $customer = $order->customer;
+
+        /*
     |--------------------------------------------------------------------------
     | Build product contents
     |--------------------------------------------------------------------------
     */
 
-    $contents = $order->orderItems
-        ->map(function ($item) {
-            return [
-                'content_id' => (string) $item->product_id,
+        $contents = $order->orderItems
+            ->map(function ($item) {
+                return [
+                    'content_id' => (string) $item->product_id,
 
-                'content_name' => $item->product?->product_name
-                    ?? $item->name
-                    ?? $item->sku
-                    ?? 'Product',
+                    'content_name' => $item->product?->product_name
+                        ?? $item->name
+                        ?? $item->sku
+                        ?? 'Product',
 
-                'quantity' => (int) $item->quantity,
+                    'quantity' => (int) $item->quantity,
 
-                'price' => (float) $item->unit_price,
-            ];
-        })
-        ->values()
-        ->all();
+                    'price' => (float) $item->unit_price,
+                ];
+            })
+            ->values()
+            ->all();
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Normalize customer phone
     |--------------------------------------------------------------------------
     */
 
-    $phone = null;
+        $phone = null;
 
-    if ($customer?->phone) {
+        if ($customer?->phone) {
 
-        $customerPhone = preg_replace(
-            '/\D+/',
-            '',
-            $customer->phone
-        );
+            $customerPhone = preg_replace(
+                '/\D+/',
+                '',
+                $customer->phone
+            );
 
-        $countryCode = preg_replace(
-            '/\D+/',
-            '',
-            $order->country?->phone_code ?? ''
-        );
+            $countryCode = preg_replace(
+                '/\D+/',
+                '',
+                $order->country?->phone_code ?? ''
+            );
 
-        // Remove local leading zero
-        $customerPhone = ltrim($customerPhone, '0');
+            // Remove local leading zero
+            $customerPhone = ltrim($customerPhone, '0');
 
-        // Add country code if not already present
-        if (
-            $countryCode &&
-            !str_starts_with($customerPhone, $countryCode)
-        ) {
-            $customerPhone = $countryCode . $customerPhone;
+            // Add country code if not already present
+            if (
+                $countryCode &&
+                !str_starts_with($customerPhone, $countryCode)
+            ) {
+                $customerPhone = $countryCode . $customerPhone;
+            }
+
+            $phone = $customerPhone;
         }
 
-        $phone = $customerPhone;
-    }
-
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Build TikTok payload
     |--------------------------------------------------------------------------
     */
 
-    $payload = [
+        $payload = [
 
-        'pixel_code' => $config['pixel'],
+            'pixel_code' => $config['pixel'],
 
-        'event' => $event->eventName,
+            'event' => $event->eventName,
 
-        'event_id' => (string) $event->eventId,
+            'event_id' => (string) $event->eventId,
 
-        'timestamp' => date(
-            DATE_ATOM,
-            $event->timestamp
-        ),
+            'timestamp' => date(
+                DATE_ATOM,
+                $event->timestamp
+            ),
 
-        'context' => [
+            'context' => [
 
-            'user' => array_filter([
+                'user' => array_filter([
 
-                'phone_number' => $phone
-                    ? hash('sha256', $phone)
-                    : null,
+                    'phone_number' => $phone
+                        ? hash('sha256', $phone)
+                        : null,
 
-                'email' => $customer?->email
-                    ? hash(
-                        'sha256',
-                        strtolower(trim($customer->email))
-                    )
-                    : null,
+                    'email' => $customer?->email
+                        ? hash(
+                            'sha256',
+                            strtolower(trim($customer->email))
+                        )
+                        : null,
 
-            ]),
+                ]),
 
-        ],
+            ],
 
-        'properties' => [
+            'properties' => [
 
-            'value' => (float) $event->value,
+                'value' => (float) $event->value,
 
-            'currency' => $event->currency,
+                'currency' => $event->currency,
 
-            'content_type' => 'product',
+                'content_type' => 'product',
 
-            'contents' => $contents,
+                'contents' => $contents,
 
-        ],
+            ],
 
-    ];
+        ];
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Debug configuration
     |--------------------------------------------------------------------------
     */
 
-    Log::info('TikTok Config', [
+        Log::info('TikTok Config', [
 
-        'pixel' => $config['pixel'],
+            'pixel' => $config['pixel'],
 
-        'token_present' => !empty(
-            $config['access_token']
-        ),
+            'token_present' => !empty($config['access_token']),
 
-    ]);
+        ]);
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Send TikTok Event
     |--------------------------------------------------------------------------
     */
 
-    $response = Http::withHeaders([
+        $response = Http::withHeaders([
 
-        'Access-Token' => $config['access_token'],
+            'Access-Token' => $config['access_token'],
 
-        'Content-Type' => 'application/json',
+            'Content-Type' => 'application/json',
 
-    ])->post(
-        'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
-        $payload
-    );
+        ])->post(
+            'https://business-api.tiktok.com/open_api/v1.3/pixel/track/',
+            $payload
+        );
 
-    /*
+        /*
     |--------------------------------------------------------------------------
     | Log response
     |--------------------------------------------------------------------------
     */
 
-    Log::info('TikTok response', [
+        Log::info('TikTok response', [
 
-        'status' => $response->status(),
+            'status' => $response->status(),
 
-        'body' => $response->json(),
+            'body' => $response->json(),
 
-    ]);
+        ]);
 
-    Log::info('TikTok payload', $payload);
+        Log::info('TikTok payload', $payload);
+    }
 }
