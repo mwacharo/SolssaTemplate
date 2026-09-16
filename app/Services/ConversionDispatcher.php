@@ -137,17 +137,17 @@ class ConversionDispatcher
     //         Log::info('TikTok payload', $payload);
     //     }
 
-    //     private function sendGoogle($event, array $config): void
-    //     {
-    //         if (!($config['enabled'] ?? false)) return;
+    private function sendGoogle($event, array $config): void
+    {
+        if (!($config['enabled'] ?? false)) return;
 
-    //         // Placeholder for Google Ads API
-    //         Log::info('Google conversion sent', [
-    //             'conversion_id' => $config['conversion_id'],
-    //             'event' => $event->eventName,
-    //         ]);
-    //     }
-    // }
+        // Placeholder for Google Ads API
+        Log::info('Google conversion sent', [
+            'conversion_id' => $config['conversion_id'],
+            'event' => $event->eventName,
+        ]);
+    }
+
 
 
 
