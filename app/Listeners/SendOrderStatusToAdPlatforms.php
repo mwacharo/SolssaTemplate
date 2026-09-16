@@ -17,7 +17,7 @@ class SendOrderStatusToAdPlatforms implements ShouldQueue
     use InteractsWithQueue;
 
     protected const TRACKABLE_STATUSES = [
-        'new',
+        // 'new',
         'scheduled',
         'delivered',
     ];

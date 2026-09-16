@@ -7,8 +7,11 @@ use App\Models\OrderStatusTimestamp;
 class OrderEventFactory
 {
     protected const STATUS_EVENT_MAP = [
-        'New'  => 'InitiateCheckout',
-        'Scheduled'  => 'AddToCart' || 'Lead', // depending on your funnel
+        // 'New'  => 'InitiateCheckout',
+        // 'Scheduled'  => 'AddToCart' || 'Lead', // depending on your funnel
+
+        'Scheduled'  =>  'Lead', // depending on your funnel
+
         // 'In Transit' => 'AddPaymentInfo',
         'Delivered'  => 'Purchase',
     ];
@@ -21,7 +24,7 @@ class OrderEventFactory
         return new ConversionEvent(
             eventName: $this->mapEventName($statusName),
             eventId: $order->id . '-' . $status->id . '-' . $statusName,
-            value: (float) ($order->total_amount ?? 0),
+            value: (float) ($order->total_price ?? 0),
             currency: $order->currency ?? 'KES',
             orderId: $order->id,
             email: $order->customer_email,
