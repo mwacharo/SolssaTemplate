@@ -20,8 +20,8 @@ class StatusTransitionService
 
 
         'Scheduled' => ['Awaiting Dispatch', 'Cancelled', 'Duplicate', 'Pending'],
+        'Awaiting Dispatch' => ['Dispatched', 'Undispatched'],
 
-        'Awaiting Dispatch' => ['Dispatched'],
 
         'Dispatched' => ['In transit', 'Undispatched'],
 
@@ -39,7 +39,7 @@ class StatusTransitionService
         'Cancelled' => ['Scheduled', 'Pending'],
 
         'Out of Stock' => ['Scheduled', 'Cancelled', 'Pending'],
-        
+
         'Paid' => ['Delivered'],
 
         'Returned' => ['Scheduled']
