@@ -20,6 +20,8 @@ class AssignCallAgentService
 
             $team = $order->vendor
                 ->vendorFulfillmentHubs()
+                // ->first();
+                ->where('country_id', $order->country_id)
                 ->first();
 
 

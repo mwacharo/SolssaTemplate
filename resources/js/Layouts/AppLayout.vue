@@ -314,6 +314,8 @@ watch(darkMode, (newValue) => {
                 }}</v-icon>
             </v-btn>
 
+            <!-add list of countries on select refresh dashboard>
+
             <!-- Notifications -->
             <v-menu
                 v-model="notificationMenu"
