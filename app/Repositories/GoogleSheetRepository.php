@@ -317,6 +317,20 @@ class GoogleSheetRepository implements GoogleSheetRepositoryInterface
 
 
             $rowValues = $this->mapOrderRow($item['order']);
+
+            // new line
+            Log::info('Google Sheets row structure', [
+                'order_no' => $item['order']->order_no,
+                'sheet_row' => $item['row'],
+                'is_list' => array_is_list($rowValues),
+                'column_count' => count($rowValues),
+                'keys' => array_keys($rowValues),
+                'types' => array_map('get_debug_type', $rowValues),
+                'encoded_as_array' => str_starts_with(
+                    json_encode($rowValues),
+                    '['
+                ),
+            ]);
             $columnCount = count($rowValues);
 
             $lastColumn = $this->getColumnLetter($columnCount);
