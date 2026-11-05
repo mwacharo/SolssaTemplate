@@ -20,7 +20,8 @@ class OrderPolicy
             'Delivery Man',
             'DeliveryAgent',
             'CallAgent',
-            'Call Agent'
+            'Call Agent',
+            'Vendor',
         ]);
     }
 
