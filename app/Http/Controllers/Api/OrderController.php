@@ -1314,7 +1314,7 @@ class OrderController extends Controller
 
         // Log::info('Fetching orders with filters', ['filters' => $request->all()]);
         // 1. Apply policy (uncomment when ready)
-        // $this->authorize('viewAny', Order::class);
+        $this->authorize('viewAny', Order::class);
 
         $user = $request->user();
         $perPage = $request->input('per_page', 15);
