@@ -165,6 +165,10 @@ Route::post('/v1/rider/logout',         [RiderAuthController::class, 'logout']);
 Route::patch('/v1/rider/status',        [RiderAuthController::class, 'updateStatus']);
 
 
+Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
+Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
+
+
 // Route::prefix('v1')->group(function () {
 Route::prefix('v1')
     ->middleware(['auth:sanctum'])
@@ -530,8 +534,8 @@ Route::prefix('v1')
         Route::patch('/user/accounts/{userCountryAccount}/default', [UserCountryAccountController::class, 'setDefault']);
         Route::delete('/user/accounts/{userCountryAccount}', [UserCountryAccountController::class, 'destroy']);
 
-        Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
-        Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
+        // Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
+        // Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
         // Route::get('v1/voice-token', [ApiCallCentreController::class, 'generateToken']);
         Route::get('/call-history', [CallCentreController::class, 'fetchCallHistory']);
         // update agent status 
