@@ -165,8 +165,8 @@ Route::post('/v1/rider/logout',         [RiderAuthController::class, 'logout']);
 Route::patch('/v1/rider/status',        [RiderAuthController::class, 'updateStatus']);
 
 
-Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
-Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
+Route::post('/v1/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
+Route::post('/v1/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
 
 
 // Route::prefix('v1')->group(function () {
