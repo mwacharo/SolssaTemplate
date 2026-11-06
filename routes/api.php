@@ -165,348 +165,351 @@ Route::post('/v1/rider/logout',         [RiderAuthController::class, 'logout']);
 Route::patch('/v1/rider/status',        [RiderAuthController::class, 'updateStatus']);
 
 
-Route::prefix('v1')->group(function () {
-    // Route::apiResource('/google-sheets', GoogleSheetController::class);
+// Route::prefix('v1')->group(function () {
+Route::prefix('v1')
+    ->middleware(['auth:sanctum'])
+    ->group(function () {
+        // Route::apiResource('/google-sheets', GoogleSheetController::class);
 
-    Route::get('/google-sheets', [GoogleSheetController::class, 'index'])->name('google-sheets.index');
-    Route::get('/google-sheets/{id}', [GoogleSheetController::class, 'show'])->name('google-sheets.show');
-    Route::post('/google-sheets', [GoogleSheetController::class, 'store'])->name('google-sheets.store');
-    Route::put('/google-sheets/{id}', [GoogleSheetController::class, 'update'])->name('google-sheets.update');
-    Route::delete('/google-sheets/{id}', [GoogleSheetController::class, 'destroy'])->name('google-sheets.destroy');
+        Route::get('/google-sheets', [GoogleSheetController::class, 'index'])->name('google-sheets.index');
+        Route::get('/google-sheets/{id}', [GoogleSheetController::class, 'show'])->name('google-sheets.show');
+        Route::post('/google-sheets', [GoogleSheetController::class, 'store'])->name('google-sheets.store');
+        Route::put('/google-sheets/{id}', [GoogleSheetController::class, 'update'])->name('google-sheets.update');
+        Route::delete('/google-sheets/{id}', [GoogleSheetController::class, 'destroy'])->name('google-sheets.destroy');
 
-    Route::post('/google-sheets/{id}/read-sheet', [GoogleSheetController::class, 'uploadOrders']);
-    Route::post('/google-sheets/{id}/update-sheet', [GoogleSheetController::class, 'updateSheet']);
+        Route::post('/google-sheets/{id}/read-sheet', [GoogleSheetController::class, 'uploadOrders']);
+        Route::post('/google-sheets/{id}/update-sheet', [GoogleSheetController::class, 'updateSheet']);
 
-    // Route::post('v1/google-sheets/{id}/sync-orders', [ApiGoogleSheetController::class, 'updateSheet']);
-    // Route::post('/google-sheets/{id}/sync-products', [GoogleSheetController::class, 'syncProducts']);
+        // Route::post('v1/google-sheets/{id}/sync-orders', [ApiGoogleSheetController::class, 'updateSheet']);
+        // Route::post('/google-sheets/{id}/sync-products', [GoogleSheetController::class, 'syncProducts']);
 
 
-    Route::get('/dispatched', [ScanDispatchController::class, 'dispatched']);
+        Route::get('/dispatched', [ScanDispatchController::class, 'dispatched']);
 
 
-    // Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'generateDispatchPDF']);
-    // Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'generateDispatchExcel']);
+        // Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'generateDispatchPDF']);
+        // Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'generateDispatchExcel']);
 
 
-    Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'downloadDispatchPDF']);
-    Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'downloadDispatchExcel']);
+        Route::post('/orders/dispatch/pdf', [ScanDispatchController::class, 'downloadDispatchPDF']);
+        Route::post('/orders/dispatch/excel', [ScanDispatchController::class, 'downloadDispatchExcel']);
 
-    // Order API
-    Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
-    Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
-    Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']);
+        // Order API
+        Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']); // List all orders
+        Route::post('/orders', [\App\Http\Controllers\Api\OrderController::class, 'store']); // Create a new order
+        Route::put('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'update']);
 
-    // show a specific order by id or order_no
+        // show a specific order by id or order_no
 
-    Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order by ID
-    Route::get('/orders/order_no/{order_no}', [\App\Http\Controllers\Api\OrderController::class, 'showByOrderNo']); // Show a specific order by order_no
+        Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']); // Show a specific order by ID
+        Route::get('/orders/order_no/{order_no}', [\App\Http\Controllers\Api\OrderController::class, 'showByOrderNo']); // Show a specific order by order_no
 
 
-    // orderhistory 
-    Route::get('/orders/{id}/history', [\App\Http\Controllers\Api\OrderController::class, 'history']); // Get order history
+        // orderhistory 
+        Route::get('/orders/{id}/history', [\App\Http\Controllers\Api\OrderController::class, 'history']); // Get order history
 
-    // delete 
-    Route::delete('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']);
-    // Update a specific order
+        // delete 
+        Route::delete('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'destroy']);
+        // Update a specific order
 
-    // Print waybill
-    // Route::get('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
-    // Route::post('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
+        // Print waybill
+        // Route::get('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
+        // Route::post('/orders/{id}/print-waybill', [OrderController::class, 'printWaybill']);
 
-    // Route::get('/{id}/print-waybill', [OrderController::class, 'printWaybill'])->name('orders.print-waybill');
-    // Route::get('/{id}/download-waybill', [OrderController::class, 'downloadWaybill'])->name('orders.download-waybill');
-    // Route::get('/{id}/preview-waybill', [OrderController::class, 'previewWaybill'])->name('orders.preview-waybill');
-    Route::post('/bulk-print-waybills', [OrderController::class, 'printWaybill'])->name('orders.bulk-print-waybills');
-    Route::get('/orders/{id}/timeline', [OrderController::class, 'timeline']);
+        // Route::get('/{id}/print-waybill', [OrderController::class, 'printWaybill'])->name('orders.print-waybill');
+        // Route::get('/{id}/download-waybill', [OrderController::class, 'downloadWaybill'])->name('orders.download-waybill');
+        // Route::get('/{id}/preview-waybill', [OrderController::class, 'previewWaybill'])->name('orders.preview-waybill');
+        Route::post('/bulk-print-waybills', [OrderController::class, 'printWaybill'])->name('orders.bulk-print-waybills');
+        Route::get('/orders/{id}/timeline', [OrderController::class, 'timeline']);
 
-    // order events
+        // order events
 
-    Route::get('/orders/{id}/events', [\App\Http\Controllers\Api\OrderController::class, 'events']); // Get order events
+        Route::get('/orders/{id}/events', [\App\Http\Controllers\Api\OrderController::class, 'events']); // Get order events
 
 
-    // waybills 
-    Route::post('/waybills', [OrderController::class, 'waybill']);
+        // waybills 
+        Route::post('/waybills', [OrderController::class, 'waybill']);
 
 
 
 
 
 
-    // assign delivery agent
-    Route::post('/orders/assign-rider', [OrderController::class, 'assignRider']);
-    // assign call centre agent
-    Route::post('/orders/assign-agent', [OrderController::class, 'assignAgent']);
-    // update status
-    Route::post('/orders/update-status', [OrderController::class, 'updateStatus']);
+        // assign delivery agent
+        Route::post('/orders/assign-rider', [OrderController::class, 'assignRider']);
+        // assign call centre agent
+        Route::post('/orders/assign-agent', [OrderController::class, 'assignAgent']);
+        // update status
+        Route::post('/orders/update-status', [OrderController::class, 'updateStatus']);
 
-    // bulk delete 
-    Route::post('/orders/bulk-delete', [OrderController::class, 'bulkDelete']);
+        // bulk delete 
+        Route::post('/orders/bulk-delete', [OrderController::class, 'bulkDelete']);
 
 
-    // find order by callagent /rirder /courier / vendor
+        // find order by callagent /rirder /courier / vendor
 
-    // Route::get('/orders/find-by/{type}/{identifier}', [OrderController::class, 'findByIdentifier']);
+        // Route::get('/orders/find-by/{type}/{identifier}', [OrderController::class, 'findByIdentifier']);
 
-    Route::get('/orders/agent/{agentId}', [OrderController::class, 'getByAgent']);
-    Route::get('/orders/rider/{riderId}', [OrderController::class, 'getByRider']);
-    // get orders by courier 
-    Route::get('/orders/courier/{courierId}', [OrderController::class, 'getByCourier']);
+        Route::get('/orders/agent/{agentId}', [OrderController::class, 'getByAgent']);
+        Route::get('/orders/rider/{riderId}', [OrderController::class, 'getByRider']);
+        // get orders by courier 
+        Route::get('/orders/courier/{courierId}', [OrderController::class, 'getByCourier']);
 
-    // get orders by vendor
-    Route::get('/orders/vendor/{vendorId}', [OrderController::class, 'getByVendor']);
+        // get orders by vendor
+        Route::get('/orders/vendor/{vendorId}', [OrderController::class, 'getByVendor']);
 
-    // ExPort orders]
-    Route::post('/orders/export', [OrderController::class, 'export']);
+        // ExPort orders]
+        Route::post('/orders/export', [OrderController::class, 'export']);
 
 
 
 
-    // scan and dispatch 
+        // scan and dispatch 
 
 
-    Route::post('/orders/dispatch', [ScanDispatchController::class, 'dispatch']);
+        Route::post('/orders/dispatch', [ScanDispatchController::class, 'dispatch']);
 
 
-    // `/api/v1/orders/by-tracking/${tracking}`
+        // `/api/v1/orders/by-tracking/${tracking}`
 
-    Route::get('/orders/by-tracking/{tracking}', [ScanDispatchController::class, 'findByTracking']);
+        Route::get('/orders/by-tracking/{tracking}', [ScanDispatchController::class, 'findByTracking']);
 
 
-    // send order to in transit
+        // send order to in transit
 
-    Route::post('/orders/send-in-transit', [ScanDispatchController::class, 'sendToInTransit']);
+        Route::post('/orders/send-in-transit', [ScanDispatchController::class, 'sendToInTransit']);
 
 
 
-    //  check order status of an order 
+        //  check order status of an order 
 
-    // Route::get('/orders/{id}/status', [OrderController::class, 'checkStatus']); // Check status of an order by ID 
+        // Route::get('/orders/{id}/status', [OrderController::class, 'checkStatus']); // Check status of an order by ID 
 
-    Route::get('/orders/{order_no}/status', [OrderController::class, 'checkStatus']); // Check status of an order by order number
+        Route::get('/orders/{order_no}/status', [OrderController::class, 'checkStatus']); // Check status of an order by order number
 
 
 
-    // shopifty 
+        // shopifty 
 
-    Route::post('/shopify/orders/webhook', [ShopifyOrderController::class, 'handleWebhook']); // Handle Shopify order webhook
+        Route::post('/shopify/orders/webhook', [ShopifyOrderController::class, 'handleWebhook']); // Handle Shopify order webhook
 
 
 
-    //product category
-    Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']); // List all categories
-    Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']); // Create a new category
-    Route::get('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'show']); // Show a specific category
-    Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'update']); // Update a specific category
-    Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']); // Delete a specific category
+        //product category
+        Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']); // List all categories
+        Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']); // Create a new category
+        Route::get('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'show']); // Show a specific category
+        Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'update']); // Update a specific category
+        Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']); // Delete a specific category
 
-    // products APIs
-    Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']); // List all products
-    Route::post('/products', [\App\Http\Controllers\Api\ProductController::class, 'store']); // Create a new product
-    Route::get('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'show']); // Show a specific product
-    Route::put('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'update']); // Update a specific product
-    Route::delete('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'destroy']); // Delete a specific product
+        // products APIs
+        Route::get('/products', [\App\Http\Controllers\Api\ProductController::class, 'index']); // List all products
+        Route::post('/products', [\App\Http\Controllers\Api\ProductController::class, 'store']); // Create a new product
+        Route::get('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'show']); // Show a specific product
+        Route::put('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'update']); // Update a specific product
+        Route::delete('/products/{id}', [\App\Http\Controllers\Api\ProductController::class, 'destroy']); // Delete a specific product
 
-    // landing page
+        // landing page
 
-    Route::get('/product/{slug}', [\App\Http\Controllers\Api\ProductController::class, 'landingPage']); // Get landing page data for a product
+        Route::get('/product/{slug}', [\App\Http\Controllers\Api\ProductController::class, 'landingPage']); // Get landing page data for a product
 
 
-    //     // prodcuts of a vendor
+        //     // prodcuts of a vendor
 
-    Route::get('/products/vendor/{vendorId}', [\App\Http\Controllers\Api\ProductController::class, 'productsByVendor']); // Get products by vendor
+        Route::get('/products/vendor/{vendorId}', [\App\Http\Controllers\Api\ProductController::class, 'productsByVendor']); // Get products by vendor
 
 
 
-    Route::get('/products', [ProductController::class, 'index']); // All products
-    Route::get('/products/vendor/{vendorId}', [ProductController::class, 'productsByVendor']); // Products by vendor
-    Route::get('/vendors', [VendorController::class, 'index']); // All vendors
-    Route::get('/agents', [AgentController::class, 'index']); // All agents
-    Route::get('/riders', [RiderController::class, 'index']); // All riders
-    // Route::get('zones', [ZoneController::class, 'index']); // All zones
-    Route::get('/order-statuses', [OrderController::class, 'statuses']); // Order status options
+        Route::get('/products', [ProductController::class, 'index']); // All products
+        Route::get('/products/vendor/{vendorId}', [ProductController::class, 'productsByVendor']); // Products by vendor
+        Route::get('/vendors', [VendorController::class, 'index']); // All vendors
+        Route::get('/agents', [AgentController::class, 'index']); // All agents
+        Route::get('/riders', [RiderController::class, 'index']); // All riders
+        // Route::get('zones', [ZoneController::class, 'index']); // All zones
+        Route::get('/order-statuses', [OrderController::class, 'statuses']); // Order status options
 
 
-    Route::post('/assign-rider', [OrderController::class, 'assignRider']);
-    Route::post('/assign-agent', [OrderController::class, 'assignAgent']);
-    Route::post('/update-status', [OrderController::class, 'updateStatus']);
+        Route::post('/assign-rider', [OrderController::class, 'assignRider']);
+        Route::post('/assign-agent', [OrderController::class, 'assignAgent']);
+        Route::post('/update-status', [OrderController::class, 'updateStatus']);
 
 
 
-    // Template APIs
+        // Template APIs
 
-    Route::get('/templates', [TemplateController::class, 'index']); // List all templates
-    Route::post('/templates', [TemplateController::class, 'store']); // Create a new template
-    Route::get('/templates/{id}', [TemplateController::class, 'show']); // Show a specific template
-    Route::put('/templates/{id}', [TemplateController::class, 'update']); // Update a specific template
-    Route::delete('/templates/{id}', [TemplateController::class, 'destroy']); // Delete a specific template
+        Route::get('/templates', [TemplateController::class, 'index']); // List all templates
+        Route::post('/templates', [TemplateController::class, 'store']); // Create a new template
+        Route::get('/templates/{id}', [TemplateController::class, 'show']); // Show a specific template
+        Route::put('/templates/{id}', [TemplateController::class, 'update']); // Update a specific template
+        Route::delete('/templates/{id}', [TemplateController::class, 'destroy']); // Delete a specific template
 
 
 
-    // Contacts APIs
-    Route::get('/contacts', [ContactController::class, 'index']);       // List all contacts
-    Route::post('/contacts', [ContactController::class, 'store']);       // Create new contact
-    Route::get('/contacts/{contact}', [ContactController::class, 'show']); // Show single contact
-    Route::put('/contacts/{contact}', [ContactController::class, 'update']); // Update contact
-    Route::patch('contacts/{contact}', [ContactController::class, 'update']); // Also support patch
-    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']); // Delete contact
+        // Contacts APIs
+        Route::get('/contacts', [ContactController::class, 'index']);       // List all contacts
+        Route::post('/contacts', [ContactController::class, 'store']);       // Create new contact
+        Route::get('/contacts/{contact}', [ContactController::class, 'show']); // Show single contact
+        Route::put('/contacts/{contact}', [ContactController::class, 'update']); // Update contact
+        Route::patch('contacts/{contact}', [ContactController::class, 'update']); // Also support patch
+        Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']); // Delete contact
 
 
 
 
-    // fetchCredentials
-    Route::get('/channel-credentials', [CredentialController::class, 'index']);
-    Route::get('/fetch-credentials', [CredentialController::class, 'fetchCredentials']);
-    Route::get('/credentialable-types', [CredentialController::class, 'getCredentialableTypes']);
-    Route::get('/credentialables', [CredentialController::class, 'getOwnersByType']);
+        // fetchCredentials
+        Route::get('/channel-credentials', [CredentialController::class, 'index']);
+        Route::get('/fetch-credentials', [CredentialController::class, 'fetchCredentials']);
+        Route::get('/credentialable-types', [CredentialController::class, 'getCredentialableTypes']);
+        Route::get('/credentialables', [CredentialController::class, 'getOwnersByType']);
 
 
-    Route::post('/channel-credentials', [CredentialController::class, 'store']);
-    Route::get('/channel-credentials/{id}', [CredentialController::class, 'show']);
-    Route::put('/channel-credentials/{id}', [CredentialController::class, 'update']);
-    Route::delete('/channel-credentials/{id}', [CredentialController::class, 'destroy']);
+        Route::post('/channel-credentials', [CredentialController::class, 'store']);
+        Route::get('/channel-credentials/{id}', [CredentialController::class, 'show']);
+        Route::put('/channel-credentials/{id}', [CredentialController::class, 'update']);
+        Route::delete('/channel-credentials/{id}', [CredentialController::class, 'destroy']);
 
 
-    // rider 
+        // rider 
 
-    Route::get('/riders', [RiderController::class, 'index']);
-    Route::post('/riders', [RiderController::class, 'store']);
-    Route::get('/riders/{id}', [RiderController::class, 'show']);
-    Route::put('/riders/{id}', [RiderController::class, 'update']);
-    Route::delete('/riders/{id}', [RiderController::class, 'destroy']);
+        Route::get('/riders', [RiderController::class, 'index']);
+        Route::post('/riders', [RiderController::class, 'store']);
+        Route::get('/riders/{id}', [RiderController::class, 'show']);
+        Route::put('/riders/{id}', [RiderController::class, 'update']);
+        Route::delete('/riders/{id}', [RiderController::class, 'destroy']);
 
 
-    // Agent 
-    Route::get('/agents', [AgentController::class, 'index']);
-    Route::post('/agents', [AgentController::class, 'store']);
-    Route::get('/agents/{id}', [AgentController::class, 'show']);
-    Route::put('/agents/{id}', [AgentController::class, 'update']);
-    Route::delete('/agents/{id}', [AgentController::class, 'destroy']);
+        // Agent 
+        Route::get('/agents', [AgentController::class, 'index']);
+        Route::post('/agents', [AgentController::class, 'store']);
+        Route::get('/agents/{id}', [AgentController::class, 'show']);
+        Route::put('/agents/{id}', [AgentController::class, 'update']);
+        Route::delete('/agents/{id}', [AgentController::class, 'destroy']);
 
 
-    // vendor 
-    Route::get('/vendors', [VendorController::class, 'index']);
-    Route::post('/vendors', [VendorController::class, 'store']);
-    Route::get('/vendors/{id}', [VendorController::class, 'show']);
-    Route::put('/vendors/{id}', [VendorController::class, 'update']);
-    Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
-    // Endpoint to fetch products for a specific vendor
-    Route::get('/vendors/{vendorId}/products', [ProductController::class, 'productsByVendor']);
+        // vendor 
+        Route::get('/vendors', [VendorController::class, 'index']);
+        Route::post('/vendors', [VendorController::class, 'store']);
+        Route::get('/vendors/{id}', [VendorController::class, 'show']);
+        Route::put('/vendors/{id}', [VendorController::class, 'update']);
+        Route::delete('/vendors/{id}', [VendorController::class, 'destroy']);
+        // Endpoint to fetch products for a specific vendor
+        Route::get('/vendors/{vendorId}/products', [ProductController::class, 'productsByVendor']);
 
-    // clients 
+        // clients 
 
-    // For clients (you'll need to create these)
-    Route::get('/clients', [ClientController::class, 'index']);
-    Route::post('/clients', [ClientController::class, 'store']);
-    // show
-    // Route::get('/clients/{id}', [ClientController::class, 'show']); 
+        // For clients (you'll need to create these)
+        Route::get('/clients', [ClientController::class, 'index']);
+        Route::post('/clients', [ClientController::class, 'store']);
+        // show
+        // Route::get('/clients/{id}', [ClientController::class, 'show']); 
 
-    Route::put('/clients/{id}', [ClientController::class, 'update']);
-    Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
+        Route::put('/clients/{id}', [ClientController::class, 'update']);
+        Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 
-    // find clent by phonebnumber
+        // find clent by phonebnumber
 
 
-    // countries 
+        // countries 
 
-    Route::get('/countries', [CountryController::class, 'index']);
-    Route::post('/countries', [CountryController::class, 'store']);
-    Route::get('/countries/{id}', [CountryController::class, 'show']);
-    Route::put('/countries/{id}', [CountryController::class, 'update']);
-    Route::delete('/countries/{id}', [CountryController::class, 'destroy']);
+        Route::get('/countries', [CountryController::class, 'index']);
+        Route::post('/countries', [CountryController::class, 'store']);
+        Route::get('/countries/{id}', [CountryController::class, 'show']);
+        Route::put('/countries/{id}', [CountryController::class, 'update']);
+        Route::delete('/countries/{id}', [CountryController::class, 'destroy']);
 
-    // api/v1/countries/1/settings
-    Route::get('/countries/{id}/settings', [CountryController::class, 'getSettings']);
+        // api/v1/countries/1/settings
+        Route::get('/countries/{id}/settings', [CountryController::class, 'getSettings']);
 
-    // Country-specific waybill settings routes
-    Route::get('/countries/{id}/settings', [CountryController::class, 'getSettings']);
-    Route::post('/countries/{id}/settings', [CountryController::class, 'storeSettings']);
-    Route::put('/countries/{id}/settings', [CountryController::class, 'updateSettings']);
-    Route::delete('/countries/{id}/settings', [CountryController::class, 'destroySettings']);
+        // Country-specific waybill settings routes
+        Route::get('/countries/{id}/settings', [CountryController::class, 'getSettings']);
+        Route::post('/countries/{id}/settings', [CountryController::class, 'storeSettings']);
+        Route::put('/countries/{id}/settings', [CountryController::class, 'updateSettings']);
+        Route::delete('/countries/{id}/settings', [CountryController::class, 'destroySettings']);
 
 
-    // waybill settings 
+        // waybill settings 
 
-    Route::get('/waybill-settings', [\App\Http\Controllers\Api\WaybillSettingController::class, 'index']); // List all waybill settings
-    Route::post('/waybill-settings', [\App\Http\Controllers\Api\WaybillSettingController::class, 'store']); // Create a new waybill setting
-    Route::get('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'show']); // Show a specific waybill setting
-    Route::put('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'update']); // Update a specific waybill setting
-    Route::delete('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'destroy']); // Delete a specific waybill setting   
+        Route::get('/waybill-settings', [\App\Http\Controllers\Api\WaybillSettingController::class, 'index']); // List all waybill settings
+        Route::post('/waybill-settings', [\App\Http\Controllers\Api\WaybillSettingController::class, 'store']); // Create a new waybill setting
+        Route::get('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'show']); // Show a specific waybill setting
+        Route::put('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'update']); // Update a specific waybill setting
+        Route::delete('/waybill-settings/{id}', [\App\Http\Controllers\Api\WaybillSettingController::class, 'destroy']); // Delete a specific waybill setting   
 
 
 
 
 
-    // webwhats    webhook 
-    // Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'receive']);
-    // Route::post('/whatsapp-send', [WhatsAppController::class, 'send']);
-    Route::get('/whatsapp-messages', [WhatsAppController::class, 'listConversations']);
-    // Route::get('messages/chat/{phone}', [WhatsAppController::class, 'getChat']);
-    Route::delete('/whatsapp-messages/{id}', [WhatsAppController::class, 'destroy']);
-    Route::get('/whatsapp/state', [WhatsAppController::class, 'getState']);
-    Route::post('/whatsapp/send-message', [WhatsAppController::class, 'sendMessage']);
-    Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'handle']);
-    // Route::get('/conversations', [WhatsAppController::class, 'listConversations']);
-    Route::get('/conversation/{chatId}', [WhatsAppController::class, 'getConversation']);
-    Route::post('/whatsapp/retry-message/{id}', [WhatsAppController::class, 'retryMessage']);
+        // webwhats    webhook 
+        // Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'receive']);
+        // Route::post('/whatsapp-send', [WhatsAppController::class, 'send']);
+        Route::get('/whatsapp-messages', [WhatsAppController::class, 'listConversations']);
+        // Route::get('messages/chat/{phone}', [WhatsAppController::class, 'getChat']);
+        Route::delete('/whatsapp-messages/{id}', [WhatsAppController::class, 'destroy']);
+        Route::get('/whatsapp/state', [WhatsAppController::class, 'getState']);
+        Route::post('/whatsapp/send-message', [WhatsAppController::class, 'sendMessage']);
+        Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'handle']);
+        // Route::get('/conversations', [WhatsAppController::class, 'listConversations']);
+        Route::get('/conversation/{chatId}', [WhatsAppController::class, 'getConversation']);
+        Route::post('/whatsapp/retry-message/{id}', [WhatsAppController::class, 'retryMessage']);
 
 
 
-    // sms 
+        // sms 
 
-    Route::post('/sms/send', [SmsController::class, 'sendSms']);
-    Route::get('/sms/history', [SmsController::class, 'getSmsHistory']);
-    Route::get('/sms/history/{id}', [SmsController::class, 'getSmsDetails']);
-    Route::delete('/sms/history/{id}', [SmsController::class, 'deleteSms']);
+        Route::post('/sms/send', [SmsController::class, 'sendSms']);
+        Route::get('/sms/history', [SmsController::class, 'getSmsHistory']);
+        Route::get('/sms/history/{id}', [SmsController::class, 'getSmsDetails']);
+        Route::delete('/sms/history/{id}', [SmsController::class, 'deleteSms']);
 
-    // ivr 
-    Route::get('/ivr-options', [IvrOptionController::class, 'index']);
-    Route::get('/ivr-options/search', [IvrOptionController::class, 'search']);
-    Route::post('/ivr-options', [IvrOptionController::class, 'store']);
-    Route::get('/ivr-options/{id}', [IvrOptionController::class, 'show']);
-    Route::put('/ivr-options/{id}', [IvrOptionController::class, 'update']);
-    Route::delete('/ivr-options/{id}', [IvrOptionController::class, 'destroy']);
+        // ivr 
+        Route::get('/ivr-options', [IvrOptionController::class, 'index']);
+        Route::get('/ivr-options/search', [IvrOptionController::class, 'search']);
+        Route::post('/ivr-options', [IvrOptionController::class, 'store']);
+        Route::get('/ivr-options/{id}', [IvrOptionController::class, 'show']);
+        Route::put('/ivr-options/{id}', [IvrOptionController::class, 'update']);
+        Route::delete('/ivr-options/{id}', [IvrOptionController::class, 'destroy']);
 
 
-    // status 
-    Route::get('/statuses', [StatusController::class, 'index']);  // List all statuses
-    Route::post('/statuses', [StatusController::class, 'store']); // Create a new status
-    Route::get('/statuses/{id}', [StatusController::class, 'show']); // Show a specific status
-    Route::put('/statuses/{id}', [StatusController::class, 'update']); // Update a specific status
-    Route::delete('/statuses/{id}', [StatusController::class, 'destroy']); // Delete a specific status
-    // avaible status by role 
-    Route::get('/available-statuses', [StatusController::class, 'availableStatuses']); // Get available statuses by role
+        // status 
+        Route::get('/statuses', [StatusController::class, 'index']);  // List all statuses
+        Route::post('/statuses', [StatusController::class, 'store']); // Create a new status
+        Route::get('/statuses/{id}', [StatusController::class, 'show']); // Show a specific status
+        Route::put('/statuses/{id}', [StatusController::class, 'update']); // Update a specific status
+        Route::delete('/statuses/{id}', [StatusController::class, 'destroy']); // Delete a specific status
+        // avaible status by role 
+        Route::get('/available-statuses', [StatusController::class, 'availableStatuses']); // Get available statuses by role
 
 
-    // cities 
-    Route::get('/cities', [CityController::class, 'index']);
-    Route::post('/cities', [CityController::class, 'store']);
-    Route::get('/cities/{id}', [CityController::class, 'show']);
-    Route::put('/cities/{id}', [CityController::class, 'update']);
-    Route::delete('/cities/{id}', [CityController::class, 'destroy']);
+        // cities 
+        Route::get('/cities', [CityController::class, 'index']);
+        Route::post('/cities', [CityController::class, 'store']);
+        Route::get('/cities/{id}', [CityController::class, 'show']);
+        Route::put('/cities/{id}', [CityController::class, 'update']);
+        Route::delete('/cities/{id}', [CityController::class, 'destroy']);
 
 
 
-    // zones 
-    Route::get('/zones', [ZoneController::class, 'index']);
-    Route::post('/zones', [ZoneController::class, 'store']);
-    Route::get('/zones/{id}', [ZoneController::class, 'show']);
-    Route::put('/zones/{id}', [ZoneController::class, 'update']);
-    Route::delete('/zones/{id}', [ZoneController::class, 'destroy']);
+        // zones 
+        Route::get('/zones', [ZoneController::class, 'index']);
+        Route::post('/zones', [ZoneController::class, 'store']);
+        Route::get('/zones/{id}', [ZoneController::class, 'show']);
+        Route::put('/zones/{id}', [ZoneController::class, 'update']);
+        Route::delete('/zones/{id}', [ZoneController::class, 'destroy']);
 
 
-    // warehouses
+        // warehouses
 
 
-    Route::get('/warehouses', [WarehouseController::class, 'index']);
-    Route::post('/warehouses', [WarehouseController::class, 'store']);
-    Route::get('/warehouses/{id}', [WarehouseController::class, 'show']);
-    Route::put('/warehouses/{id}', [WarehouseController::class, 'update']);
-    Route::delete('/warehouses/{id}', [WarehouseController::class, 'destroy']);
-    // courier
-    Route::get('/couriers', [CourierController::class, 'index']);
-    Route::post('/couriers', [CourierController::class, 'store']);
-    Route::get('/couriers/{id}', [CourierController::class, 'show']);
-    Route::put('/couriers/{ id}', [CourierController::class, 'update']);
+        Route::get('/warehouses', [WarehouseController::class, 'index']);
+        Route::post('/warehouses', [WarehouseController::class, 'store']);
+        Route::get('/warehouses/{id}', [WarehouseController::class, 'show']);
+        Route::put('/warehouses/{id}', [WarehouseController::class, 'update']);
+        Route::delete('/warehouses/{id}', [WarehouseController::class, 'destroy']);
+        // courier
+        Route::get('/couriers', [CourierController::class, 'index']);
+        Route::post('/couriers', [CourierController::class, 'store']);
+        Route::get('/couriers/{id}', [CourierController::class, 'show']);
+        Route::put('/couriers/{ id}', [CourierController::class, 'update']);
 
 
 
@@ -514,240 +517,240 @@ Route::prefix('v1')->group(function () {
 
 
 
-    // // callcentre 
+        // // callcentre 
 
-    // authuser accounts 
-    Route::get('/user/accounts', [UserCountryAccountController::class, 'index']);
+        // authuser accounts 
+        Route::get('/user/accounts', [UserCountryAccountController::class, 'index']);
 
-    // find account by user id passed 
-    Route::get('/user/accounts/{user_id}', [UserCountryAccountController::class, 'showByUserId']);
+        // find account by user id passed 
+        Route::get('/user/accounts/{user_id}', [UserCountryAccountController::class, 'showByUserId']);
 
-    Route::post('/user/accounts',             [UserCountryAccountController::class, 'store']);
-    Route::put('/user/accounts/{userCountryAccount}',   [UserCountryAccountController::class, 'update']);
-    Route::patch('/user/accounts/{userCountryAccount}/default', [UserCountryAccountController::class, 'setDefault']);
-    Route::delete('/user/accounts/{userCountryAccount}', [UserCountryAccountController::class, 'destroy']);
+        Route::post('/user/accounts',             [UserCountryAccountController::class, 'store']);
+        Route::put('/user/accounts/{userCountryAccount}',   [UserCountryAccountController::class, 'update']);
+        Route::patch('/user/accounts/{userCountryAccount}/default', [UserCountryAccountController::class, 'setDefault']);
+        Route::delete('/user/accounts/{userCountryAccount}', [UserCountryAccountController::class, 'destroy']);
 
-    Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
-    Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
-    // Route::get('v1/voice-token', [ApiCallCentreController::class, 'generateToken']);
-    Route::get('/call-history', [CallCentreController::class, 'fetchCallHistory']);
-    // update agent status 
-    Route::post('/agent/status', [CallCentreController::class, 'updateAgentStatus']);
-    Route::post('/agent/ping', [CallCentreController::class, 'ping']);
+        Route::post('/africastalking-handle-callback', [CallCentreController::class, 'handleVoiceCallback']);
+        Route::post('/africastalking-handle-event', [CallCentreController::class, 'handleEventCallback']);
+        // Route::get('v1/voice-token', [ApiCallCentreController::class, 'generateToken']);
+        Route::get('/call-history', [CallCentreController::class, 'fetchCallHistory']);
+        // update agent status 
+        Route::post('/agent/status', [CallCentreController::class, 'updateAgentStatus']);
+        Route::post('/agent/ping', [CallCentreController::class, 'ping']);
 
 
-    // // Route::post('/africastalking-handle-selection', [ApiCallCentreController::class, 'handleSelection']);
-    // // make a new call
-    Route::post('/makecall', [CallCentreController::class, 'makeCall']);
+        // // Route::post('/africastalking-handle-selection', [ApiCallCentreController::class, 'handleSelection']);
+        // // make a new call
+        Route::post('/makecall', [CallCentreController::class, 'makeCall']);
 
 
 
-    // Route::get('/v1/queued-calls', [ApiCallCentreController::class, 'getQueuedCalls']);
-    // Route::post('/v1/dequeue-call', [ApiCallCentreController::class, 'dequeueCall']);
+        // Route::get('/v1/queued-calls', [ApiCallCentreController::class, 'getQueuedCalls']);
+        // Route::post('/v1/dequeue-call', [ApiCallCentreController::class, 'dequeueCall']);
 
-    // Route::post('/v1/transfer-call', [ApiCallCentreController::class, 'transferCall']);
+        // Route::post('/v1/transfer-call', [ApiCallCentreController::class, 'transferCall']);
 
 
 
-    // // Route::get('v1/call-centre-make-call', [ApiCallCentreController::class, 'makeOutboundCall']);
-    // Route::get('v1/call-centre-upload-media', [ApiCallCentreController::class, 'uploadMediaFile']);
-    // Route::get('v1/call-centre-play-welcome', [ApiCallCentreController::class, 'messageBuilderPlayWelcome']);
-    // Route::post('v1/call-centre-transfer-call', [ApiCallCentreController::class, 'transferCall']);
-    // Route::post('v1/call-centre-dequeue-call', [ApiCallCentreController::class, 'dequeueCall']);
-    Route::get('/token', [CallCentreController::class, 'getToken']);
-    // Route::get('v1/call-waiting-history', [ApiCallCentreController::class, 'getCallWaitingHistory']);
-    // Route::get('v1/call-agent-history/{id}', [ApiCallCentreController::class, 'getAgentCallHistory']);
+        // // Route::get('v1/call-centre-make-call', [ApiCallCentreController::class, 'makeOutboundCall']);
+        // Route::get('v1/call-centre-upload-media', [ApiCallCentreController::class, 'uploadMediaFile']);
+        // Route::get('v1/call-centre-play-welcome', [ApiCallCentreController::class, 'messageBuilderPlayWelcome']);
+        // Route::post('v1/call-centre-transfer-call', [ApiCallCentreController::class, 'transferCall']);
+        // Route::post('v1/call-centre-dequeue-call', [ApiCallCentreController::class, 'dequeueCall']);
+        Route::get('/token', [CallCentreController::class, 'getToken']);
+        // Route::get('v1/call-waiting-history', [ApiCallCentreController::class, 'getCallWaitingHistory']);
+        // Route::get('v1/call-agent-history/{id}', [ApiCallCentreController::class, 'getAgentCallHistory']);
 
-    // statistics and reports
-    // /v1/agent-stats
+        // statistics and reports
+        // /v1/agent-stats
 
-    Route::get('/agent-stats/{id}', [CallCentreStatistics::class, 'AgentCallStats']);
+        Route::get('/agent-stats/{id}', [CallCentreStatistics::class, 'AgentCallStats']);
 
-    // Route::post('v1/reports/call-summary', [ApiCallCentreController::class, 'callSummaryReport']);
+        // Route::post('v1/reports/call-summary', [ApiCallCentreController::class, 'callSummaryReport']);
 
 
-    // Route::post('v1/report-call-agent-list-summary-filter', [ApiCallCentreController::class, 'getAgentListSummaryFilter']);
-    // Route::get('v1/report-call-waiting-history', [ApiCallCentreController::class, 'getCallWaitingHistory']);
-    // Route::get('v1/report-call-ongoing-history', [ApiCallCentreController::class, 'getCallOngoingHistory']);
-    // Route::get('v1/report-call-agent-list-summary', [ApiCallCentreController::class, 'getAgentListSummary']);
-    // Route::get('v1/report-call-history-list', [ApiCallCentreController::class, 'getCallHistory']);
-    // Route::post('v1/report-call-history-list-filter', [ApiCallCentreController::class, 'getCallHistoryFilter']);
-    // Route::get('v1/report-call-centre-summary', [ApiCallCentreController::class, 'getSummaryReport']);
-    // Route::get('v1/call-order-history/{phone_number}', [ApiCallCentreController::class, 'callOrderHistory']);
+        // Route::post('v1/report-call-agent-list-summary-filter', [ApiCallCentreController::class, 'getAgentListSummaryFilter']);
+        // Route::get('v1/report-call-waiting-history', [ApiCallCentreController::class, 'getCallWaitingHistory']);
+        // Route::get('v1/report-call-ongoing-history', [ApiCallCentreController::class, 'getCallOngoingHistory']);
+        // Route::get('v1/report-call-agent-list-summary', [ApiCallCentreController::class, 'getAgentListSummary']);
+        // Route::get('v1/report-call-history-list', [ApiCallCentreController::class, 'getCallHistory']);
+        // Route::post('v1/report-call-history-list-filter', [ApiCallCentreController::class, 'getCallHistoryFilter']);
+        // Route::get('v1/report-call-centre-summary', [ApiCallCentreController::class, 'getSummaryReport']);
+        // Route::get('v1/call-order-history/{phone_number}', [ApiCallCentreController::class, 'callOrderHistory']);
 
-    // Route::post('v1/call-agent-create', [ApiCallAgentController::class, 'createCallAgentDetails']);
-    // Route::post('v1/call-agent-edit', [ApiCallAgentController::class, 'editCallAgentDetails']);
-    // Route::post('v1/call-agent-edit-status', [ApiCallAgentController::class, 'editCallAgentStatus']);
-    // Route::post('v1/call-agent-delete', [ApiCallAgentController::class, 'deleteCallAgentDetails']);
-    // Route::get('v1/call-agent-list', [ApiCallAgentController::class, 'getCallAgentList']);
-    // Route::get('v1/call-agent-available-list', [ApiCallAgentController::class, 'getCallAgentListAvailable']);
-    // Route::get('v1/call-agent-details/{id}', [ApiCallAgentController::class, 'getCallAgentDetails']);
-    // Route::get('v1/call-agent-details-2/{id}', [ApiCallAgentController::class, 'getCallAgentDetails2']);
-    // Route::get('v1/call-agent-summary/{id}', [ApiCallAgentController::class, 'getCallAgentSummary']);
+        // Route::post('v1/call-agent-create', [ApiCallAgentController::class, 'createCallAgentDetails']);
+        // Route::post('v1/call-agent-edit', [ApiCallAgentController::class, 'editCallAgentDetails']);
+        // Route::post('v1/call-agent-edit-status', [ApiCallAgentController::class, 'editCallAgentStatus']);
+        // Route::post('v1/call-agent-delete', [ApiCallAgentController::class, 'deleteCallAgentDetails']);
+        // Route::get('v1/call-agent-list', [ApiCallAgentController::class, 'getCallAgentList']);
+        // Route::get('v1/call-agent-available-list', [ApiCallAgentController::class, 'getCallAgentListAvailable']);
+        // Route::get('v1/call-agent-details/{id}', [ApiCallAgentController::class, 'getCallAgentDetails']);
+        // Route::get('v1/call-agent-details-2/{id}', [ApiCallAgentController::class, 'getCallAgentDetails2']);
+        // Route::get('v1/call-agent-summary/{id}', [ApiCallAgentController::class, 'getCallAgentSummary']);
 
 
 
 
-    // call center settings
-    Route::get('/call-center-settings', [CallCenterSettingController::class, 'index']);
-    Route::post('/call-center-settings', [CallCenterSettingController::class, 'store']);
-    Route::get('/call-center-settings/{id}', [CallCenterSettingController::class, 'show']);
-    Route::put('/call-center-settings/{id}', [CallCenterSettingController::class, 'update']);
-    Route::delete('/call-center-settings/{id}', [CallCenterSettingController::class, 'destroy']);
+        // call center settings
+        Route::get('/call-center-settings', [CallCenterSettingController::class, 'index']);
+        Route::post('/call-center-settings', [CallCenterSettingController::class, 'store']);
+        Route::get('/call-center-settings/{id}', [CallCenterSettingController::class, 'show']);
+        Route::put('/call-center-settings/{id}', [CallCenterSettingController::class, 'update']);
+        Route::delete('/call-center-settings/{id}', [CallCenterSettingController::class, 'destroy']);
 
 
-    // conditiontypes 
-    Route::get('/condition-types', [ConditionTypeController::class, 'index']);
-    Route::post('/condition-types', [ConditionTypeController::class, 'store']);
-    Route::get('/condition-types/{id}', [ConditionTypeController::class, 'show']);
-    Route::put('/condition-types/{id}', [ConditionTypeController::class, 'update']);
-    Route::delete('/condition-types/{id}', [ConditionTypeController::class, 'destroy']);
+        // conditiontypes 
+        Route::get('/condition-types', [ConditionTypeController::class, 'index']);
+        Route::post('/condition-types', [ConditionTypeController::class, 'store']);
+        Route::get('/condition-types/{id}', [ConditionTypeController::class, 'show']);
+        Route::put('/condition-types/{id}', [ConditionTypeController::class, 'update']);
+        Route::delete('/condition-types/{id}', [ConditionTypeController::class, 'destroy']);
 
 
 
-    // service conditions
+        // service conditions
 
-    Route::get('/service-conditions', [ServiceConditionController::class, 'index']);
-    Route::post('/service-conditions', [ServiceConditionController::class, 'store']);
-    Route::get('/service-conditions/{id}', [ServiceConditionController::class, 'show']);
-    Route::put('/service-conditions/{id}', [ServiceConditionController::class, 'update']);
-    Route::delete('/service-conditions/{id}', [ServiceConditionController::class, 'destroy']);
+        Route::get('/service-conditions', [ServiceConditionController::class, 'index']);
+        Route::post('/service-conditions', [ServiceConditionController::class, 'store']);
+        Route::get('/service-conditions/{id}', [ServiceConditionController::class, 'show']);
+        Route::put('/service-conditions/{id}', [ServiceConditionController::class, 'update']);
+        Route::delete('/service-conditions/{id}', [ServiceConditionController::class, 'destroy']);
 
 
 
 
-    // assign vendor a service 
+        // assign vendor a service 
 
-    Route::post('/vendors/{vendorId}/services', [VendorServicesController::class, 'assignService']);
-    Route::get('/vendors/{vendorId}/services', [VendorServicesController::class, 'getServices']);
-    Route::delete('/vendors/{vendorId}/services/{vendorServiceId}', [VendorServicesController::class, 'removeService']);
+        Route::post('/vendors/{vendorId}/services', [VendorServicesController::class, 'assignService']);
+        Route::get('/vendors/{vendorId}/services', [VendorServicesController::class, 'getServices']);
+        Route::delete('/vendors/{vendorId}/services/{vendorServiceId}', [VendorServicesController::class, 'removeService']);
 
 
 
 
-    // email routes
+        // email routes
 
-    Route::get('email-templates', [EmailTemplateController::class, 'index']);
-    Route::post('email-templates', [EmailTemplateController::class, 'store']);
-    Route::put('email-templates/{id}', [EmailTemplateController::class, 'update']);
-    Route::delete('email-templates/{id}', [EmailTemplateController::class, 'delete']);
+        Route::get('email-templates', [EmailTemplateController::class, 'index']);
+        Route::post('email-templates', [EmailTemplateController::class, 'store']);
+        Route::put('email-templates/{id}', [EmailTemplateController::class, 'update']);
+        Route::delete('email-templates/{id}', [EmailTemplateController::class, 'delete']);
 
-    Route::get('drafts', [EmailController::class, 'getDrafts']);
-    Route::post('drafts', [EmailController::class, 'storeDraft']);
-    Route::delete('drafts/{id}', [EmailController::class, 'deleteDraft']);
+        Route::get('drafts', [EmailController::class, 'getDrafts']);
+        Route::post('drafts', [EmailController::class, 'storeDraft']);
+        Route::delete('drafts/{id}', [EmailController::class, 'deleteDraft']);
 
-    Route::get('sent', [EmailController::class, 'getSentEmails']);
-    Route::post('send', [EmailController::class, 'sendEmail']);
-    Route::post('bulk-send', [EmailController::class, 'sendBulkEmails']);
+        Route::get('sent', [EmailController::class, 'getSentEmails']);
+        Route::post('send', [EmailController::class, 'sendEmail']);
+        Route::post('bulk-send', [EmailController::class, 'sendBulkEmails']);
 
 
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard', [DashboardController::class, 'index']);
 
 
 
-    // customer routes
-    Route::get('/customers', [CustomerController::class, 'index']);
-    Route::post('/customers', [CustomerController::class, 'store']);
-    Route::get('/customers/{id}', [CustomerController::class, 'show']);
-    Route::put('/customers/{id}', [CustomerController::class, 'update']);
-    Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
-    // find customer by phone number
-    Route::get('/customers/phone/{phone}', [CustomerController::class, 'findByPhone']);
+        // customer routes
+        Route::get('/customers', [CustomerController::class, 'index']);
+        Route::post('/customers', [CustomerController::class, 'store']);
+        Route::get('/customers/{id}', [CustomerController::class, 'show']);
+        Route::put('/customers/{id}', [CustomerController::class, 'update']);
+        Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
+        // find customer by phone number
+        Route::get('/customers/phone/{phone}', [CustomerController::class, 'findByPhone']);
 
 
-    // expedition
-    Route::get('/expeditions', [\App\Http\Controllers\Api\ExpeditionController::class, 'index']);
-    Route::post('/expeditions', [\App\Http\Controllers\Api\ExpeditionController::class, 'store']);
-    Route::get('/expeditions/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'show']);
-    Route::put('/expeditions/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'update']);
-    Route::delete('/expeditions/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'destroy']);
+        // expedition
+        Route::get('/expeditions', [\App\Http\Controllers\Api\ExpeditionController::class, 'index']);
+        Route::post('/expeditions', [\App\Http\Controllers\Api\ExpeditionController::class, 'store']);
+        Route::get('/expeditions/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'show']);
+        Route::put('/expeditions/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'update']);
+        Route::delete('/expeditions/{id}', [\App\Http\Controllers\Api\ExpeditionController::class, 'destroy']);
 
 
-    // seller expenses
-    Route::get('/seller-expenses', [\App\Http\Controllers\Api\SellerExpenseController::class, 'index']);
-    Route::post('/seller-expenses', [\App\Http\Controllers\Api\SellerExpenseController::class, 'store']);
-    Route::get('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'show']);
-    Route::put('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'update']);
-    Route::delete('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'destroy']);
+        // seller expenses
+        Route::get('/seller-expenses', [\App\Http\Controllers\Api\SellerExpenseController::class, 'index']);
+        Route::post('/seller-expenses', [\App\Http\Controllers\Api\SellerExpenseController::class, 'store']);
+        Route::get('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'show']);
+        Route::put('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'update']);
+        Route::delete('/seller-expenses/{id}', [\App\Http\Controllers\Api\SellerExpenseController::class, 'destroy']);
 
 
 
-    // expense-categories
-    Route::get('/expense-categories', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'index']);
-    Route::post('/expense-categories', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'store']);
-    Route::get('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'show']);
-    Route::put('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'update']);
-    Route::delete('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'destroy']);
+        // expense-categories
+        Route::get('/expense-categories', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'index']);
+        Route::post('/expense-categories', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'store']);
+        Route::get('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'show']);
+        Route::put('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'update']);
+        Route::delete('/expense-categories/{id}', [\App\Http\Controllers\Api\ExpenseCategoryController::class, 'destroy']);
 
 
-    // expense-types
-    Route::get('/expense-types', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'index']);
-    Route::post('/expense-types', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'store']);
-    Route::get('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'show']);
-    Route::put('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'update']);
-    Route::delete('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'destroy']);
+        // expense-types
+        Route::get('/expense-types', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'index']);
+        Route::post('/expense-types', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'store']);
+        Route::get('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'show']);
+        Route::put('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'update']);
+        Route::delete('/expense-types/{id}', [\App\Http\Controllers\Api\ExpenseTypeController::class, 'destroy']);
 
 
 
-    // service 
-    Route::get('/services', [\App\Http\Controllers\Api\ServiceController::class, 'index']);
-    Route::post('/services', [\App\Http\Controllers\Api\ServiceController::class, 'store']);
-    Route::get('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'show']);
-    Route::put('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'update']);
-    Route::delete('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'destroy']);
+        // service 
+        Route::get('/services', [\App\Http\Controllers\Api\ServiceController::class, 'index']);
+        Route::post('/services', [\App\Http\Controllers\Api\ServiceController::class, 'store']);
+        Route::get('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'show']);
+        Route::put('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'update']);
+        Route::delete('/services/{id}', [\App\Http\Controllers\Api\ServiceController::class, 'destroy']);
 
 
-    // remittances
-    Route::get('/remittances', [\App\Http\Controllers\Api\RemittanceController::class, 'index']);
-    Route::post('/remittances', [\App\Http\Controllers\Api\RemittanceController::class, 'store']);
-    Route::get('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'show']);
-    Route::put('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'update']);
-    Route::delete('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'destroy']);
-    Route::get('/remittances/{id}/excel', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadExcel']);
-    Route::get('/remittances/{id}/pdf', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadPdf']);
+        // remittances
+        Route::get('/remittances', [\App\Http\Controllers\Api\RemittanceController::class, 'index']);
+        Route::post('/remittances', [\App\Http\Controllers\Api\RemittanceController::class, 'store']);
+        Route::get('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'show']);
+        Route::put('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'update']);
+        Route::delete('/remittances/{id}', [\App\Http\Controllers\Api\RemittanceController::class, 'destroy']);
+        Route::get('/remittances/{id}/excel', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadExcel']);
+        Route::get('/remittances/{id}/pdf', [\App\Http\Controllers\Api\RemittanceController::class, 'downloadPdf']);
 
 
-    // team magement 
-    // FulfillmentHubController
-    Route::get('/fulfillment-hubs', [FulfillmentHubController::class, 'index']);
-    Route::post('/fulfillment-hubs', [FulfillmentHubController::class, 'store']);
-    Route::get('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'show']);
-    // Route::put('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'update']);
-    Route::put(
-        '/fulfillment-hubs/{fulfillmentHub}',
-        [FulfillmentHubController::class, 'update']
-    );
-    // Route::delete('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'destroy']);
+        // team magement 
+        // FulfillmentHubController
+        Route::get('/fulfillment-hubs', [FulfillmentHubController::class, 'index']);
+        Route::post('/fulfillment-hubs', [FulfillmentHubController::class, 'store']);
+        Route::get('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'show']);
+        // Route::put('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'update']);
+        Route::put(
+            '/fulfillment-hubs/{fulfillmentHub}',
+            [FulfillmentHubController::class, 'update']
+        );
+        // Route::delete('/fulfillment-hubs/{id}', [FulfillmentHubController::class, 'destroy']);
 
 
-    Route::delete('/fulfillment-hubs/{fulfillmentHub}', [FulfillmentHubController::class, 'destroy']);
+        Route::delete('/fulfillment-hubs/{fulfillmentHub}', [FulfillmentHubController::class, 'destroy']);
 
 
 
-    // seriverates 
+        // seriverates 
 
-    Route::get('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'index']);
-    // Route::post('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
+        Route::get('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'index']);
+        // Route::post('/service-rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
 
-    //                 `/api/v1/vendors/${selectedVendorId.value}/services/${vendorServiceId}/rates`,
+        //                 `/api/v1/vendors/${selectedVendorId.value}/services/${vendorServiceId}/rates`,
 
-    // Route::post('/vendors/{vendorId}/services/{vendorServiceId}/rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
+        // Route::post('/vendors/{vendorId}/services/{vendorServiceId}/rates', [\App\Http\Controllers\Api\ServiceRateController::class, 'store']);
 
 
-    Route::post(
-        '/vendors/{vendor}/services/{vendorService}/rates',
-        [ServiceRateController::class, 'store']
-    );
+        Route::post(
+            '/vendors/{vendor}/services/{vendorService}/rates',
+            [ServiceRateController::class, 'store']
+        );
 
-    Route::get('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'show']);
-    Route::put('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'update']);
-    Route::delete('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'destroy']);
+        Route::get('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'show']);
+        Route::put('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'update']);
+        Route::delete('/service-rates/{id}', [\App\Http\Controllers\Api\ServiceRateController::class, 'destroy']);
 
 
-    // mopesa payments 
+        // mopesa payments 
 
-    Route::post('/payments/mpesa/stk-push', [MpesaStkPushController::class, 'initiate']);
-});
+        Route::post('/payments/mpesa/stk-push', [MpesaStkPushController::class, 'initiate']);
+    });
 
 
 

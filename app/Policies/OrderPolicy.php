@@ -50,6 +50,12 @@ class OrderPolicy
                 ->where('user_id', $user->id)
                 ->exists();
         }
+        // newline
+
+        // Vendor can only view their own orders
+        if ($user->hasRole('Vendor')) {
+            return (int) $order->vendor_id === (int) $user->id;
+        }
 
         return false;
     }
