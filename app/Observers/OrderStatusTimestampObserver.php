@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Events\OrderStatusChanged;
 use App\Models\OrderStatusTimestamp;
+use App\Models\Scopes\CountryScope;
 use App\Services\StockService;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
@@ -27,22 +28,44 @@ class OrderStatusTimestampObserver
 
         // new code to improve performance 
 
+        // $statusTimestamp->load([
+        //     'status',
+
+        //     'order' => function ($query) {
+        //         $query->with([
+        //             'vendor',
+        //             'customer',
+        //             'zone',
+
+        //             'latest_status.status',
+
+        //             'orderItems.product',
+
+        //             'assignments.user',
+        //         ]);
+        //     }
+        // ]);
+
+
+
         $statusTimestamp->load([
             'status',
 
             'order' => function ($query) {
-                $query->with([
-                    'vendor',
-                    'customer',
-                    'zone',
+                $query->withoutGlobalScope(CountryScope::class)
+                    ->with([
+                        'vendor',
+                        'customer',
+                        'zone',
+                        'latest_status.status',
 
-                    'latest_status.status',
+                        'orderItems.product' => function ($query) {
+                            $query->withoutGlobalScope(CountryScope::class);
+                        },
 
-                    'orderItems.product',
-
-                    'assignments.user',
-                ]);
-            }
+                        'assignments.user',
+                    ]);
+            },
         ]);
         $order = $statusTimestamp->order;
 

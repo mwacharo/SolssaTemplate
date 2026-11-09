@@ -10,6 +10,7 @@ use App\Http\Resources\ProductResource;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
 use App\Models\ProductStock;
+use App\Models\Scopes\CountryScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,10 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
+
+use App\Models\Warehouse;
+use Illuminate\Validation\ValidationException;
 
 
 
@@ -317,6 +322,8 @@ class ProductController extends Controller
             'vendor_id'   => 'sometimes|exists:users,id',
             // NEW LINE
             'country_id' => 'sometimes|exists:countries,id',
+            // warehouse_id is optional, default to 1 if not provided
+            'warehouse_id' => 'sometimes|exists:warehouses,id',
 
             'category_id' => 'nullable|exists:categories,id',
             'product_name' => 'required|string|max:255',
@@ -374,14 +381,84 @@ class ProductController extends Controller
 
 
 
+            // Determine the selected warehouse
+            $warehouseId = $validated['warehouse_id']
+                ?? data_get($validated, 'stock.warehouse_id');
+
+            $warehouse = null;
+
+            if ($warehouseId) {
+                $warehouse = Warehouse::withoutGlobalScope(CountryScope::class)
+                    ->find($warehouseId);
+
+                if (!$warehouse) {
+                    throw ValidationException::withMessages([
+                        'warehouse_id' => 'Selected warehouse does not exist.',
+                    ]);
+                }
+            }
+
+            // Explicit country takes priority.
+            // If only warehouse is supplied, derive country from it.
+            // Otherwise preserve the existing vendor-country fallback.
+            $countryId = $validated['country_id']
+                ?? $warehouse?->country_id
+                ?? $user->country_id;
+
+            if (!$countryId) {
+                throw ValidationException::withMessages([
+                    'country_id' => 'A country is required.',
+                ]);
+            }
+
+            // Ensure warehouse and product belong to the same country
+            if (
+                $warehouse &&
+                (int) $warehouse->country_id !== (int) $countryId
+            ) {
+                throw ValidationException::withMessages([
+                    'warehouse_id' =>
+                    'The selected warehouse belongs to a different country.',
+                ]);
+            }
+
+            // Find a warehouse in the requested country if none was provided
+            if (!$warehouse) {
+                $warehouse = Warehouse::withoutGlobalScope(CountryScope::class)
+                    ->where('country_id', $countryId)
+                    ->orderBy('id')
+                    ->first();
+
+                if (!$warehouse) {
+                    throw ValidationException::withMessages([
+                        'warehouse_id' =>
+                        'No warehouse found in the selected country.',
+                    ]);
+                }
+            }
+
+
+
+
 
             // 1. Create Product
+            // $product = Product::create([
+            //     'vendor_id'   => $validated['vendor_id'],
+            //     'category_id' => $validated['category_id']  ?? null,
+            //     'product_name' => $validated['product_name'],
+            //     'description' => $validated['description'] ?? null,
+            //     'sku'         => $validated['sku'],
+            // ]);
+
+
             $product = Product::create([
-                'vendor_id'   => $validated['vendor_id'],
-                'category_id' => $validated['category_id']  ?? null,
+                'vendor_id' => $validated['vendor_id'],
+                // 'country_id' => $validated['country_id'] ?? $user->country_id,
+                'country_id' => $countryId,
+                'category_id' => $validated['category_id'] ?? null,
                 'product_name' => $validated['product_name'],
                 'description' => $validated['description'] ?? null,
-                'sku'         => $validated['sku'],
+                'sku' => $validated['sku'],
             ]);
 
             // 2. Handle Attributes
@@ -456,12 +533,38 @@ class ProductController extends Controller
                 $validated['stock']['historical_stock'] = $validated['stock']['historical_stock'] ?? [];
                 $validated['stock']['stock_threshold'] = $validated['stock']['stock_threshold'] ?? $stock_threshold;
 
-                if (!\App\Models\Warehouse::where('id', $warehouseId)->exists()) {
-                    throw new \Exception("Warehouse with id {$warehouseId} does not exist.");
-                }
-                $product->stocks()->create(array_merge($validated['stock'], [
-                    'warehouse_id' => $warehouseId
-                ]));
+                // if (!\App\Models\Warehouse::where('id', $warehouseId)->exists()) {
+                //     throw new \Exception("Warehouse with id {$warehouseId} does not exist.");
+                // }
+
+
+                $warehouse = \App\Models\Warehouse::withoutGlobalScope(CountryScope::class)
+                    ->where('id', $warehouseId)
+                    ->where('country_id', $product->country_id)
+                    ->firstOrFail();
+                // $product->stocks()->create(array_merge($validated['stock'], [
+                //     'warehouse_id' => $warehouseId
+                // ]));
+
+
+                // $product->stocks()->create(array_merge($validated['stock'], [
+                //     'warehouse_id' => $warehouseId,
+                //     'country_id' => $product->country_id,
+                // ]));
+
+
+                // 5. Initialize stock in the selected country and warehouse
+
+                $product->stocks()->create([
+                    'country_id' => $countryId,
+                    'warehouse_id' => $warehouse->id,
+                    'current_stock' => 0,
+                    'committed_stock' => 0,
+                    'defected_stock' => 0,
+                    'historical_stock' => 0,
+                    'stock_threshold' => $validated['stock_threshold'],
+                    'stock_delivered' => 0,
+                ]);
             }
             // 6. Handle Offers
             if (!empty($validated['offers'])) {

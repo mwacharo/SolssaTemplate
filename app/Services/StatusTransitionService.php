@@ -19,11 +19,28 @@ class StatusTransitionService
 
 
 
-        'Scheduled' => ['Awaiting Dispatch', 'Cancelled', 'Duplicate', 'Pending'],
-        'Awaiting Dispatch' => ['Dispatched', 'Undispatched'],
+        'Scheduled' => [
+            'Awaiting Dispatch',
+            'Cancelled',
+            'Duplicate',
+            'Pending',
+            // 'Rescheduled'
+        ],
+        'Awaiting Dispatch' => [
+            'Dispatched',
+            'Undispatched',
+
+            'Rescheduled'
+        ],
 
 
-        'Dispatched' => ['In transit', 'Undispatched'],
+        'Dispatched' => ['In transit', 'Undispatched', 'Rescheduled'],
+
+
+        'Rescheduled' => [
+            'Awaiting Dispatch',
+            'Dispatched',
+        ],
 
         'In transit' => ['Delivered', 'Returned', 'In transit', 'Awaiting Return'],
 

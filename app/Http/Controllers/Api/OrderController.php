@@ -35,7 +35,9 @@ use Illuminate\Validation\ValidationException;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdersExport;
+use App\Models\Scopes\CountryScope;
 use App\Models\Status;
+use App\Models\Warehouse;
 use App\Services\Order\OrderTimelineService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -1538,6 +1540,24 @@ class OrderController extends Controller
                 }
             }
 
+
+
+
+            // Resolve destination warehouse without active-country restriction
+            $warehouse = Warehouse::withoutGlobalScope(CountryScope::class)
+                ->findOrFail($validated['warehouse_id']);
+
+            $countryId = $warehouse->country_id;
+
+            // Warehouse country determines order country
+            $validated['country_id'] = $countryId;
+
+            Log::info('Cross-country order destination resolved', [
+                'authenticated_country_id' => $user->country_id,
+                'order_country_id' => $countryId,
+                'warehouse_id' => $warehouse->id,
+                'vendor_id' => $validated['vendor_id'],
+            ]);
             /**
              * Step 3: Create Order
              */
@@ -1550,8 +1570,52 @@ class OrderController extends Controller
             if (!empty($validated['order_items'])) {
                 foreach ($validated['order_items'] as $item) {
                     try {
-                        $product = Product::where('sku', $item['sku'])->firstOrFail();
+
+
+                        // new logic for warehouse 
+
+                        // // Find warehouse without logged-in country restriction
+                        // $warehouse = Warehouse::withoutGlobalScope(CountryScope::class)
+                        //     ->where('id', $validated['warehouse_id'])
+                        //     ->firstOrFail();
+
+                        // // Get country from warehouse
+                        // $countryId = $warehouse->country_id;
+
+                        // // Assign correct country to order
+                        // $validated['country_id'] = $countryId;
+
+                        // // Resolve Zambia product even when vendor is logged into Kenya
+                        $product = Product::withoutGlobalScope(CountryScope::class)
+                            ->where('sku', $item['sku'])
+                            ->where('country_id', $countryId)
+                            ->where('vendor_id', $user->id)
+                            ->firstOrFail();
+
+
+                        if (!$product) {
+                            Log::error('Product not found for order item', [
+                                'sku' => $item['sku'],
+                                'order_id' => $order->id,
+                                'order_country_id' => $order->country_id,
+                                'vendor_id' => $order->vendor_id,
+                            ]);
+
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                'order_items' => "Product {$item['sku']} was not found for the selected vendor and country.",
+                            ]);
+                        }
+
+                        // // IMPORTANT: Assign the resolved product ID
                         $item['product_id'] = $product->id;
+
+
+
+
+
+                        // old logic
+                        // $product = Product::where('sku', $item['sku'])->firstOrFail();
+                        // $item['product_id'] = $product->id;
 
                         $orderItem = $order->orderItems()->create($item);
                     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
@@ -1632,7 +1696,15 @@ class OrderController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to create order', ['error' => $e->getMessage()]);
+            // Log::error('Failed to create order', ['error' => $e->getMessage()]);
+            Log::error('Failed to create order', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'order_country_id' => $countryId ?? null,
+                'authenticated_country_id' => Auth::user()?->country_id,
+            ]);
 
             return response()->json([
                 'success' => false,
